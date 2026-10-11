@@ -23,6 +23,7 @@ type PostReactionButtonProps = {
   /** True when this reaction failed to sync and is waiting in the outbox for a retry. Tapping retries instead of opening the picker. */
   failed?: boolean;
   onRetry?: () => void;
+  showCount?: boolean;
 };
 
 // Same Facebook reaction-picker mechanism as FilterPicker (tap reveals a
@@ -31,7 +32,7 @@ type PostReactionButtonProps = {
 // removes it; tapping a different one switches. No literal "dislike" --
 // deliberately a devotional set (pranam/love/insightful), not a general
 // social reaction bar.
-export function PostReactionButton({ reaction, count, onSelect, onRemove, onViewReactors, dim, cardBg, border, scrimColor, failed, onRetry }: PostReactionButtonProps) {
+export function PostReactionButton({ reaction, count, onSelect, onRemove, onViewReactors, dim, cardBg, border, scrimColor, failed, onRetry, showCount = true }: PostReactionButtonProps) {
   const reduceMotion = useReducedMotion();
   const triggerRef = useRef<View>(null);
   const [open, setOpen] = useState(false);
@@ -81,15 +82,24 @@ export function PostReactionButton({ reaction, count, onSelect, onRemove, onView
           haptic="selection"
           accessibilityLabel={failed ? 'Reaction could not sync -- tap to retry' : active ? `Remove ${active.label} reaction` : 'React to this post'}
           onPress={failed ? onRetry : openPicker}
-          style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start' }}
+          style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 4 }}
         >
           {active ? (
             <Text style={{ fontSize: 14, opacity: failed ? 0.5 : 1 }}>{active.emoji}</Text>
           ) : (
             <Feather name="smile" size={13} color={dim} />
           )}
+          <Text
+            style={{
+              color: active ? active.color : dim,
+              fontFamily: active ? FONTS.sansSemiBold : FONTS.sansMedium,
+              fontSize: 11.5,
+            }}
+          >
+            {active ? active.label : 'React'}
+          </Text>
         </PressableSurface>
-        {count > 0 ? (
+        {showCount && count > 0 ? (
           <PressableSurface
             haptic="selection"
             accessibilityLabel={failed ? 'Retry syncing this reaction' : `View all ${count} reactions`}

@@ -49,29 +49,17 @@ function triggerPush(notificationKey: string): void {
 export type MandaliPostType = 'update' | 'event' | 'question' | 'announcement';
 export type RsvpStatus = 'going' | 'interested' | 'not_going';
 
-// Devotional reaction set replacing the single upvote heart — deliberately
-// no negative/"dislike" option (tonally wrong for a feed people share vrat
-// updates, losses, and scripture questions on).
-export type ReactionType =
-  | 'pranam'
-  | 'bhakti'
-  | 'jnana'
-  | 'chardi_kala'
-  | 'shanti'
-  | 'love'
-  | 'insightful';
+import {
+  type ReactionType,
+  REACTION_META,
+  REACTION_ORDER,
+} from './mandaliReactionTypes';
 
-export const REACTION_META: Record<ReactionType, { emoji: string; label: string; color: string }> = {
-  pranam: { emoji: '🙏', label: 'Pranam', color: '#C5A059' },
-  bhakti: { emoji: '🪷', label: 'Bhakti', color: '#E0684C' },
-  jnana: { emoji: '🪔', label: 'Jnana', color: '#F59E0B' },
-  chardi_kala: { emoji: '🌸', label: 'Chardi Kala', color: '#EC4899' },
-  shanti: { emoji: '🕊️', label: 'Shanti', color: '#3B82F6' },
-  love: { emoji: '❤️', label: 'Love', color: '#E0684C' },
-  insightful: { emoji: '💡', label: 'Insightful', color: '#4C8BF5' },
+export {
+  type ReactionType,
+  REACTION_META,
+  REACTION_ORDER,
 };
-
-export const REACTION_ORDER: ReactionType[] = ['pranam', 'bhakti', 'jnana', 'chardi_kala', 'shanti'];
 
 export { formatRelativeTime } from './formatRelativeTime';
 

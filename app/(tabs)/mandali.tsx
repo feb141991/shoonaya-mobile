@@ -40,6 +40,8 @@ import { PostOptionsSheet } from '@/components/mandali/PostOptionsSheet';
 import { ConnectionRequestsSheet } from '@/components/mandali/ConnectionRequestsSheet';
 import { PostReactionButton } from '@/components/mandali/PostReactionButton';
 import { PostReactorsSheet } from '@/components/mandali/PostReactorsSheet';
+import { PostReactionSummaryBar } from '@/components/mandali/PostReactionSummaryBar';
+import { type PostReactionSummary, fetchPostReactionSummaries } from '@/lib/mandaliReactions';
 import { MandaliPollCard } from '@/components/mandali/MandaliPollCard';
 import { FestivalQuizMandaliStat } from '@/components/mandali/FestivalQuizMandaliStat';
 import { COLORS, FONTS, SHADOWS, TYPE } from '@/lib/constants';
@@ -237,6 +239,7 @@ type MandaliPostCardProps = {
   onVotePoll?: (pollId: string, optionId: string) => Promise<boolean | void>;
   onToggleHighlightComment?: (commentId: string, isHighlighted: boolean) => Promise<void> | void;
   onReportComment?: (commentId: string) => void;
+  reactionSummary?: PostReactionSummary | null;
 };
 
 const MandaliPostCard = memo(function MandaliPostCard({
@@ -274,6 +277,7 @@ const MandaliPostCard = memo(function MandaliPostCard({
   onVotePoll,
   onToggleHighlightComment,
   onReportComment,
+  reactionSummary,
 }: MandaliPostCardProps) {
   const isDark = useColorScheme() === 'dark';
   const isOwnPost = post.author_id === userId;
@@ -467,10 +471,25 @@ const MandaliPostCard = memo(function MandaliPostCard({
         />
       ) : null}
 
+      <PostReactionSummaryBar
+        count={post.upvotes}
+        commentCount={post.comment_count}
+        summary={reactionSummary}
+        hasViewerReacted={Boolean(myReaction)}
+        currentUserId={userId ?? undefined}
+        onViewReactors={() => onViewReactors(post.id)}
+        onToggleComments={() => onToggleComments(post.id)}
+        dim={theme.dim}
+        text={theme.text}
+        cardBg={theme.card}
+        borderSoft={theme.border}
+      />
+
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 18 }}>
         <PostReactionButton
           reaction={myReaction}
           count={post.upvotes}
+          showCount={false}
           onSelect={(reaction) => onSelectReaction(post.id, reaction)}
           onRemove={() => onRemoveReaction(post.id)}
           onViewReactors={() => onViewReactors(post.id)}
@@ -587,6 +606,7 @@ function MandaliScreen() {
   const [requestsSheetVisible, setRequestsSheetVisible] = useState(false);
   const [postOptionsPost, setPostOptionsPost] = useState<PostRow | null>(null);
   const [reactorsPostId, setReactorsPostId] = useState<string | null>(null);
+  const [reactionSummaries, setReactionSummaries] = useState<Record<string, PostReactionSummary>>({});
 
   const [sheetVisible, setSheetVisible] = useState(false);
   const [composerKeyboardVisible, setComposerKeyboardVisible] = useState(false);
@@ -945,6 +965,14 @@ function MandaliScreen() {
       )
     );
 
+    const postsWithUpvotes = allPosts.filter((post) => post.upvotes > 0).map((post) => post.id);
+    if (postsWithUpvotes.length > 0) {
+      void fetchPostReactionSummaries(postsWithUpvotes, userId).then((summaries) => {
+        if (!isCurrentLoad()) return;
+        setReactionSummaries((prev) => ({ ...prev, ...summaries }));
+      });
+    }
+
     // Seed `comments` from each post's 2-comment preview; expanding a post
     // fetches its full thread separately (see toggleComments).
     const previewComments = allPosts.flatMap((post) => post.commentPreview ?? []);
@@ -1039,6 +1067,13 @@ function MandaliScreen() {
         );
         return { ...current, ...additions };
       });
+      const newPostsWithUpvotes = page.posts.filter((post) => post.upvotes > 0).map((post) => post.id);
+      if (newPostsWithUpvotes.length > 0 && identityAtStart.kind === 'authenticated') {
+        void fetchPostReactionSummaries(newPostsWithUpvotes, identityAtStart.userId).then((summaries) => {
+          if (mandaliLoadGenerationRef.current !== loadGeneration) return;
+          setReactionSummaries((prev) => ({ ...prev, ...summaries }));
+        });
+      }
       setNextCursor(page.nextCursor);
     } catch (error) {
       if (!isFetchCancelled(error) && isCurrentLoad()) {
@@ -1128,6 +1163,9 @@ function MandaliScreen() {
     // the count by one for every other viewer each time someone switched.
     if (payload.eventType === 'UPDATE') return;
     patchPostUpvotes(postId, payload.eventType === 'DELETE' ? -1 : 1);
+    void fetchPostReactionSummaries([postId], profile?.userId).then((summaries) => {
+      setReactionSummaries((prev) => ({ ...prev, ...summaries }));
+    });
   }, [patchPostUpvotes, profile?.userId]);
 
   const handleCommentRealtimeChange = useCallback((payload: RealtimeCommentPayload) => {
@@ -1432,6 +1470,21 @@ function MandaliScreen() {
     if (!hadReaction) {
       targetList((current) => current.map((p) => (p.id === postId ? { ...p, upvotes: p.upvotes + 1 } : p)));
     }
+    setReactionSummaries((prev) => {
+      const existing = prev[postId];
+      const prevEmojis = existing?.topEmojis ?? [];
+      const newEmojis = prevEmojis.includes(reaction) ? prevEmojis : [reaction, ...prevEmojis.filter((e) => e !== reaction)].slice(0, 3);
+      return {
+        ...prev,
+        [postId]: {
+          postId,
+          totalCount: hadReaction ? (existing?.totalCount ?? 1) : ((existing?.totalCount ?? 0) + 1),
+          topEmojis: newEmojis,
+          firstReactorName: existing?.firstReactorName ?? null,
+          firstReactorUserId: existing?.firstReactorUserId ?? null,
+        },
+      };
+    });
     setFailedReactionTargets((current) => {
       if (!current.has(`post:${postId}`)) return current;
       const next = new Set(current);
@@ -1456,6 +1509,17 @@ function MandaliScreen() {
       return rest;
     });
     targetList((current) => current.map((p) => (p.id === postId ? { ...p, upvotes: Math.max(0, p.upvotes - 1) } : p)));
+    setReactionSummaries((prev) => {
+      const existing = prev[postId];
+      if (!existing) return prev;
+      return {
+        ...prev,
+        [postId]: {
+          ...existing,
+          totalCount: Math.max(0, existing.totalCount - 1),
+        },
+      };
+    });
     setFailedReactionTargets((current) => {
       if (!current.has(`post:${postId}`)) return current;
       const next = new Set(current);
@@ -2315,9 +2379,10 @@ function MandaliScreen() {
         onVotePoll={handleVotePoll}
         onToggleHighlightComment={handleToggleHighlightComment}
         onReportComment={handleReportComment}
+        reactionSummary={reactionSummaries[post.id] ?? null}
       />
     );
-  }, [commenting, commentLoadFailedPostIds, commentsByPost, expandedPostId, failedCommentReactionIds, failedReactionTargets, handleDeleteComment, handleDismissFailedComment, handleEditComment, handleRemoveCommentReaction, handleRemoveReaction, handleReportComment, handleRetryComment, handleRetryCommentReaction, handleRetryReaction, handleRsvp, handleSelectCommentReaction, handleSelectReaction, handleToggleHighlightComment, handleViewProfile, handleVotePoll, loadingCommentsForPostId, myCommentReactions, myReactions, profile?.userId, retryLoadComments, rsvpsByPost, setReactorsPostId, showOwnPostOptions, showPostOptions, submitComment, theme, toggleComments]);
+  }, [commenting, commentLoadFailedPostIds, commentsByPost, expandedPostId, failedCommentReactionIds, failedReactionTargets, handleDeleteComment, handleDismissFailedComment, handleEditComment, handleRemoveCommentReaction, handleRemoveReaction, handleReportComment, handleRetryComment, handleRetryCommentReaction, handleRetryReaction, handleRsvp, handleSelectCommentReaction, handleSelectReaction, handleToggleHighlightComment, handleViewProfile, handleVotePoll, loadingCommentsForPostId, myCommentReactions, myReactions, profile?.userId, reactionSummaries, retryLoadComments, rsvpsByPost, setReactorsPostId, showOwnPostOptions, showPostOptions, submitComment, theme, toggleComments]);
 
   const renderMembersCard = useCallback(() => (
     <Card tone="auto" elevated style={{ backgroundColor: theme.card, borderColor: theme.premiumBorder, gap: 10, padding: 11, borderRadius: 16 }}>
