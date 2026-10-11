@@ -20,6 +20,7 @@ import { AgeGuidanceNotice } from '@/components/privacy/AgeGuidanceNotice';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { DatePickerField } from '@/components/ui/DatePickerField';
+import { TimePickerField } from '@/components/ui/TimePickerField';
 import { CityFinder } from '@/components/kundali/CityFinder';
 import { formatLocalDateOnly } from '@/lib/dateOnly';
 import { useFallbackBackHandler } from '@/components/ui/BackButton';
@@ -510,18 +511,18 @@ export default function KundaliScreen() {
                     modalTitle="Select Date of Birth"
                   />
                 </View>
-                <View style={{ flex: 1, gap: 8 }}>
-                  <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>Time</Text>
-                  <TextInput
-                    style={{ backgroundColor: theme.glass, borderColor: theme.premiumBorder, borderWidth: 1, borderRadius: 14, padding: 12, minHeight: MIN_TOUCH_TARGET, color: theme.text, fontFamily: FONTS.sans, fontSize: 15 }}
-                    placeholder="HH:MM"
-                    placeholderTextColor={theme.dim}
+                <View style={{ flex: 1 }}>
+                  <TimePickerField
+                    label="Time of Birth"
                     value={formData.timeOfBirth}
-                    onChangeText={t => setFormData({ ...formData, timeOfBirth: t })}
+                    onChangeTime={t => setFormData({ ...formData, timeOfBirth: t })}
+                    placeholder="HH:MM"
+                    modalTitle="Select Birth Time"
+                    allowUnknown
                   />
                 </View>
               </View>
-              <Text style={{ color: theme.dim, ...TYPE.caption }}>Use 24-hour format. Leave time empty if unknown.</Text>
+              <Text style={{ color: theme.dim, ...TYPE.caption }}>Select exact hour and minute (AM/PM or 24h). Leave empty if unknown.</Text>
               <AgeGuidanceNotice dateOfBirth={formData.dateOfBirth} />
             </Card>
 
