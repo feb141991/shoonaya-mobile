@@ -1,8 +1,7 @@
-export type KundaliDetailTab = 'chart' | 'predictions' | 'identity' | 'panchang' | 'planets' | 'dasha';
+export type KundaliDetailTab = 'chart' | 'identity' | 'panchang' | 'planets' | 'dasha';
 
 const KUNDALI_DETAIL_TAB_SET = new Set<KundaliDetailTab>([
   'chart',
-  'predictions',
   'identity',
   'panchang',
   'planets',

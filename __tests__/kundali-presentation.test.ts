@@ -84,8 +84,10 @@ describe('Kundali presentation safety', () => {
     assert.equal(model.factors.some((factor) => factor.id.includes('Mangala')), false);
   });
 
-  it('resolves Predictions deep links and rejects unknown tabs', () => {
-    assert.equal(resolveKundaliDetailTab('predictions'), 'predictions');
+  it('resolves valid deep links, falls back gracefully for removed or unknown tabs', () => {
+    assert.equal(resolveKundaliDetailTab('chart'), 'chart');
+    assert.equal(resolveKundaliDetailTab('identity'), 'identity');
+    assert.equal(resolveKundaliDetailTab('predictions'), 'chart');
     assert.equal(resolveKundaliDetailTab('unknown'), 'chart');
     assert.equal(resolveKundaliDetailTab(undefined), 'chart');
   });

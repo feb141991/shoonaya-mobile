@@ -15,7 +15,6 @@ import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { useFallbackBackHandler } from '@/components/ui/BackButton';
-import { KundaliPredictions } from '@/components/kundali/KundaliPredictions';
 import { NotebookKundaliSummary } from '@/components/kundali/NotebookKundaliSummary';
 import { BirthPanchangCard } from '@/components/kundali/BirthPanchangCard';
 import { DashaTimeline } from '@/components/kundali/DashaTimeline';
@@ -36,7 +35,6 @@ type TextScale = 'sm' | 'md' | 'lg';
 
 const TAB_CONFIG: Array<{ key: KundaliDetailTab; label: string; icon: keyof typeof Feather.glyphMap }> = [
   { key: 'chart', label: 'Chart', icon: 'grid' },
-  { key: 'predictions', label: 'Predictions', icon: 'book-open' },
   { key: 'identity', label: 'Identity', icon: 'user' },
   { key: 'panchang', label: 'Panchang', icon: 'calendar' },
   { key: 'planets', label: 'Planets', icon: 'sun' },
@@ -269,10 +267,6 @@ export default function KundaliDetailScreen() {
                 <NotebookKundaliSummary profile={profile} isDark={isDark} textScaleMultiplier={scaleMultiplier} />
                 <VedicDiamondChart chart={profile.chart_data} isDark={isDark} />
               </>
-            )}
-
-            {activeTab === 'predictions' && (
-              <KundaliPredictions profile={profile} isDark={isDark} textScaleMultiplier={scaleMultiplier} />
             )}
 
             {activeTab === 'identity' && (
