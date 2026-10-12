@@ -4,9 +4,8 @@
  * caches built this session (Home, Mandali, Settings, Notifications).
  *
  * Deliberately NOT routed through lib/analytics.ts: that facade is the
- * consent-gated *product/marketing* analytics pipeline (app_opened,
- * onboarding_completed, ...), currently a no-op stub pending a consented
- * provider. This is a different category -- internal engineering
+ * consent-gated *product* analytics pipeline (app_opened, practice
+ * actions, ...). This is a different category -- internal engineering
  * observability, not a tracking channel. It exists specifically to answer
  * the "do route timings actually show a need for a content cache" question
  * the Bhakti/Dharm Veer/Pathshala caching phase is gated on, and (as of

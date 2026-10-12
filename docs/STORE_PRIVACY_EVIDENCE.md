@@ -1,7 +1,7 @@
 # Native Store Privacy Evidence
 
 Generated from `app.json`, installed dependencies and the backend data
-inventory; release review updated on 2026-08-30. This is an engineering worksheet, not a submitted
+inventory; release review updated on 2026-10-12. This is an engineering worksheet, not a submitted
 store declaration or legal approval.
 
 ## App Store
@@ -15,11 +15,25 @@ store declaration or legal approval.
 | Other user content | Yes | No | Community posts, comments, reflections and journals |
 | User ID | Yes | No | Account and authorization |
 | Device ID | Yes | No | Expo/FCM push token delivery |
-| Product interaction | Yes | No | Saved practice/progress and personalization |
+| Product interaction | Yes, only after separate opt-in | No | Coarse first-party product measurement; no route or content details |
+| App diagnostics | Yes | No | Separate reliability telemetry: route labels, timings, cache outcomes and request/auth failure metadata |
 
 `@react-native-firebase/analytics` is absent. Firebase Core remains for app
-registration/FCM. ATT is not added because no cross-company tracking path was
-identified. `ios.privacyManifests` in `app.json` is the durable Expo source.
+registration/FCM. Native product analytics is first-party and default-off. It
+records at most one allowlisted event per signed-in account/event/UTC day; it
+never sends route names, content, prompt keys, mood, location, tradition, or
+profile fields. The account-linked table is service-role-only and rows cascade
+on account deletion. Users can revoke consent and delete retained events from
+Privacy & Data settings. ATT is not added because no cross-company tracking
+path is used. Separately, the reliability system uploads account-linked
+startup summaries and identity-free request/auth diagnostics without
+product-analytics consent. These are restricted operational diagnostics with
+30-day server retention, not product-usage events. The operational monitoring
+dashboard can show recent startup summaries for troubleshooting; the 20-account
+suppression applies to the separate product-measurement report, not this
+diagnostic view. Confirm this separate collection, access and purpose with the
+privacy owner and store-console reviewer before final store declarations.
+`ios.privacyManifests` in `app.json` is the durable Expo source.
 
 ## Google Play
 
@@ -37,7 +51,8 @@ wording may change; answer based on the behavior of the submitted build.
 | Other user-generated content | Yes | Optional | No* | Mandali, reflections and AI prompts |
 | Religious or philosophical beliefs | Yes | Optional | No* | Tradition/profile personalisation |
 | Health information | Review conservatively | Optional | No* | Mood/reflection data may fall in this category |
-| App interactions | Yes | Optional | No* | Saved practice/progress and personalisation |
+| App interactions | Yes, only after separate opt-in | Optional | No* | Coarse first-party product measurement; account-linked and user-deletable |
+| App diagnostics | Yes | Optional | No* | Separate reliability telemetry including route labels/timing and failure metadata; 30-day server retention |
 | Device or other IDs | Yes | Optional | No* | Expo/FCM push delivery |
 
 `No*` means no sale or advertising sharing was identified. Before selecting
@@ -82,4 +97,5 @@ false and no ATT prompt should be declared unless tracking is actually added.
 - Final store questionnaire wording and policy-lawful basis.
 - Provider backup retention and deletion limitations.
 - Whether any future advertising SDK is added; current Native graph has none.
+- Confirm final store declarations for account-linked operational diagnostics separately from consent-gated product analytics.
 - Store-console answers have not been submitted by this repository change.

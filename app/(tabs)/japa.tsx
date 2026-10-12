@@ -47,6 +47,7 @@ import {
 } from '@/lib/japaPendingCompletion';
 import { attemptAndReconcilePendingCompletion, parsePendingCompletionMantra } from '@/lib/japaCompletionReconciliation';
 import { recordMutationRetryOutcome, recordRefreshFailure, recordRouteOpen, recordServerTiming, parseServerTimingHeader } from '@/lib/telemetry';
+import { trackAnalyticsEvent } from '@/lib/analytics';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { getMalaSkin, MALA_SKINS } from '@/lib/mala-skins';
 import { NAV_BAR_CLEARANCE, setBottomNavHidden } from '@/lib/nav-bar';
@@ -1439,6 +1440,7 @@ export default function JapaScreen() {
       }
 
       const context = normalizeJapaContext(await outcome.response.json());
+      void trackAnalyticsEvent('practice_completed');
       if (context) {
         applyJapaContext(context);
         if (userIdRef.current) void writeJapaContextCache(userIdRef.current, context);
@@ -1518,6 +1520,7 @@ export default function JapaScreen() {
   // ── Launcher → practice / exit-confirm flow — mirrors JapaClient.tsx's
   // handleStartPractice / StopPracticeSheet actions exactly. ─────────────
   const handleStartPractice = useCallback(() => {
+    void trackAnalyticsEvent('practice_started');
     if (sessionStartTime === null) setSessionStartTime(Date.now());
     setScreen('practice');
   }, [sessionStartTime]);

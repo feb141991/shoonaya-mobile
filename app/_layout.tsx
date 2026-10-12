@@ -94,6 +94,8 @@ import { syncDeviceLocationIfPermitted } from '@/lib/locationSync';
 import { Animated, StyleSheet } from 'react-native';
 import { resolveStartupSurface } from '@/lib/startup-visibility';
 import { setAppIdentity, getAppIdentity, useAppIdentity } from '@/lib/appIdentity';
+import { initializeProductAnalytics } from '@/lib/productAnalyticsRuntime';
+import { trackAnalyticsEvent } from '@/lib/analytics';
 import { accountDeletion } from '@/lib/accountDeletion';
 import { clearAllReaderPrefs } from '@/lib/readerPrefs';
 import { clearAllReadingProgress } from '@/lib/readingProgress';
@@ -294,6 +296,18 @@ function RootLayout() {
   // too, push is re-registered, and failure is reported instead of "Restored".
   const deletionIdentity = useAppIdentity();
   const deletionPromptedUserRef = useRef<string | null>(null);
+  const analyticsLaunchIdentityRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!readyToRender || deletionIdentity.kind === 'loading') return;
+    const userId = deletionIdentity.kind === 'authenticated' ? deletionIdentity.userId : null;
+    void initializeProductAnalytics(userId).then(() => {
+      const currentIdentity = getAppIdentity();
+      if (userId && currentIdentity.kind === 'authenticated' && currentIdentity.userId === userId && analyticsLaunchIdentityRef.current !== userId) {
+        analyticsLaunchIdentityRef.current = userId;
+        void trackAnalyticsEvent('app_opened');
+      }
+    });
+  }, [readyToRender, deletionIdentity.kind, deletionIdentity.kind === 'authenticated' ? deletionIdentity.userId : null]);
   // Root sits outside LanguageProvider; startup prefs carry the app language.
   const deletionLanguageRef = useRef(startupPrefs.language);
   deletionLanguageRef.current = startupPrefs.language;

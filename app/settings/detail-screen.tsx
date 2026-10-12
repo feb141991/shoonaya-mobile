@@ -73,6 +73,7 @@ import { ReminderTimePicker } from '@/components/settings/ReminderTimePicker';
 import { accountDeletion, readDeletionReasons, useAccountDeletionStatus } from '@/lib/accountDeletion';
 import { accountDeletionCopy } from '@/lib/accountDeletionCopy';
 import { getGreetingPick } from '@/lib/greetingPreference';
+import { applyPracticeAnalyticsConsent, applyProductAnalyticsConsent, revokePracticeAnalyticsConsent, revokeProductAnalyticsConsent } from '@/lib/productAnalyticsRuntime';
 
 type ThemePref = 'light' | 'dark' | 'system';
 export type SettingsSectionKey = 'account' | 'notifications' | 'appearance' | 'privacy' | 'about';
@@ -107,6 +108,7 @@ const INITIAL_SETTINGS: SettingsState = {
   meaning_language: 'en',
   consent_religious_data: false,
   consent_activity_personalization: false,
+  consent_product_analytics: false,
 };
 
 const NOTIFICATION_TOGGLES: { key: keyof SettingsState; label: string; subtitle: string; disabled?: boolean; requiresAccount?: boolean; badge?: string }[] = [
@@ -195,6 +197,7 @@ function toSettingsState(value: Partial<SettingsState> | null | undefined): Sett
     meaning_language: value?.meaning_language ?? INITIAL_SETTINGS.meaning_language,
     consent_religious_data: value?.consent_religious_data ?? INITIAL_SETTINGS.consent_religious_data,
     consent_activity_personalization: value?.consent_activity_personalization ?? INITIAL_SETTINGS.consent_activity_personalization,
+    consent_product_analytics: value?.consent_product_analytics ?? INITIAL_SETTINGS.consent_product_analytics,
   };
 }
 
@@ -359,6 +362,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   const [settings, setSettings] = useState<SettingsState>(INITIAL_SETTINGS);
   const [familyRemembranceSchemaReady, setFamilyRemembranceSchemaReady] = useState(false);
   const [brahmaMuhurtaSchemaReady, setBrahmaMuhurtaSchemaReady] = useState(false);
+  const [productAnalyticsSchemaReady, setProductAnalyticsSchemaReady] = useState(false);
   const [themePref, setThemePref] = useState<ThemePref>('system');
   const [isGuest, setIsGuest] = useState(false);
   const [pendingWrite, setPendingWrite] = useState<PendingSettingsWrite | null>(null);
@@ -416,6 +420,13 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
           pendingOperations: [],
         });
         recordMutationRetryOutcome(identity, 'settings', 'success', write.attempts);
+        const persistedSettings = json?.persisted ?? write.fields;
+        if ('consent_product_analytics' in persistedSettings) {
+          await applyProductAnalyticsConsent(identity.userId, persistedSettings.consent_product_analytics === true);
+        }
+        if ('consent_religious_data' in persistedSettings) {
+          await applyPracticeAnalyticsConsent(identity.userId, persistedSettings.consent_religious_data === true);
+        }
         return;
       }
 
@@ -526,6 +537,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
 
     setFamilyRemembranceSchemaReady(false);
     setBrahmaMuhurtaSchemaReady(false);
+    setProductAnalyticsSchemaReady(false);
     const profileSettingsPromise = (async () => {
       const baseColumns = 'tradition, japa_reminder_enabled, japa_reminder_time, quiz_reminder_enabled, quiz_reminder_time, wants_festival_reminders, wants_vrat_reminders, wants_tithi_reminders, observance_reminder_lead_days, observance_reminder_time, wants_shloka_reminders, wants_nitya_reminders, wants_sankalpa_midpoint_reminders, wants_community_notifications, wants_family_notifications, app_language, transliteration_language, meaning_language, consent_religious_data, consent_activity_personalization';
       const familyColumns = `${baseColumns}, wants_family_remembrance_reminders, family_remembrance_time`;
@@ -535,16 +547,24 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       // The Native bundle may be installed before an additive DB migration.
       // Keep all existing settings readable and keep each newer control
       // disabled until its server column exists.
-      const current = await read(`${familyColumns}, wants_brahma_muhurta_reminders`);
-      if (!current.error) return { ...current, familyRemembranceSchemaReady: true, brahmaMuhurtaSchemaReady: true };
+      const current = await read(`${familyColumns}, wants_brahma_muhurta_reminders, consent_product_analytics`);
+      if (!current.error) return { ...current, familyRemembranceSchemaReady: true, brahmaMuhurtaSchemaReady: true, productAnalyticsSchemaReady: true };
       if (!isMissingColumn(current.error)) return { ...current, familyRemembranceSchemaReady: false, brahmaMuhurtaSchemaReady: false };
 
-      const withFamily = await read(familyColumns);
-      if (!withFamily.error) return { ...withFamily, familyRemembranceSchemaReady: true, brahmaMuhurtaSchemaReady: false };
-      if (!isMissingColumn(withFamily.error)) return { ...withFamily, familyRemembranceSchemaReady: false, brahmaMuhurtaSchemaReady: false };
+      const familyAndAnalytics = await read(`${familyColumns}, consent_product_analytics`);
+      if (!familyAndAnalytics.error) return { ...familyAndAnalytics, familyRemembranceSchemaReady: true, brahmaMuhurtaSchemaReady: false, productAnalyticsSchemaReady: true };
+      if (!isMissingColumn(familyAndAnalytics.error)) return { ...familyAndAnalytics, familyRemembranceSchemaReady: false, brahmaMuhurtaSchemaReady: false, productAnalyticsSchemaReady: false };
+
+      const familyWithoutNewFields = await read(familyColumns);
+      if (!familyWithoutNewFields.error) return { ...familyWithoutNewFields, familyRemembranceSchemaReady: true, brahmaMuhurtaSchemaReady: false, productAnalyticsSchemaReady: false };
+      if (!isMissingColumn(familyWithoutNewFields.error)) return { ...familyWithoutNewFields, familyRemembranceSchemaReady: false, brahmaMuhurtaSchemaReady: false, productAnalyticsSchemaReady: false };
+
+      const analyticsOnly = await read(`${baseColumns}, consent_product_analytics`);
+      if (!analyticsOnly.error) return { ...analyticsOnly, familyRemembranceSchemaReady: false, brahmaMuhurtaSchemaReady: false, productAnalyticsSchemaReady: true };
+      if (!isMissingColumn(analyticsOnly.error)) return { ...analyticsOnly, familyRemembranceSchemaReady: false, brahmaMuhurtaSchemaReady: false, productAnalyticsSchemaReady: false };
 
       const legacy = await read(baseColumns);
-      return { ...legacy, familyRemembranceSchemaReady: false, brahmaMuhurtaSchemaReady: false };
+      return { ...legacy, familyRemembranceSchemaReady: false, brahmaMuhurtaSchemaReady: false, productAnalyticsSchemaReady: false };
     })();
 
     const [profileRes, cached, localTheme] = await Promise.all([
@@ -558,6 +578,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
 
     setFamilyRemembranceSchemaReady(profileRes.familyRemembranceSchemaReady);
     setBrahmaMuhurtaSchemaReady(profileRes.brahmaMuhurtaSchemaReady);
+    setProductAnalyticsSchemaReady(profileRes.productAnalyticsSchemaReady);
     const profileRow = (profileRes.data ?? null) as (Partial<SettingsState> & { tradition?: string | null }) | null;
     setProfileTradition(profileRow?.tradition || 'hindu');
     const remote = toSettingsState(profileRow ?? INITIAL_SETTINGS);
@@ -565,6 +586,12 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     const merged = mergeServerWithPending(remote, pending);
 
     setSettings(merged);
+      if (appIdentity.kind === 'authenticated') {
+        // Consent is authoritative only when returned by the server. Pending
+        // optimistic settings must never enable analytics collection.
+        await applyProductAnalyticsConsent(appIdentity.userId, remote.consent_product_analytics === true);
+        await applyPracticeAnalyticsConsent(appIdentity.userId, remote.consent_religious_data === true);
+      }
     setPendingWrite(pending[0] ?? null);
     await writeSettingsCache({
       schemaVersion: 2,
@@ -697,6 +724,13 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       }
     });
     if (Object.keys(changedFields).length === 0) return;
+
+    if (changedFields.consent_product_analytics === false) {
+      void revokeProductAnalyticsConsent(identity.userId);
+    }
+    if (changedFields.consent_religious_data === false) {
+      void revokePracticeAnalyticsConsent(identity.userId);
+    }
 
     setSettings(nextState);
     clearRetryTimer();
@@ -1427,7 +1461,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
             {section === 'privacy' ? <SettingsSection label="Privacy & Data" theme={theme}>
               <ToggleRow
                 label="Tradition-aware personalization"
-                subtitle="Uses your spiritual preference data to tailor recommendations."
+                subtitle="Uses your spiritual preference data to tailor recommendations. If product usage sharing is enabled, it also permits a broad practice-completed event for measurement."
                 value={settings.consent_religious_data}
                 onChange={(value) => { void persistSettings({ ...settings, consent_religious_data: value }); }}
                 theme={theme}
@@ -1441,6 +1475,17 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                 value={settings.consent_activity_personalization}
                 disabled={isGuest}
                 onChange={(value) => { void persistSettings({ ...settings, consent_activity_personalization: value }); }}
+                theme={theme}
+              />
+              <View style={{ height: 1, backgroundColor: theme.borderSoft }} />
+              <ToggleRow
+                label="Share product usage data"
+                subtitle={productAnalyticsSchemaReady
+                  ? 'Optional, account-linked daily events (such as app opened or practice completed) are kept for up to 90 days. Practice events require “Tradition-aware personalization” too. Admin reports show daily totals only for groups of 20 or more accounts. We never send screen names, spiritual content, mood, location, or profile details. Turn this off any time to stop collection and delete saved events.'
+                  : 'Available after the app and service are updated.'}
+                value={settings.consent_product_analytics === true}
+                disabled={isGuest || !productAnalyticsSchemaReady}
+                onChange={(value) => { void persistSettings({ ...settings, consent_product_analytics: value }); }}
                 theme={theme}
               />
               {!isGuest ? (
