@@ -1,6 +1,6 @@
 # Native product measurement plan
 
-**Status:** implemented in code, default-off, awaiting migration deployment and privacy review before enabling any user cohort.
+**Status:** implemented in code, default-off; database migration is applied in production. Backend and Native commits still need deployment/release, and privacy review is required before enabling a user cohort.
 **Scope:** Native mobile product reliability and feature discovery. Web/PWA product development is out of scope.
 
 ## What this measurement answers
