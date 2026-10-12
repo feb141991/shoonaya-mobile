@@ -51,3 +51,12 @@ test('Native Rashiphal only renders and shares the neutral Native contract, neve
   assert.doesNotMatch(screen, /Lucky Color|Lucky Number|Suggested Window|Mantra Anchor|Work Guidance/);
   assert.match(screen, /Transit reflection: \$\{data\.panditAiOracle\}/);
 });
+
+test('Native Rashiphal supports Hindi with toggle and defaults as per profile language', () => {
+  assert.match(screen, /RASHIPHALA_I18N/);
+  assert.match(screen, /दैनिक राशिफल/);
+  assert.match(screen, /चन्द्र राशि/);
+  assert.match(screen, /toggleLanguage/);
+  assert.match(screen, /profile\?\.app_language \|\| profile\?\.meaning_language/);
+});
+

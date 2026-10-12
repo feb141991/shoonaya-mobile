@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Share,
   ScrollView,
+  StyleSheet,
   Text,
   useColorScheme,
   View,
@@ -15,9 +16,9 @@ import { Screen } from '@/components/ui/Screen';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
+import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, SPACING, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
-import { RASHI_LIST } from '@/lib/jyotish';
+import { RASHI_LIST, RASHI_MAP } from '@/lib/jyotish';
 import { useAppIdentity } from '@/lib/appIdentity';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { formatRashiphalaSpiritualDate } from '@/lib/rashiphalaDate';
@@ -61,6 +62,48 @@ function normalizeRashiKey(value: string | null | undefined): string | null {
   return match?.key ?? null;
 }
 
+// Complete Hindi UI labels dictionary for authentic Hindi Rashiphal experience
+const RASHIPHALA_I18N = {
+  en: {
+    screenTitle: 'Your Rashiphala',
+    shareLabel: 'Share Rashiphala',
+    selectorTitle: (hasSelected: boolean) => (hasSelected ? 'Chandra Rashi' : 'Choose your Chandra Rashi'),
+    loaderTitle: 'Reading Planetary Transits',
+    loaderSubtitle: 'Aligning with your celestial signs and cosmic movements...',
+    promptTitle: 'Select your Chandra Rashi',
+    promptBody: 'Rashiphala is organized by Moon sign. Choose the sign you follow to see today’s general transit reflection.',
+    errorTitle: 'Rashiphala could not load',
+    retryBtn: 'Try again',
+    rulingGraha: 'Ruling Graha',
+    transitSummary: 'Transit Summary',
+    transitReflections: 'Selected Transit Reflections',
+    currentChapter: 'Your Current Chapter',
+    practiceInTradition: 'Practice in Your Tradition',
+    dhyanaSupport: 'Dhyana Support',
+    sharedFrom: 'Shared from Shoonaya',
+    today: 'Today',
+  },
+  hi: {
+    screenTitle: 'दैनिक राशिफल',
+    shareLabel: 'राशिफल साझा करें',
+    selectorTitle: (hasSelected: boolean) => (hasSelected ? 'चन्द्र राशि' : 'अपनी चन्द्र राशि चुनें'),
+    loaderTitle: 'ग्रह गोचर अध्ययन',
+    loaderSubtitle: 'आपके राशि चक्र एवं दिव्य ग्रह गतियों का संरेखन...',
+    promptTitle: 'अपनी चन्द्र राशि चुनें',
+    promptBody: 'राशिफल चन्द्र राशि पर आधारित है। आज का सामान्य गोचर फल देखने हेतु अपनी राशि चुनें।',
+    errorTitle: 'राशिफल लोड नहीं हो सका',
+    retryBtn: 'पुनः प्रयास करें',
+    rulingGraha: 'राशि स्वामी',
+    transitSummary: 'गोचर सारांश',
+    transitReflections: 'प्रमुख ग्रह गोचर प्रभाव',
+    currentChapter: 'वर्तमान दशा अध्याय',
+    practiceInTradition: 'परम्परानुसार साधना',
+    dhyanaSupport: 'ध्यान एवं श्लोक',
+    sharedFrom: 'शून्या से साझा किया गया',
+    today: 'आज',
+  },
+};
+
 export default function RashiphalaScreen() {
   const handleBack = useFallbackBackHandler('/(tabs)', true);
   const scheme = useColorScheme();
@@ -68,7 +111,19 @@ export default function RashiphalaScreen() {
 
   const theme = useMemo(() => themeColor(isDark), [isDark]);
   const appIdentity = useAppIdentity();
-  const { language } = useLanguage();
+  const { language: appLanguage } = useLanguage();
+
+  // Screen-level language defaults to user's profile/app language ('hi' if Hindi, else 'en')
+  const defaultLang = appLanguage === 'hi' ? 'hi' : 'en';
+  const [activeLang, setActiveLang] = useState<'en' | 'hi'>(defaultLang);
+
+  // Sync default if user's appLanguage switches in settings/profile
+  useEffect(() => {
+    setActiveLang(appLanguage === 'hi' ? 'hi' : 'en');
+  }, [appLanguage]);
+
+  const t = RASHIPHALA_I18N[activeLang];
+
   const identityKey = appIdentity.kind === 'authenticated' ? `user:${appIdentity.userId}` : appIdentity.kind;
   const authenticatedUserId = appIdentity.kind === 'authenticated' ? appIdentity.userId : null;
 
@@ -78,6 +133,7 @@ export default function RashiphalaScreen() {
     setErrorMessage(null);
     setSelection({ identityKey, rashi });
   }, [identityKey]);
+
   const [timezone, setTimezone] = useState<string>(() => {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata';
   });
@@ -97,20 +153,24 @@ export default function RashiphalaScreen() {
   const [reloadToken, setReloadToken] = useState(0);
 
   const dateLabel = useMemo(() => {
-    return data?.spiritualDate ? formatRashiphalaSpiritualDate(data.spiritualDate, language) : 'Today';
-  }, [data?.spiritualDate, language]);
+    return data?.spiritualDate ? formatRashiphalaSpiritualDate(data.spiritualDate, activeLang) : t.today;
+  }, [data?.spiritualDate, activeLang, t.today]);
 
   const shareReading = useCallback(async () => {
     if (!data) return;
+    const rashiDisplay = activeLang === 'hi'
+      ? `${RASHI_MAP[data.rashi.toLowerCase()]?.sa ?? data.rashiSanskrit} (${data.rashiSanskrit})`
+      : `${data.rashiSanskrit} (${data.rashi})`;
+
     const text =
-      `Daily Rashiphala for ${data.rashiSanskrit} (${data.rashi}) — ${dateLabel}\n\n` +
+      `${t.screenTitle}: ${rashiDisplay} — ${dateLabel}\n\n` +
       `Transit reflection: ${data.panditAiOracle}\n\n` +
       `${data.accuracyNote}\n\n` +
-      'Shared from Shoonaya';
-    await Share.share({ title: 'Daily Rashiphala', message: text });
-  }, [data, dateLabel]);
+      t.sharedFrom;
+    await Share.share({ title: t.screenTitle, message: text });
+  }, [data, dateLabel, activeLang, t]);
 
-  // Load initial context (rashi, timezone)
+  // Load initial context (rashi, timezone, profile language preference)
   useEffect(() => {
     let active = true;
     if (appIdentity.kind === 'loading') {
@@ -133,22 +193,34 @@ export default function RashiphalaScreen() {
         if (authenticatedUserId) {
           const { data: profile, error } = await supabase
             .from('profiles')
-            .select('rashi, timezone')
+            .select('rashi, timezone, app_language, meaning_language')
             .eq('id', authenticatedUserId)
             .single();
 
           if (error) {
-            contextMessage = 'Your saved Rashi could not be loaded. Choose one below to continue.';
+            contextMessage = activeLang === 'hi'
+              ? 'आपकी सहेजी गई राशि लोड नहीं हो सकी। नीचे एक राशि चुनें।'
+              : 'Your saved Rashi could not be loaded. Choose one below to continue.';
           } else {
             profileRashi = normalizeRashiKey(profile?.rashi);
             profileTimezone = profile?.timezone ?? null;
             if (!profileRashi) {
-              contextMessage = 'No Chandra Rashi is saved to your profile. Choose one below to view the daily reflection.';
+              contextMessage = activeLang === 'hi'
+                ? 'आपकी प्रोफ़ाइल में चन्द्र राशि नहीं मिली। दैनिक गोचर फल देखने हेतु नीचे चुनें।'
+                : 'No Chandra Rashi is saved to your profile. Choose one below to view the daily reflection.';
+            }
+
+            // Respect user's profile language preference
+            const preferredLang = (profile?.app_language || profile?.meaning_language || appLanguage) === 'hi' ? 'hi' : 'en';
+            if (active) {
+              setActiveLang(preferredLang);
             }
           }
         }
       } catch {
-        contextMessage = 'Your saved Rashi could not be loaded. Choose one below to continue.';
+        contextMessage = activeLang === 'hi'
+          ? 'आपकी सहेजी गई राशि लोड नहीं हो सकी। नीचे एक राशि चुनें।'
+          : 'Your saved Rashi could not be loaded. Choose one below to continue.';
       } finally {
         if (active) {
           if (profileTimezone) setTimezone(profileTimezone);
@@ -161,7 +233,7 @@ export default function RashiphalaScreen() {
     }
     void loadContext();
     return () => { active = false; };
-  }, [appIdentity.kind, authenticatedUserId, identityKey]);
+  }, [appIdentity.kind, authenticatedUserId, identityKey, appLanguage]);
 
   // A reading belongs to both the active account and selected sign. Masking
   // it during render prevents Dasha context from one account reaching another
@@ -202,41 +274,76 @@ export default function RashiphalaScreen() {
     return () => { active = false; };
   }, [contextReady, identityKey, selectedRashi, timezone, reloadToken]);
 
+  const toggleLanguage = () => {
+    setActiveLang((curr) => (curr === 'hi' ? 'en' : 'hi'));
+  };
+
   return (
     <Screen
       header={{
-        title: 'Your Rashiphala',
+        title: t.screenTitle,
         onBack: handleBack,
-        rightElement: data ? (
-          <PressableSurface
-            onPress={shareReading}
-            haptic="selection"
-            accessibilityLabel="Share Rashiphala"
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 14,
-              borderWidth: 1,
-              borderColor: theme.premiumBorder,
-              backgroundColor: theme.card,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Feather name="share-2" size={16} color={theme.brandStrong} />
-          </PressableSurface>
-        ) : null,
+        rightElement: (
+          <View style={styles.headerActions}>
+            {/* Language Toggle Button (44px touch target) */}
+            <PressableSurface
+              onPress={toggleLanguage}
+              haptic="selection"
+              accessibilityLabel={`Language toggle: currently ${activeLang === 'hi' ? 'Hindi' : 'English'}`}
+              style={[
+                styles.langBtn,
+                {
+                  borderColor: theme.premiumBorder,
+                  backgroundColor: activeLang === 'hi' ? (isDark ? 'rgba(217, 119, 6, 0.2)' : 'rgba(254, 226, 226, 0.95)') : theme.card,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.langBtnText,
+                  {
+                    color: activeLang === 'hi' ? (isDark ? '#F59E0B' : '#991B1B') : theme.dim,
+                    fontWeight: activeLang === 'hi' ? '700' : '600',
+                  },
+                ]}
+              >
+                {activeLang === 'hi' ? 'हिन्दी' : 'EN'}
+              </Text>
+            </PressableSurface>
+
+            {/* Share button */}
+            {data ? (
+              <PressableSurface
+                onPress={shareReading}
+                haptic="selection"
+                accessibilityLabel={t.shareLabel}
+                style={[
+                  styles.iconBtn,
+                  {
+                    borderColor: theme.premiumBorder,
+                    backgroundColor: theme.card,
+                  },
+                ]}
+              >
+                <Feather name="share-2" size={16} color={theme.brandStrong} />
+              </PressableSurface>
+            ) : null}
+          </View>
+        ),
       }}
       style={{ backgroundColor: theme.bg, paddingHorizontal: 0 }}
     >
       <View style={{ paddingTop: 14 }}>
         {/* Horizontal Rashi Selector */}
         <Text style={{ paddingHorizontal: 16, paddingBottom: 10, color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
-          {selectedRashi ? 'Chandra Rashi' : 'Choose your Chandra Rashi'}
+          {t.selectorTitle(Boolean(selectedRashi))}
         </Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingHorizontal: 16, paddingBottom: 14 }}>
           {RASHI_LIST.map((rashi) => {
             const isSelected = selectedRashi === rashi.key;
+            const primaryName = activeLang === 'hi' ? (RASHI_MAP[rashi.key]?.sa ?? rashi.sa) : rashi.sa;
+            const secondaryName = activeLang === 'hi' ? rashi.en : rashi.en;
+
             return (
               <PressableSurface
                 key={rashi.key}
@@ -261,8 +368,12 @@ export default function RashiphalaScreen() {
                 }}
               >
                 <Text style={{ fontSize: 24, lineHeight: 28, textAlign: 'center' }}>{rashi.symbol}</Text>
-                <Text numberOfLines={1} style={{ marginTop: 4, color: theme.brandStrong, fontFamily: FONTS.sansSemiBold, fontSize: 12, lineHeight: 16, textAlign: 'center' }}>{rashi.sa}</Text>
-                <Text numberOfLines={1} style={{ marginTop: 2, color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 9, lineHeight: 12, textTransform: 'uppercase', letterSpacing: 0.5, textAlign: 'center' }}>{rashi.en}</Text>
+                <Text numberOfLines={1} style={{ marginTop: 4, color: theme.brandStrong, fontFamily: FONTS.sansSemiBold, fontSize: 12, lineHeight: 16, textAlign: 'center' }}>
+                  {primaryName}
+                </Text>
+                <Text numberOfLines={1} style={{ marginTop: 2, color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 9, lineHeight: 12, textTransform: 'uppercase', letterSpacing: 0.5, textAlign: 'center' }}>
+                  {secondaryName}
+                </Text>
               </PressableSurface>
             );
           })}
@@ -272,16 +383,16 @@ export default function RashiphalaScreen() {
       {!contextReady ? (
         <SacredLoader
           icon="rashiphala"
-          title="Reading Planetary Transits"
-          subtitle="Aligning with your celestial signs and cosmic movements..."
+          title={t.loaderTitle}
+          subtitle={t.loaderSubtitle}
         />
       ) : !selectedRashi ? (
         <View style={{ paddingHorizontal: 16, paddingTop: 24 }}>
           <Card tone="auto" style={{ alignItems: 'center', gap: 12 }}>
             <Text style={{ fontSize: 30 }}>🌙</Text>
-            <Text style={{ ...TYPE.metric, color: theme.text, textAlign: 'center' }}>Select your Chandra Rashi</Text>
+            <Text style={{ ...TYPE.metric, color: theme.text, textAlign: 'center' }}>{t.promptTitle}</Text>
             <Text style={{ ...TYPE.body, color: theme.dim, textAlign: 'center' }}>
-              Rashiphala is organized by Moon sign. Choose the sign you follow to see today’s general transit reflection.
+              {t.promptBody}
             </Text>
             {profileContextMessage ? (
               <Text style={{ ...TYPE.body, color: theme.dim, textAlign: 'center' }}>{profileContextMessage}</Text>
@@ -291,18 +402,18 @@ export default function RashiphalaScreen() {
       ) : loading ? (
         <SacredLoader
           icon="rashiphala"
-          title="Reading Planetary Transits"
-          subtitle="Aligning with your celestial signs and cosmic movements..."
+          title={t.loaderTitle}
+          subtitle={t.loaderSubtitle}
         />
       ) : !data ? (
         <View style={{ paddingHorizontal: 16, paddingTop: 80 }}>
           <Card tone="auto" style={{ alignItems: 'center', gap: 14 }}>
             <Text style={{ fontSize: 30 }}>✨</Text>
             <Text style={{ ...TYPE.metric, color: theme.text, textAlign: 'center' }}>
-              Rashiphala could not load
+              {t.errorTitle}
             </Text>
             <Text style={{ ...TYPE.body, color: theme.dim, textAlign: 'center' }}>
-              {errorMessage ?? 'Please try again in a moment.'}
+              {errorMessage ?? (activeLang === 'hi' ? 'कृपया कुछ समय बाद पुनः प्रयास करें।' : 'Please try again in a moment.')}
             </Text>
             <PressableSurface
               onPress={() => {
@@ -317,7 +428,7 @@ export default function RashiphalaScreen() {
                 justifyContent: 'center',
               }}
             >
-              <Text style={{ color: COLORS.onMediaWhite, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>Try again</Text>
+              <Text style={{ color: COLORS.onMediaWhite, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>{t.retryBtn}</Text>
             </PressableSurface>
           </Card>
         </View>
@@ -356,15 +467,15 @@ export default function RashiphalaScreen() {
               </View>
               <View style={{ flex: 1, gap: 2 }}>
                 <Text style={{ color: theme.text, ...TYPE.cardHeading, fontSize: 21, lineHeight: 25 }}>
-                  {data.rashiSanskrit} ({data.rashi})
+                  {activeLang === 'hi' ? `${data.rashiSanskrit} (${RASHI_MAP[data.rashi.toLowerCase()]?.sa ?? data.rashiSanskrit})` : `${data.rashiSanskrit} (${data.rashi})`}
                 </Text>
                 <Text style={{ color: theme.dim, fontFamily: FONTS.sansMedium, fontSize: 13 }}>
-                  Ruling Graha: <Text style={{ fontFamily: FONTS.sansSemiBold, color: theme.text }}>{data.lord}</Text>
+                  {t.rulingGraha}: <Text style={{ fontFamily: FONTS.sansSemiBold, color: theme.text }}>{data.lord}</Text>
                 </Text>
               </View>
             </View>
             <View style={{ backgroundColor: theme.brandSoft, padding: 14, borderRadius: 14, borderColor: theme.premiumBorder, borderWidth: 1, gap: 6 }}>
-              <Text style={{ color: theme.brand, ...TYPE.chip, textTransform: 'uppercase', letterSpacing: 1 }}>Transit Summary · {dateLabel}</Text>
+              <Text style={{ color: theme.brand, ...TYPE.chip, textTransform: 'uppercase', letterSpacing: 1 }}>{t.transitSummary} · {dateLabel}</Text>
               <Text style={{ color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 14, lineHeight: 22 }}>{data.panditAiOracle}</Text>
               <View style={{ height: 1, backgroundColor: theme.premiumBorder, marginVertical: 6 }} />
               <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 11, lineHeight: 16 }}>{data.accuracyNote}</Text>
@@ -378,7 +489,7 @@ export default function RashiphalaScreen() {
                 <Feather name="activity" size={18} color={theme.brand} />
               </View>
               <View style={{ flex: 1, gap: 4 }}>
-                <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Selected Transit Reflections</Text>
+                <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>{t.transitReflections}</Text>
                 <Text style={{ color: theme.dim, fontFamily: FONTS.sans, fontSize: 12, lineHeight: 18 }}>{data.gocharSummary}</Text>
                 <Text style={{ color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 13, lineHeight: 18 }}>{data.moonTransit}</Text>
               </View>
@@ -409,7 +520,7 @@ export default function RashiphalaScreen() {
                 <Feather name="clock" size={18} color={theme.brand} />
               </View>
               <View style={{ flex: 1, gap: 4 }}>
-                <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Your Current Chapter</Text>
+                <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>{t.currentChapter}</Text>
                 <Text style={{ color: theme.text, fontFamily: FONTS.sansMedium, fontSize: 14, lineHeight: 22 }}>{data.dashaContext.note}</Text>
               </View>
             </Card>
@@ -460,7 +571,7 @@ export default function RashiphalaScreen() {
                 <View style={{ width: 34, height: 34, borderRadius: 13, backgroundColor: theme.brandSoft, alignItems: 'center', justifyContent: 'center' }}>
                   <Feather name="compass" size={16} color={theme.brand} />
                 </View>
-                <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Practice in Your Tradition</Text>
+                <Text style={{ color: theme.brand, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>{t.practiceInTradition}</Text>
               </View>
               <Text style={{ color: theme.text, fontFamily: FONTS.sansSemiBold, fontSize: 15, lineHeight: 22 }}>{data.practiceFocus}</Text>
               <View style={{ gap: 10 }}>
@@ -474,7 +585,7 @@ export default function RashiphalaScreen() {
 
               {/* Dhyana Support */}
               <View style={{ backgroundColor: theme.glass, borderColor: theme.premiumBorder, borderWidth: 1, borderRadius: 14, padding: 14, gap: 8 }}>
-                <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>Dhyana Support</Text>
+                <Text style={{ color: theme.dim, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>{t.dhyanaSupport}</Text>
                 <Text style={{ color: theme.text, fontFamily: FONTS.serifBold, fontSize: 15, lineHeight: 24, fontStyle: 'italic' }}>{data.shloka}</Text>
                 <Text style={{ color: theme.brand, fontFamily: FONTS.sansMedium, fontSize: 11, lineHeight: 18 }}>{data.shlokaTranslation}</Text>
               </View>
@@ -485,3 +596,32 @@ export default function RashiphalaScreen() {
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.xs,
+  },
+  langBtn: {
+    minHeight: MIN_TOUCH_TARGET,
+    minWidth: 44,
+    paddingHorizontal: 10,
+    borderRadius: RADII.sm,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  langBtnText: {
+    fontFamily: FONTS.sansSemiBold,
+    fontSize: 12,
+  },
+  iconBtn: {
+    width: MIN_TOUCH_TARGET,
+    height: MIN_TOUCH_TARGET,
+    borderRadius: 14,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
