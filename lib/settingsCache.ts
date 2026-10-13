@@ -56,6 +56,8 @@ export type SettingsFields = {
   meaning_language: AppLanguage;
   consent_religious_data: boolean;
   consent_activity_personalization: boolean;
+  // Optional for schema-version-2 envelopes written before product analytics consent existed.
+  consent_product_analytics?: boolean;
 };
 
 /**

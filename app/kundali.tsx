@@ -12,6 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
+import * as Crypto from 'expo-crypto';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
@@ -99,6 +100,7 @@ function KundaliScreenForIdentity({ appIdentity }: { appIdentity: AppIdentity })
   });
   const [geocodeResult, setGeocodeResult] = useState<GeocodeResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const chartSubmissionKeyRef = useRef<{ fingerprint: string; key: string } | null>(null);
 
   const fetchSelfAccount = useCallback(async () => {
     if (appIdentity.kind !== 'authenticated') return;
@@ -205,13 +207,19 @@ function KundaliScreenForIdentity({ appIdentity }: { appIdentity: AppIdentity })
         birth_lng: geocodeResult.lng,
         birth_timezone: geocodeResult.timezone,
       };
+      const fingerprint = JSON.stringify(payload);
+      if (chartSubmissionKeyRef.current?.fingerprint !== fingerprint) {
+        chartSubmissionKeyRef.current = { fingerprint, key: Crypto.randomUUID() };
+      }
+      const idempotencyKey = chartSubmissionKeyRef.current.key;
 
       const response = await apiFetch('/api/jyotish/chart', {
         method: 'POST',
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ ...payload, idempotency_key: idempotencyKey }),
       });
 
       if (response.ok) {
+        chartSubmissionKeyRef.current = null;
         Alert.alert('Chart Generated!', 'Your profile has been saved.');
         setShowForm(false);
         setFormData({

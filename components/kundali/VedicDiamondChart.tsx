@@ -339,7 +339,7 @@ export function VedicDiamondChart({
                   fill={rashiNumberColor}
                   fontSize={lang === 'hi' ? '12' : '10'}
                   fontWeight="700"
-                  fontFamily={lang === 'hi' ? FONTS.devanagariBold : FONTS.sansBold}
+                  fontFamily={lang === 'hi' ? FONTS.devanagariBold : FONTS.sansSemiBold}
                   textAnchor="middle"
                   alignmentBaseline="middle"
                 >

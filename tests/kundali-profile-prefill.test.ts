@@ -38,3 +38,10 @@ test('Kundali self autofill leaves birth time and birthplace for explicit user e
   assert.match(selectSelfBranch, /cityQuery: ''/);
   assert.match(selectSelfBranch, /setGeocodeResult\(null\)/);
 });
+
+test('Kundali retries reuse one key for unchanged chart input and clear it only after success', () => {
+  assert.match(screen, /const chartSubmissionKeyRef = useRef<\{ fingerprint: string; key: string \} \| null>\(null\)/);
+  assert.match(screen, /const fingerprint = JSON\.stringify\(payload\)[\s\S]*?if \(chartSubmissionKeyRef\.current\?\.fingerprint !== fingerprint\)[\s\S]*?Crypto\.randomUUID\(\)/);
+  assert.match(screen, /idempotency_key: idempotencyKey/);
+  assert.match(screen, /if \(response\.ok\) \{\s*chartSubmissionKeyRef\.current = null/);
+});

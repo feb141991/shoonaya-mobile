@@ -81,10 +81,15 @@
     "test": "tsx --test __tests__/*.test.ts tests/*.test.ts",
     "android:clean": "bash scripts/android-clean.sh",
     "check:assets": "tsx scripts/check-asset-formats.ts",
-    "eas:android:apk": "npm run check:assets && eas build --platform android --profile preview",
-    "eas:android:dev": "npm run check:assets && eas build --platform android --profile development",
-    "eas:android:store": "npm run check:assets && eas build --platform android --profile production",
-    "eas:update": "npm run check:assets && eas update"
+    "check:build-metadata": "tsx scripts/check-build-metadata.ts",
+    "prebuild:verify": "npm run check:assets && npm run check:build-metadata && npm run typecheck && npm test",
+    "prebuild:release": "npm run prebuild:verify && node scripts/check-backend-release-readiness.mjs",
+    "eas:android:apk": "npm run prebuild:verify && eas build --platform android --profile preview",
+    "eas:android:dev": "npm run prebuild:verify && eas build --platform android --profile development",
+    "eas:android:store": "npm run prebuild:release && eas build --platform android --profile production",
+    "eas:ios:simulator": "npm run prebuild:verify && eas build --platform ios --profile development-simulator",
+    "eas:ios:store": "npm run prebuild:release && eas build --platform ios --profile production",
+    "eas:update": "npm run prebuild:release && eas update"
   },
   "private": true,
   "expo": {

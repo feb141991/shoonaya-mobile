@@ -98,12 +98,15 @@ async function writeLocationIfChanged(
     return { ok: true, city: geocoded.city };
   }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('profiles')
     .update({ latitude: lat, longitude: lon, city: geocoded.city, country: geocoded.country || null })
-    .eq('id', userId);
+    .eq('id', userId)
+    .select('id, latitude, longitude, city, country')
+    .single();
 
-  if (error) {
+  if (error || !data || data.id !== userId ||
+      data.latitude !== lat || data.longitude !== lon || data.city !== geocoded.city) {
     return { ok: false, reason: 'Could not save your location. Please try again.' };
   }
 
