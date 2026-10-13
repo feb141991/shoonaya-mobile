@@ -48,6 +48,8 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-owl-and-crows': require('@/assets/panchatantra/owl-crows-1.webp'),
   'panchatantra-golden-dropping-bird': require('@/assets/panchatantra/golden-bird-1.webp'),
   'panchatantra-weaver-as-vishnu': require('@/assets/panchatantra/weaver-vishnu-1.webp'),
+  'panchatantra-cat-as-judge': require('@/assets/panchatantra/cat-judge-1.webp'),
+  'panchatantra-donkey-and-jackal': require('@/assets/panchatantra/donkey-jackal-1.webp'),
 };
 
 /**
@@ -278,6 +280,30 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/golden-bird-4.webp'),
     require('@/assets/panchatantra/golden-bird-5.webp'),
     require('@/assets/panchatantra/golden-bird-6.webp'),
+  ],
+  'panchatantra-weaver-as-vishnu': [
+    require('@/assets/panchatantra/weaver-vishnu-1.webp'),
+    require('@/assets/panchatantra/weaver-vishnu-2.webp'),
+    require('@/assets/panchatantra/weaver-vishnu-3.webp'),
+    require('@/assets/panchatantra/weaver-vishnu-4.webp'),
+    require('@/assets/panchatantra/weaver-vishnu-5.webp'),
+    require('@/assets/panchatantra/weaver-vishnu-6.webp'),
+  ],
+  'panchatantra-cat-as-judge': [
+    require('@/assets/panchatantra/cat-judge-1.webp'),
+    require('@/assets/panchatantra/cat-judge-2.webp'),
+    require('@/assets/panchatantra/cat-judge-3.webp'),
+    require('@/assets/panchatantra/cat-judge-4.webp'),
+    require('@/assets/panchatantra/cat-judge-5.webp'),
+    require('@/assets/panchatantra/cat-judge-6.webp'),
+  ],
+  'panchatantra-donkey-and-jackal': [
+    require('@/assets/panchatantra/donkey-jackal-1.webp'),
+    require('@/assets/panchatantra/donkey-jackal-2.webp'),
+    require('@/assets/panchatantra/donkey-jackal-3.webp'),
+    require('@/assets/panchatantra/donkey-jackal-4.webp'),
+    require('@/assets/panchatantra/donkey-jackal-5.webp'),
+    require('@/assets/panchatantra/donkey-jackal-6.webp'),
   ],
 };
 

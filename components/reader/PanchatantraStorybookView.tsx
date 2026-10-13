@@ -1,6 +1,9 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import {
+  AccessibilityInfo,
   Alert,
+  Animated,
+  GestureResponderEvent,
   View,
   Text,
   StyleSheet,
@@ -14,7 +17,8 @@ import { useReaderAppearance } from "@/lib/useReaderAppearance";
 import { readerCopy } from "@/lib/readerCopy";
 import { PagedResumeBanner, usePagedResume } from "@/components/reader/usePagedResume";
 import { useNitiTreasuryItem } from "@/components/reader/useNitiTreasury";
-import { withAlpha } from "@/lib/readerAppearance";
+import { readerControlsPalette, withAlpha } from "@/lib/readerAppearance";
+import { createReaderChromeController, isPageTap } from "@/lib/readerChrome";
 import Feather from "@expo/vector-icons/Feather";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
@@ -127,10 +131,87 @@ export function PanchatantraStorybookView({
   onComplete,
 }: PanchatantraStorybookViewProps) {
   // Reader paper theme (Phase 2, docs/READER_EXPERIENCE_GRAND_PLAN.md).
-  const { isDark, theme } = useReaderAppearance();
+  const { isDark, theme, paper } = useReaderAppearance();
   const insets = useSafeAreaInsets();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const accent = KATHA_VIEW_ACCENT.panchatantra; // warm terracotta #C87850
+  const palette = useMemo(() => readerControlsPalette(paper, accent), [paper, accent]);
+
+  // Controls visibility & auto-hide controller (Full screen after 3.5s)
+  const [controlsVisible, setControlsVisible] = useState(true);
+  const [pinned, setPinned] = useState(false);
+  const [screenReader, setScreenReader] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
+  const controlsProgress = useRef(new Animated.Value(1)).current;
+
+  const chromeRef = useRef<ReturnType<typeof createReaderChromeController> | null>(null);
+  if (!chromeRef.current) {
+    chromeRef.current = createReaderChromeController({
+      onChange: (state) => setControlsVisible(state.visible),
+    });
+  }
+  const chrome = chromeRef.current;
+
+  useEffect(() => {
+    chrome.start();
+    return () => chrome.dispose();
+  }, [chrome]);
+
+  useEffect(() => {
+    let mounted = true;
+    void AccessibilityInfo.isScreenReaderEnabled().then((on) => {
+      if (mounted) {
+        setScreenReader(on);
+        chrome.setScreenReader(on);
+      }
+    }).catch(() => {});
+    void AccessibilityInfo.isReduceMotionEnabled().then((on) => {
+      if (mounted) setReduceMotion(on);
+    }).catch(() => {});
+    const sr = AccessibilityInfo.addEventListener("screenReaderChanged", (on) => {
+      setScreenReader(on);
+      chrome.setScreenReader(on);
+    });
+    const rm = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduceMotion);
+    return () => {
+      mounted = false;
+      sr.remove();
+      rm.remove();
+    };
+  }, [chrome]);
+
+  useEffect(() => {
+    if (isTTSGenerating) chrome.hold("tts-loading");
+    else chrome.release("tts-loading");
+  }, [chrome, isTTSGenerating]);
+
+  useEffect(() => {
+    Animated.timing(controlsProgress, {
+      toValue: controlsVisible ? 1 : 0,
+      duration: reduceMotion ? 120 : 260,
+      useNativeDriver: true,
+    }).start();
+  }, [controlsVisible, controlsProgress, reduceMotion]);
+
+  const togglePin = () => {
+    const next = !pinned;
+    setPinned(next);
+    chrome.setPinned(next);
+  };
+
+  const touchStart = useRef<{ x: number; y: number; t: number } | null>(null);
+  const onScreenTouchStart = (event: GestureResponderEvent) => {
+    touchStart.current = { x: event.nativeEvent.pageX, y: event.nativeEvent.pageY, t: Date.now() };
+  };
+  const onScreenTouchEnd = (event: GestureResponderEvent) => {
+    const start = touchStart.current;
+    touchStart.current = null;
+    if (!start) return;
+    const end = { x: event.nativeEvent.pageX, y: event.nativeEvent.pageY, t: Date.now() };
+    if (isPageTap(start, end)) {
+      chrome.pageTap(false);
+    }
+  };
 
   const scrollRef = useRef<ScrollView>(null);
   const [currentPage, setCurrentPage] = useState(0);
@@ -139,6 +220,7 @@ export function PanchatantraStorybookView({
   const [fontScaleIndex, setFontScaleIndex] = useState(1);
 
   const handleDecreaseFontSize = () => {
+    chrome.interact();
     if (fontScaleIndex > 0) {
       if (Platform.OS !== "web") void Haptics.selectionAsync();
       setFontScaleIndex((prev) => prev - 1);
@@ -146,6 +228,7 @@ export function PanchatantraStorybookView({
   };
 
   const handleIncreaseFontSize = () => {
+    chrome.interact();
     if (fontScaleIndex < STORYBOOK_FONT_SCALES.length - 1) {
       if (Platform.OS !== "web") void Haptics.selectionAsync();
       setFontScaleIndex((prev) => prev + 1);
@@ -226,6 +309,7 @@ export function PanchatantraStorybookView({
   // Navigate to specific page with smooth scroll & haptics
   const goToPage = (nextIndex: number, animated = true) => {
     if (nextIndex < 0 || nextIndex >= totalPages) return;
+    chrome.interact();
     if (Platform.OS !== "web") {
       void Haptics.selectionAsync();
     }
@@ -257,43 +341,61 @@ export function PanchatantraStorybookView({
   const artHeight = Math.round(screenHeight * 0.45);
 
   return (
-    <View style={[styles.screen, { backgroundColor: screenBg }]}>
-      {/* ── 1. Floating Semi-Transparent Top Bar ── */}
-      <View
+    <View
+      style={[styles.screen, { backgroundColor: screenBg }]}
+      onTouchStart={onScreenTouchStart}
+      onTouchEnd={onScreenTouchEnd}
+    >
+      {/* ── 1. Floating Semi-Transparent Top Bar with 3.5s Full-Screen Fade ── */}
+      <Animated.View
         style={[
           styles.topBar,
           {
             paddingTop: Math.max(insets.top + 6, 12),
+            opacity: controlsProgress,
+            transform: [
+              {
+                translateY: controlsProgress.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [-80, 0],
+                }),
+              },
+            ],
           },
         ]}
+        pointerEvents={controlsVisible ? "auto" : "none"}
       >
         <LinearGradient
           colors={[
-            "rgba(0,0,0,0.8)",
-            "rgba(0,0,0,0.45)",
+            "rgba(0,0,0,0.85)",
+            "rgba(0,0,0,0.5)",
             "transparent",
           ]}
           style={StyleSheet.absoluteFill}
           pointerEvents="none"
         />
 
-        {/* Left: Back Button */}
+        {/* Left: Back Button - Styled like Dharm Veer ReaderTopBar */}
         <PressableSurface
           haptic="selection"
-          onPress={onBack}
-          style={styles.circleBtnWrapper}
+          onPress={() => {
+            chrome.interact();
+            onBack?.();
+          }}
+          style={styles.dharmBtnSmall}
+          accessibilityRole="button"
           accessibilityLabel="Back to tales"
         >
           <View
             style={[
-              styles.circleBtn,
+              styles.dharmBtnSmallInner,
               {
-                backgroundColor: "rgba(0,0,0,0.4)",
-                borderColor: "rgba(255,255,255,0.25)",
+                backgroundColor: palette.well,
+                borderColor: palette.border,
               },
             ]}
           >
-            <Feather name="chevron-left" size={20} color="#FFFFFF" />
+            <Feather name="chevron-left" size={19} color={palette.accent} />
           </View>
         </PressableSurface>
 
@@ -315,31 +417,34 @@ export function PanchatantraStorybookView({
           </View>
         </View>
 
-        {/* Right: Language Pill [EN | HI] + Narrator Audio Button */}
+        {/* Right: Language Track + Audio Button + Pin/Fullscreen Button */}
         <View style={styles.topRightControls}>
           {hasHindi || hasPunjabi ? (
             <View
               style={[
                 styles.langTrack,
                 {
-                  backgroundColor: "rgba(0,0,0,0.4)",
-                  borderColor: "rgba(255,255,255,0.25)",
+                  backgroundColor: palette.well,
+                  borderColor: palette.border,
                 },
               ]}
             >
               <PressableSurface
                 haptic="selection"
-                onPress={() => onLanguageChange("en")}
+                onPress={() => {
+                  chrome.interact();
+                  onLanguageChange("en");
+                }}
                 style={[
                   styles.langSegment,
-                  activeLanguage === "en" && [styles.langSegmentActive, { backgroundColor: accent }],
+                  activeLanguage === "en" && [styles.langSegmentActive, { backgroundColor: palette.accent }],
                 ]}
               >
                 <Text
                   style={[
                     styles.langSegmentText,
                     {
-                      color: "#FFFFFF",
+                      color: activeLanguage === "en" ? palette.onAccent : palette.dim,
                       fontFamily: FONTS.sansSemiBold,
                     },
                   ]}
@@ -351,25 +456,51 @@ export function PanchatantraStorybookView({
               {hasHindi ? (
                 <PressableSurface
                   haptic="selection"
-                  onPress={() => onLanguageChange("hi")}
+                  onPress={() => {
+                    chrome.interact();
+                    onLanguageChange("hi");
+                  }}
                   style={[
                     styles.langSegment,
-                    activeLanguage === "hi" && [styles.langSegmentActive, { backgroundColor: accent }],
+                    activeLanguage === "hi" && [styles.langSegmentActive, { backgroundColor: palette.accent }],
                   ]}
                 >
-                  <Text style={[styles.langSegmentText, { color: "#FFFFFF", fontFamily: FONTS.devanagariBold }]}>हिं</Text>
+                  <Text
+                    style={[
+                      styles.langSegmentText,
+                      {
+                        color: activeLanguage === "hi" ? palette.onAccent : palette.dim,
+                        fontFamily: FONTS.devanagariBold,
+                      },
+                    ]}
+                  >
+                    हिं
+                  </Text>
                 </PressableSurface>
               ) : null}
               {hasPunjabi ? (
                 <PressableSurface
                   haptic="selection"
-                  onPress={() => onLanguageChange("pa")}
+                  onPress={() => {
+                    chrome.interact();
+                    onLanguageChange("pa");
+                  }}
                   style={[
                     styles.langSegment,
-                    activeLanguage === "pa" && [styles.langSegmentActive, { backgroundColor: accent }],
+                    activeLanguage === "pa" && [styles.langSegmentActive, { backgroundColor: palette.accent }],
                   ]}
                 >
-                  <Text style={[styles.langSegmentText, { color: "#FFFFFF", fontFamily: FONTS.sansSemiBold }]}>ਪੰ</Text>
+                  <Text
+                    style={[
+                      styles.langSegmentText,
+                      {
+                        color: activeLanguage === "pa" ? palette.onAccent : palette.dim,
+                        fontFamily: FONTS.sansSemiBold,
+                      },
+                    ]}
+                  >
+                    ਪੰ
+                  </Text>
                 </PressableSurface>
               ) : null}
             </View>
@@ -379,46 +510,68 @@ export function PanchatantraStorybookView({
             <PressableSurface
               haptic="selection"
               onPress={() => {
+                chrome.interact();
                 const isFinal = safePage === totalPages - 1;
                 const currentSceneText = isFinal
-                  ? `${localizedLabel(activeLanguage, 'Moral of the story:', 'कथा का बोध:', 'ਕਥਾ ਦੀ ਸਿੱਖਿਆ:')} ${moralText}. ${bodyParagraphs[safePage] ?? ''}`
+                  ? `${localizedLabel(activeLanguage, 'Moral of the story:', 'कथा का बोध:', 'ਕਥਾ की ਸਿੱਖਿਆ:')} ${moralText}. ${bodyParagraphs[safePage] ?? ''}`
                   : safePage === 0
                   ? `${title}. ${bodyParagraphs[0] ?? ''}`
                   : (bodyParagraphs[safePage] ?? '');
                 onTTS(currentSceneText);
               }}
               disabled={isTTSGenerating}
-              style={styles.circleBtnWrapper}
+              style={styles.dharmBtnSmall}
+              accessibilityRole="button"
               accessibilityLabel={isSpeaking ? "Pause story narration" : "Listen to story"}
             >
               <View
                 style={[
-                  styles.circleBtn,
-                  isSpeaking
-                    ? {
-                        backgroundColor: accent,
-                        borderColor: accent,
-                        shadowColor: accent,
-                        shadowOpacity: 0.45,
-                        shadowRadius: 8,
-                        elevation: 4,
-                      }
-                    : {
-                        backgroundColor: "rgba(0,0,0,0.4)",
-                        borderColor: "rgba(255,255,255,0.25)",
-                      },
+                  styles.dharmBtnSmallInner,
+                  {
+                    backgroundColor: isSpeaking ? palette.accent : palette.well,
+                    borderColor: isSpeaking ? palette.accent : palette.border,
+                  },
                 ]}
               >
                 <Feather
                   name={isSpeaking ? "square" : "volume-2"}
                   size={16}
-                  color={isSpeaking ? "#FFFFFF" : COLORS.brandGold}
+                  color={isSpeaking ? palette.onAccent : palette.accent}
                 />
               </View>
             </PressableSurface>
           ) : null}
+
+          {/* Dharm Veer Pin / Fullscreen Toggle Button */}
+          <PressableSurface
+            haptic="selection"
+            onPress={() => {
+              chrome.interact();
+              togglePin();
+            }}
+            accessibilityRole="switch"
+            accessibilityLabel={pinned ? "Unpin controls" : "Pin controls"}
+            accessibilityState={{ checked: pinned }}
+            style={styles.dharmBtnSmall}
+          >
+            <View
+              style={[
+                styles.dharmBtnSmallInner,
+                {
+                  backgroundColor: pinned ? palette.accent : palette.well,
+                  borderColor: palette.border,
+                },
+              ]}
+            >
+              <Feather
+                name={pinned ? "minimize-2" : "maximize-2"}
+                size={16}
+                color={pinned ? palette.onAccent : palette.accent}
+              />
+            </View>
+          </PressableSurface>
         </View>
-      </View>
+      </Animated.View>
 
       {/* ── 2. Full-Screen Horizontal Paging Carousel (Edge-to-Edge) ── */}
       <ScrollView
@@ -429,6 +582,7 @@ export function PanchatantraStorybookView({
         bounces={false}
         scrollEventThrottle={16}
         onMomentumScrollEnd={(event) => {
+          chrome.interact();
           const newIndex = Math.round(event.nativeEvent.contentOffset.x / screenWidth);
           if (newIndex !== safePage && newIndex >= 0 && newIndex < totalPages) {
             setCurrentPage(newIndex);
@@ -835,100 +989,143 @@ export function PanchatantraStorybookView({
         })}
       </ScrollView>
 
-      {/* ── 3. Floating Bottom Navigation Bar (Prev / Next & Scene Beads) ── */}
-      <View
+      {/* ── 3. Floating Bottom Navigation Bar (Prev / Next & Scene Beads) with 3.5s Full-Screen Fade ── */}
+      <Animated.View
         style={[
           styles.bottomBar,
           {
             paddingBottom: Math.max(insets.bottom + 8, 22),
+            opacity: controlsProgress,
+            transform: [
+              {
+                translateY: controlsProgress.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [80, 0],
+                }),
+              },
+            ],
           },
         ]}
+        pointerEvents={controlsVisible ? "auto" : "none"}
       >
-        <LinearGradient
-          colors={[
-            "transparent",
-            withAlpha(screenBg, 0.88),
-            withAlpha(screenBg, 0.98),
+        <View
+          style={[
+            styles.capsuleBar,
+            {
+              backgroundColor: palette.capsule,
+              borderColor: palette.glassBorder,
+              boxShadow: palette.floatingShadow,
+            },
           ]}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
-
-        {/* Left: Prev Scene */}
-        <PressableSurface
-          haptic="selection"
-          onPress={() => goToPage(safePage - 1)}
-          disabled={safePage === 0}
-          style={{ opacity: safePage === 0 ? 0.2 : 1 }}
-          accessibilityLabel="Previous scene"
         >
-          <View
-            style={[
-              styles.navMiniBtn,
-              {
-                backgroundColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)",
-                borderColor: isDark ? "rgba(197,160,89,0.3)" : "rgba(200,160,110,0.3)",
-              },
-            ]}
+          {/* Left: Prev Scene Button */}
+          <PressableSurface
+            haptic="selection"
+            onPress={() => {
+              chrome.interact();
+              goToPage(safePage - 1);
+            }}
+            disabled={safePage === 0}
+            style={{ opacity: safePage === 0 ? 0.3 : 1 }}
+            accessibilityRole="button"
+            accessibilityLabel="Previous scene"
           >
-            <Feather name="chevron-left" size={17} color={theme.text} />
-            <Text style={[styles.navMiniText, { color: theme.text, fontFamily: FONTS.sansSemiBold }]}>
-              Prev
-            </Text>
-          </View>
-        </PressableSurface>
+            <View
+              style={[
+                styles.capsuleBtn,
+                {
+                  backgroundColor: palette.well,
+                  borderColor: palette.border,
+                },
+              ]}
+            >
+              <Feather name="chevron-left" size={16} color={palette.accent} />
+              <Text style={[styles.capsuleBtnText, { color: palette.text, fontFamily: FONTS.sansSemiBold }]}>
+                Prev
+              </Text>
+            </View>
+          </PressableSurface>
 
-        {/* Center: 6 Illuminated Scene Beads */}
-        <View style={styles.beadsRow}>
-          {Array.from({ length: totalPages }).map((_, i) => (
+          {/* Center: 6 Illuminated Scene Beads */}
+          <View style={styles.beadsRow}>
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <PressableSurface
+                key={i}
+                onPress={() => {
+                  chrome.interact();
+                  goToPage(i);
+                }}
+                style={styles.beadTouch}
+                accessibilityRole="button"
+                accessibilityLabel={`Go to page ${i + 1}`}
+              >
+                <View
+                  style={[
+                    styles.beadDot,
+                    {
+                      backgroundColor: i === safePage ? palette.accent : `${palette.dim}45`,
+                      width: i === safePage ? 20 : 6,
+                    },
+                  ]}
+                />
+              </PressableSurface>
+            ))}
+          </View>
+
+          {/* Right: Next Scene / Complete */}
+          {safePage < totalPages - 1 ? (
             <PressableSurface
-              key={i}
-              onPress={() => goToPage(i)}
-              style={styles.beadTouch}
-              accessibilityLabel={`Go to page ${i + 1}`}
+              haptic="selection"
+              onPress={() => {
+                chrome.interact();
+                goToPage(safePage + 1);
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="Next scene"
             >
               <View
                 style={[
-                  styles.beadDot,
+                  styles.capsuleBtn,
                   {
-                    backgroundColor: i === safePage ? accent : `${theme.dim}40`,
-                    width: i === safePage ? 22 : 6,
+                    backgroundColor: palette.accent,
+                    borderColor: palette.accent,
                   },
                 ]}
-              />
+              >
+                <Text style={[styles.capsuleBtnText, { color: palette.onAccent, fontFamily: FONTS.sansSemiBold }]}>
+                  Next
+                </Text>
+                <Feather name="chevron-right" size={16} color={palette.onAccent} />
+              </View>
             </PressableSurface>
-          ))}
+          ) : (
+            <PressableSurface
+              haptic="impact"
+              onPress={() => {
+                chrome.interact();
+                onComplete?.();
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="Finish story"
+            >
+              <View
+                style={[
+                  styles.capsuleBtn,
+                  {
+                    backgroundColor: palette.accent,
+                    borderColor: palette.accent,
+                  },
+                ]}
+              >
+                <Feather name="check" size={15} color={palette.onAccent} />
+                <Text style={[styles.capsuleBtnText, { color: palette.onAccent, fontFamily: FONTS.sansSemiBold }]}>
+                  {localizedLabel(activeLanguage, "Done", "पूर्ण", "ਸਮਾਪਤ")}
+                </Text>
+              </View>
+            </PressableSurface>
+          )}
         </View>
-
-        {/* Right: Next Scene / Complete */}
-        {safePage < totalPages - 1 ? (
-          <PressableSurface
-            haptic="selection"
-            onPress={() => goToPage(safePage + 1)}
-            accessibilityLabel="Next scene"
-          >
-            <View style={[styles.navMiniBtn, styles.navMiniBtnActive, { backgroundColor: accent }]}>
-              <Text style={[styles.navMiniText, { color: "#FFFFFF", fontFamily: FONTS.sansSemiBold }]}>
-                Next
-              </Text>
-              <Feather name="chevron-right" size={17} color="#FFFFFF" />
-            </View>
-          </PressableSurface>
-        ) : (
-          <PressableSurface
-            haptic="impact"
-            onPress={onComplete}
-            accessibilityLabel="Finish story"
-          >
-            <View style={[styles.navMiniBtn, styles.navMiniBtnActive, { backgroundColor: accent }]}>
-              <Feather name="check" size={15} color="#FFFFFF" />
-              <Text style={[styles.navMiniText, { color: "#FFFFFF", fontFamily: FONTS.sansSemiBold }]}>
-                Done
-              </Text>
-            </View>
-          </PressableSurface>
-        )}
-      </View>
+      </Animated.View>
 
       {/* Resume (Phase 5): "Resumed where you left off · Scene 4 · Start over" */}
       {resume.banner ? (
@@ -962,6 +1159,18 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingBottom: 12,
+  },
+  dharmBtnSmall: {
+    borderRadius: 20,
+    minHeight: 0,
+  },
+  dharmBtnSmallInner: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
   circleBtnWrapper: {
     borderRadius: 20,
@@ -1296,36 +1505,39 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 50,
-    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
     paddingHorizontal: 18,
     paddingTop: 10,
   },
-  navMiniBtn: {
+  capsuleBar: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
+    alignSelf: "center",
+    gap: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: RADII.pill,
     borderWidth: 1,
   },
-  navMiniBtnActive: {
-    borderWidth: 0,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
-    elevation: 2,
+  capsuleBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: RADII.pill,
+    borderWidth: 1,
+    minHeight: 0,
   },
-  navMiniText: {
+  capsuleBtnText: {
     fontSize: 12,
   },
   beadsRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
+    gap: 6,
+    paddingHorizontal: 4,
   },
   beadTouch: {
     padding: 4,

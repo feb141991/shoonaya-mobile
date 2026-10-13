@@ -138,6 +138,9 @@ test('Panchatantra Artwork Resolution', async (t) => {
       'panchatantra-king-and-minister',
       'panchatantra-owl-and-crows',
       'panchatantra-golden-dropping-bird',
+      'panchatantra-weaver-as-vishnu',
+      'panchatantra-cat-as-judge',
+      'panchatantra-donkey-and-jackal',
     ];
 
     for (const storyId of storiesWithScenes) {
@@ -220,6 +223,22 @@ test('Panchatantra storybook font scaling controls', async (t) => {
     assert.match(src, />\s*--\s*<\/Text>/);
     assert.match(src, />\s*\+\+\s*<\/Text>/);
   });
+
+  await t.test('integrates 3.5s auto-hide chrome controller for obstacle-free full screen reading', () => {
+    assert.match(src, /createReaderChromeController/);
+    assert.match(src, /chrome\.start\(\)/);
+    assert.match(src, /controlsProgress/);
+    assert.match(src, /onTouchStart=\{onScreenTouchStart\}/);
+    assert.match(src, /onTouchEnd=\{onScreenTouchEnd\}/);
+  });
+
+  await t.test('provides Dharm Veer styled small buttons and pin toggle', () => {
+    assert.match(src, /readerControlsPalette/);
+    assert.match(src, /dharmBtnSmall/);
+    assert.match(src, /dharmBtnSmallInner/);
+    assert.match(src, /capsuleBar/);
+    assert.match(src, /name=\{pinned \? "minimize-2" : "maximize-2"\}/);
+  });
 });
 
 test('Panchatantra story sorting and visual tier priority', async (t) => {
@@ -253,18 +272,18 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-king-and-minister'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-owl-and-crows'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-golden-dropping-bird'), 2);
-
-    // Tier 1: Masterwork cover artwork
-    assert.equal(getPanchatantraStoryVisualTier('panchatantra-weaver-as-vishnu'), 1);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-weaver-as-vishnu'), 2);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-cat-as-judge'), 2);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-donkey-and-jackal'), 2);
 
     // Tier 0: Manuscript folios without local art
-    assert.equal(getPanchatantraStoryVisualTier('panchatantra-cat-as-judge'), 0);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-snake-and-frogs'), 0);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-nonexistent'), 0);
   });
 
   await t.test('sorts stories so full scene storybooks appear first, then manuscript', () => {
     const mixed = [
-      { id: 'panchatantra-cat-as-judge', title: 'The Cat as Judge' },
+      { id: 'panchatantra-snake-and-frogs', title: 'The Snake Who Carried Frogs' },
       { id: 'panchatantra-dove-king-and-net', title: 'The Dove King and the Net' },
       { id: 'panchatantra-wedge-pulling-monkey', title: 'Wedge Pulling Monkey' },
       { id: 'panchatantra-lion-and-rabbit', title: 'The Lion and the Rabbit' },
@@ -279,7 +298,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(sorted[2].id, 'panchatantra-moon-lake-rabbits');
 
     // Tier 0 items must follow at indices 3 and 4
-    assert.equal(sorted[3].id, 'panchatantra-cat-as-judge');
+    assert.equal(sorted[3].id, 'panchatantra-snake-and-frogs');
     assert.equal(sorted[4].id, 'panchatantra-wedge-pulling-monkey');
   });
 
@@ -327,3 +346,37 @@ test('The Bird with Golden Droppings story uses six paragraph-aligned offline sc
     assert.ok(getPanchatantraSceneArtwork('panchatantra-golden-dropping-bird', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });
+
+test('The Weaver Who Pretended to Be Vishnu story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-weaver-as-vishnu');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-weaver-as-vishnu'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-weaver-as-vishnu'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-weaver-as-vishnu', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('The Cat as Judge story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-cat-as-judge');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-cat-as-judge'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-cat-as-judge'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-cat-as-judge', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('The Donkey and the Jackal story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-donkey-and-jackal');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-donkey-and-jackal'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-donkey-and-jackal'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-donkey-and-jackal', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
