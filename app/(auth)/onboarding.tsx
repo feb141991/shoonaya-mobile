@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   Pressable,
   Share,
+  Switch,
   Text,
   TextInput,
   useColorScheme,
@@ -255,6 +256,9 @@ export default function OnboardingScreen() {
   const [goals, setGoals] = useState<string[]>([]);
   const [name, setName] = useState('');
   const [notificationChoice, setNotificationChoice] = useState<NotificationChoice>('unset');
+  // Optional email updates: off unless the person turns it on, and deliberately not kept in the onboarding
+  // draft, so a resumed session never starts from a remembered "yes".
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [notificationsDenied, setNotificationsDenied] = useState(false);
   const [notificationsCanAskAgain, setNotificationsCanAskAgain] = useState(true);
   const [requestingNotifications, setRequestingNotifications] = useState(false);
@@ -720,6 +724,7 @@ export default function OnboardingScreen() {
         calendarScope,
         goals,
         notificationsEnabled: contentNotificationsEnabled,
+        marketingOptIn,
         location: capturedLocation,
       });
 
@@ -1596,6 +1601,45 @@ export default function OnboardingScreen() {
                 </Text>
               </View>
             ) : null}
+            <Pressable
+              onPress={() => setMarketingOptIn((value) => !value)}
+              accessibilityRole="switch"
+              accessibilityState={{ checked: marketingOptIn }}
+              accessibilityLabel={translated('Occasional email from Shoonaya', 'Shoonaya से कभी-कभार ईमेल')}
+              accessibilityHint={translated('Optional. Off unless you turn it on.', 'वैकल्पिक। आप चालू न करें तो बंद रहेगा।')}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 12,
+                minHeight: 56,
+                borderRadius: RADII.xl,
+                borderWidth: 1,
+                borderColor: border,
+                backgroundColor: cardBg,
+                paddingVertical: 12,
+                paddingHorizontal: 16,
+              }}
+            >
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 14, color: text }}>
+                  {translated('Occasional email from Shoonaya', 'Shoonaya से कभी-कभार ईमेल')}
+                </Text>
+                <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 12, lineHeight: 18, color: dim }}>
+                  {translated(
+                    'New features, festival guides and a weekly newsletter. Optional, and you can unsubscribe at any time.',
+                    'नई सुविधाएँ, पर्व मार्गदर्शन और साप्ताहिक न्यूज़लेटर। वैकल्पिक, और आप कभी भी सदस्यता छोड़ सकते हैं।'
+                  )}
+                </Text>
+              </View>
+              <Switch
+                value={marketingOptIn}
+                onValueChange={setMarketingOptIn}
+                trackColor={{ true: accent }}
+                pointerEvents="none"
+                accessible={false}
+                importantForAccessibility="no-hide-descendants"
+              />
+            </Pressable>
           </>
         )}
 

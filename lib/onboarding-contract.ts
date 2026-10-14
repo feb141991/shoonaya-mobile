@@ -146,6 +146,25 @@ export function getNotificationPersistencePayload(userWantsReminders: boolean) {
   };
 }
 
+/**
+ * Marketing email consent from the optional onboarding switch.
+ *
+ * It is separate from the reminder choice above and off unless the person turns it on: nothing here is ever
+ * inferred from another answer. When they opt in, both columns the campaign audience reads are set together
+ * (marketing_consent and email_newsletter) and the consent time is stamped. When they do not, NOTHING is
+ * written, so a skip can never overwrite an existing choice and the column defaults (false) apply.
+ *
+ * Not recorded: which wording was shown. consent_updated_at is the only timestamp the profile has.
+ */
+export function getMarketingConsentPayload(optedIn: boolean, now: Date = new Date()) {
+  if (optedIn !== true) return {};
+  return {
+    marketing_consent: true,
+    email_newsletter: true,
+    consent_updated_at: now.toISOString(),
+  };
+}
+
 export function buildOnboardingProfilePayload({
   displayName,
   tradition,
@@ -160,6 +179,7 @@ export function buildOnboardingProfilePayload({
   calendarScope,
   goals,
   notificationsEnabled,
+  marketingOptIn = false,
   location,
 }: {
   displayName: string;
@@ -175,6 +195,8 @@ export function buildOnboardingProfilePayload({
   calendarScope: CalendarScopeSlug | '';
   goals: string[];
   notificationsEnabled: boolean;
+  /** Optional email updates switch. Absent means no consent. */
+  marketingOptIn?: boolean;
   location?: OnboardingLocation | null;
 }) {
   const isHinduProfile = tradition === 'hindu';
@@ -193,6 +215,7 @@ export function buildOnboardingProfilePayload({
     calendar_scope: isHinduProfile ? calendarScope || null : null,
     onboarding_goal: goals.join(','),
     ...getNotificationPersistencePayload(notificationsEnabled),
+    ...getMarketingConsentPayload(marketingOptIn),
     // Omitted entirely (not written as null) when the user skipped or denied
     // location during onboarding -- never overwrite an existing value with
     // nothing, and never substitute a default location here either; a

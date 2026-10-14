@@ -7,6 +7,7 @@ import {
   stepEyebrow,
   getNotificationPersistencePayload,
   buildOnboardingProfilePayload,
+  getMarketingConsentPayload,
   getOnboardingReadyPracticeCta,
   getPermissionRecoveryAction,
   computeContentNotificationOptIn,
@@ -656,5 +657,73 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
       assert.equal(stepEyebrow('notifications', nonHinduSteps, 'en'), 'Step 5 of 6');
       assert.equal(stepEyebrow('location', nonHinduSteps, 'en'), 'Step 6 of 6');
     });
+  });
+});
+
+describe('4. Marketing email consent from onboarding', () => {
+  const base = {
+    displayName: 'Prince',
+    tradition: 'hindu' as const,
+    language: 'en' as const,
+    dateOfBirth: '1990-01-01',
+    gender: 'male' as const,
+    lifeStage: 'grihastha' as const,
+    rashi: 'Karka',
+    nakshatra: 'Pushya',
+    gotra: 'Kashyap',
+    calendarProfile: 'north_indian_purnimanta' as const,
+    calendarScope: 'all_observances' as const,
+    goals: ['peace'],
+    notificationsEnabled: true,
+  };
+  const MARKETING_KEYS = ['marketing_consent', 'email_newsletter', 'consent_updated_at'];
+
+  it('opting in sets both columns the campaign audience reads, and stamps the consent time', () => {
+    const at = new Date('2026-10-15T08:30:00.000Z');
+    assert.deepEqual(getMarketingConsentPayload(true, at), {
+      marketing_consent: true,
+      email_newsletter: true,
+      consent_updated_at: '2026-10-15T08:30:00.000Z',
+    });
+  });
+
+  it('not opting in writes nothing at all: a skip must never overwrite an existing choice', () => {
+    assert.deepEqual(getMarketingConsentPayload(false), {});
+  });
+
+  it('only a real true counts: no truthy value can grant consent', () => {
+    for (const value of [undefined, null, 0, 1, '', 'true', 'yes', {}, []] as unknown[]) {
+      assert.deepEqual(getMarketingConsentPayload(value as boolean), {}, `value ${JSON.stringify(value)}`);
+    }
+  });
+
+  it('the profile payload has no marketing keys unless the person opted in', () => {
+    for (const payload of [
+      buildOnboardingProfilePayload(base),
+      buildOnboardingProfilePayload({ ...base, marketingOptIn: false }),
+    ]) {
+      for (const key of MARKETING_KEYS) assert.equal(key in payload, false, `${key} must be absent`);
+    }
+  });
+
+  it('turning reminders on does not turn marketing email on (they are separate choices)', () => {
+    const payload = buildOnboardingProfilePayload({ ...base, notificationsEnabled: true });
+    assert.equal(payload.wants_festival_reminders, true);
+    assert.equal('marketing_consent' in payload, false);
+  });
+
+  it('turning marketing on does not turn reminders on', () => {
+    const payload = buildOnboardingProfilePayload({ ...base, notificationsEnabled: false, marketingOptIn: true });
+    assert.equal(payload.wants_festival_reminders, false);
+    assert.equal(payload.marketing_consent, true);
+    assert.equal(payload.email_newsletter, true);
+    assert.ok(!Number.isNaN(Date.parse(String(payload.consent_updated_at))));
+  });
+
+  it('does not touch the other consent columns (religious data, activity, analytics)', () => {
+    const payload = buildOnboardingProfilePayload({ ...base, marketingOptIn: true }) as Record<string, unknown>;
+    for (const key of ['consent_religious_data', 'consent_activity_personalization', 'consent_product_analytics', 'whatsapp_opt_in']) {
+      assert.equal(key in payload, false, `${key} must not be written by this choice`);
+    }
   });
 });
