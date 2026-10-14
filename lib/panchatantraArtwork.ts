@@ -50,6 +50,8 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-weaver-as-vishnu': require('@/assets/panchatantra/weaver-vishnu-1.webp'),
   'panchatantra-cat-as-judge': require('@/assets/panchatantra/cat-judge-1.webp'),
   'panchatantra-donkey-and-jackal': require('@/assets/panchatantra/donkey-jackal-1.webp'),
+  'panchatantra-potter-as-warrior': require('@/assets/panchatantra/potter-warrior-1.webp'),
+  'panchatantra-greedy-brahmin-dream': require('@/assets/panchatantra/greedy-brahmin-1.webp'),
 };
 
 /**
@@ -304,6 +306,22 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/donkey-jackal-4.webp'),
     require('@/assets/panchatantra/donkey-jackal-5.webp'),
     require('@/assets/panchatantra/donkey-jackal-6.webp'),
+  ],
+  'panchatantra-potter-as-warrior': [
+    require('@/assets/panchatantra/potter-warrior-1.webp'),
+    require('@/assets/panchatantra/potter-warrior-2.webp'),
+    require('@/assets/panchatantra/potter-warrior-3.webp'),
+    require('@/assets/panchatantra/potter-warrior-4.webp'),
+    require('@/assets/panchatantra/potter-warrior-5.webp'),
+    require('@/assets/panchatantra/potter-warrior-6.webp'),
+  ],
+  'panchatantra-greedy-brahmin-dream': [
+    require('@/assets/panchatantra/greedy-brahmin-1.webp'),
+    require('@/assets/panchatantra/greedy-brahmin-2.webp'),
+    require('@/assets/panchatantra/greedy-brahmin-3.webp'),
+    require('@/assets/panchatantra/greedy-brahmin-4.webp'),
+    require('@/assets/panchatantra/greedy-brahmin-5.webp'),
+    require('@/assets/panchatantra/greedy-brahmin-6.webp'),
   ],
 };
 
