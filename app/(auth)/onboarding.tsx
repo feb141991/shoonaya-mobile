@@ -21,6 +21,7 @@ import { OnboardingShell } from '@/components/onboarding/OnboardingShell';
 import { NakshatraPicker } from '@/components/onboarding/NakshatraPicker';
 import { OnboardingWelcomeScreen } from '@/components/onboarding/OnboardingWelcomeScreen';
 import { FounderNoteInterlude } from '@/components/onboarding/FounderNoteInterlude';
+import { ReligiousDataConsentCard } from '@/components/onboarding/ReligiousDataConsentCard';
 import { AgeGuidanceNotice } from '@/components/privacy/AgeGuidanceNotice';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
@@ -55,6 +56,13 @@ import {
   computeFinalNotificationState,
 } from '@/lib/onboarding-contract';
 import { saveOnboardingDraft, readOnboardingDraft, clearOnboardingDraft, type OnboardingDraftData } from '@/lib/onboardingDraft';
+import {
+  canLeavePreferences,
+  planConsentChange,
+  planTraditionTap,
+  traditionNeedsReligiousDataConsent,
+  type ReligiousConsentWrite,
+} from '@/lib/religious-data-consent';
 import { saveDeviceStartupPreferences, syncStartupPreferencesFromProfile } from '@/lib/startup-scenes/preferences';
 import {
   LIFE_STAGES,
@@ -254,6 +262,8 @@ export default function OnboardingScreen() {
   const [calendarProfile, setCalendarProfile] = useState<CalendarProfileSlug | ''>('');
   const [calendarScope, setCalendarScope] = useState<CalendarScopeSlug | ''>('');
   const [goals, setGoals] = useState<string[]>([]);
+  // Off until the person turns it on. A faith tradition is not saved to the account before then.
+  const [religiousDataConsent, setReligiousDataConsent] = useState(false);
   const [name, setName] = useState('');
   const [notificationChoice, setNotificationChoice] = useState<NotificationChoice>('unset');
   // Optional email updates: off unless the person turns it on, and deliberately not kept in the onboarding
@@ -332,6 +342,7 @@ export default function OnboardingScreen() {
           if (draft.calendarProfile) setCalendarProfile(draft.calendarProfile);
           if (draft.calendarScope) setCalendarScope(draft.calendarScope);
           if (draft.goals) setGoals(draft.goals);
+          setReligiousDataConsent(draft.religiousDataConsent === true);
           if (draft.name) setName(draft.name);
           if (draft.notificationChoice) {
             setNotificationChoice(draft.notificationChoice);
@@ -388,6 +399,7 @@ export default function OnboardingScreen() {
         deniedNotificationPromptShown: notificationsDenied,
         locationChoice,
         deniedLocationPromptShown: locationDenied,
+        religiousDataConsent,
         ...overrides,
       });
     } catch {}
@@ -408,7 +420,7 @@ export default function OnboardingScreen() {
   // Best-effort, non-blocking: these first-screen choices must be available
   // to later server-backed content even if onboarding is abandoned midway.
   const persistPreferenceEarly = async (
-    payload: { tradition?: TraditionKey; app_language?: LanguageKey; meaning_language?: LanguageKey }
+    payload: ReligiousConsentWrite & { app_language?: LanguageKey; meaning_language?: LanguageKey }
   ) => {
     try {
       const uid = await getCachedUserId();
@@ -448,8 +460,9 @@ export default function OnboardingScreen() {
 
   const goNext = () => {
     if (step === 'preferences') {
-      if (!tradition || !language) return;
-      void persistPreferenceEarly({ tradition, app_language: language, meaning_language: language });
+      if (!tradition || !language || !canLeavePreferences({ tradition, language, religiousDataConsent })) return;
+      // The tradition itself was already saved when it was chosen with agreement; only the language is re-sent.
+      void persistPreferenceEarly({ app_language: language, meaning_language: language });
       void saveDeviceStartupPreferences({
         tradition: tradition === 'none' ? 'neutral' : tradition,
         language,
@@ -459,6 +472,15 @@ export default function OnboardingScreen() {
     }
     const next = STEPS[stepIndex + 1];
     if (next) goToStep(next);
+  };
+
+  // Turning the switch on saves the tradition together with the agreement; turning it off removes the tradition
+  // that was saved because of it. Either way the account never holds a faith tradition without a yes.
+  const handleReligiousConsentChange = (agreed: boolean) => {
+    setReligiousDataConsent(agreed);
+    void syncDraft(step, { religiousDataConsent: agreed });
+    const plan = planConsentChange({ tradition, agreed, now: new Date().toISOString() });
+    if (plan) void persistPreferenceEarly(plan);
   };
 
   const goBack = () => {
@@ -725,6 +747,8 @@ export default function OnboardingScreen() {
         goals,
         notificationsEnabled: contentNotificationsEnabled,
         marketingOptIn,
+        religiousDataConsent,
+        consentRecordedAt: new Date().toISOString(),
         location: capturedLocation,
       });
 
@@ -958,7 +982,7 @@ export default function OnboardingScreen() {
         primaryActionLabel={primaryActionLabel}
         onPrimaryAction={onPrimaryAction}
         primaryDisabled={
-          (step === 'preferences' && (!tradition || !language)) ||
+          (step === 'preferences' && !canLeavePreferences({ tradition, language, religiousDataConsent })) ||
           (step === 'notifications' && requestingNotifications) ||
           (step === 'location' && requestingLocation) ||
           saving
@@ -1081,6 +1105,9 @@ export default function OnboardingScreen() {
                           setTradition(t.key);
                           setNameStory(null);
                           setNameStoryError('');
+                          // The neutral choice carries no religious data, so an earlier agreement lapses with it.
+                          const hadConsent = religiousDataConsent;
+                          if (!traditionNeedsReligiousDataConsent(t.key)) setReligiousDataConsent(false);
                           if (t.key !== 'hindu') {
                             setRashi('');
                             setNakshatra('');
@@ -1088,7 +1115,10 @@ export default function OnboardingScreen() {
                             setCalendarProfile('');
                             setCalendarScope('');
                           }
-                          void persistPreferenceEarly({ tradition: t.key });
+                          // A faith tradition is held on this device until the person agrees below; only the
+                          // neutral choice (or a tradition chosen after agreeing) is saved to the account now.
+                          const plan = planTraditionTap({ tradition: t.key, hadConsent, now: new Date().toISOString() });
+                          if (plan) void persistPreferenceEarly(plan);
                           void saveDeviceStartupPreferences({
                             tradition: t.key === 'none' ? 'neutral' : t.key,
                           });
@@ -1170,6 +1200,16 @@ export default function OnboardingScreen() {
                 })}
               </View>
             </View>
+
+            {traditionNeedsReligiousDataConsent(tradition) ? (
+              <ReligiousDataConsentCard
+                isDark={isDark}
+                language={language}
+                agreed={religiousDataConsent}
+                onChange={handleReligiousConsentChange}
+                accent={accent}
+              />
+            ) : null}
           </View>
         )}
 

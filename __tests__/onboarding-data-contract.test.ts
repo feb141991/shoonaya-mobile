@@ -217,6 +217,8 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
         calendarScope: 'all_observances',
         goals: ['peace'],
         notificationsEnabled: true,
+        religiousDataConsent: true,
+        consentRecordedAt: '2026-10-15T08:00:00.000Z',
       });
 
       assert.equal(profile.wants_festival_reminders, true);
@@ -241,6 +243,8 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
         calendarScope: 'all_observances' as const,
         goals: ['peace'],
         notificationsEnabled: true,
+        religiousDataConsent: true,
+        consentRecordedAt: '2026-10-15T08:00:00.000Z',
       };
 
       const withLocation = buildOnboardingProfilePayload({
@@ -632,6 +636,8 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
         calendarScope: '',
         goals: [],
         notificationsEnabled: false,
+        religiousDataConsent: true,
+        consentRecordedAt: '2026-10-15T08:00:00.000Z',
       });
 
       assert.equal(unansweredProfile.life_stage, null);
@@ -661,9 +667,10 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
 });
 
 describe('4. Marketing email consent from onboarding', () => {
+  // The neutral tradition keeps the religious-data choice out of these tests, which are about the email choice alone.
   const base = {
     displayName: 'Prince',
-    tradition: 'hindu' as const,
+    tradition: 'none' as const,
     language: 'en' as const,
     dateOfBirth: '1990-01-01',
     gender: 'male' as const,
@@ -675,6 +682,8 @@ describe('4. Marketing email consent from onboarding', () => {
     calendarScope: 'all_observances' as const,
     goals: ['peace'],
     notificationsEnabled: true,
+    religiousDataConsent: false,
+    consentRecordedAt: '2026-10-15T08:00:00.000Z',
   };
   const MARKETING_KEYS = ['marketing_consent', 'email_newsletter', 'consent_updated_at'];
 
@@ -720,10 +729,27 @@ describe('4. Marketing email consent from onboarding', () => {
     assert.ok(!Number.isNaN(Date.parse(String(payload.consent_updated_at))));
   });
 
-  it('does not touch the other consent columns (religious data, activity, analytics)', () => {
-    const payload = buildOnboardingProfilePayload({ ...base, marketingOptIn: true }) as Record<string, unknown>;
+  it('the email choice itself does not touch the other consent columns (religious data, activity, analytics)', () => {
+    const payload = getMarketingConsentPayload(true) as Record<string, unknown>;
     for (const key of ['consent_religious_data', 'consent_activity_personalization', 'consent_product_analytics', 'whatsapp_opt_in']) {
       assert.equal(key in payload, false, `${key} must not be written by this choice`);
+    }
+  });
+
+  it('the email choice and the religious-data choice are independent in all four combinations', () => {
+    for (const email of [false, true]) {
+      for (const religious of [false, true]) {
+        const p = buildOnboardingProfilePayload({
+          ...base,
+          tradition: 'hindu',
+          religiousDataConsent: religious,
+          marketingOptIn: email,
+        }) as Record<string, unknown>;
+        assert.equal(p.consent_religious_data, religious, `religious=${religious} email=${email}`);
+        assert.equal('marketing_consent' in p, email, `religious=${religious} email=${email}`);
+        assert.equal('email_newsletter' in p, email, `religious=${religious} email=${email}`);
+        assert.equal(p.tradition, religious ? 'hindu' : 'none', `religious=${religious} email=${email}`);
+      }
     }
   });
 });

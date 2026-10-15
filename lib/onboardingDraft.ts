@@ -70,6 +70,9 @@ export type OnboardingDraftData = {
   // latitude/longitude/city are never persisted here (see invariant 2).
   locationChoice?: NotificationChoice;
   deniedLocationPromptShown?: boolean;
+  // The religious-data switch. A draft written before it existed has no value, which reads as "not agreed",
+  // so a resumed session asks again rather than assuming a yes.
+  religiousDataConsent?: boolean;
 };
 
 export type OnboardingDraftEnvelope = {

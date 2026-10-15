@@ -1,5 +1,6 @@
 import type { GenderKey, LifeStageKey, CalendarProfileSlug, CalendarScopeSlug } from './profile-constants';
 import { genderContext } from './profile-constants';
+import { storableTradition, traditionNeedsReligiousDataConsent } from './religious-data-consent';
 
 export type TraditionKey = 'hindu' | 'sikh' | 'buddhist' | 'jain' | 'none';
 export type LanguageKey = 'en' | 'hi';
@@ -180,6 +181,8 @@ export function buildOnboardingProfilePayload({
   goals,
   notificationsEnabled,
   marketingOptIn = false,
+  religiousDataConsent,
+  consentRecordedAt,
   location,
 }: {
   displayName: string;
@@ -197,11 +200,22 @@ export function buildOnboardingProfilePayload({
   notificationsEnabled: boolean;
   /** Optional email updates switch. Absent means no consent. */
   marketingOptIn?: boolean;
+  /** The switch the person turned on (or not) when choosing a tradition. Required so no caller can forget it. */
+  religiousDataConsent: boolean;
+  /** When that choice was saved, as an ISO string. Passed in so this stays pure. */
+  consentRecordedAt: string;
   location?: OnboardingLocation | null;
 }) {
-  const isHinduProfile = tradition === 'hindu';
+  // A faith tradition, and the details that go with it, are saved only with the person's agreement. Without it
+  // the account gets the neutral choice and none of the Hindu-only fields, whatever the screen state says.
+  const consented = traditionNeedsReligiousDataConsent(tradition) && religiousDataConsent;
+  const savedTradition = storableTradition(tradition, consented);
+  const isHinduProfile = savedTradition === 'hindu';
   return {
-    tradition,
+    tradition: savedTradition,
+    consent_religious_data: consented,
+    // Stamped only when the person made the choice here; a neutral path leaves any earlier stamp alone.
+    ...(traditionNeedsReligiousDataConsent(tradition) ? { consent_updated_at: consentRecordedAt } : {}),
     app_language: language,
     meaning_language: language,
     full_name: displayName,
