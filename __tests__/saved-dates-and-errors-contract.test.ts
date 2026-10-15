@@ -62,9 +62,10 @@ describe('a save failure says what to fix', () => {
     assert.notEqual(shown, describeSaveError(new Error('x'), 'en'));
   });
 
-  it('an unknown failure keeps the generic line but carries the support reference', () => {
-    assert.match(describeSaveError({ code: 'XX000', message: 'secret table detail' }, 'en'), /ref XX000/);
-    assert.doesNotMatch(describeSaveError({ code: 'XX000', message: 'secret table detail' }, 'en'), /secret/);
+  it('an unknown failure keeps the generic line, with no internal code and no provider text', () => {
+    const text = describeSaveError({ code: 'XX000', message: 'secret table detail' }, 'en');
+    assert.equal(text, 'Unable to save onboarding. Please try again.');
+    assert.doesNotMatch(text, /XX000|secret/);
   });
 
   it('the onboarding screen shows it instead of "error instanceof Error ? error.message"', () => {

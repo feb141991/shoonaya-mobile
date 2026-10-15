@@ -62,9 +62,11 @@ describe('describeSaveError', () => {
     }
   });
 
-  it('adds a short support reference for codes that carry one, and none when there is none', () => {
-    assert.match(describeSaveError(db('23514'), 'en'), /\(ref 23514\)/);
-    assert.doesNotMatch(describeSaveError(new TypeError('Network request failed'), 'en'), /\(ref/);
+  it('never shows a database error code or a status number to a person', () => {
+    for (const e of [db('23514'), db('42501'), db('99999'), db('22008'), new TypeError('Network request failed'), new Error('x')]) {
+      const text = describeSaveError(e, 'en');
+      assert.doesNotMatch(text, /\(ref|reference|23514|42501|99999|22008/i, text);
+    }
   });
 
   it('keeps the generic fallback for a truly unknown failure', () => {
@@ -107,10 +109,37 @@ describe('a save the server refused (Personal details and other API saves)', () 
     assert.match(shown(refused(400, 'INVALID_DATE_OF_BIRTH', 'too_old')), /year|1900|earlier|old/i);
   });
 
-  it('adds the HTTP status as the support reference and never any server text', () => {
-    assert.match(shown(refused(500)), /\(ref 500\)/);
-    assert.match(shown(refused(418)), /Unable to save your details\. Please try again\. \(ref 418\)/);
-    assert.doesNotMatch(shown(refused(401)), /\(ref/, 'the session line stays clean');
+  it('shows no number at all: neither the HTTP status nor a code means anything to a person', () => {
+    for (const status of [400, 401, 403, 409, 418, 422, 429, 500, 503]) {
+      assert.doesNotMatch(shown(refused(status)), /\b\d{3}\b|\(ref/, `HTTP ${status}`);
+    }
+  });
+
+  it('gives a support reference only where nothing can be fixed by the person and the server sent a request id', () => {
+    const id = '3F9A2C1B-7d4e-4a55-9b0c-1234567890ab';
+    const serverError = new ApiSaveError(500, null, null, id);
+    assert.match(shown(serverError), /Support reference: 3f9a2c1b\./, 'lower-cased, first eight characters');
+    assert.match(shown(new ApiSaveError(418, null, null, id)), /Support reference: 3f9a2c1b\./);
+    assert.match(shown(new ApiSaveError(403, null, null, id)), /Support reference: 3f9a2c1b\./);
+    // Things the person can fix or wait out get no reference, even when an id exists.
+    for (const status of [400, 401, 409, 422]) {
+      assert.doesNotMatch(shown(new ApiSaveError(status, null, null, id)), /reference/i, `HTTP ${status}`);
+    }
+    // No id from the server means no reference rather than a made-up one.
+    assert.doesNotMatch(shown(new ApiSaveError(500)), /reference/i);
+    assert.match(describeSaveError(serverError, 'hi', 'details'), /सहायता संदर्भ: 3f9a2c1b/);
+  });
+
+  it('reads the request id from the response header, and ignores one that is not a plain id', async () => {
+    const header = (value: string | null) => ({ get: (n: string) => (n.toLowerCase() === 'x-request-id' ? value : null) });
+    const ok = await saveErrorFromResponse({ status: 500, json: async () => ({}), headers: header('3f9a2c1b-7d4e-4a55-9b0c-1234567890ab') });
+    assert.equal(ok.supportReference, '3f9a2c1b');
+    for (const bad of ['', 'short', '<script>alert(1)</script>', 'x'.repeat(200), null]) {
+      const e = await saveErrorFromResponse({ status: 500, json: async () => ({}), headers: header(bad) });
+      assert.equal(e.supportReference, null, String(bad).slice(0, 20));
+    }
+    const noHeaders = await saveErrorFromResponse({ status: 500, json: async () => ({}) });
+    assert.equal(noHeaders.supportReference, null);
   });
 
   it('uses the details wording, not the onboarding wording, on the details screen only', () => {
