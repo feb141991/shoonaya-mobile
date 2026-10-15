@@ -50,6 +50,7 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before 
 - Every migration requires RLS review, privilege review, rollback guidance,
   generated type updates and applied/unapplied environment reporting.
 - Never expose service-role credentials or production secrets.
+- Don’t run `supabase db push`. It would push every unapplied migration, and production already has history drift. Apply migrations individually or through reviewed target scripts only when explicitly approved.
 
 ### 5. Cache and Identity Isolation
 - Every persisted client cache must define its key dimensions: user, guest,
