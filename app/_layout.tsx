@@ -129,7 +129,9 @@ Observe.configure({
 function RootLayout() {
   const router = useRouter();
   const { markInteractive } = useObserve();
-  const segments = useSegments();
+  // useSegments() is typed as a tuple of the generated routes, which has no second element for most of them;
+  // widened to a plain list so the second segment can be read (it is undefined on a top-level screen).
+  const segments: readonly string[] = useSegments();
   const rootSegment = segments[0];
   const childSegment = segments[1];
   const updatePromptSafe = isUpdatePromptSafeSurface(rootSegment, childSegment);
