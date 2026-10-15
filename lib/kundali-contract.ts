@@ -9,6 +9,14 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
+/**
+ * Earliest birth date a chart can be cast for. A chart can be cast for a family member, and the server's chart
+ * engine (backend src/lib/jyotish/astro-engine.ts) accepts dates from 1800 ("birth date must be 1800 or later"),
+ * so the picker must not be stricter than the contract it talks to (it was 1920, which made an ancestor born in
+ * the 1880s impossible to enter). Date of birth in onboarding and Personal details stays at 1920.
+ */
+export const KUNDALI_MIN_BIRTH_DATE = '1800-01-01';
+
 export interface GrahaPosition {
   tropicalDeg: number;
   siderealDeg: number;

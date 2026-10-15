@@ -55,6 +55,7 @@ import {
   computePushNotificationEligibility,
   computeFinalNotificationState,
 } from '@/lib/onboarding-contract';
+import { describeSaveError } from '@/lib/save-error';
 import { saveOnboardingDraft, readOnboardingDraft, clearOnboardingDraft, type OnboardingDraftData } from '@/lib/onboardingDraft';
 import {
   canLeavePreferences,
@@ -796,7 +797,9 @@ export default function OnboardingScreen() {
       );
     } catch (error) {
       console.error('[Onboarding] profile save failed', error);
-      setSaveError(error instanceof Error ? error.message : (isHindi ? 'ऑनबोर्डिंग सहेजने में असमर्थ। कृपया पुनः प्रयास करें।' : 'Unable to save onboarding. Please try again.'));
+      // A database error is a plain object, not an Error, so the old `error instanceof Error ? error.message : generic`
+      // always showed the generic line. This maps the failure by SQLSTATE/status and never echoes provider text.
+      setSaveError(describeSaveError(error, isHindi ? 'hi' : 'en'));
       setSaving(false);
       return;
     }

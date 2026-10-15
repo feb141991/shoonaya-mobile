@@ -29,6 +29,7 @@ import { apiFetch } from '@/lib/api';
 import { type AppIdentity, useAppIdentity } from '@/lib/appIdentity';
 import { supabase } from '@/lib/supabase';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
+import { KUNDALI_MIN_BIRTH_DATE } from '@/lib/kundali-contract';
 import { RASHI_MAP } from '@/lib/jyotish';
 
 const RELATION_OPTIONS = [
@@ -525,7 +526,7 @@ function KundaliScreenForIdentity({ appIdentity }: { appIdentity: AppIdentity })
                     onChangeDate={t => setFormData({ ...formData, dateOfBirth: t })}
                     placeholder="YYYY-MM-DD"
                     maxDate={formatLocalDateOnly(new Date())}
-                    minDate="1920-01-01"
+                    minDate={KUNDALI_MIN_BIRTH_DATE}
                     modalTitle="Select Date of Birth"
                   />
                 </View>

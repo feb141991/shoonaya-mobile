@@ -204,3 +204,45 @@ Rules:
 - If graphify-out/wiki/index.md exists, navigate it instead of reading raw files
 - After modifying code files in this session, run `./scripts/graphify-update-source.sh` to keep the graph current (AST-only, no API cost)
 - Do not run `graphify update .` directly in this repo; it includes node_modules and produces dependency noise instead of saving tokens.
+
+### 12. Typed Input, Save Errors and Bottom-of-Screen Layout
+- A date is chosen with `components/ui/DatePickerField` (a plain-JavaScript calendar), not typed into a bare
+  `TextInput`. A native date-picker module would not exist in builds that are already installed, so it could not ship
+  as an over-the-air update and would crash or vanish for those users; adding any native module needs a build plan
+  first (see 7).
+- Any other text a person types for a typed column (a time, a number, an enum) goes through a shared parser that
+  returns the database's canonical form before it is stored, sent to an API, or used to derive anything such as age or
+  life stage. Dates and times use `lib/date-input.ts`. Never send raw typed text to the database or an API, and never
+  write a `date_of_birth`-style field from `value || null`.
+- Payload builders re-validate: they normalise or throw (`buildOnboardingProfilePayload` does). A screen that forgets
+  the check must still not be able to put raw text in the payload.
+- A picker's bounds must not be stricter than the contract behind it. Date of birth is 1920 or later; a Kundali can be
+  cast for a family member and the chart engine accepts 1800 or later (`KUNDALI_MIN_BIRTH_DATE`).
+- A save failure tells the person what to fix. It never shows `error.message` or provider text (it can carry table,
+  column and query detail). A Supabase database error is a plain object, not an `Error`: never branch on
+  `error instanceof Error` to decide what to show. Classify by SQLSTATE or HTTP status (`lib/save-error.ts`), and show a
+  short support reference. "Check your connection" is only for network failures.
+- Every typed field has a test with malformed input: the exact string from any incident, dates that do not exist,
+  wrong separators, empty and whitespace. When one typed field is fixed, sweep every screen for the same kind of field
+  and report the sweep.
+- The shared `Screen` reserves only the top safe-area edge. A screen with buttons at or near the bottom must reserve
+  `useSafeAreaInsets().bottom` itself (onboarding does this in `OnboardingShell`; the login does it in its scroll
+  container). On Android's edge-to-edge layout the content otherwise runs under the system navigation bar. Check it
+  with 3-button navigation as well as gesture navigation. Do not change `Screen` globally: tab screens render under the
+  floating bottom nav by design.
+- Why this rule exists: on 2026-10-09 the last onboarding step failed on every retry on a new Android build. A person
+  had typed `18081991`; the app sent it as `profiles.date_of_birth`, Postgres rejected it (22008) and the screen showed
+  a generic line, because a database error is not an `Error`. The field had accepted free text with no validation since
+  2026-07-09 (`bf7321f`) and the same pattern existed in Personal details, Kundali and Kul. The same week a tester
+  reported that Continue and Skip sat under the Android navigation bar on every onboarding page. This applies equally
+  to human and AI-agent contributors.
+
+### 13. Closing a Defect
+- A defect found by a tester, a device or production is not closed by fixing the instance. In the same change: fix the
+  class and report the sweep; add a guard test that fails without the fix and prove it by reverting the fix; and add or
+  amend the rule here with the origin (date, symptom, cause). Do this when the fix lands, not later: a rule written
+  after the next incident would have been read before it.
+- Find the cause in logs, the database or the server before naming one. State what was and was not verified on a
+  device (see 7); a green test suite does not show that a screen is usable.
+- A feature that passes its tests but has no rule describing how it fails is unfinished. When something starts
+  working, record what would make it stop.

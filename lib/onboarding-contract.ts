@@ -1,6 +1,7 @@
 import type { GenderKey, LifeStageKey, CalendarProfileSlug, CalendarScopeSlug } from './profile-constants';
 import { genderContext } from './profile-constants';
 import { storableTradition, traditionNeedsReligiousDataConsent } from './religious-data-consent';
+import { InvalidDateInputError, parseDateInput } from './date-input';
 
 export type TraditionKey = 'hindu' | 'sikh' | 'buddhist' | 'jain' | 'none';
 export type LanguageKey = 'en' | 'hi';
@@ -211,6 +212,10 @@ export function buildOnboardingProfilePayload({
   const consented = traditionNeedsReligiousDataConsent(tradition) && religiousDataConsent;
   const savedTradition = storableTradition(tradition, consented);
   const isHinduProfile = savedTradition === 'hindu';
+  // The column is a `date`: only a validated ISO date may reach it. The screens use a calendar, so this is the
+  // backstop that guarantees raw text ("18081991", which Postgres rejects with 22008) is normalised or refused here.
+  const birth = dateOfBirth && dateOfBirth.trim() ? parseDateInput(dateOfBirth) : null;
+  if (birth && !birth.ok) throw new InvalidDateInputError('date_of_birth', birth.reason);
   return {
     tradition: savedTradition,
     consent_religious_data: consented,
@@ -219,7 +224,7 @@ export function buildOnboardingProfilePayload({
     app_language: language,
     meaning_language: language,
     full_name: displayName,
-    date_of_birth: dateOfBirth || null,
+    date_of_birth: birth && birth.ok ? birth.iso : null,
     gender_context: genderContext(gender),
     life_stage: lifeStage, // nullable; never defaulted to brahmacharya
     rashi: isHinduProfile && rashi ? rashi : null,
