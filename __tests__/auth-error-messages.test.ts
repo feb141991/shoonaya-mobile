@@ -78,6 +78,30 @@ describe('classifySignUpErrorMessage -- account creation errors', () => {
   });
 });
 
+describe('classifySignUpErrorMessage -- password rules', () => {
+  it('tells someone whose password is known to be leaked exactly that, not that it is too short', () => {
+    const leaked = 'Password is known to be weak and easy to guess, please choose a different one.';
+    const result = classifySignUpErrorMessage(leaked);
+    assert.match(result, /data breaches/);
+    assert.doesNotMatch(result, /at least 6/);
+    for (const raw of ['password has been pwned', 'This password was found in a data breach', 'compromised password']) {
+      assert.match(classifySignUpErrorMessage(raw), /data breaches/, raw);
+    }
+  });
+
+  it('still explains a password that really is too short', () => {
+    assert.equal(
+      classifySignUpErrorMessage('Password should be at least 6 characters.'),
+      'Password must be at least 6 characters long.'
+    );
+  });
+
+  it('does not claim "6 characters" for some other password rule: the plain message passes through', () => {
+    const other = 'Password should contain at least one digit.';
+    assert.equal(classifySignUpErrorMessage(other), other);
+  });
+});
+
 describe('classifyOAuthErrorMessage -- Google & Apple cancellations and errors', () => {
   it('returns null for user cancellations so no ugly error banner is displayed', () => {
     assert.equal(classifyOAuthErrorMessage('The authorization attempt was canceled.', 'Apple'), null);

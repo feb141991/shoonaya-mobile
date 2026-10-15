@@ -64,7 +64,20 @@ export function classifySignUpErrorMessage(rawMessage: unknown): string {
     return 'Unable to send verification email right now. If your account already exists, please tap "Sign in" above.';
   }
 
-  if (lower.includes('at least 6 characters') || lower.includes('password')) {
+  // Supabase's leaked-password protection (and any strength rule) rejects a long password with a message that says
+  // so. It must not fall into the length message below: someone with a 14-character password would be told it is
+  // too short and have no way to tell what is wrong.
+  if (
+    lower.includes('known to be weak') ||
+    lower.includes('easy to guess') ||
+    lower.includes('pwned') ||
+    lower.includes('data breach') ||
+    lower.includes('compromised')
+  ) {
+    return 'This password has appeared in known data breaches, so it is not safe to use. Please choose a different one.';
+  }
+
+  if (lower.includes('at least 6 characters')) {
     return 'Password must be at least 6 characters long.';
   }
 
