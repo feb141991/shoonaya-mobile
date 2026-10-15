@@ -63,6 +63,13 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   }
   if (pathname.startsWith('/vrat')) return '/vrat';
   if (pathname.startsWith('/festival/')) return path as Href;
+  // The backend's candidate producers (sankranti, series, pradosha) and observance notification source write festival
+  // links as /festivals/<slug> in the plural; the screen is /festival/<slug>. Without this a tap on one of those
+  // notifications fell through to the fallback and opened Home. A bare /festivals has no slug and keeps the fallback.
+  if (pathname.startsWith('/festivals/') && pathname.length > '/festivals/'.length) {
+    const search = path.includes('?') ? `?${path.split('?')[1]}` : '';
+    return `/festival/${pathname.slice('/festivals/'.length)}${search}` as Href;
+  }
   if (pathname.startsWith('/quiz')) return '/quiz';
   if (pathname.startsWith('/kundali/')) return path as Href;
   if (pathname.startsWith('/kundali')) return '/kundali';
