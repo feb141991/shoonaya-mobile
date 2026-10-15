@@ -1,7 +1,9 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { classifySaveError, describeSaveError } from '../lib/save-error';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { ApiSaveError, classifySaveError, describeSaveError, saveErrorFromResponse } from '../lib/save-error';
 import { InvalidDateInputError } from '../lib/date-input';
 
 // A Supabase/PostgREST database error is a plain object, not an Error: that is exactly why the
@@ -67,5 +69,86 @@ describe('describeSaveError', () => {
 
   it('keeps the generic fallback for a truly unknown failure', () => {
     assert.equal(describeSaveError('boom', 'en'), 'Unable to save onboarding. Please try again.');
+  });
+});
+
+describe('a save the server refused (Personal details and other API saves)', () => {
+  const refused = (status: number, code: string | null = null, reason: ApiSaveError['dateReason'] = null) => new ApiSaveError(status, code, reason);
+  const shown = (e: unknown) => describeSaveError(e, 'en', 'details');
+
+  it('classifies by HTTP status and the API\'s own code', () => {
+    assert.equal(classifySaveError(refused(400)).kind, 'invalid_value');
+    assert.equal(classifySaveError(refused(422)).kind, 'invalid_value');
+    assert.equal(classifySaveError(refused(400, 'INVALID_VALUE')).kind, 'invalid_value');
+    assert.equal(classifySaveError(refused(400, 'INVALID_DATE_OF_BIRTH', 'future')).kind, 'invalid_date');
+    assert.equal(classifySaveError(refused(401)).kind, 'session');
+    assert.equal(classifySaveError(refused(403)).kind, 'permission');
+    assert.equal(classifySaveError(refused(409)).kind, 'conflict');
+    assert.equal(classifySaveError(refused(429)).kind, 'server');
+    assert.equal(classifySaveError(refused(500)).kind, 'server');
+    assert.equal(classifySaveError(refused(503)).kind, 'server');
+    assert.equal(classifySaveError(refused(418)).kind, 'unknown');
+  });
+
+  it('only a real network failure says "check your connection"; every server answer says something else', () => {
+    const networkText = shown(new TypeError('Network request failed'));
+    assert.match(networkText, /connection/i);
+    for (const status of [400, 401, 403, 409, 422, 429, 500, 502, 503]) {
+      assert.doesNotMatch(shown(refused(status)), /connection/i, `HTTP ${status}`);
+    }
+  });
+
+  it('each cause tells the person what to do', () => {
+    assert.match(shown(refused(401)), /sign in again/i);
+    assert.match(shown(refused(400)), /check them and try again/i);
+    assert.match(shown(refused(403)), /contact support/i);
+    assert.match(shown(refused(500)), /on our side/i);
+    assert.match(shown(refused(400, 'INVALID_DATE_OF_BIRTH', 'future')), /future/i);
+    assert.match(shown(refused(400, 'INVALID_DATE_OF_BIRTH', 'too_old')), /year|1900|earlier|old/i);
+  });
+
+  it('adds the HTTP status as the support reference and never any server text', () => {
+    assert.match(shown(refused(500)), /\(ref 500\)/);
+    assert.match(shown(refused(418)), /Unable to save your details\. Please try again\. \(ref 418\)/);
+    assert.doesNotMatch(shown(refused(401)), /\(ref/, 'the session line stays clean');
+  });
+
+  it('uses the details wording, not the onboarding wording, on the details screen only', () => {
+    assert.match(describeSaveError('boom', 'en', 'details'), /your details/);
+    assert.doesNotMatch(describeSaveError('boom', 'en', 'details'), /onboarding/i);
+    assert.match(describeSaveError('boom', 'en'), /onboarding/i);
+    assert.doesNotMatch(describeSaveError(refused(401), 'en', 'details'), /setup/i);
+    assert.match(describeSaveError(refused(401), 'en'), /setup/i);
+  });
+
+  it('reads only the fixed code and reason from a response body, never its text', async () => {
+    const e = await saveErrorFromResponse({ status: 400, json: async () => ({ error: 'profiles.date_of_birth secret detail', code: 'INVALID_DATE_OF_BIRTH', reason: 'calendar' }) });
+    assert.equal(e.status, 400);
+    assert.equal(e.apiCode, 'INVALID_DATE_OF_BIRTH');
+    assert.equal(e.dateReason, 'calendar');
+    assert.doesNotMatch(shown(e), /secret|profiles|date_of_birth/);
+    assert.doesNotMatch(e.message, /secret|profiles/);
+  });
+
+  it('survives a body that is not JSON, and ignores a code that is not one of ours', async () => {
+    const html = await saveErrorFromResponse({ status: 502, json: async () => { throw new SyntaxError('Unexpected token <'); } });
+    assert.equal(html.status, 502);
+    assert.equal(html.apiCode, null);
+    const odd = await saveErrorFromResponse({ status: 400, json: async () => ({ code: 'drop table profiles;', reason: 'nonsense' }) });
+    assert.equal(odd.apiCode, null);
+    assert.equal(odd.dateReason, null);
+  });
+
+  it('Hindi has a line for the new server case', () => {
+    assert.notEqual(describeSaveError(refused(500), 'hi', 'details'), describeSaveError(refused(500), 'en', 'details'));
+  });
+});
+
+describe('Personal details screen wiring', () => {
+  const screen = readFileSync(resolve(__dirname, '../app/settings/personal-details.tsx'), 'utf8');
+  it('classifies the failure instead of always blaming the connection', () => {
+    assert.match(screen, /if \(!response\.ok\) throw await saveErrorFromResponse\(response\)/);
+    assert.match(screen, /Alert\.alert\('Could not save', describeSaveError\(error, 'en', 'details'\)\)/);
+    assert.doesNotMatch(screen, /Alert\.alert\('Could not save', 'Check your connection/);
   });
 });

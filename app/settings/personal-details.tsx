@@ -13,6 +13,7 @@ import { DatePickerField } from '@/components/ui/DatePickerField';
 import { formatLocalDateOnly } from '@/lib/dateOnly';
 import { RADII, TYPE, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
+import { describeSaveError, saveErrorFromResponse } from '@/lib/save-error';
 import { supabase } from '@/lib/supabase';
 import { GENDERS, LIFE_STAGES, ageFromDob, type GenderKey, type LifeStageKey } from '@/lib/profile-constants';
 
@@ -99,10 +100,12 @@ export default function PersonalDetailsScreen() {
           life_stage: details.life_stage,
         }),
       });
-      if (!response.ok) throw new Error('save failed');
+      if (!response.ok) throw await saveErrorFromResponse(response);
       Alert.alert('Saved', 'Your personal details have been updated.');
-    } catch {
-      Alert.alert('Could not save', 'Check your connection and try again.');
+    } catch (error) {
+      // "Check your connection" is only true for a network failure. A refused value, an expired session or a server
+      // problem each get their own line (lib/save-error.ts), and no provider text is shown.
+      Alert.alert('Could not save', describeSaveError(error, 'en', 'details'));
     } finally {
       setSaving(false);
     }
