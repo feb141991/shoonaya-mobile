@@ -10,6 +10,7 @@
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import * as Crypto from 'expo-crypto';
 import { apiFetch } from '@/lib/api';
 import { API_BASE } from '@/lib/constants';
 import { APP_VERSION } from '@/lib/appVersion';
@@ -30,6 +31,28 @@ const LAST_UPLOAD_KEY = 'shoonaya_telemetry_v1_last_upload';
 const UPLOAD_THROTTLE_MS = 60 * 60 * 1000;
 const AUTH_DIAGNOSTIC_LAST_UPLOAD_KEY = 'shoonaya_auth_diag_v1_last_upload';
 let nativeDiagnosticUpload: Promise<void> | null = null;
+
+const GUEST_INSTALL_ID_KEY = 'shoonaya_telemetry_guest_install_id_v1';
+
+/**
+ * A random, anonymous, locally-generated id -- never an account id, never
+ * derived from any device/hardware signal -- that lets backend analysis
+ * tell "the same guest install uploaded N summaries" from "N different
+ * guest installs uploaded one each", the same thing an authenticated
+ * upload already gets for free from the user's id. Reset to a new random
+ * value if the app's storage is ever cleared; nothing links it to any
+ * other identifier before or after that. Authenticated uploads never
+ * generate or send this -- userId already serves this exact purpose for
+ * them, and attaching a second device-level token to a real identity's
+ * telemetry would be scope creep this fix doesn't need.
+ */
+async function getOrCreateGuestInstallId(): Promise<string> {
+  const existing = await AsyncStorage.getItem(GUEST_INSTALL_ID_KEY);
+  if (existing) return existing;
+  const generated = Crypto.randomUUID();
+  await AsyncStorage.setItem(GUEST_INSTALL_ID_KEY, generated);
+  return generated;
+}
 
 /**
  * Best-effort background beacon: sends the current aggregated summary to
@@ -63,6 +86,10 @@ export async function maybeUploadTelemetrySummary(identity: TelemetryIdentity): 
     const decision = decideTelemetryUploadAfterSummary(identity, isCurrent, summary.totalEvents);
     if (decision.action === 'skip') return;
 
+    // Only ever generated/sent for guests -- an authenticated upload already
+    // has userId for this exact purpose (see getOrCreateGuestInstallId).
+    const guestInstallId = identity.kind === 'guest' ? await getOrCreateGuestInstallId() : null;
+
     const response = await apiFetch('/api/native/telemetry-summary', {
       method: 'POST',
       ...('expectedUserId' in decision ? { expectedUserId: decision.expectedUserId } : { expectedGuest: true }),
@@ -70,6 +97,7 @@ export async function maybeUploadTelemetrySummary(identity: TelemetryIdentity): 
         schemaVersion: TELEMETRY_SCHEMA_VERSION,
         appVersion: APP_VERSION,
         platform: Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : null,
+        ...(guestInstallId ? { guestInstallId } : {}),
         summary,
       }),
     });

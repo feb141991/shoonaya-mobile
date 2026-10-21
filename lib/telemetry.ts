@@ -36,8 +36,14 @@
  * and src/app/api/native/telemetry-summary/route.ts (backend repo) for the
  * receiving contract, and /admin's "Native Startup Performance" monitoring
  * tab for the viewer. Authenticated uploads carry the user's id (the same
- * per-user partition this module already used locally); guest uploads
- * carry no identifier at all.
+ * per-user partition this module already used locally). Guest uploads carry
+ * no account identifier -- the server never trusts or derives one from a
+ * guest request -- but do carry a random, locally-generated install id
+ * (lib/telemetryUpload.ts's getOrCreateGuestInstallId), purely so fleet
+ * analysis can tell repeat uploads from the same anonymous install apart
+ * from distinct installs, the same thing userId already gives authenticated
+ * rows for free. It is never derived from any device/hardware signal and
+ * resets to a new random value if the app's storage is ever cleared.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { ApiRequestDiagnostic } from './apiDiagnosticPolicy';
