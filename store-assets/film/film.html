@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Shoonaya film</title>
+<!--
+  A film is a pure function of time: window.renderFrame(t) sets every element for second t, so any frame can be
+  rendered on its own (see render.cjs). Nothing here animates by itself.
+  Only things that exist in the product are said (store-assets/film/README.md lists the source of each line).
+-->
+<style>
+  @font-face { font-family: 'Cormorant'; font-weight: 600; src: url('../../node_modules/@expo-google-fonts/cormorant-garamond/600SemiBold/CormorantGaramond_600SemiBold.ttf'); }
+  @font-face { font-family: 'Cormorant'; font-weight: 700; src: url('../../node_modules/@expo-google-fonts/cormorant-garamond/700Bold/CormorantGaramond_700Bold.ttf'); }
+  @font-face { font-family: 'Cormorant'; font-weight: 600; font-style: italic; src: url('../../node_modules/@expo-google-fonts/cormorant-garamond/600SemiBold_Italic/CormorantGaramond_600SemiBold_Italic.ttf'); }
+  @font-face { font-family: 'Inter'; font-weight: 500; src: url('../../node_modules/@expo-google-fonts/inter/500Medium/Inter_500Medium.ttf'); }
+  @font-face { font-family: 'Mukta'; font-weight: 400; src: url('../../node_modules/@expo-google-fonts/mukta/400Regular/Mukta_400Regular.ttf'); }
+  @font-face { font-family: 'Mukta'; font-weight: 700; src: url('../../node_modules/@expo-google-fonts/mukta/700Bold/Mukta_700Bold.ttf'); }
+
+  :root { --cream: #FBF1DC; --gold: #E6C27A; --gold-deep: #C5A059; --ink: #0C0A07; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1920px; background: var(--ink); overflow: hidden; }
+  #stage { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: var(--ink); }
+  .bg { position: absolute; inset: -140px; will-change: transform, opacity; opacity: 0; }
+  .bg img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  #shade { position: absolute; inset: 0; pointer-events: none; }
+  #vignette { position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 46%, rgba(12,10,7,0) 38%, rgba(12,10,7,.55) 100%); }
+  #bloom { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen;
+    background: radial-gradient(circle at 50% 44%, rgba(255,214,140,.55), rgba(255,200,120,0) 55%); opacity: 0; }
+  canvas#dust { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen; }
+  #grain { position: absolute; inset: -200px; pointer-events: none; mix-blend-mode: overlay; opacity: .16; }
+  #black { position: absolute; inset: 0; background: var(--ink); opacity: 1; pointer-events: none; }
+
+  .line { position: absolute; left: 90px; width: 900px; text-align: center; color: var(--cream);
+    text-shadow: 0 2px 30px rgba(12,10,7,.6), 0 0 2px rgba(12,10,7,.4); opacity: 0; will-change: transform, opacity, filter; }
+  .h1 { font-family: 'Cormorant', serif; font-weight: 600; font-size: 112px; line-height: 1.04; letter-spacing: -0.5px; }
+  .h2 { font-family: 'Cormorant', serif; font-weight: 600; font-size: 86px; line-height: 1.08; }
+  .em { font-style: italic; color: var(--gold); }
+  .label { font-family: 'Inter', sans-serif; font-weight: 500; font-size: 30px; letter-spacing: .34em; text-transform: uppercase; color: var(--gold); }
+  .sub { font-family: 'Inter', sans-serif; font-weight: 500; font-size: 38px; line-height: 1.4; letter-spacing: .01em; color: rgba(251,241,220,.86); }
+  .native { font-family: 'Mukta', 'Kohinoor Devanagari', 'Gurmukhi Sangam MN', sans-serif; font-weight: 700; font-size: 96px; color: var(--gold); }
+  .wordmark { font-family: 'Cormorant', serif; font-weight: 700; font-size: 164px; letter-spacing: .02em;
+    background: linear-gradient(180deg, #FFFCF0 0%, #F6DDA0 48%, #D9AC56 100%); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; filter: drop-shadow(0 3px 3px rgba(60,36,10,.55)) drop-shadow(0 10px 34px rgba(12,10,7,.75)); }
+  .tagline { font-family: 'Cormorant', serif; font-style: italic; font-weight: 600; font-size: 66px; color: var(--cream); }
+
+  .medallion { position: absolute; width: 520px; height: 520px; left: 280px; opacity: 0; will-change: transform, opacity; }
+  .medallion .ring { position: absolute; inset: 0; }
+  .medallion .glow { position: absolute; inset: 40px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,222,160,.55), rgba(255,200,120,0) 68%); }
+  .medallion img { position: absolute; left: 110px; top: 110px; width: 300px; height: 300px; object-fit: contain;
+    filter: drop-shadow(0 10px 30px rgba(12,10,7,.5)); }
+  #emblem { position: absolute; width: 420px; height: 420px; left: 330px; opacity: 0; will-change: transform, opacity;
+    filter: drop-shadow(0 0 60px rgba(255,214,140,.55)); }
+  .ticks { position: absolute; left: 0; width: 1080px; display: flex; justify-content: center; gap: 22px; opacity: 0; }
+  .ticks i { display: block; width: 64px; height: 3px; background: rgba(230,194,122,.28); border-radius: 2px; }
+  .ticks i.on { background: var(--gold); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="bgs"></div>
+  <div id="shade"></div>
+  <div id="vignette"></div>
+  <div id="bloom"></div>
+  <canvas id="dust" width="1080" height="1920"></canvas>
+  <div id="items"></div>
+  <img id="grain" alt="">
+  <div id="black"></div>
+</div>
+
+<script>
+/* ───────────────────────── helpers ───────────────────────── */
+const W = 1080, H = 1920;
+const params = new URLSearchParams(location.search);
+const CUT = params.get('cut') === '30' ? 30 : 45;
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const eOut = (x) => 1 - Math.pow(1 - x, 3);
+const eInOut = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+const eOutQuint = (x) => 1 - Math.pow(1 - x, 5);
+function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+
+/* ───────────────────────── assets ───────────────────────── */
+const A = '../../assets/';
+const SCENES_ART = {
+  sunrise: A + 'startup-scenes/hindu-sunrise.webp',
+  temple: A + 'startup-scenes/hindu-temple.webp',
+  sarovar: A + 'startup-scenes/sikh-sarovar.webp',
+  dharma: A + 'startup-scenes/buddhist-dharma.webp',
+  bodhi: A + 'startup-scenes/buddhist-bodhi.webp',
+  derasar: A + 'startup-scenes/jain-derasar.webp',
+  lotus: A + 'startup-scenes/jain-lotus.webp',
+  portal: A + 'startup-scenes/neutral-portal.webp',
+};
+const ICONS = {
+  panchang: A + 'icons/panchang.png',
+  japa: A + 'icons/japa.png',
+  pathshala: A + 'icons/pathshala.png',
+  tirtha: A + 'icons/tirtha.png',
+};
+const EMBLEM = A + 'brand/shoonaya-emblem-transparent.png';
+
+/* ───────────────────────── timeline ─────────────────────────
+   Each scene has a duration per cut. Offsets inside a scene are fractions of its duration, so the same
+   storyboard serves the 45 s and 30 s cuts. Every line below is a confirmed product statement or a plain
+   human observation; see README.md. */
+const SCENES = [
+  { id: 'hook1', d45: 3.8, d30: 2.8, bg: ['sunrise'], shade: .42 },
+  { id: 'hook2', d45: 3.6, d30: 3.0, bg: ['sunrise', 'temple'], shade: .50 },
+  { id: 'panchang', d45: 5.8, d30: 3.8, bg: ['temple'], shade: .52 },
+  { id: 'paths', d45: 8.0, d30: 5.0, bg: ['sunrise', 'sarovar', 'dharma', 'derasar'], shade: .46 },
+  { id: 'japa', d45: 3.4, d30: 2.2, bg: ['portal'], shade: .50 },
+  { id: 'pathshala', d45: 3.4, d30: 2.2, bg: ['bodhi'], shade: .50 },
+  { id: 'tirtha', d45: 3.4, d30: 2.2, bg: ['sarovar'], shade: .50 },
+  { id: 'choose', d45: 4.6, d30: 2.8, bg: ['lotus'], shade: .54 },
+  { id: 'wherever', d45: 3.6, d30: 2.4, bg: ['portal'], shade: .50 },
+  { id: 'end', d45: 5.4, d30: 3.6, bg: ['portal'], shade: .44 },
+];
+let T = 0;
+for (const s of SCENES) { s.dur = CUT === 30 ? s.d30 : s.d45; s.t0 = T; s.t1 = T + s.dur; T += s.dur; }
+const TOTAL = T;
+window.__total = TOTAL;
+
+/* ───────────────────────── DOM build ───────────────────────── */
+const bgsEl = document.getElementById('bgs');
+const itemsEl = document.getElementById('items');
+const bgLayers = [];       // {el, t0, t1, scene, from, to}
+const FADE = 0.9;
+
+function addBg(key, t0, t1, idx) {
+  const el = document.createElement('div'); el.className = 'bg';
+  const img = document.createElement('img'); img.src = SCENES_ART[key]; el.appendChild(img); bgsEl.appendChild(el);
+  const r = rng(7 + idx * 13);
+  bgLayers.push({ el, t0, t1, dx: (r() - .5) * 90, dy: -30 - r() * 50, s0: 1.02, s1: 1.13 + r() * .03 });
+}
+let bi = 0;
+for (const s of SCENES) {
+  const n = s.bg.length;
+  s.bg.forEach((key, i) => addBg(key, s.t0 + (s.dur * i) / n, s.t0 + (s.dur * (i + 1)) / n, bi++));
+}
+// merge consecutive identical backgrounds into one continuous layer so a shared backdrop never re-fades
+for (let i = bgLayers.length - 1; i > 0; i--) {
+  const a = bgLayers[i - 1], b = bgLayers[i];
+  if (a.el.firstChild.src === b.el.firstChild.src) { a.t1 = b.t1; b.el.remove(); bgLayers.splice(i, 1); }
+}
+
+function mkLine(html, cls, y, extra = {}) {
+  const el = document.createElement('div'); el.className = 'line ' + cls; el.innerHTML = html; el.style.top = y + 'px';
+  Object.assign(el.style, extra); itemsEl.appendChild(el); return el;
+}
+const items = []; // {el, kind, a, b, ...}
+function line(sceneId, html, cls, y, f0, f1, opts = {}) {
+  const s = SCENES.find((x) => x.id === sceneId);
+  const el = mkLine(html, cls, y, opts.style);
+  items.push({ el, a: s.t0 + s.dur * f0, b: s.t0 + s.dur * f1, rise: opts.rise ?? 70, blur: opts.blur ?? 12, inDur: opts.inDur ?? 1.1, outDur: opts.outDur ?? 0.55 });
+  return el;
+}
+function medallion(sceneId, icon, y, f0, f1) {
+  const s = SCENES.find((x) => x.id === sceneId);
+  const el = document.createElement('div'); el.className = 'medallion'; el.style.top = y + 'px';
+  el.innerHTML = `<div class="glow"></div>
+    <svg class="ring" viewBox="0 0 520 520"><circle cx="260" cy="260" r="246" fill="none" stroke="rgba(230,194,122,.85)" stroke-width="2.5" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1"/>
+    <circle cx="260" cy="260" r="228" fill="none" stroke="rgba(230,194,122,.35)" stroke-width="1.5"/></svg>
+    <img src="${ICONS[icon]}" alt="">`;
+  itemsEl.appendChild(el);
+  items.push({ el, a: s.t0 + s.dur * f0, b: s.t0 + s.dur * f1, medallion: true, outDur: 0.55 });
+}
+function ticksFor(sceneId, y) {
+  const s = SCENES.find((x) => x.id === sceneId);
+  const el = document.createElement('div'); el.className = 'ticks'; el.style.top = y + 'px';
+  el.innerHTML = '<i></i><i></i><i></i><i></i>'; itemsEl.appendChild(el);
+  items.push({ el, a: s.t0 + .25, b: s.t1 - .15, ticks: s, outDur: .5 });
+}
+
+/* hook */
+line('hook1', 'When you live<br><span class="em">far from home,</span>', 'h1', 700, 0.12, 0.98);
+line('hook2', 'which day<br>is the <span class="em">festival?</span>', 'h1', 700, 0.04, 0.98);
+/* panchang (confirmed: panchang and festival timings follow the city you set) */
+medallion('panchang', 'panchang', 330, 0.04, 0.98);
+line('panchang', 'Panchang &amp; festival days', 'label', 900, 0.14, 0.98, { rise: 30, blur: 6 });
+line('panchang', 'that follow<br>the <span class="em">city you set.</span>', 'h2', 972, 0.2, 0.98);
+/* four paths (confirmed: separate experiences for the four traditions) */
+line('paths', 'Four paths.<br><span class="em">Each its own.</span>', 'h2', 360, 0.02, 0.98, { inDur: 1.2 });
+const PATHS = [
+  ['Hindu', 'हिन्दू'], ['Sikh', 'ਸਿੱਖ'], ['Buddhist', 'बौद्ध'], ['Jain', 'जैन'],
+];
+const pathsScene = SCENES.find((x) => x.id === 'paths');
+PATHS.forEach(([name, native], i) => {
+  const q = 1 / 4, f0 = 0.04 + i * q * .96, f1 = 0.04 + (i + 1) * q * .96;
+  const last = i === 3;
+  line('paths', `<div class="h1" style="font-size:150px">${name}</div>`, 'h1', 880, f0, last ? 0.98 : f1 + 0.02, { rise: 50, blur: 10, inDur: .8 });
+  line('paths', `<div class="native">${native}</div>`, 'native', 1090, f0 + 0.015, last ? 0.98 : f1 + 0.02, { rise: 40, blur: 8, inDur: .8 });
+});
+ticksFor('paths', 1320);
+/* features (confirmed: japa mala counter and daily shloka; Pathshala learning paths and lessons; Tirtha temples and gurdwaras in many cities) */
+medallion('japa', 'japa', 330, 0.04, 0.98);
+line('japa', 'Japa', 'label', 900, 0.14, 0.98, { rise: 30, blur: 6 });
+line('japa', 'A mala counter<br>&amp; a <span class="em">daily shloka.</span>', 'h2', 972, 0.2, 0.98);
+medallion('pathshala', 'pathshala', 330, 0.04, 0.98);
+line('pathshala', 'Pathshala', 'label', 900, 0.14, 0.98, { rise: 30, blur: 6 });
+line('pathshala', 'Learning paths<br>&amp; <span class="em">lessons.</span>', 'h2', 972, 0.2, 0.98);
+medallion('tirtha', 'tirtha', 330, 0.04, 0.98);
+line('tirtha', 'Tirtha', 'label', 900, 0.14, 0.98, { rise: 30, blur: 6 });
+line('tirtha', 'Temples &amp; gurdwaras<br><span class="em">in many cities.</span>', 'h2', 972, 0.2, 0.98);
+/* choose (confirmed: reminders are off until you choose; English, Hindi, Punjabi) */
+line('choose', 'Reminders<br><span class="em">you choose.</span>', 'h1', 640, 0.03, 0.97);
+line('choose', 'Off until you turn them on.', 'sub', 1010, 0.2, 0.97, { rise: 30, blur: 6 });
+line('choose', 'English &nbsp;·&nbsp; हिन्दी &nbsp;·&nbsp; ਪੰਜਾਬੀ', 'sub', 1190, 0.42, 0.97, { rise: 30, blur: 6, style: { fontSize: '46px', color: '#E6C27A' } });
+/* the diaspora line */
+line('wherever', 'Wherever you live,<br><span class="em">your tradition<br>comes with you.</span>', 'h1', 640, 0.04, 0.97, { inDur: 1.3 });
+/* end card */
+const endEmblem = document.createElement('img'); endEmblem.id = 'emblem'; endEmblem.src = EMBLEM; endEmblem.style.top = '400px'; itemsEl.appendChild(endEmblem);
+const endS = SCENES.find((x) => x.id === 'end');
+line('end', 'Shoonaya', 'wordmark', 880, 0.14, 1.1, { rise: 40, blur: 14, inDur: 1.4 });
+line('end', 'Find your infinite.', 'tagline', 1120, 0.36, 1.1, { rise: 24, blur: 8, inDur: 1.2 });
+
+/* ───────────────────────── dust + grain ───────────────────────── */
+const dust = document.getElementById('dust').getContext('2d');
+const R = rng(2026);
+const MOTES = Array.from({ length: 110 }, () => ({
+  x: R() * W, y: R() * H, v: 14 + R() * 38, r: 1.2 + R() * 3.6, ph: R() * 6.28, amp: 12 + R() * 40, tw: .6 + R() * 1.6, depth: R(),
+}));
+(function makeGrain() {
+  const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'); const id = g.createImageData(256, 256);
+  const r = rng(99);
+  for (let i = 0; i < id.data.length; i += 4) { const v = 96 + Math.floor(r() * 64); id.data[i] = id.data[i + 1] = id.data[i + 2] = v; id.data[i + 3] = 255; }
+  g.putImageData(id, 0, 0);
+  const big = document.createElement('canvas'); big.width = W + 400; big.height = H + 400; const bg = big.getContext('2d');
+  bg.fillStyle = bg.createPattern(c, 'repeat'); bg.fillRect(0, 0, big.width, big.height);
+  document.getElementById('grain').src = big.toDataURL('image/png');
+})();
+
+/* ───────────────────────── frame ───────────────────────── */
+function dustFrame(t, intensity) {
+  dust.clearRect(0, 0, W, H);
+  for (const m of MOTES) {
+    const y = ((m.y - m.v * t) % (H + 80) + (H + 80)) % (H + 80) - 40;
+    const x = m.x + Math.sin(m.ph + t * .35) * m.amp;
+    const a = (0.18 + 0.5 * (0.5 + 0.5 * Math.sin(m.ph * 3 + t * m.tw))) * intensity * (0.35 + 0.65 * m.depth);
+    const r = m.r * (1 + m.depth * 1.6);
+    const g = dust.createRadialGradient(x, y, 0, x, y, r * 4);
+    g.addColorStop(0, `rgba(255,226,170,${a})`); g.addColorStop(.4, `rgba(255,205,120,${a * .35})`); g.addColorStop(1, 'rgba(255,200,110,0)');
+    dust.fillStyle = g; dust.beginPath(); dust.arc(x, y, r * 4, 0, 6.2832); dust.fill();
+  }
+}
+
+const shadeEl = document.getElementById('shade');
+const bloomEl = document.getElementById('bloom');
+const blackEl = document.getElementById('black');
+const grainEl = document.getElementById('grain');
+
+window.renderFrame = function (t) {
+  t = clamp(t, 0, TOTAL);
+  /* backgrounds: crossfade, slow push, drift */
+  for (const L of bgLayers) {
+    const fin = L.t0 <= 0.001 ? 1 : eInOut(seg(t, L.t0 - FADE / 2, L.t0 + FADE / 2));
+    const fout = L.t1 >= TOTAL - 0.001 ? 1 : 1 - eInOut(seg(t, L.t1 - FADE / 2, L.t1 + FADE / 2));
+    const p = seg(t, L.t0 - FADE, L.t1 + FADE);
+    const s = L.s0 + (L.s1 - L.s0) * p;
+    L.el.style.opacity = String(Math.min(fin, fout));
+    L.el.style.transform = `translate3d(${L.dx * (p - .5)}px, ${L.dy * (p - .5)}px, 0) scale(${s})`;
+  }
+  /* shade strength follows the current scene */
+  let sc = SCENES[0]; for (const s of SCENES) if (t >= s.t0) sc = s;
+  const sh = Math.max(.12, sc.shade - .12);
+  shadeEl.style.background = `radial-gradient(ellipse 62% 30% at 50% 52%, rgba(12,10,7,${sh + .26}), rgba(12,10,7,0) 100%), linear-gradient(to bottom, rgba(12,10,7,${sh + .14}) 0%, rgba(12,10,7,${sh - .06}) 34%, rgba(12,10,7,${sh}) 70%, rgba(12,10,7,${sh + .2}) 100%)`;
+
+  /* text + medallions */
+  for (const it of items) {
+    if (it.ticks) {
+      const on = seg(t, it.a, it.a + .5) * (1 - seg(t, it.b - it.outDur, it.b));
+      it.el.style.opacity = String(on);
+      const idx = Math.min(3, Math.floor(seg(t, it.ticks.t0 + .04 * it.ticks.dur, it.ticks.t1 - .04 * it.ticks.dur) * 4));
+      [...it.el.children].forEach((c, i) => c.classList.toggle('on', i === idx));
+      continue;
+    }
+    const pin = seg(t, it.a, it.a + (it.inDur ?? 1.1));
+    const pout = seg(t, it.b - it.outDur, it.b);
+    if (it.medallion) {
+      const e = eOutQuint(pin), o = 1 - eInOut(pout);
+      it.el.style.opacity = String(e * o);
+      it.el.style.transform = `scale(${0.86 + 0.14 * e + 0.015 * seg(t, it.a, it.b)})`;
+      const ring = it.el.querySelector('circle'); ring.setAttribute('stroke-dashoffset', String(1 - eInOut(seg(t, it.a + .1, it.a + 1.4))));
+      continue;
+    }
+    const e = eOut(pin), o = 1 - eInOut(pout);
+    it.el.style.opacity = String(e * o);
+    it.el.style.transform = `translate3d(0, ${(1 - e) * it.rise - (1 - o) * 26}px, 0)`;
+    it.el.style.filter = `blur(${(1 - e) * it.blur + (1 - o) * 8}px)`;
+  }
+
+  /* end card emblem + bloom */
+  const pe = seg(t, endS.t0 + endS.dur * .02, endS.t0 + endS.dur * .02 + 1.6);
+  endEmblem.style.opacity = String(eOutQuint(pe) * (1 - seg(t, TOTAL - 0.7, TOTAL)));
+  endEmblem.style.transform = `translate3d(0, ${(1 - eOutQuint(pe)) * 40}px, 0) scale(${0.9 + 0.1 * eOutQuint(pe) + 0.02 * seg(t, endS.t0, TOTAL)})`;
+  const bloom = 0.08 + 0.12 * Math.sin(t * .9) ** 2 + 0.22 * eInOut(seg(t, endS.t0, endS.t0 + 1.6)) * (1 - seg(t, TOTAL - 0.8, TOTAL));
+  bloomEl.style.opacity = String(bloom);
+
+  /* particles, grain, fades */
+  dustFrame(t, 0.9 + 0.5 * eInOut(seg(t, endS.t0, endS.t0 + 1.5)));
+  const gi = Math.floor(t * 30);
+  const gr = rng(gi * 7919 + 13);
+  grainEl.style.transform = `translate3d(${-Math.floor(gr() * 190)}px, ${-Math.floor(gr() * 190)}px, 0)`;
+  blackEl.style.opacity = String(Math.max(1 - eInOut(seg(t, 0, 1.2)), seg(t, TOTAL - 0.7, TOTAL)));
+};
+
+/* readiness: every image decoded and every font loaded */
+Promise.all([
+  document.fonts.load("600 40px Cormorant"), document.fonts.load("700 40px Cormorant"), document.fonts.load("italic 600 40px Cormorant"),
+  document.fonts.load("500 30px Inter"), document.fonts.load("400 40px Mukta"), document.fonts.load("700 40px Mukta"),
+  ...[...document.images].map((i) => (i.decode ? i.decode().catch(() => {}) : Promise.resolve())),
+]).then(() => document.fonts.ready).then(() => { window.renderFrame(0); window.__ready = true; });
+</script>
+</body>
+</html>
