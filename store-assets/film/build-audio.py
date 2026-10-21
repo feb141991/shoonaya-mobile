@@ -24,20 +24,23 @@ args = ap.parse_args()
 tl = json.load(open(os.path.join(HERE, f'timeline-{args.cut}.json')))
 total = tl['total']
 starts = {s['id']: s['t0'] for s in tl['scenes']}
+lengths = {s['id']: s['t1'] - s['t0'] for s in tl['scenes']}
 
-# (time, base Hz, loudness, decay seconds). D4=293.66, A4=440, F#4=369.99, D5=587.33, D3=146.83
-hits = [
-    (0.9, 293.66, 0.55, 3.2),
-    (starts['panchang'] + 0.05, 440.00, 0.50, 3.4),
-    (starts['paths'] + 0.05, 293.66, 0.50, 3.4),
-    (starts['japa'] + 0.05, 369.99, 0.42, 3.0),
-    (starts['pathshala'] + 0.05, 440.00, 0.42, 3.0),
-    (starts['tirtha'] + 0.05, 587.33, 0.38, 3.0),
-    (starts['choose'] + 0.05, 369.99, 0.42, 3.2),
-    (starts['wherever'] + 0.05, 293.66, 0.50, 3.6),
-    (starts['end'] + 0.10, 146.83, 0.80, 6.5),
-    (starts['end'] + 0.10, 293.66, 0.45, 6.0),
-]
+# One note per scene, from the D major pentatonic so every combination sounds consonant:
+# D4 293.66, E4 329.63, F#4 369.99, A4 440, B4 493.88, D5 587.33, D3 146.83
+NOTES = {
+    'panchang': 440.00, 'paths': 293.66, 'kundali': 329.63, 'rashiphala': 369.99, 'japa': 440.00, 'pathshala': 493.88,
+    'panchatantra': 329.63, 'livedarshan': 587.33, 'tirtha': 440.00, 'mandali': 369.99, 'kul': 293.66, 'more': 493.88, 'choose': 369.99,
+    'wherever': 293.66,
+}
+hits = [(0.9, 293.66, 0.55, 3.2)]
+for sid, f in NOTES.items():
+    if sid not in starts:
+        continue  # the scene is not in this cut
+    quick = lengths[sid] < 2.5  # short scenes get a shorter, softer strike so they do not pile up
+    hits.append((starts[sid] + 0.05, f, 0.36 if quick else 0.46, 2.2 if quick else 3.4))
+hits.append((starts['end'] + 0.10, 146.83, 0.80, 6.5))
+hits.append((starts['end'] + 0.10, 293.66, 0.45, 6.0))
 
 def bowl_expr(f, amp, tau):
     """A struck bowl: a fast attack, inharmonic partials that die at different rates, and a slight L/R detune for beating."""

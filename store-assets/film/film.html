@@ -20,7 +20,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { width: 1080px; height: 1920px; background: var(--ink); overflow: hidden; }
   #stage { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: var(--ink); }
-  .bg { position: absolute; inset: -140px; will-change: transform, opacity; opacity: 0; }
+  .bg { position: absolute; inset: -140px; opacity: 0; display: none; }
   .bg img { width: 100%; height: 100%; object-fit: cover; display: block; }
   #shade { position: absolute; inset: 0; pointer-events: none; }
   #vignette { position: absolute; inset: 0; pointer-events: none;
@@ -72,7 +72,7 @@
 /* ───────────────────────── helpers ───────────────────────── */
 const W = 1080, H = 1920;
 const params = new URLSearchParams(location.search);
-const CUT = params.get('cut') === '30' ? 30 : 45;
+const CUT = ['30', '60'].includes(params.get('cut')) ? Number(params.get('cut')) : 45;
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 const seg = (t, a, b) => clamp((t - a) / (b - a));
 const eOut = (x) => 1 - Math.pow(1 - x, 3);
@@ -94,42 +94,56 @@ const SCENES_ART = {
 };
 const ICONS = {
   panchang: A + 'icons/panchang.png',
+  kundali: A + 'icons/kundali.png',
+  rashiphala: A + 'icons/rashiphala.png',
   japa: A + 'icons/japa.png',
   pathshala: A + 'icons/pathshala.png',
+  'live-darshan': A + 'icons/live-darshan.png',
   tirtha: A + 'icons/tirtha.png',
+  mandali: A + 'icons/mandali.png',
 };
 const EMBLEM = A + 'brand/shoonaya-emblem-transparent.png';
 
 /* ───────────────────────── timeline ─────────────────────────
-   Each scene has a duration per cut. Offsets inside a scene are fractions of its duration, so the same
-   storyboard serves the 45 s and 30 s cuts. Every line below is a confirmed product statement or a plain
-   human observation; see README.md. */
-const SCENES = [
-  { id: 'hook1', d45: 3.8, d30: 2.8, bg: ['sunrise'], shade: .42 },
-  { id: 'hook2', d45: 3.6, d30: 3.0, bg: ['sunrise', 'temple'], shade: .50 },
-  { id: 'panchang', d45: 5.8, d30: 3.8, bg: ['temple'], shade: .52 },
-  { id: 'paths', d45: 8.0, d30: 5.0, bg: ['sunrise', 'sarovar', 'dharma', 'derasar'], shade: .46 },
-  { id: 'japa', d45: 3.4, d30: 2.2, bg: ['portal'], shade: .50 },
-  { id: 'pathshala', d45: 3.4, d30: 2.2, bg: ['bodhi'], shade: .50 },
-  { id: 'tirtha', d45: 3.4, d30: 2.2, bg: ['sarovar'], shade: .50 },
-  { id: 'choose', d45: 4.6, d30: 2.8, bg: ['lotus'], shade: .54 },
-  { id: 'wherever', d45: 3.6, d30: 2.4, bg: ['portal'], shade: .50 },
-  { id: 'end', d45: 5.4, d30: 3.6, bg: ['portal'], shade: .44 },
+   Three cuts share one storyboard: 60 s (every feature), 45 s (every feature, faster) and 30 s (highlights).
+   A scene with no duration for a cut is left out of that cut. Offsets inside a scene are fractions of its length.
+   Every line below is a confirmed product statement or a plain human observation; see README.md. */
+const SCENES_ALL = [
+  { id: 'hook1',        d60: 3.4, d45: 2.8, d30: 2.5, bg: ['sunrise'], shade: .42 },
+  { id: 'hook2',        d60: 3.4, d45: 2.8, d30: 2.5, bg: ['sunrise', 'temple'], shade: .50 },
+  { id: 'panchang',     d60: 4.6, d45: 3.6, d30: 3.0, bg: ['temple'], shade: .52 },
+  { id: 'paths',        d60: 6.6, d45: 4.8, d30: 4.0, bg: ['sunrise', 'sarovar', 'dharma', 'derasar'], shade: .46 },
+  { id: 'kundali',      d60: 2.9, d45: 2.1, d30: 1.9, bg: ['dharma'], shade: .50 },
+  { id: 'rashiphala',   d60: 2.9, d45: 2.1, d30: 1.9, bg: ['portal'], shade: .50 },
+  { id: 'japa',         d60: 2.9, d45: 2.1, d30: null, bg: ['lotus'], shade: .50 },
+  { id: 'pathshala',    d60: 2.9, d45: 2.1, d30: null, bg: ['bodhi'], shade: .50 },
+  { id: 'panchatantra', d60: 3.6, d45: 2.7, d30: 2.3, bg: ['portal'], shade: .30 },
+  { id: 'livedarshan',  d60: 2.9, d45: 2.1, d30: 1.9, bg: ['derasar'], shade: .50 },
+  { id: 'tirtha',       d60: 2.9, d45: 2.1, d30: null, bg: ['sarovar'], shade: .50 },
+  { id: 'mandali',      d60: 2.9, d45: 2.1, d30: 1.9, bg: ['sunrise'], shade: .50 },
+  { id: 'kul',          d60: 2.9, d45: 2.1, d30: 1.9, bg: ['portal'], shade: .50 },
+  { id: 'more',         d60: 3.4, d45: 2.6, d30: null, bg: ['dharma'], shade: .52 },
+  { id: 'choose',       d60: 3.6, d45: 2.6, d30: null, bg: ['lotus'], shade: .54 },
+  { id: 'wherever',     d60: 3.2, d45: 2.6, d30: 2.4, bg: ['portal'], shade: .50 },
+  { id: 'end',          d60: 5.0, d45: 3.7, d30: 3.4, bg: ['portal'], shade: .44 },
 ];
+const KEY = 'd' + CUT;
+const SCENES = SCENES_ALL.filter((s) => s[KEY]);
 let T = 0;
-for (const s of SCENES) { s.dur = CUT === 30 ? s.d30 : s.d45; s.t0 = T; s.t1 = T + s.dur; T += s.dur; }
+for (const s of SCENES) { s.dur = s[KEY]; s.t0 = T; s.t1 = T + s.dur; T += s.dur; }
 const TOTAL = T;
 window.__total = TOTAL;
+const sceneOf = (id) => SCENES.find((x) => x.id === id);
 
 /* ───────────────────────── DOM build ───────────────────────── */
 const bgsEl = document.getElementById('bgs');
 const itemsEl = document.getElementById('items');
-const bgLayers = [];       // {el, t0, t1, scene, from, to}
+const bgLayers = [];       // {el, t0, t1, dx, dy, s0, s1}
 const FADE = 0.9;
 
 function addBg(key, t0, t1, idx) {
   const el = document.createElement('div'); el.className = 'bg';
-  const img = document.createElement('img'); img.src = SCENES_ART[key]; el.appendChild(img); bgsEl.appendChild(el);
+  const img = document.createElement('img'); img.decoding = 'sync'; img.src = SCENES_ART[key]; el.appendChild(img); bgsEl.appendChild(el);
   const r = rng(7 + idx * 13);
   bgLayers.push({ el, t0, t1, dx: (r() - .5) * 90, dy: -30 - r() * 50, s0: 1.02, s1: 1.13 + r() * .03 });
 }
@@ -148,60 +162,97 @@ function mkLine(html, cls, y, extra = {}) {
   const el = document.createElement('div'); el.className = 'line ' + cls; el.innerHTML = html; el.style.top = y + 'px';
   Object.assign(el.style, extra); itemsEl.appendChild(el); return el;
 }
-const items = []; // {el, kind, a, b, ...}
+const items = [];
 function line(sceneId, html, cls, y, f0, f1, opts = {}) {
-  const s = SCENES.find((x) => x.id === sceneId);
+  const s = sceneOf(sceneId); if (!s) return;
   const el = mkLine(html, cls, y, opts.style);
   items.push({ el, a: s.t0 + s.dur * f0, b: s.t0 + s.dur * f1, rise: opts.rise ?? 70, blur: opts.blur ?? 12, inDur: opts.inDur ?? 1.1, outDur: opts.outDur ?? 0.55 });
-  return el;
 }
+const MEDALLION_ART = {
+  // Kul has no icon of its own: three lamps, one larger, joined by a hairline, read as a family circle.
+  kul: `<svg class="kul" viewBox="0 0 520 520" style="position:absolute;inset:0"><path d="M140 372 Q260 292 380 372" fill="none" stroke="rgba(230,194,122,.55)" stroke-width="2"/></svg>
+        <img src="${A}relics/diya-bronze.png" style="left:132px;top:96px;width:256px;height:256px" alt="">
+        <img src="${A}relics/diya-bronze.png" style="left:24px;top:262px;width:158px;height:158px;opacity:.92" alt="">
+        <img src="${A}relics/diya-bronze.png" style="left:338px;top:262px;width:158px;height:158px;opacity:.92" alt="">`,
+};
 function medallion(sceneId, icon, y, f0, f1) {
-  const s = SCENES.find((x) => x.id === sceneId);
+  const s = sceneOf(sceneId); if (!s) return;
   const el = document.createElement('div'); el.className = 'medallion'; el.style.top = y + 'px';
+  const art = MEDALLION_ART[icon] || `<img src="${ICONS[icon]}" alt="">`;
   el.innerHTML = `<div class="glow"></div>
     <svg class="ring" viewBox="0 0 520 520"><circle cx="260" cy="260" r="246" fill="none" stroke="rgba(230,194,122,.85)" stroke-width="2.5" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1"/>
-    <circle cx="260" cy="260" r="228" fill="none" stroke="rgba(230,194,122,.35)" stroke-width="1.5"/></svg>
-    <img src="${ICONS[icon]}" alt="">`;
+    <circle cx="260" cy="260" r="228" fill="none" stroke="rgba(230,194,122,.35)" stroke-width="1.5"/></svg>${art}`;
   itemsEl.appendChild(el);
   items.push({ el, a: s.t0 + s.dur * f0, b: s.t0 + s.dur * f1, medallion: true, outDur: 0.55 });
 }
 function ticksFor(sceneId, y) {
-  const s = SCENES.find((x) => x.id === sceneId);
+  const s = sceneOf(sceneId); if (!s) return;
   const el = document.createElement('div'); el.className = 'ticks'; el.style.top = y + 'px';
   el.innerHTML = '<i></i><i></i><i></i><i></i>'; itemsEl.appendChild(el);
   items.push({ el, a: s.t0 + .25, b: s.t1 - .15, ticks: s, outDur: .5 });
+}
+/* a feature scene: medallion, a small label, then the sentence */
+function feature(id, icon, label, html) {
+  medallion(id, icon, 330, 0.04, 0.98);
+  line(id, label, 'label', 900, 0.14, 0.98, { rise: 30, blur: 6 });
+  line(id, html, 'h2', 972, 0.2, 0.98);
 }
 
 /* hook */
 line('hook1', 'When you live<br><span class="em">far from home,</span>', 'h1', 700, 0.12, 0.98);
 line('hook2', 'which day<br>is the <span class="em">festival?</span>', 'h1', 700, 0.04, 0.98);
 /* panchang (confirmed: panchang and festival timings follow the city you set) */
-medallion('panchang', 'panchang', 330, 0.04, 0.98);
-line('panchang', 'Panchang &amp; festival days', 'label', 900, 0.14, 0.98, { rise: 30, blur: 6 });
-line('panchang', 'that follow<br>the <span class="em">city you set.</span>', 'h2', 972, 0.2, 0.98);
+feature('panchang', 'panchang', 'Panchang &amp; festival days', 'that follow<br>the <span class="em">city you set.</span>');
 /* four paths (confirmed: separate experiences for the four traditions) */
 line('paths', 'Four paths.<br><span class="em">Each its own.</span>', 'h2', 360, 0.02, 0.98, { inDur: 1.2 });
-const PATHS = [
-  ['Hindu', 'हिन्दू'], ['Sikh', 'ਸਿੱਖ'], ['Buddhist', 'बौद्ध'], ['Jain', 'जैन'],
-];
-const pathsScene = SCENES.find((x) => x.id === 'paths');
-PATHS.forEach(([name, native], i) => {
-  const q = 1 / 4, f0 = 0.04 + i * q * .96, f1 = 0.04 + (i + 1) * q * .96;
-  const last = i === 3;
+[['Hindu', 'हिन्दू'], ['Sikh', 'ਸਿੱਖ'], ['Buddhist', 'बौद्ध'], ['Jain', 'जैन']].forEach(([name, native], i) => {
+  const q = 1 / 4, f0 = 0.04 + i * q * .96, f1 = 0.04 + (i + 1) * q * .96, last = i === 3;
   line('paths', `<div class="h1" style="font-size:150px">${name}</div>`, 'h1', 880, f0, last ? 0.98 : f1 + 0.02, { rise: 50, blur: 10, inDur: .8 });
   line('paths', `<div class="native">${native}</div>`, 'native', 1090, f0 + 0.015, last ? 0.98 : f1 + 0.02, { rise: 40, blur: 8, inDur: .8 });
 });
 ticksFor('paths', 1320);
-/* features (confirmed: japa mala counter and daily shloka; Pathshala learning paths and lessons; Tirtha temples and gurdwaras in many cities) */
-medallion('japa', 'japa', 330, 0.04, 0.98);
-line('japa', 'Japa', 'label', 900, 0.14, 0.98, { rise: 30, blur: 6 });
-line('japa', 'A mala counter<br>&amp; a <span class="em">daily shloka.</span>', 'h2', 972, 0.2, 0.98);
-medallion('pathshala', 'pathshala', 330, 0.04, 0.98);
-line('pathshala', 'Pathshala', 'label', 900, 0.14, 0.98, { rise: 30, blur: 6 });
-line('pathshala', 'Learning paths<br>&amp; <span class="em">lessons.</span>', 'h2', 972, 0.2, 0.98);
-medallion('tirtha', 'tirtha', 330, 0.04, 0.98);
-line('tirtha', 'Tirtha', 'label', 900, 0.14, 0.98, { rise: 30, blur: 6 });
-line('tirtha', 'Temples &amp; gurdwaras<br><span class="em">in many cities.</span>', 'h2', 972, 0.2, 0.98);
+/* features. Each sentence says what the screen does and no more. */
+feature('kundali', 'kundali', 'Kundali', 'Birth charts for you<br><span class="em">&amp; your family.</span>');
+feature('rashiphala', 'rashiphala', 'Rashiphala', 'A daily reading<br><span class="em">for your rashi.</span>');
+feature('japa', 'japa', 'Japa', 'A mala counter<br>&amp; a <span class="em">daily shloka.</span>');
+feature('pathshala', 'pathshala', 'Pathshala', 'Learning paths<br>&amp; <span class="em">lessons.</span>');
+feature('livedarshan', 'live-darshan', 'Live Darshan', 'Darshan, live<br><span class="em">from sacred sites.</span>');
+feature('tirtha', 'tirtha', 'Tirtha', 'Temples &amp; gurdwaras<br><span class="em">in many cities.</span>');
+feature('mandali', 'mandali', 'Mandali', 'A community<br><span class="em">for your city.</span>');
+feature('kul', 'kul', 'Kul', 'A space for<br><span class="em">your family.</span>');
+/* Panchatantra storybooks: the app's illustrated six-scene storybooks ("Read Storybook"). Three plates from one
+   fable (the lion and the rabbit), laid down one after another on warm paper. Pages with no baked-in text only. */
+const PT = [['lion-rabbit-1', -2.2, 215], ['lion-rabbit-3', 1.6, 555], ['lion-rabbit-5', -1.2, 895]];
+const ptScene = sceneOf('panchatantra');
+const ptCards = [];
+let ptGroup = null;
+if (ptScene) {
+  ptGroup = document.createElement('div'); ptGroup.style.cssText = 'position:absolute;inset:0;opacity:0'; itemsEl.appendChild(ptGroup);
+  PT.forEach(([file, rot, top], i) => {
+    const el = document.createElement('div');
+    el.style.cssText = `position:absolute;left:130px;top:${top}px;width:820px;height:458px;padding:14px;background:linear-gradient(135deg,#F7EBD0,#EBD5A6);border-radius:12px;box-shadow:0 26px 60px rgba(12,10,7,.5),0 2px 0 rgba(255,250,235,.7) inset;opacity:0;will-change:transform,opacity;transform-origin:50% 50%`;
+    el.innerHTML = `<div style="position:relative;width:100%;height:100%;overflow:hidden;border-radius:4px;outline:2px solid rgba(155,112,40,.65);outline-offset:-1px">
+      <img src="${A}panchatantra/${file}.webp" style="width:100%;height:100%;object-fit:cover;display:block;will-change:transform" alt="">
+      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(0,0,0,0) 60%,rgba(60,36,10,.28) 100%)"></div></div>`;
+    ptGroup.appendChild(el); ptCards.push({ el, rot, i, img: el.querySelector('img') });
+  });
+  line('panchatantra', 'Panchatantra', 'label', 1405, 0.2, 0.98, { rise: 30, blur: 6 });
+  line('panchatantra', 'Illustrated <span class="em">storybooks.</span>', 'h2', 1462, 0.28, 0.98, { style: { fontSize: '80px' } });
+}
+/* and more: the app's other sections, named, nothing claimed about them */
+const MORE = [['bhakti', 'Bhakti'], ['nitya', 'Nitya'], ['seva', 'Seva'], ['dharmveer', 'Dharm Veer'], ['quiz', 'Quiz'], ['ai-guide-scroll', 'Dharma Mitra']];
+const moreScene = sceneOf('more');
+const moreCells = [];
+if (moreScene) {
+  line('more', 'And<br><span class="em">more.</span>', 'h2', 300, 0.02, 0.98, { inDur: 1.0 });
+  MORE.forEach(([icon, name], i) => {
+    const el = document.createElement('div');
+    el.style.cssText = `position:absolute;width:260px;left:${110 + (i % 3) * 290}px;top:${720 + Math.floor(i / 3) * 330}px;text-align:center;opacity:0;will-change:transform,opacity`;
+    el.innerHTML = `<img src="${A}icons/${icon}.png" style="width:190px;height:190px;object-fit:contain;filter:drop-shadow(0 8px 24px rgba(12,10,7,.5))" alt="">
+      <div class="label" style="font-size:24px;letter-spacing:.24em;margin-top:14px">${name}</div>`;
+    itemsEl.appendChild(el); moreCells.push({ el, i });
+  });
+}
 /* choose (confirmed: reminders are off until you choose; English, Hindi, Punjabi) */
 line('choose', 'Reminders<br><span class="em">you choose.</span>', 'h1', 640, 0.03, 0.97);
 line('choose', 'Off until you turn them on.', 'sub', 1010, 0.2, 0.97, { rise: 30, blur: 6 });
@@ -210,7 +261,7 @@ line('choose', 'English &nbsp;·&nbsp; हिन्दी &nbsp;·&nbsp; ਪੰ�
 line('wherever', 'Wherever you live,<br><span class="em">your tradition<br>comes with you.</span>', 'h1', 640, 0.04, 0.97, { inDur: 1.3 });
 /* end card */
 const endEmblem = document.createElement('img'); endEmblem.id = 'emblem'; endEmblem.src = EMBLEM; endEmblem.style.top = '400px'; itemsEl.appendChild(endEmblem);
-const endS = SCENES.find((x) => x.id === 'end');
+const endS = sceneOf('end');
 line('end', 'Shoonaya', 'wordmark', 880, 0.14, 1.1, { rise: 40, blur: 14, inDur: 1.4 });
 line('end', 'Find your infinite.', 'tagline', 1120, 0.36, 1.1, { rise: 24, blur: 8, inDur: 1.2 });
 
@@ -253,6 +304,11 @@ window.renderFrame = function (t) {
   t = clamp(t, 0, TOTAL);
   /* backgrounds: crossfade, slow push, drift */
   for (const L of bgLayers) {
+    // Only layers that are on screen exist for the browser: a dozen full-size layers at once made Chrome drop tiles
+    // and render black rectangles in the later scenes.
+    const live = t > L.t0 - FADE - 0.1 && t < L.t1 + FADE + 0.1;
+    L.el.style.display = live ? 'block' : 'none';
+    if (!live) continue;
     const fin = L.t0 <= 0.001 ? 1 : eInOut(seg(t, L.t0 - FADE / 2, L.t0 + FADE / 2));
     const fout = L.t1 >= TOTAL - 0.001 ? 1 : 1 - eInOut(seg(t, L.t1 - FADE / 2, L.t1 + FADE / 2));
     const p = seg(t, L.t0 - FADE, L.t1 + FADE);
@@ -289,6 +345,21 @@ window.renderFrame = function (t) {
     it.el.style.filter = `blur(${(1 - e) * it.blur + (1 - o) * 8}px)`;
   }
 
+  if (ptGroup) ptGroup.style.opacity = String(1 - eInOut(seg(t, ptScene.t1 - .55, ptScene.t1)));
+  for (const c of ptCards) {
+    const a = ptScene.t0 + ptScene.dur * (0.04 + c.i * 0.2);
+    const e = eOutQuint(seg(t, a, a + 0.95));
+    const settle = 1 - e;
+    c.el.style.opacity = String(e);
+    c.el.style.transform = `translate3d(${(c.i % 2 ? 1 : -1) * settle * 60}px, ${settle * 90}px, 0) rotate(${c.rot * (1 + settle * 1.6)}deg) scale(${0.95 + 0.05 * e})`;
+    c.img.style.transform = `scale(${1.02 + 0.07 * seg(t, a, ptScene.t1)})`;
+  }
+  for (const c of moreCells) {
+    const a = moreScene.t0 + moreScene.dur * 0.12 + c.i * 0.16;
+    const e = eOutQuint(seg(t, a, a + 0.9)), o = 1 - eInOut(seg(t, moreScene.t1 - .55, moreScene.t1));
+    c.el.style.opacity = String(e * o);
+    c.el.style.transform = `translate3d(0, ${(1 - e) * 40}px, 0) scale(${0.92 + 0.08 * e})`;
+  }
   /* end card emblem + bloom */
   const pe = seg(t, endS.t0 + endS.dur * .02, endS.t0 + endS.dur * .02 + 1.6);
   endEmblem.style.opacity = String(eOutQuint(pe) * (1 - seg(t, TOTAL - 0.7, TOTAL)));
