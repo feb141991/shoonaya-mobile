@@ -246,3 +246,24 @@ Rules:
   device (see 7); a green test suite does not show that a screen is usable.
 - A feature that passes its tests but has no rule describing how it fails is unfinished. When something starts
   working, record what would make it stop.
+
+### 14. Telemetry and Diagnostic Upload Buffers Must Clear on Confirmed Receipt
+- A client buffer that aggregates events locally and uploads a periodic summary (not a per-event queue) must remove
+  exactly the events included in a successfully uploaded summary before the next upload — the same guarantee the
+  per-event diagnostic queues already give (delete by id after a confirmed response). Reading a buffer is not the same
+  as consuming it: a non-destructive read that is re-uploaded on every periodic tick re-reports every event still
+  sitting in it.
+- A fleet-level number computed by summing a value across multiple uploaded rows (a percentage, a total count) is only
+  valid once each row is known to represent a disjoint set of underlying events. Confirm that before trusting a
+  sum-across-rows query against a telemetry or diagnostics table. If it is not guaranteed, deduplicate by device or
+  identity and use the latest row only, and say so explicitly in whatever the number is reported as.
+- Why this rule exists: on 2026-10-21 an Android cold-start stall rate ("~1 in 5 cold starts need the 6-second
+  emergency fallback") was computed by summing `samples`/`emergencyFallbackCount` across every row in
+  `native_startup_telemetry_summaries`. The client (`lib/telemetry.ts`) read its local rolling event buffer
+  non-destructively on every hourly upload and never trimmed it, so a device with fewer than `MAX_EVENTS` (500)
+  lifetime events had the same events included in every summary row it ever uploaded — the quoted rate was inflated by
+  re-counting the same cold starts once per upload they happened to ride along in, not a real per-launch measurement.
+  An external review caught this. The fix (`removeReportedTelemetryEvents`, called only after a confirmed upload
+  response) mirrors the pattern the auth/API diagnostic queues already used correctly
+  (`removeUploadedApiRequestDiagnostics`/`removeUploadedAuthDiagnostics`). This applies equally to human and
+  AI-agent contributors.

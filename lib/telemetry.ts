@@ -763,6 +763,53 @@ export async function getTelemetrySummary(identity: TelemetryIdentity): Promise<
   };
 }
 
+/**
+ * Removes exactly the events that were included in a successfully uploaded
+ * summary, leaving anything appended after that summary was computed
+ * intact. Routed through the same per-key writeChains queue appendEvent
+ * uses -- NOT clearGeneration/clearKeyChained, which exist for a different
+ * race class (sign-out/account-switch full invalidation across every
+ * identity). This is a routine, single-identity trim: it must not
+ * interrupt a concurrent append for another identity, or even block one
+ * already queued behind it for this same identity, which should still
+ * land normally once this trim's turn in the chain completes.
+ *
+ * Fixes a real double-count: maybeUploadTelemetrySummary (lib/
+ * telemetryUpload.ts) previously read and re-uploaded the full rolling
+ * MAX_EVENTS buffer every ~hour without ever trimming it, so a device
+ * with fewer than MAX_EVENTS lifetime events had the exact same
+ * first_useful_frame/route_open/etc. events included in every summary row
+ * it ever uploaded. Any fleet-level aggregate computed by summing across
+ * uploaded rows (e.g. "how many cold starts stalled this week") silently
+ * multi-counted those events once per upload they rode along in -- found
+ * 2026-10-21 auditing a claimed Android cold-start stall rate that turned
+ * out to be inflated by exactly this. The auth/API diagnostic queues
+ * already avoid this class of bug (removeUploadedApiRequestDiagnostics/
+ * removeUploadedAuthDiagnostics delete by id after a confirmed upload);
+ * this gives the route/first-useful-frame summary the same guarantee,
+ * using a count instead of per-event ids since the summary has no
+ * per-event identifiers to key on.
+ */
+export async function removeReportedTelemetryEvents(identity: TelemetryIdentity, reportedCount: number): Promise<void> {
+  if (reportedCount <= 0) return;
+  const key = getTelemetryKey(identity);
+  const previous = writeChains.get(key) ?? Promise.resolve();
+  const next = previous
+    .catch(() => {})
+    .then(async () => {
+      const envelope = await readEnvelope(identity);
+      if (envelope.events.length === 0) return;
+      const events = envelope.events.slice(reportedCount);
+      await AsyncStorage.setItem(key, JSON.stringify({ ...envelope, events }));
+    });
+  writeChains.set(key, next);
+  try {
+    await next;
+  } catch (error) {
+    console.warn('[Telemetry] trim failed', error);
+  }
+}
+
 export async function clearTelemetry(identity: TelemetryIdentity): Promise<void> {
   clearGeneration += 1;
   const key = getTelemetryKey(identity);

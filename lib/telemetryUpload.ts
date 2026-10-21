@@ -21,6 +21,7 @@ import {
   removeUploadedAuthDiagnostics,
   readPendingApiRequestDiagnostics,
   removeUploadedApiRequestDiagnostics,
+  removeReportedTelemetryEvents,
   type TelemetryIdentity,
 } from '@/lib/telemetry';
 import { isTelemetryUploadThrottled, decideTelemetryUploadAfterSummary } from '@/lib/telemetryUploadPolicy';
@@ -73,8 +74,17 @@ export async function maybeUploadTelemetrySummary(identity: TelemetryIdentity): 
       }),
     });
 
-    if (response.ok && isCurrent()) {
-      await AsyncStorage.setItem(LAST_UPLOAD_KEY, String(Date.now()));
+    if (response.ok) {
+      // Gated on the server's confirmed receipt alone, not isCurrent() --
+      // these exact events were genuinely recorded server-side under this
+      // identity, so it's correct to stop re-reporting them locally
+      // regardless of whether the session has since switched. Mirrors
+      // removeUploadedApiRequestDiagnostics/removeUploadedAuthDiagnostics
+      // below, which are likewise gated on the response alone.
+      await removeReportedTelemetryEvents(identity, summary.totalEvents);
+      if (isCurrent()) {
+        await AsyncStorage.setItem(LAST_UPLOAD_KEY, String(Date.now()));
+      }
     }
   } catch (error) {
     console.warn('[Telemetry] upload failed', error);

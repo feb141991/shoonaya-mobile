@@ -38,6 +38,7 @@ import {
   getTelemetrySummary,
   clearTelemetry,
   clearAllTelemetry,
+  removeReportedTelemetryEvents,
   type TelemetryIdentity,
 } from '../lib/telemetry';
 
@@ -171,6 +172,86 @@ describe('Telemetry -- aggregation correctness', () => {
     assert.deepEqual(summary.routes, []);
     assert.deepEqual(summary.outbox, []);
     assert.deepEqual(summary.serverTimings, []);
+    assert.equal(summary.totalEvents, 0);
+  });
+});
+
+describe('removeReportedTelemetryEvents -- upload dedup (2026-10-21 Android stall-rate audit)', () => {
+  beforeEach(async () => {
+    await clearAllTelemetry();
+  });
+
+  it('a summary uploaded twice without trimming in between double-counts -- the exact bug being fixed', async () => {
+    // Demonstrates the failure mode removeReportedTelemetryEvents exists to
+    // prevent: reading the summary twice without trimming (what
+    // maybeUploadTelemetrySummary did before this fix) sees the same event
+    // both times, because getTelemetrySummary is a non-destructive read.
+    const identity: TelemetryIdentity = { kind: 'authenticated', userId: 'user-stall-1' };
+    recordFirstUsefulFrame(identity, { elapsedMs: 9000, viaEmergencyFallback: true });
+    await flush();
+
+    const firstRead = await getTelemetrySummary(identity);
+    const secondRead = await getTelemetrySummary(identity);
+    assert.equal(firstRead.firstUsefulFrame?.emergencyFallbackCount, 1);
+    assert.equal(secondRead.firstUsefulFrame?.emergencyFallbackCount, 1);
+    // Both "uploads" reported the same one real cold start -- summing
+    // emergencyFallbackCount across them (as the fleet analysis did) would
+    // wrongly conclude there were 2.
+  });
+
+  it('trims exactly the reported events, so a second read after upload sees none of them', async () => {
+    const identity: TelemetryIdentity = { kind: 'authenticated', userId: 'user-stall-2' };
+    recordFirstUsefulFrame(identity, { elapsedMs: 9000, viaEmergencyFallback: true });
+    await flush();
+
+    const summary = await getTelemetrySummary(identity);
+    assert.equal(summary.totalEvents, 1);
+    await removeReportedTelemetryEvents(identity, summary.totalEvents);
+
+    const after = await getTelemetrySummary(identity);
+    assert.equal(after.totalEvents, 0);
+    assert.equal(after.firstUsefulFrame, null);
+  });
+
+  it('preserves events recorded after the summary snapshot was taken', async () => {
+    const identity: TelemetryIdentity = { kind: 'authenticated', userId: 'user-stall-3' };
+    recordFirstUsefulFrame(identity, { elapsedMs: 9000, viaEmergencyFallback: true });
+    await flush();
+    const summary = await getTelemetrySummary(identity); // totalEvents: 1
+
+    // A new cold start lands while the upload for the first one is still
+    // "in flight" -- must survive the trim below, which only removes the
+    // 1 event that was actually in the uploaded summary.
+    recordFirstUsefulFrame(identity, { elapsedMs: 2000, viaEmergencyFallback: false });
+    await flush();
+
+    await removeReportedTelemetryEvents(identity, summary.totalEvents);
+
+    const after = await getTelemetrySummary(identity);
+    assert.equal(after.totalEvents, 1);
+    assert.equal(after.firstUsefulFrame?.samples, 1);
+    assert.equal(after.firstUsefulFrame?.avgMs, 2000);
+  });
+
+  it('never trims another identity\'s events', async () => {
+    const identityA: TelemetryIdentity = { kind: 'authenticated', userId: 'user-stall-4a' };
+    const identityB: TelemetryIdentity = { kind: 'authenticated', userId: 'user-stall-4b' };
+    recordFirstUsefulFrame(identityA, { elapsedMs: 9000, viaEmergencyFallback: true });
+    recordFirstUsefulFrame(identityB, { elapsedMs: 3000, viaEmergencyFallback: false });
+    await flush();
+
+    await removeReportedTelemetryEvents(identityA, 1);
+
+    const afterA = await getTelemetrySummary(identityA);
+    const afterB = await getTelemetrySummary(identityB);
+    assert.equal(afterA.totalEvents, 0);
+    assert.equal(afterB.totalEvents, 1, 'Identity B must be unaffected by a trim scoped to identity A');
+  });
+
+  it('is a safe no-op against an empty or already-cleared buffer', async () => {
+    const identity: TelemetryIdentity = { kind: 'authenticated', userId: 'user-stall-5' };
+    await removeReportedTelemetryEvents(identity, 5);
+    const summary = await getTelemetrySummary(identity);
     assert.equal(summary.totalEvents, 0);
   });
 });
