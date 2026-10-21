@@ -48,6 +48,7 @@ import { captureAppIdentity } from '@/lib/appIdentity';
 import { addKulTirthaWish, fetchKulMembership, fetchTirthaPlace } from '@/lib/kul';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { navScrollHandler } from '@/lib/navScrollBus';
+import { describeFailure } from '@/lib/user-facing-error';
 
 type PassportTab = 'map' | 'yatras' | 'passport';
 type MoodKey = 'gratitude' | 'devotion' | 'peace' | 'clarity';
@@ -675,7 +676,7 @@ export default function TirthaScreen() {
     } catch (error) {
       if (!lease.isCurrent()) return;
       if (requestId === kulWishRequestRef.current) {
-        setKulWishNotice(error instanceof Error ? error.message : 'Could not add this place to your family Yatra.');
+        setKulWishNotice(describeFailure(error, 'Could not add this place to your family Yatra.'));
       }
     } finally {
       if (lease.isCurrent() && requestId === kulWishRequestRef.current) setKulWishSaving(false);

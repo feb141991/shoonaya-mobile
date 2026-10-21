@@ -6,6 +6,7 @@ import { Screen } from '@/components/ui/Screen';
 import { exchangeOAuthCodeOnce, waitForStoredSession } from '@/lib/authRedirect';
 import { COLORS, FONTS } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
+import { describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
 
 export default function AuthCallbackScreen() {
   const router = useRouter();
@@ -49,8 +50,8 @@ export default function AuthCallbackScreen() {
         router.replace(needsOnboarding ? '/(auth)/onboarding' : '/(tabs)');
       } catch (error) {
         if (cancelled) return;
-        const nextMessage = error instanceof Error ? error.message : 'Sign in failed.';
-        setMessage(nextMessage);
+        console.warn('[auth/callback] sign-in could not be completed', error instanceof Error ? error.name : typeof error);
+        setMessage(describeFailure(error, 'Sign in could not be completed. Please try again.'));
         setTimeout(() => {
           if (!cancelled) {
             router.replace('/(auth)/login');

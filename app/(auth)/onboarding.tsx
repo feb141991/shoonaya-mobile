@@ -65,6 +65,7 @@ import {
   type ReligiousConsentWrite,
 } from '@/lib/religious-data-consent';
 import { saveDeviceStartupPreferences, syncStartupPreferencesFromProfile } from '@/lib/startup-scenes/preferences';
+import { describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
 import {
   LIFE_STAGES,
   GENDERS,
@@ -516,10 +517,9 @@ export default function OnboardingScreen() {
         }),
       });
 
+      // The name-story route writes some of its errors for people (the once-every-30-days limit), so its text is trusted.
+      if (!response.ok) throw await requestErrorFromResponse(response, { trustServerMessage: true });
       const body = await response.json();
-      if (!response.ok) {
-        throw new Error(body?.error ?? (isHindi ? 'आपके नाम की कथा तैयार नहीं हो सकी।' : 'Could not generate your Name Story.'));
-      }
 
       const storyData = (body?.data ?? null) as NameStory | null;
       setNameStory(storyData);
@@ -536,9 +536,7 @@ export default function OnboardingScreen() {
         );
       } else {
         setNameStoryError(
-          error instanceof Error
-            ? error.message
-            : (isHindi ? 'आपके नाम की कथा तैयार नहीं हो सकी।' : 'Could not generate your Name Story.')
+          describeFailure(error, isHindi ? 'आपके नाम की कथा तैयार नहीं हो सकी।' : 'Could not generate your Name Story.', isHindi ? 'hi' : 'en')
         );
       }
     } finally {

@@ -11,6 +11,8 @@
 // src/app/api/user/delete/{status,cancel}/route.ts). Snapshots are keyed by
 // user id and never shown to a different identity; nothing here is persisted.
 
+import { requestErrorFromResponse } from './user-facing-error';
+
 export type AccountDeletionStatus = {
   userId: string;
   isDeleting: boolean;
@@ -127,9 +129,7 @@ export function createAccountDeletionStore(d: Dependencies) {
       const body = await response.json().catch(() => null);
       const confirmed = response.ok && !!body && typeof body === 'object' && (body as { success?: unknown }).success === true;
       if (!confirmed) {
-        const detail = body && typeof body === 'object' && typeof (body as { error?: unknown }).error === 'string'
-          ? (body as { error: string }).error : '';
-        throw new Error(detail || `Could not cancel deletion (status ${response.status})`);
+        throw await requestErrorFromResponse(response, { parsedBody: body });
       }
       if (!ownedBy(lease, userId)) return;
       publish({ userId, isDeleting: false, deletionRequestedAt: null, purgeAfter: null, daysRemaining: null });

@@ -221,7 +221,9 @@ Rules:
 - A save failure tells the person what to fix. It never shows `error.message` or provider text (it can carry table,
   column and query detail). A Supabase database error is a plain object, not an `Error`: never branch on
   `error instanceof Error` to decide what to show. Classify by SQLSTATE or HTTP status (`lib/save-error.ts`), and show a
-  short support reference. "Check your connection" is only for network failures.
+  short support reference. "Check your connection" is only for network failures. Every other failure a screen shows
+  goes through `describeFailure(error, 'its own sentence')` (`lib/user-facing-error.ts`); `__tests__/user-facing-errors-guard.test.ts`
+  fails if a screen puts an error's message, a status code or a database detail on screen.
 - Every typed field has a test with malformed input: the exact string from any incident, dates that do not exist,
   wrong separators, empty and whitespace. When one typed field is fixed, sweep every screen for the same kind of field
   and report the sweep.

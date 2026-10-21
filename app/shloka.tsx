@@ -23,6 +23,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
+import { describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { spiritualDate } from '@/lib/spiritualDate';
@@ -301,10 +302,7 @@ export default function ShlokaScreen() {
 
     try {
       const response = await apiFetch('/api/native/shloka/read', { method: 'POST' });
-      if (!response.ok) {
-        const body = await response.text().catch(() => '');
-        throw new Error(`save failed (${response.status}): ${body.slice(0, 300)}`);
-      }
+      if (!response.ok) throw await requestErrorFromResponse(response);
       const result = (await response.json()) as {
         date?: string;
         streak?: number;
@@ -331,14 +329,7 @@ export default function ShlokaScreen() {
     } catch (err) {
       setProfile(previousProfile);
       console.error('markRead failed:', err);
-      const message = err instanceof Error ? err.message : '';
-      const isAuthError = message.includes('(401)') || message.includes('(403)');
-      Alert.alert(
-        "Could not save today's reading",
-        isAuthError
-          ? 'Your session expired. Please sign out and back in, then try again.'
-          : 'Check your connection and try again.'
-      );
+      Alert.alert("Could not save today's reading", describeFailure(err, "Could not save today's reading. Please try again."));
     } finally {
       setMarking(false);
     }

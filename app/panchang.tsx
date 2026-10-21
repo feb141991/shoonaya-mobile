@@ -23,6 +23,7 @@ import { CalendarDatePicker } from '@/components/ui/CalendarDatePicker';
 import { formatLocalDateOnly } from '@/lib/dateOnly';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
+import { describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
 import {
   recordRouteOpen,
   recordRefreshFailure,
@@ -623,20 +624,13 @@ export default function PanchangScreen() {
     try {
       const response = await apiFetch('/api/native/panchang-viewed', { method: 'POST' });
       if (!response.ok) {
-        let detail = `Server error (${response.status})`;
-        try {
-          const body = (await response.json()) as { error?: string };
-          if (body?.error) detail = body.error;
-        } catch {
-          // body not JSON — keep status-based message
-        }
-        console.warn('[Panchang] markObserved failed:', detail);
-        throw new Error(detail);
+        const failure = await requestErrorFromResponse(response);
+        console.warn('[Panchang] markObserved failed:', failure.status, failure.apiCode);
+        throw failure;
       }
       setViewedToday(true);
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Could not save';
-      setMarkError(`Could not save — ${msg}. Check your connection and try again.`);
+      setMarkError(describeFailure(e, 'Could not save. Please try again.'));
     } finally {
       setMarkingViewed(false);
     }

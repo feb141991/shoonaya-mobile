@@ -74,6 +74,7 @@ import { accountDeletion, readDeletionReasons, useAccountDeletionStatus } from '
 import { accountDeletionCopy } from '@/lib/accountDeletionCopy';
 import { getGreetingPick } from '@/lib/greetingPreference';
 import { applyPracticeAnalyticsConsent, applyProductAnalyticsConsent, revokePracticeAnalyticsConsent, revokeProductAnalyticsConsent } from '@/lib/productAnalyticsRuntime';
+import { describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
 
 type ThemePref = 'light' | 'dark' | 'system';
 export type SettingsSectionKey = 'account' | 'notifications' | 'appearance' | 'privacy' | 'about';
@@ -819,7 +820,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     setDownloading(true);
     try {
       const response = await apiFetch('/api/user/export');
-      if (!response.ok) throw new Error(`Request failed (status ${response.status})`);
+      if (!response.ok) throw await requestErrorFromResponse(response);
       const data = await response.text();
 
       if (!(await Sharing.isAvailableAsync())) {
@@ -831,8 +832,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       targetFile.write(data);
       await Sharing.shareAsync(targetFile.uri);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Please check your connection and try again.';
-      Alert.alert('Could not download data', message);
+      Alert.alert('Could not download data', describeFailure(error, 'Could not prepare your data. Please try again.', language));
     } finally {
       setDownloading(false);
     }
@@ -922,10 +922,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       const json: unknown = await response.json().catch(() => null);
       const data = json && typeof json === 'object' ? (json as Record<string, unknown>) : null;
       const success = data?.success === true;
-      if (!response.ok || !success) {
-        const detail = data && typeof data.error === 'string' ? data.error : '';
-        throw new Error(detail || `Request failed (status ${response.status})`);
-      }
+      if (!response.ok || !success) throw await requestErrorFromResponse(response, { parsedBody: json });
       if (appIdentity.kind === 'authenticated') {
         accountDeletion.markScheduled(
           appIdentity.userId,
@@ -940,8 +937,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
 
       Alert.alert(deletionCopy.scheduledTitle, deletionCopy.scheduledBody);
     } catch (error) {
-      const message = error instanceof Error ? error.message : deletionCopy.checkConnection;
-      Alert.alert(deletionCopy.scheduleFailedTitle, message);
+      Alert.alert(deletionCopy.scheduleFailedTitle, describeFailure(error, deletionCopy.scheduleFailed, language));
       throw error;
     } finally {
       setDeleting(false);
@@ -973,8 +969,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
 
       Alert.alert(deletionCopy.cancelledTitle, deletionCopy.cancelledBody);
     } catch (error) {
-      const message = error instanceof Error ? error.message : deletionCopy.checkConnection;
-      Alert.alert(deletionCopy.cancelFailedTitle, message);
+      Alert.alert(deletionCopy.cancelFailedTitle, describeFailure(error, deletionCopy.cancelFailed, language));
     } finally {
       setCancelingDeletion(false);
     }

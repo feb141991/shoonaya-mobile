@@ -16,6 +16,7 @@ import { Screen } from '@/components/ui/Screen';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { apiFetch } from '@/lib/api';
+import { describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, SPACING, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { RASHI_LIST, RASHI_MAP } from '@/lib/jyotish';
@@ -253,17 +254,15 @@ export default function RashiphalaScreen() {
     async function loadHoroscope() {
       try {
         const res = await apiFetch(`/api/jyotish/rashiphal?rashi=${requestedRashi}&tz=${encodeURIComponent(timezone)}&contract=2`);
+        if (!res.ok) throw await requestErrorFromResponse(res);
         const payload = await res.json().catch(() => null);
-        if (!res.ok) {
-          throw new Error(payload?.error ?? 'Unable to load Rashiphala.');
-        }
         if (active) {
           setLoadedReading({ identityKey, rashi: requestedRashi, value: payload as RashiHoroscope });
         }
       } catch (e) {
         if (active) {
           setLoadedReading(null);
-          setErrorMessage(e instanceof Error ? e.message : 'Unable to load Rashiphala.');
+          setErrorMessage(describeFailure(e, 'Unable to load Rashiphala. Please try again.'));
         }
       } finally {
         if (active) setLoading(false);

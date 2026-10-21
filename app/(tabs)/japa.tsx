@@ -59,6 +59,7 @@ import { getNityaRankProgress } from '@/lib/nitya-rank';
 import { getMalaVolumeMilestone } from '@/lib/mala-milestones';
 import { pickDharmaFact } from '@/lib/dharma-facts';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
 import {
   JAPA_SOUND_OPTIONS,
   DEFAULT_JAPA_SOUND_ID,
@@ -1435,8 +1436,8 @@ export default function JapaScreen() {
       });
 
       if (outcome.kind !== 'success') {
-        const data = outcome.response ? (await outcome.response.json().catch(() => null)) as { error?: string } | null : null;
-        throw new Error(data?.error ?? 'japa-complete-failed');
+        // No response means the request never got an answer: a network failure, said as such.
+        throw outcome.response ? await requestErrorFromResponse(outcome.response) : new TypeError('Network request failed');
       }
 
       const context = normalizeJapaContext(await outcome.response.json());
@@ -1461,10 +1462,7 @@ export default function JapaScreen() {
     } catch (error) {
       setCompletedRounds(Math.max(0, nextRounds - 1));
       setCount(107);
-      const message = error instanceof Error && error.message !== 'japa-complete-failed'
-        ? error.message
-        : 'Check your connection and try again.';
-      Alert.alert('Could not save japa session', message);
+      Alert.alert('Could not save japa session', describeFailure(error, 'Could not save your japa session. Please try again.'));
     }
 
     setSaving(false);
@@ -1567,8 +1565,7 @@ export default function JapaScreen() {
           activeSymbolId,
         });
         if (outcome.kind !== 'success') {
-          const data = outcome.response ? (await outcome.response.json().catch(() => null)) as { error?: string } | null : null;
-          throw new Error(data?.error ?? 'japa-partial-save-failed');
+          throw outcome.response ? await requestErrorFromResponse(outcome.response) : new TypeError('Network request failed');
         }
         const context = normalizeJapaContext(await outcome.response.json());
         if (context) {
@@ -1581,10 +1578,7 @@ export default function JapaScreen() {
         saved = true;
       }
     } catch (error) {
-      const message = error instanceof Error && error.message !== 'japa-partial-save-failed'
-        ? error.message
-        : 'Check your connection and try again.';
-      Alert.alert('Could not save japa session', message);
+      Alert.alert('Could not save japa session', describeFailure(error, 'Could not save your japa session. Please try again.'));
     } finally {
       setStopSaving(false);
       if (saved) {

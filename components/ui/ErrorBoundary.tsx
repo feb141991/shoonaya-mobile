@@ -5,7 +5,6 @@ import { COLORS, FONTS, themeColor } from '@/lib/constants';
 
 type ErrorBoundaryState = {
   hasError: boolean;
-  message: string;
 };
 
 type ErrorBoundaryProps = PropsWithChildren<{
@@ -17,13 +16,12 @@ type ErrorBoundaryProps = PropsWithChildren<{
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false, message: '' };
+    this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error: unknown): ErrorBoundaryState {
-    const message =
-      error instanceof Error ? error.message : 'An unexpected error occurred.';
-    return { hasError: true, message };
+  // The error's own message is deliberately not kept: the fallback never shows it, and it is logged below.
+  static getDerivedStateFromError(): ErrorBoundaryState {
+    return { hasError: true };
   }
 
   override componentDidCatch(error: unknown) {
@@ -31,7 +29,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   reset = () => {
-    this.setState({ hasError: false, message: '' });
+    this.setState({ hasError: false });
     this.props.onRetry?.();
   };
 

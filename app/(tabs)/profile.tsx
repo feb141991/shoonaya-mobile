@@ -70,6 +70,7 @@ import { accountDeletionCopy } from '@/lib/accountDeletionCopy';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { navScrollHandler } from '@/lib/navScrollBus';
+import { describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
 import {
   getIshtaDevataLabel,
   getSampradayaLabel,
@@ -223,13 +224,6 @@ function getKulName(kuls: KulRelation): string | null {
   return kuls?.name ?? null;
 }
 
-async function readApiError(response: Response) {
-  const body = await response.json().catch(() => null);
-  if (body && typeof body === 'object' && 'error' in body && typeof body.error === 'string') {
-    return body.error;
-  }
-  return `Request failed with status ${response.status}`;
-}
 
 function isValidUsername(value: string) {
   return /^[a-z0-9_]{3,24}$/.test(value.trim().toLowerCase());
@@ -656,7 +650,7 @@ export default function ProfileScreen() {
       Alert.alert(accountDeletionCopy(deletionLanguage).cancelledTitle, accountDeletionCopy(deletionLanguage).cancelledBody);
     } catch (err) {
       const copy = accountDeletionCopy(deletionLanguage);
-      Alert.alert(copy.cancelFailedTitle, err instanceof Error ? err.message : copy.checkConnection);
+      Alert.alert(copy.cancelFailedTitle, describeFailure(err, copy.cancelFailed, deletionLanguage));
       throw err;
     }
   }, [appIdentity, deletionLanguage]);
@@ -727,7 +721,7 @@ export default function ProfileScreen() {
       });
 
       if (!isCurrent()) return;
-      if (!response.ok) throw new Error(await readApiError(response));
+      if (!response.ok) throw await requestErrorFromResponse(response);
 
       // The profile API has already persisted this value; update shared app
       // state without issuing a duplicate profile write.
@@ -737,7 +731,7 @@ export default function ProfileScreen() {
       if (isCurrent()) setEditVisible(false);
     } catch (error) {
       if (!isCurrent()) return;
-      Alert.alert('Could not save profile', error instanceof Error ? error.message : 'Please try again.');
+      Alert.alert('Could not save profile', describeFailure(error, 'Could not save your profile. Please try again.', 'en', { 409: 'That username is already taken. Please choose another.' }));
     } finally {
       if (isCurrent()) setSaving(false);
     }
@@ -766,9 +760,9 @@ export default function ProfileScreen() {
 
     if (!isCurrent() || response.ok) return;
 
-    const apiError = await readApiError(response);
+    const apiError = await requestErrorFromResponse(response);
     if (!isCurrent()) return;
-    console.warn('[profile] avatar API save failed; falling back to RLS profile update', apiError);
+    console.warn('[profile] avatar API save failed; falling back to RLS profile update', apiError.status, apiError.apiCode);
 
     // The PWA still writes avatar_url directly under the user's own-row RLS
     // policy. Keep this fallback so installed native builds do not break when
@@ -779,7 +773,9 @@ export default function ProfileScreen() {
       .eq('id', ownerId);
 
     if (error) {
-      throw new Error(`${apiError}; direct profile save failed: ${error.message}`);
+      // Both paths failed. The codes go to the log; the person is told only that the picture could not be saved.
+      console.warn('[profile] direct avatar save failed', apiError.status, error.code);
+      throw new Error('avatar save failed');
     }
   };
 
@@ -841,8 +837,7 @@ export default function ProfileScreen() {
       }
     } catch (err) {
       if (!isCurrent()) return;
-      const message = err instanceof Error ? err.message : 'Could not update profile picture';
-      Alert.alert('Photo update failed', message);
+      Alert.alert('Photo update failed', describeFailure(err, 'Could not update your profile picture. Please try again.'));
     } finally {
       if (isCurrent()) setAvatarUploading(false);
     }
@@ -874,8 +869,7 @@ export default function ProfileScreen() {
       }
     } catch (err) {
       if (!isCurrent()) return;
-      const message = err instanceof Error ? err.message : 'Could not remove profile picture';
-      Alert.alert('Photo removal failed', message);
+      Alert.alert('Photo removal failed', describeFailure(err, 'Could not remove your profile picture. Please try again.'));
     } finally {
       if (isCurrent()) setAvatarUploading(false);
     }

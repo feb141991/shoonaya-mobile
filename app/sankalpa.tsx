@@ -28,6 +28,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { apiFetch } from '@/lib/api';
+import { describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
 import { supabase } from '@/lib/supabase';
 import {
   queueSankalpaCheckin,
@@ -577,17 +578,14 @@ export default function SankalpaScreen() {
         body: JSON.stringify({ text: trimmed, target_days: targetDays }),
       });
 
-      if (!response.ok) {
-        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(payload?.error ?? 'Could not create Sankalpa');
-      }
+      if (!response.ok) throw await requestErrorFromResponse(response);
 
       try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
       setText('');
       setCompletedReceipt(null);
       await loadSankalpa();
     } catch (err) {
-      Alert.alert('Sankalpa', err instanceof Error ? err.message : 'Could not create Sankalpa');
+      Alert.alert('Sankalpa', describeFailure(err, 'Could not create your Sankalpa. Please try again.'));
     } finally {
       setCreating(false);
     }
@@ -661,10 +659,7 @@ export default function SankalpaScreen() {
         method: 'POST',
         body: JSON.stringify({ sankalpa_id: sankalpa.id }),
       });
-      if (!response.ok) {
-        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(payload?.error ?? 'Could not complete Sankalpa');
-      }
+      if (!response.ok) throw await requestErrorFromResponse(response);
 
       const payload = (await response.json()) as { karmaAwarded?: number; completedAt?: string };
       try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
@@ -694,7 +689,7 @@ export default function SankalpaScreen() {
       setCheckins([]);
       await loadHistory();
     } catch (err) {
-      Alert.alert('Sankalpa', err instanceof Error ? err.message : 'Could not complete Sankalpa');
+      Alert.alert('Sankalpa', describeFailure(err, 'Could not complete your Sankalpa. Please try again.'));
     } finally {
       setCompleting(false);
     }

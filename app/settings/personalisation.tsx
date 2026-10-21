@@ -21,6 +21,7 @@ import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { RADII, TYPE, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
+import { describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
 import { supabase } from '@/lib/supabase';
 import {
   CALENDAR_PROFILES,
@@ -133,18 +134,14 @@ export default function PersonalisationScreen() {
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        const body = await response.json().catch(() => null);
-        throw new Error(body?.error || 'Save failed');
-      }
+      if (!response.ok) throw await requestErrorFromResponse(response);
 
       try {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } catch {}
       Alert.alert('Saved', 'Your personalisation preferences have been updated.');
     } catch (error) {
-      const msg = error instanceof Error ? error.message : 'Check your connection and try again.';
-      Alert.alert('Could not save', msg);
+      Alert.alert('Could not save', describeFailure(error, 'Could not save your preferences. Please try again.'));
     } finally {
       setSaving(false);
     }

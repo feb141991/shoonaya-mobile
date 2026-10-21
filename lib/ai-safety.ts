@@ -43,7 +43,8 @@ export async function reportAiChatResponse(input: {
   });
 
   if (error) {
-    throw new Error(error.message || 'Could not submit report');
+    // The database's own text can name tables and columns, so only its code travels with the error.
+    throw Object.assign(new Error('could not submit report'), { code: error.code });
   }
 }
 

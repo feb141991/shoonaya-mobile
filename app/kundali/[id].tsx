@@ -30,6 +30,7 @@ import {
   validateBirthProfileDetail,
 } from '@/lib/kundali-contract';
 import { KundaliDetailTab, resolveKundaliDetailTab } from '@/lib/kundali-detail-tabs';
+import { describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
 
 type TextScale = 'sm' | 'md' | 'lg';
 
@@ -81,7 +82,7 @@ export default function KundaliDetailScreen() {
       }
       if (!res.ok) {
         setErrorStatus(res.status);
-        setErrorMessage(`Unable to load chart (HTTP ${res.status}).`);
+        setErrorMessage(describeFailure(await requestErrorFromResponse(res), 'This chart could not be loaded right now. Please try again.'));
         return;
       }
 
@@ -95,7 +96,7 @@ export default function KundaliDetailScreen() {
 
       setProfile(validated);
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Network error loading birth profile.');
+      setErrorMessage(describeFailure(err, 'This chart could not be loaded right now. Please try again.'));
     } finally {
       setLoading(false);
     }

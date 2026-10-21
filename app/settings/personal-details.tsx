@@ -13,7 +13,7 @@ import { DatePickerField } from '@/components/ui/DatePickerField';
 import { formatLocalDateOnly } from '@/lib/dateOnly';
 import { RADII, TYPE, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
-import { classifySaveError, describeSaveError, saveErrorFromResponse } from '@/lib/save-error';
+import { classifySaveError, describeSaveError, requestErrorFromResponse } from '@/lib/save-error';
 import { supabase } from '@/lib/supabase';
 import { GENDERS, LIFE_STAGES, ageFromDob, type GenderKey, type LifeStageKey } from '@/lib/profile-constants';
 
@@ -100,7 +100,7 @@ export default function PersonalDetailsScreen() {
           life_stage: details.life_stage,
         }),
       });
-      if (!response.ok) throw await saveErrorFromResponse(response);
+      if (!response.ok) throw await requestErrorFromResponse(response);
       Alert.alert('Saved', 'Your personal details have been updated.');
     } catch (error) {
       // "Check your connection" is only true for a network failure. A refused value, an expired session or a server

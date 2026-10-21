@@ -32,6 +32,7 @@ import { parseAiMessageCitations } from '@/lib/ai-citations';
 import { COLORS, FONTS, SHADOWS, themeColor } from '@/lib/constants';
 import { getTraditionGreeting, getTraditionPrompts, getTraditionSymbol } from '@/lib/dharma-mitra-content';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { describeFailure } from '@/lib/user-facing-error';
 
 function TypingDots({ color }: { color: string }) {
   const dot1 = useRef(new Animated.Value(0.3)).current;
@@ -490,7 +491,7 @@ function AiChatScreen() {
         } catch (error) {
           Alert.alert(
             'Could not submit report',
-            error instanceof Error ? error.message : 'Please check your connection and try again.'
+            describeFailure(error, 'Could not send your report. Please try again.')
           );
         }
       };

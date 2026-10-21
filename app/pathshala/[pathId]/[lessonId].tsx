@@ -47,6 +47,7 @@ import { readerControlsPalette } from '@/lib/readerAppearance';
 import { READER_PAPER_CHOICES, setReaderPrefs, useReaderPrefs } from '@/lib/readerPrefs';
 import { PagedResumeBanner, usePagedResume } from '@/components/reader/usePagedResume';
 import { createReaderChromeController, isPageTap, type ReaderChromeState } from '@/lib/readerChrome';
+import { describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
 
 type ReaderFontSize = 'small' | 'normal' | 'large' | 'xl';
 type AudioSpeed = 0.75 | 1.0 | 1.25;
@@ -682,10 +683,7 @@ function LessonReaderContent() {
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        const errorBody = await response.json().catch(() => null) as { error?: string } | null;
-        throw new Error(errorBody?.error ?? 'Could not save progress');
-      }
+      if (!response.ok) throw await requestErrorFromResponse(response);
 
       const data = (await response.json().catch(() => ({}))) as {
         karmaEarned?: number;
@@ -695,7 +693,7 @@ function LessonReaderContent() {
       if (typeof data.dailySadhanaUpdated === 'boolean') sadhanaUpdated = data.dailySadhanaUpdated;
     } catch (error) {
       setCompletedLessons(completedLessons);
-      Alert.alert(error instanceof Error ? error.message : 'Could not save progress');
+      Alert.alert(describeFailure(error, 'Could not save your progress. Please try again.'));
       setSaving(false);
       return;
     }

@@ -17,6 +17,7 @@ import {
   themeColor,
 } from "@/lib/constants";
 import { useAppIdentity } from "@/lib/appIdentity";
+import { describeFailure } from '@/lib/user-facing-error';
 import {
   joinKulByToken,
   previewKulInvitation,
@@ -48,7 +49,7 @@ export default function KulJoinScreen() {
       const data = await previewKulInvitation(token);
       setPreview(data);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Invalid or expired family invitation link.");
+      setError(describeFailure(e, "Invalid or expired family invitation link."));
     } finally {
       setLoading(false);
     }
@@ -71,7 +72,7 @@ export default function KulJoinScreen() {
       await joinKulByToken(identity.userId, token);
       router.replace({ pathname: "/kul", params: { section: "family" } });
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Could not join family circle. Please try again.");
+      setError(describeFailure(e, "Could not join family circle. Please try again."));
     } finally {
       setJoining(false);
     }

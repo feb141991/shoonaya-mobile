@@ -25,6 +25,7 @@ import { SacredLoader } from '@/components/ui/SacredLoader';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { apiFetch } from '@/lib/api';
+import { describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
 import { COLORS, FONTS, RADII, SPACING, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { useAppIdentity } from '@/lib/appIdentity';
@@ -166,10 +167,11 @@ export default function NameStoryScreen() {
         }),
       });
 
-      const body = await response.json();
       if (!response.ok) {
-        throw new Error(body?.error || 'Could not generate Dharmic Name Story. Please try again.');
+        // This route writes some of its errors for people (the once-every-30-days limit), so its message is trusted.
+        throw await requestErrorFromResponse(response, { trustServerMessage: true });
       }
+      const body = await response.json();
 
       const generatedStory = (body?.data || null) as NameStoryData | null;
       if (!generatedStory) {
@@ -184,7 +186,7 @@ export default function NameStoryScreen() {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } catch {}
     } catch (err: any) {
-      setFormError(err?.message || 'Unable to connect to sacred knowledge service.');
+      setFormError(describeFailure(err, 'Could not generate your Dharmic Name Story. Please try again.'));
       try {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       } catch {}

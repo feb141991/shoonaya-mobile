@@ -19,6 +19,11 @@ const COPY = {
 
 type Subscription = { active: boolean; url: string | null; settings: { calendarProfile: string; tradition: string; sampradaya: string | null; timezone: string; location: string | null }; preview: { id: string; name: string; date: string }[]; count: number };
 
+/** The short code for why the calendar feed is unavailable. The sheet maps each code to its own wording. */
+class CalendarSubscriptionError extends Error {
+  constructor(readonly code: string) { super(code); this.name = 'CalendarSubscriptionError'; }
+}
+
 export function SacredCalendarSheet({ onClose, onDownload, downloading, lang }: { onClose: () => void; onDownload: () => void; downloading: boolean; lang: 'en' | 'hi' | 'pa' }) {
   const theme = themeColor(useColorScheme() === 'dark');
   const insets = useSafeAreaInsets();
@@ -54,7 +59,7 @@ export function SacredCalendarSheet({ onClose, onDownload, downloading, lang }: 
     setBusy(true); setError(null); setNotice(null);
     try {
       const { data: auth } = await supabase.auth.getSession();
-      if (!auth.session) throw new Error('Unauthorized');
+      if (!auth.session) throw new CalendarSubscriptionError('Unauthorized');
       owner.current = auth.session.user.id;
       const response = await apiFetch('/api/calendar/subscription', { method, expectedUserId: owner.current });
       if (response.status === 204) {
@@ -62,12 +67,12 @@ export function SacredCalendarSheet({ onClose, onDownload, downloading, lang }: 
         return;
       }
       const body = await response.json();
-      if (!response.ok) throw new Error(body.error ?? 'CALENDAR_UNAVAILABLE');
+      if (!response.ok) throw new CalendarSubscriptionError(typeof body?.error === 'string' && /^[A-Z_]{3,40}$/.test(body.error) ? body.error : 'CALENDAR_UNAVAILABLE');
       const { data: latest } = await supabase.auth.getSession();
       if (!mounted.current || latest.session?.user.id !== owner.current) return;
       setData(body as Subscription);
     } catch (failure) {
-      if (mounted.current) setError(failure instanceof Error ? failure.message : 'CALENDAR_UNAVAILABLE');
+      if (mounted.current) setError(failure instanceof CalendarSubscriptionError ? failure.code : 'CALENDAR_UNAVAILABLE');
     } finally { inFlight.current = false; if (mounted.current) setBusy(false); }
   };
 

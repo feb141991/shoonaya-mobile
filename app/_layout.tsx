@@ -106,6 +106,7 @@ import { resolveProfileOutcome } from '@/lib/profileResolution';
 import { AuthCoordinator, USE_AUTH_COORDINATOR, type BootstrapProfileResult, type OnboardingStatus } from '@/lib/authCoordinator';
 import { runAutomaticUpdateCheck } from '@/lib/updateManager';
 import { reportNewDeviceSignIn } from '@/lib/securityEmail';
+import { describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
 import {
   isUpdatePromptSafeSurface,
   shouldCheckForUpdateOnResume,
@@ -340,7 +341,7 @@ function RootLayout() {
                 (error: unknown) => {
                   Alert.alert(
                     copy.restoreFailedTitle,
-                    `${error instanceof Error ? error.message : copy.checkConnection} ${copy.restoreFailedHint}`,
+                    `${describeFailure(error, copy.cancelFailed, deletionLanguageRef.current)} ${copy.restoreFailedHint}`,
                   );
                 },
               );

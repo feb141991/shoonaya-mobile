@@ -7,6 +7,7 @@ import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, TYPE, themeColor } fro
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { accountDeletionCopy } from '@/lib/accountDeletionCopy';
+import { describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
 
 type AccountDeletionBannerProps = {
   purgeAfter: string | null;
@@ -49,7 +50,7 @@ export function AccountDeletionBanner({
       await onCancelDeletion();
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     } catch (err) {
-      setError(err instanceof Error ? err.message : copy.cancelFailed);
+      setError(describeFailure(err, copy.cancelFailed, language));
     } finally {
       setCancelling(false);
     }

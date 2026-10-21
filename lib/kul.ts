@@ -6,6 +6,7 @@ import {
 } from "@/lib/telemetry";
 import { getKulTaskHref } from "@/lib/kul-contract";
 import { isKulSnapshot } from "@/lib/kulSnapshotContract";
+import { UserMessageError, requestErrorFromResponse } from './user-facing-error';
 import type {
   KulDateSystem,
   KulEventType,
@@ -176,15 +177,11 @@ async function requestJson<T>(
 ): Promise<T> {
   const response = await apiFetch(path, { ...options, expectedUserId: userId });
   const payload: unknown = await response.json().catch(() => null);
-  if (!response.ok) {
-    const message = isRecord(payload) && isString(payload.error)
-      ? payload.error
-      : "Something went wrong. Please try again.";
-    throw new Error(message);
-  }
+  // The Kul routes write their errors for people ("Join a family circle first."), so their text is trusted here.
+  if (!response.ok) throw await requestErrorFromResponse(response, { parsedBody: payload, trustServerMessage: true });
   const timing = parseServerTimingHeader(response.headers.get("Server-Timing"));
   if (timing) recordServerTiming({ kind: "authenticated", userId } satisfies AuthIdentity, "kul", timing);
-  if (validate && !validate(payload)) throw new Error("The family response was incomplete. Refresh and try again.");
+  if (validate && !validate(payload)) throw new UserMessageError("The family response was incomplete. Refresh and try again.");
   return payload as T;
 }
 
@@ -218,19 +215,16 @@ export function fetchKulInvitationToken(userId: string) {
 }
 export async function previewKulInvitation(token: string): Promise<UniversalKulPreview> {
   const res = await apiFetch(`/api/native/kul/invitation?token=${encodeURIComponent(token)}`);
-  if (!res.ok) {
-    const err: unknown = await res.json().catch(() => null);
-    throw new Error(isRecord(err) && isString(err.error) ? err.error : "Invitation not found");
-  }
+  if (!res.ok) throw await requestErrorFromResponse(res, { trustServerMessage: true });
   const payload: unknown = await res.json();
   if (!isRecord(payload) || payload.success !== true || !isRecord(payload.invitation)) {
-    throw new Error("The family invitation response was incomplete.");
+    throw new UserMessageError("The family invitation response was incomplete.");
   }
   const invitation = payload.invitation;
   if (!isString(invitation.kulName) || !isString(invitation.avatarEmoji) ||
       !isString(invitation.guardianName) || typeof invitation.memberCount !== "number" ||
       (invitation.expiresAt !== null && !isString(invitation.expiresAt))) {
-    throw new Error("The family invitation response was incomplete.");
+    throw new UserMessageError("The family invitation response was incomplete.");
   }
   return invitation as UniversalKulPreview;
 }
@@ -324,7 +318,7 @@ export type TirthaPlaceImport = {
 };
 export async function addKulTirthaWish(userId: string, place: TirthaPlaceImport): Promise<KulTirthaItem & { alreadyExists?: boolean }> {
   const ensured = await apiFetch("/api/tirtha/place", { method: "POST", expectedUserId: userId, body: JSON.stringify(place) });
-  if (!ensured.ok) throw new Error("Could not add this sacred place to the catalog.");
+  if (!ensured.ok) throw new UserMessageError("Could not add this sacred place to the catalog.");
   return requestJson<KulTirthaItem & { alreadyExists?: boolean }>("/api/native/kul/tirtha", userId, { method: "POST", body: JSON.stringify({ placeId: place.id }) });
 }
 export function addExistingKulTirthaWish(userId: string, placeId: string) {

@@ -26,6 +26,7 @@ import { Button } from '@/components/ui/Button';
 // DELETION_REASONS, src/lib/account-deletion-reasons.ts) and the chosen `id`
 // is sent back -- never a client-side copy of the list.
 import type { DeletionReason } from '@/lib/accountDeletionStore';
+import { describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
 
 export type DeletionJourneySnapshot = {
   userName: string;
@@ -129,7 +130,7 @@ export function AccountDeletionSheet({
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       onClose();
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : copy.pauseFailed);
+      setErrorMessage(describeFailure(err, copy.pauseFailed, snapshot.lang));
     } finally {
       setPausing(false);
     }
@@ -147,7 +148,7 @@ export function AccountDeletionSheet({
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       onClose();
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : copy.scheduleFailed);
+      setErrorMessage(describeFailure(err, copy.scheduleFailed, snapshot.lang));
     } finally {
       setSubmitting(false);
     }

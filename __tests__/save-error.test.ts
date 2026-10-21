@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { ApiSaveError, classifySaveError, describeSaveError, saveErrorFromResponse } from '../lib/save-error';
+import { ApiRequestError, classifySaveError, describeSaveError, requestErrorFromResponse } from '../lib/save-error';
 import { InvalidDateInputError } from '../lib/date-input';
 
 // A Supabase/PostgREST database error is a plain object, not an Error: that is exactly why the
@@ -75,7 +75,7 @@ describe('describeSaveError', () => {
 });
 
 describe('a save the server refused (Personal details and other API saves)', () => {
-  const refused = (status: number, code: string | null = null, reason: ApiSaveError['dateReason'] = null) => new ApiSaveError(status, code, reason);
+  const refused = (status: number, code: string | null = null, reason: ApiRequestError['dateReason'] = null) => new ApiRequestError(status, code, reason);
   const shown = (e: unknown) => describeSaveError(e, 'en', 'details');
 
   it('classifies by HTTP status and the API\'s own code', () => {
@@ -117,28 +117,28 @@ describe('a save the server refused (Personal details and other API saves)', () 
 
   it('gives a support reference only where nothing can be fixed by the person and the server sent a request id', () => {
     const id = '3F9A2C1B-7d4e-4a55-9b0c-1234567890ab';
-    const serverError = new ApiSaveError(500, null, null, id);
+    const serverError = new ApiRequestError(500, null, null, id);
     assert.match(shown(serverError), /Support reference: 3f9a2c1b\./, 'lower-cased, first eight characters');
-    assert.match(shown(new ApiSaveError(418, null, null, id)), /Support reference: 3f9a2c1b\./);
-    assert.match(shown(new ApiSaveError(403, null, null, id)), /Support reference: 3f9a2c1b\./);
+    assert.match(shown(new ApiRequestError(418, null, null, id)), /Support reference: 3f9a2c1b\./);
+    assert.match(shown(new ApiRequestError(403, null, null, id)), /Support reference: 3f9a2c1b\./);
     // Things the person can fix or wait out get no reference, even when an id exists.
     for (const status of [400, 401, 409, 422]) {
-      assert.doesNotMatch(shown(new ApiSaveError(status, null, null, id)), /reference/i, `HTTP ${status}`);
+      assert.doesNotMatch(shown(new ApiRequestError(status, null, null, id)), /reference/i, `HTTP ${status}`);
     }
     // No id from the server means no reference rather than a made-up one.
-    assert.doesNotMatch(shown(new ApiSaveError(500)), /reference/i);
+    assert.doesNotMatch(shown(new ApiRequestError(500)), /reference/i);
     assert.match(describeSaveError(serverError, 'hi', 'details'), /सहायता संदर्भ: 3f9a2c1b/);
   });
 
   it('reads the request id from the response header, and ignores one that is not a plain id', async () => {
     const header = (value: string | null) => ({ get: (n: string) => (n.toLowerCase() === 'x-request-id' ? value : null) });
-    const ok = await saveErrorFromResponse({ status: 500, json: async () => ({}), headers: header('3f9a2c1b-7d4e-4a55-9b0c-1234567890ab') });
+    const ok = await requestErrorFromResponse({ status: 500, json: async () => ({}), headers: header('3f9a2c1b-7d4e-4a55-9b0c-1234567890ab') });
     assert.equal(ok.supportReference, '3f9a2c1b');
     for (const bad of ['', 'short', '<script>alert(1)</script>', 'x'.repeat(200), null]) {
-      const e = await saveErrorFromResponse({ status: 500, json: async () => ({}), headers: header(bad) });
+      const e = await requestErrorFromResponse({ status: 500, json: async () => ({}), headers: header(bad) });
       assert.equal(e.supportReference, null, String(bad).slice(0, 20));
     }
-    const noHeaders = await saveErrorFromResponse({ status: 500, json: async () => ({}) });
+    const noHeaders = await requestErrorFromResponse({ status: 500, json: async () => ({}) });
     assert.equal(noHeaders.supportReference, null);
   });
 
@@ -151,7 +151,7 @@ describe('a save the server refused (Personal details and other API saves)', () 
   });
 
   it('reads only the fixed code and reason from a response body, never its text', async () => {
-    const e = await saveErrorFromResponse({ status: 400, json: async () => ({ error: 'profiles.date_of_birth secret detail', code: 'INVALID_DATE_OF_BIRTH', reason: 'calendar' }) });
+    const e = await requestErrorFromResponse({ status: 400, json: async () => ({ error: 'profiles.date_of_birth secret detail', code: 'INVALID_DATE_OF_BIRTH', reason: 'calendar' }) });
     assert.equal(e.status, 400);
     assert.equal(e.apiCode, 'INVALID_DATE_OF_BIRTH');
     assert.equal(e.dateReason, 'calendar');
@@ -160,10 +160,10 @@ describe('a save the server refused (Personal details and other API saves)', () 
   });
 
   it('survives a body that is not JSON, and ignores a code that is not one of ours', async () => {
-    const html = await saveErrorFromResponse({ status: 502, json: async () => { throw new SyntaxError('Unexpected token <'); } });
+    const html = await requestErrorFromResponse({ status: 502, json: async () => { throw new SyntaxError('Unexpected token <'); } });
     assert.equal(html.status, 502);
     assert.equal(html.apiCode, null);
-    const odd = await saveErrorFromResponse({ status: 400, json: async () => ({ code: 'drop table profiles;', reason: 'nonsense' }) });
+    const odd = await requestErrorFromResponse({ status: 400, json: async () => ({ code: 'drop table profiles;', reason: 'nonsense' }) });
     assert.equal(odd.apiCode, null);
     assert.equal(odd.dateReason, null);
   });
@@ -176,7 +176,7 @@ describe('a save the server refused (Personal details and other API saves)', () 
 describe('Personal details screen wiring', () => {
   const screen = readFileSync(resolve(__dirname, '../app/settings/personal-details.tsx'), 'utf8');
   it('classifies the failure instead of always blaming the connection', () => {
-    assert.match(screen, /if \(!response\.ok\) throw await saveErrorFromResponse\(response\)/);
+    assert.match(screen, /if \(!response\.ok\) throw await requestErrorFromResponse\(response\)/);
     assert.match(screen, /Alert\.alert\('Could not save', describeSaveError\(error, 'en', 'details'\)\)/);
     assert.doesNotMatch(screen, /Alert\.alert\('Could not save', 'Check your connection/);
   });
