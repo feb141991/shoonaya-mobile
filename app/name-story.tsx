@@ -25,6 +25,7 @@ import { SacredLoader } from '@/components/ui/SacredLoader';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { apiFetch } from '@/lib/api';
+import { AI_CHAT_TIMEOUT_MS } from '@/lib/api-policy';
 import { describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
 import { COLORS, FONTS, RADII, SPACING, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
@@ -151,6 +152,7 @@ export default function NameStoryScreen() {
     try {
       const response = await apiFetch('/api/name-story/generate', {
         method: 'POST',
+        timeoutMs: AI_CHAT_TIMEOUT_MS,
         body: JSON.stringify({
           name: trimmed,
           tradition: selectedTradition,

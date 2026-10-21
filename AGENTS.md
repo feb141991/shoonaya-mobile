@@ -269,3 +269,9 @@ Rules:
   response) mirrors the pattern the auth/API diagnostic queues already used correctly
   (`removeUploadedApiRequestDiagnostics`/`removeUploadedAuthDiagnostics`). This applies equally to human and
   AI-agent contributors.
+
+### 15. Separate Auth Preparation and Network Timeouts
+- `apiFetch` must bound auth/session preparation and HTTP transport independently. The requested `timeoutMs` is the network budget and starts immediately before the first fetch; auth readiness/session restoration has its own finite timeout. Retries share the original transport deadline.
+- A local Panchang calculation may paint while the server resolves a profile or canonical observances, but it must identify the reference location. It must never replace canonical observance dates or imply an unresolved response is complete.
+- AI-backed Name Story requests use `AI_CHAT_TIMEOUT_MS`, including the standalone Profile entry point.
+- Why this rule exists: on 2026-10-21 a new-user simulator walkthrough found `apiFetch` started its only timer before `waitForAuthReady()` and token restoration, reducing the network time budget. The Panchang screen also had a local calculation but hid it behind a full-screen loader until profile and observance requests completed. Both defects were fixed while preserving finite auth/network deadlines and visibly labelling Ujjain reference timings.

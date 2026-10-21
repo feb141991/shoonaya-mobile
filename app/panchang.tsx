@@ -44,6 +44,7 @@ import {
   recordPromptDismissal,
 } from '@/lib/progressiveProfiling';
 import { trackProgressivePromptEvent } from '@/lib/progressiveProfilingAnalytics';
+import { shouldBlockPanchangScreen } from '@/lib/panchang-screen-policy';
 
 // ── Panchang — rebuilt to match PWA's src/app/(main)/panchang/today/
 // PanchangDetail.tsx living-sky design (sky-phase gradient, glow orb,
@@ -672,7 +673,11 @@ export default function PanchangScreen() {
     }
   }, [dateLabel, panchang]);
 
-  if (loading || panchangOwner !== cacheIdentity || appIdentity.kind === 'unauthenticated' || appIdentity.kind === 'loading') {
+  if (shouldBlockPanchangScreen({
+    panchangOwner,
+    cacheIdentity,
+    identityKind: appIdentity.kind,
+  })) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.darkBg }} edges={['top']}>
         <SacredLoader
@@ -712,6 +717,12 @@ export default function PanchangScreen() {
             <Feather name="share-2" size={16} color={CREAM} />
           </Pressable>
         </View>
+
+        {profileState.lat === INITIAL_STATE.lat && profileState.lon === INITIAL_STATE.lon && !profileState.city ? (
+          <Text accessibilityRole="text" style={{ color: 'rgba(255,255,255,0.68)', fontFamily: FONTS.sans, fontSize: 12 }}>
+            Using Ujjain reference timings{loading ? ' while your profile and upcoming observances load.' : '. Add or confirm your city in Profile for local timings.'}
+          </Text>
+        ) : null}
 
         {profileState.timezone && profileState.timezone !== 'Asia/Kolkata' ? (
           <Pressable
@@ -985,7 +996,9 @@ export default function PanchangScreen() {
         <GlassCard>
           <Text style={{ color: CREAM, fontFamily: FONTS.serifBold, fontSize: 19 }}>Upcoming festivals</Text>
           {festivals.length === 0 ? (
-            <Text style={{ color: 'rgba(255,255,255,0.5)', fontFamily: FONTS.sans, fontSize: 13 }}>No upcoming observances loaded.</Text>
+            <Text style={{ color: 'rgba(255,255,255,0.5)', fontFamily: FONTS.sans, fontSize: 13 }}>
+              {loading ? 'Loading upcoming observances…' : 'No upcoming observances loaded.'}
+            </Text>
           ) : (
             // Deduplicate on date+slug before rendering to prevent React key
             // collisions when the API returns the same observance twice (e.g.

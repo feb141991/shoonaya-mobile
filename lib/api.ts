@@ -5,7 +5,8 @@ import * as Crypto from 'expo-crypto';
 import { supabase } from '@/lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 import { isFetchCancelled } from './fetch-error';
-import { DEFAULT_API_TIMEOUT_MS } from './api-policy';
+import { API_AUTH_PREPARATION_TIMEOUT_MS, DEFAULT_API_TIMEOUT_MS } from './api-policy';
+import { createApiPhaseTimeout } from './api-phase-timeout';
 import { waitForAuthReady } from './authReadyGate';
 import { sessionHasUsableAccessToken } from './api-auth-policy';
 import { createSingleFlight } from './async-single-flight';
@@ -16,7 +17,7 @@ import { recordApiRequestDiagnostic, recordAuthDiagnostic, type AuthDiagnosticCo
 export { isFetchCancelled };
 
 export type ApiFetchOptions = RequestInit & {
-  /** Override the default request deadline for legitimately long-running APIs. */
+  /** HTTP transport deadline after auth/session preparation. */
   timeoutMs?: number;
   /** Disable sharing for streaming or deliberately independent GET reads. */
   dedupe?: boolean;
@@ -185,11 +186,7 @@ async function performApiFetch(path: string, options: ApiFetchOptions = {}, chec
   const forwardAbort = () => controller.abort(callerSignal?.reason);
   if (callerSignal?.aborted) forwardAbort();
   else callerSignal?.addEventListener('abort', forwardAbort, { once: true });
-  const timeout = setTimeout(() => {
-    const error = new Error('API request timed out');
-    error.name = 'AbortError';
-    controller.abort(error);
-  }, timeoutMs);
+  const phaseTimeout = createApiPhaseTimeout(controller, API_AUTH_PREPARATION_TIMEOUT_MS, timeoutMs);
 
   const abortable = async <T>(operation: Promise<T>): Promise<T> => {
     if (controller.signal.aborted) throw controller.signal.reason;
@@ -235,6 +232,10 @@ async function performApiFetch(path: string, options: ApiFetchOptions = {}, chec
 
     requestSent = true;
     attemptCount += 1;
+    // Auth/session restoration has its own finite budget above. Start the
+    // caller's transport budget only once the authenticated HTTP request is
+    // ready to leave the device; retries share this same transport deadline.
+    phaseTimeout.startTransport();
     const response = await fetch(`${API_BASE}${normalizedPath}`, {
       ...fetchOptions,
       headers: requestHeaders,
@@ -246,8 +247,9 @@ async function performApiFetch(path: string, options: ApiFetchOptions = {}, chec
   };
 
   try {
-    // The deadline covers the startup auth gate, session lookup/refresh,
-    // owner verification and transport instead of starting only at fetch().
+    // Auth and transport each have a finite deadline, but the caller's
+    // timeoutMs applies only to transport and begins inside requestWithToken
+    // after session and owner checks are ready.
     const authGateStartedAt = Date.now();
     await abortable(waitForAuthReady());
     authReadyWaitMs = Date.now() - authGateStartedAt;
@@ -365,7 +367,7 @@ async function performApiFetch(path: string, options: ApiFetchOptions = {}, chec
     } catch {
       // Diagnostics are best-effort and never change the request's result.
     }
-    clearTimeout(timeout);
+    phaseTimeout.dispose();
     callerSignal?.removeEventListener('abort', forwardAbort);
   }
 }

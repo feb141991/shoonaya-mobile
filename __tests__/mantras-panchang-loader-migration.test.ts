@@ -16,11 +16,13 @@ test('Mantras uses public content snapshots and loads only the profile context i
 
 test('Panchang reuses only same-spiritual-day snapshots owned by the active identity and purges on auth boundaries', () => {
   const screen = fs.readFileSync(path.join(process.cwd(), 'app/panchang.tsx'), 'utf8');
+  const policy = fs.readFileSync(path.join(process.cwd(), 'lib/panchang-screen-policy.ts'), 'utf8');
   const cache = fs.readFileSync(path.join(process.cwd(), 'lib/panchangScreenCache.ts'), 'utf8');
   const layout = fs.readFileSync(path.join(process.cwd(), 'app/_layout.tsx'), 'utf8');
 
   assert.match(screen, /getPanchangScreenSnapshot<UpcomingFestival, Tradition>\(cacheIdentity\)/);
-  assert.match(screen, /panchangOwner !== cacheIdentity/);
+  assert.match(screen, /shouldBlockPanchangScreen\(/);
+  assert.match(policy, /input\.panchangOwner !== input\.cacheIdentity/);
   assert.match(screen, /writePanchangScreenSnapshot\(`user:\$\{appIdentity\.userId\}`/);
   assert.match(screen, /writePanchangScreenSnapshot\('guest'/);
   assert.match(cache, /snapshot\.spiritualDate !== spiritualDate\(snapshot\.profile\.timezone, now\)/);
