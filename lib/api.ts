@@ -13,6 +13,7 @@ import { createSingleFlight } from './async-single-flight';
 import { retryTransientReadOnce } from './api-503-retry';
 import { classifyApiDiagnostic, normalizeApiDiagnosticMethod, normalizeApiEndpoint } from './apiDiagnosticPolicy';
 import { recordApiRequestDiagnostic, recordAuthDiagnostic, type AuthDiagnosticCode, type AuthDiagnosticRoute } from './telemetry';
+import { appBackgroundTransitionTracker } from './appLifecycleDiagnostics';
 
 export { isFetchCancelled };
 
@@ -170,6 +171,7 @@ async function performApiFetch(path: string, options: ApiFetchOptions = {}, chec
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
   const requestId = Crypto.randomUUID();
   const requestStartedAt = Date.now();
+  const backgroundTransitionAtStart = appBackgroundTransitionTracker.capture();
   const requestMethod = normalizeApiDiagnosticMethod(fetchOptions.method);
   let authReadyWaitMs = 0;
   let hadAccessToken = false;
@@ -362,6 +364,7 @@ async function performApiFetch(path: string, options: ApiFetchOptions = {}, chec
           serverRequestId,
           retryServerRequestId: latestRequestId && latestRequestId !== serverRequestId ? latestRequestId : null,
           timestamp: Date.now(),
+          crossedBackground: appBackgroundTransitionTracker.crossedSince(backgroundTransitionAtStart),
         });
       }
     } catch {

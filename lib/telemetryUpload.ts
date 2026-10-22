@@ -33,6 +33,7 @@ const AUTH_DIAGNOSTIC_LAST_UPLOAD_KEY = 'shoonaya_auth_diag_v1_last_upload';
 let nativeDiagnosticUpload: Promise<void> | null = null;
 
 const GUEST_INSTALL_ID_KEY = 'shoonaya_telemetry_guest_install_id_v1';
+const telemetrySummaryFlights = new Map<string, Promise<void>>();
 
 /**
  * A random, anonymous, locally-generated id -- never an account id, never
@@ -55,12 +56,12 @@ async function getOrCreateGuestInstallId(): Promise<string> {
 }
 
 /**
- * Best-effort background beacon: sends the current aggregated summary to
+ * Best-effort foreground beacon: sends the current aggregated summary to
  * the backend, throttled to once per hour per install regardless of how
- * often the caller invokes this. Called from app/_layout.tsx on
- * backgrounding. Never throws, never awaited by anything that affects app
- * behavior -- a failed or skipped upload just means this hour's snapshot is
- * read next time instead.
+ * often the caller invokes this. Called from app/_layout.tsx after the app
+ * is ready and has settled in the foreground. Never throws and never blocks
+ * app behavior. A failed or skipped upload leaves the local events for a
+ * later foreground attempt.
  *
  * Identity-race guarded the same way app/(tabs)/profile.tsx guards its own
  * writes: captureAppIdentity()'s lease expires on ANY identity transition
@@ -75,7 +76,19 @@ async function getOrCreateGuestInstallId(): Promise<string> {
  * token is current at the moment it actually fires, not the one active
  * when this function was called.
  */
-export async function maybeUploadTelemetrySummary(identity: TelemetryIdentity): Promise<void> {
+export function maybeUploadTelemetrySummary(identity: TelemetryIdentity): Promise<void> {
+  const flightKey = identity.kind === 'guest' ? 'guest' : `authenticated:${identity.userId}`;
+  const existing = telemetrySummaryFlights.get(flightKey);
+  if (existing) return existing;
+
+  const flight = uploadTelemetrySummary(identity).finally(() => {
+    if (telemetrySummaryFlights.get(flightKey) === flight) telemetrySummaryFlights.delete(flightKey);
+  });
+  telemetrySummaryFlights.set(flightKey, flight);
+  return flight;
+}
+
+async function uploadTelemetrySummary(identity: TelemetryIdentity): Promise<void> {
   const { isCurrent } = captureAppIdentity();
   try {
     const lastUploadRaw = await AsyncStorage.getItem(LAST_UPLOAD_KEY);
@@ -123,7 +136,7 @@ export async function maybeUploadTelemetrySummary(identity: TelemetryIdentity): 
  * Flushes the anonymous, idempotent auth and API diagnostic outboxes. This
  * deliberately bypasses apiFetch/auth readiness so an auth failure can still
  * be reported. Both payloads omit identity, request bodies, query values,
- * tokens, and user content. Called on launch and backgrounding.
+ * tokens, and user content. Called after the app is ready and settles in foreground.
  */
 export function maybeUploadAuthDiagnostics(): Promise<void> {
   if (nativeDiagnosticUpload) return nativeDiagnosticUpload;
@@ -163,7 +176,7 @@ async function uploadAuthDiagnostics(): Promise<void> {
     await removeUploadedAuthDiagnostics(events.map((event) => event.requestId));
     await AsyncStorage.setItem(AUTH_DIAGNOSTIC_LAST_UPLOAD_KEY, String(Date.now()));
   } catch {
-    // Keep the queue for a later foreground/background attempt. Diagnostics
+    // Keep the queue for a later foreground attempt. Diagnostics
     // must never block startup, navigation, or the user's current request.
   }
 }
@@ -201,7 +214,7 @@ async function uploadApiRequestDiagnostics(): Promise<void> {
     await removeUploadedApiRequestDiagnostics(events.map((event) => event.clientEventId));
     await AsyncStorage.setItem(API_DIAGNOSTIC_LAST_UPLOAD_KEY, String(Date.now()));
   } catch {
-    // Keep events for the next launch/background attempt; diagnostics never
+    // Keep events for the next launch or foreground-resume attempt; diagnostics never
     // block startup or any screen's current request.
   }
 }

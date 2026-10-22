@@ -32,7 +32,7 @@
  * lib/api.ts) breaks that test file's ability to import this module at
  * all. The actual upload trigger lives in lib/telemetryUpload.ts, which
  * imports getTelemetrySummary from here and is triggered from
- * app/_layout.tsx on backgrounding. See src/lib/native-telemetry-contract.ts
+ * app/_layout.tsx after the app settles in foreground. See src/lib/native-telemetry-contract.ts
  * and src/app/api/native/telemetry-summary/route.ts (backend repo) for the
  * receiving contract, and /admin's "Native Startup Performance" monitoring
  * tab for the viewer. Authenticated uploads carry the user's id (the same
@@ -427,6 +427,7 @@ function isApiRequestDiagnosticRecord(value: unknown): value is ApiRequestDiagno
     && typeof event.durationMs === 'number' && Number.isInteger(event.durationMs) && event.durationMs >= 0 && event.durationMs <= 180_000
     && (event.serverRequestId === null || isUuid(event.serverRequestId))
     && (event.retryServerRequestId === null || isUuid(event.retryServerRequestId))
+    && (event.crossedBackground === undefined || typeof event.crossedBackground === 'boolean')
     && typeof event.timestamp === 'number' && Number.isFinite(event.timestamp) && event.timestamp >= 0;
 }
 

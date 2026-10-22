@@ -275,3 +275,9 @@ Rules:
 - A local Panchang calculation may paint while the server resolves a profile or canonical observances, but it must identify the reference location. It must never replace canonical observance dates or imply an unresolved response is complete.
 - AI-backed Name Story requests use `AI_CHAT_TIMEOUT_MS`, including the standalone Profile entry point.
 - Why this rule exists: on 2026-10-21 a new-user simulator walkthrough found `apiFetch` started its only timer before `waitForAuthReady()` and token restoration, reducing the network time budget. The Panchang screen also had a local calculation but hid it behind a full-screen loader until profile and observance requests completed. Both defects were fixed while preserving finite auth/network deadlines and visibly labelling Ujjain reference timings.
+
+### 16. Lifecycle-Aware Diagnostic Timing and Uploads
+- Upload telemetry and request-diagnostic outboxes only after the app is ready and stable in the foreground; do not start network sends on the transition to background. Keep local events until the server acknowledges receipt.
+- Mark a diagnostic when a real `background` transition occurred during its measured wall-clock interval. Do not treat iOS `inactive` alone as background; it also occurs for short interruptions such as Control Center and incoming calls.
+- Keep the lifecycle marker nullable at the backend so older installed app versions remain compatible, and display unknown separately from a confirmed `no` in admin diagnostics.
+- Why this rule exists: on 2026-10-21, production diagnostics showed client request durations at the 180-second storage cap across unrelated routes. The root layout was starting telemetry uploads as the app entered background, while `Date.now()` included suspension time and no event recorded lifecycle transitions. This applies equally to human and AI-agent contributors.

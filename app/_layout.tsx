@@ -69,6 +69,12 @@ import { clearMoodStatusCache } from '@/lib/moodStatusCache';
 import { clearPanchangScreenSnapshots } from '@/lib/panchangScreenCache';
 import { clearAllTelemetry, recordFirstUsefulFrame } from '@/lib/telemetry';
 import { maybeUploadAuthDiagnostics, maybeUploadTelemetrySummary } from '@/lib/telemetryUpload';
+import {
+  appBackgroundTransitionTracker,
+  shouldScheduleTelemetryFlush,
+  TELEMETRY_UPLOAD_SETTLE_MS,
+  type AppLifecycleState,
+} from '@/lib/appLifecycleDiagnostics';
 import { clearAllSankalpaOutboxes } from '@/lib/sankalpaOutbox';
 import { clearAllReactionOutboxes } from '@/lib/reactionOutbox';
 import { clearAllOnboardingDrafts } from '@/lib/onboardingDraft';
@@ -877,25 +883,57 @@ function RootLayout() {
     };
   }, []);
 
-  // ── Upload the aggregated startup-performance telemetry on background ──
-  // Self-throttled to once per hour per install inside maybeUploadTelemetrySummary,
-  // so this can fire on every background transition without spamming the backend.
+  // ── Flush durable diagnostics only after the app is stable in foreground ──
+  // The local outboxes survive suspension, so sending at the background edge
+  // risks counting iOS suspension time in request durations and losing the
+  // response before its acknowledgement can clear the outbox.
   useEffect(() => {
-    // Flush any prior anonymous auth-failure events once on launch and again
-    // when backgrounding; this path has no auth gate and never blocks UI.
-    void maybeUploadAuthDiagnostics();
+    let previousState = AppState.currentState as AppLifecycleState;
+    appBackgroundTransitionTracker.observe(previousState);
+    let initialForegroundFlushStarted = false;
+    let pendingFlush = false;
+    let flushTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const cancelScheduledFlush = () => {
+      if (flushTimer !== null) clearTimeout(flushTimer);
+      flushTimer = null;
+    };
+    const scheduleFlush = () => {
+      if (!readyToRender || AppState.currentState !== 'active') return;
+      cancelScheduledFlush();
+      pendingFlush = true;
+      flushTimer = setTimeout(() => {
+        flushTimer = null;
+        if (AppState.currentState !== 'active') return;
+        pendingFlush = false;
+        initialForegroundFlushStarted = true;
+        // Outboxes are local and acknowledged only after a confirmed response.
+        void maybeUploadAuthDiagnostics();
+        const identity = getAppIdentity();
+        if (identity.kind === 'guest') {
+          void maybeUploadTelemetrySummary({ kind: 'guest' });
+        } else if (identity.kind === 'authenticated') {
+          void maybeUploadTelemetrySummary({ kind: 'authenticated', userId: identity.userId });
+        }
+      }, TELEMETRY_UPLOAD_SETTLE_MS);
+    };
+
+    if (readyToRender && AppState.currentState === 'active') scheduleFlush();
     const subscription = AppState.addEventListener('change', (state) => {
-      if (state !== 'background') return;
-      void maybeUploadAuthDiagnostics();
-      const identity = getAppIdentity();
-      if (identity.kind === 'guest') {
-        void maybeUploadTelemetrySummary({ kind: 'guest' });
-      } else if (identity.kind === 'authenticated') {
-        void maybeUploadTelemetrySummary({ kind: 'authenticated', userId: identity.userId });
+      const previous = previousState;
+      appBackgroundTransitionTracker.observe(state as AppLifecycleState);
+      previousState = state as AppLifecycleState;
+      if (state !== 'active') {
+        cancelScheduledFlush();
+        return;
       }
+      if (shouldScheduleTelemetryFlush(previous, state as AppLifecycleState, initialForegroundFlushStarted, pendingFlush)) scheduleFlush();
     });
-    return () => subscription.remove();
-  }, []);
+    return () => {
+      cancelScheduledFlush();
+      subscription.remove();
+    };
+  }, [readyToRender]);
 
   // ── Deferred Update Checks (EAS OTA & Store Binary) ──────────────────
   // Non-blocking: Runs 2.5s after readyToRender to guarantee time-to-first-paint is never delayed.

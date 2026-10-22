@@ -21,6 +21,8 @@ export type ApiRequestDiagnostic = {
   serverRequestId: string | null;
   retryServerRequestId: string | null;
   timestamp: number;
+  /** Null/omitted on diagnostics persisted by older app versions. */
+  crossedBackground?: boolean;
 };
 
 export const API_DIAGNOSTIC_SLOW_MS = 3_000;

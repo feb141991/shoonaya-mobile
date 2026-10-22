@@ -8,6 +8,7 @@ import { canRetryTransientTransportFailure } from '@/lib/api-auth-policy';
 import { createSecureAuthStorage } from '@/lib/secureAuthStorage';
 import { classifyApiDiagnostic, normalizeApiDiagnosticMethod, normalizeSupabaseEndpoint } from '@/lib/apiDiagnosticPolicy';
 import { recordApiRequestDiagnostic } from '@/lib/telemetry';
+import { appBackgroundTransitionTracker } from '@/lib/appLifecycleDiagnostics';
 
 const EXPO_PUBLIC_SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const EXPO_PUBLIC_SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
@@ -102,6 +103,7 @@ const resilientFetch: typeof fetch = async (input, init) => {
   const maxRetries = 2;
   const mayRetry = canRetryTransientTransportFailure(init?.method);
   const startedAt = Date.now();
+  const backgroundTransitionAtStart = appBackgroundTransitionTracker.capture();
   const endpoint = normalizeSupabaseEndpoint(input, EXPO_PUBLIC_SUPABASE_URL ?? 'https://placeholder.supabase.co');
   const requestMethod = normalizeApiDiagnosticMethod(
     init?.method ?? (typeof Request !== 'undefined' && input instanceof Request ? input.method : undefined),
@@ -141,6 +143,7 @@ const resilientFetch: typeof fetch = async (input, init) => {
         serverRequestId,
         retryServerRequestId: latestRequestId && latestRequestId !== serverRequestId ? latestRequestId : null,
         timestamp: Date.now(),
+        crossedBackground: appBackgroundTransitionTracker.crossedSince(backgroundTransitionAtStart),
       });
     } catch {
       // Observability must never alter the request's network result.
