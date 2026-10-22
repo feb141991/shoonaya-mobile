@@ -281,3 +281,9 @@ Rules:
 - Mark a diagnostic when a real `background` transition occurred during its measured wall-clock interval. Do not treat iOS `inactive` alone as background; it also occurs for short interruptions such as Control Center and incoming calls.
 - Keep the lifecycle marker nullable at the backend so older installed app versions remain compatible, and display unknown separately from a confirmed `no` in admin diagnostics.
 - Why this rule exists: on 2026-10-21, production diagnostics showed client request durations at the 180-second storage cap across unrelated routes. The root layout was starting telemetry uploads as the app entered background, while `Date.now()` included suspension time and no event recorded lifecycle transitions. This applies equally to human and AI-agent contributors.
+
+### 17. Row Text Layout and Wrapping Bounds
+- Any `<Text>` rendered inside a horizontal container (`flexDirection: 'row'`) alongside an icon, badge, button, or other sibling element must carry `flex: 1` (or `flexShrink: 1`).
+- Without `flex: 1`, React Native does not bound the text node's width to the remaining horizontal space of the row; the text expands past parent container padding and clips or wraps abruptly against the card/screen border.
+- Pair multi-line text in row items with explicit `lineHeight` to prevent descender clipping or cramped vertical rhythm on custom fonts.
+- Why this rule exists: on 2026-10-23, onboarding Step 9 (Location) had text alignment and clipping issues on iOS devices: labels in the feature card ("Accurate sunrise...", "Brahma Muhurta wake-up reminder at your real dawn") lacked `flex: 1`, causing text to bleed past the 20px card padding and touch the right border. This applies equally to human and AI-agent contributors.

@@ -1702,7 +1702,7 @@ export default function OnboardingScreen() {
                   <View style={{ width: 34, height: 34, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: wellBg }}>
                     <Feather name={item.icon} size={16} color={accent} />
                   </View>
-                  <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sansMedium, fontSize: 14, color: text }}>
+                  <Text style={{ flex: 1, fontFamily: isHindi ? FONTS.devanagari : FONTS.sansMedium, fontSize: 14, lineHeight: isHindi ? 21 : 20, color: text }}>
                     {item.label}
                   </Text>
                 </View>
