@@ -2,6 +2,8 @@ import { useMemo } from 'react';
 import { ScrollView, Text, useColorScheme, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { useRouter, type Href } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 
 import { BackButton } from '@/components/ui/BackButton';
 import { Card } from '@/components/ui/Card';
@@ -49,12 +51,13 @@ function SettingsRow({ item, theme }: { item: SettingsDestination; theme: Return
 }
 
 export default function SettingsScreen() {
+  const insets = useSafeAreaInsets();
   const isDark = useColorScheme() === 'dark';
   const theme = useMemo(() => themeColor(isDark), [isDark]);
 
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 28, gap: 20 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + NAV_BAR_CLEARANCE + 20, gap: 20 }} showsVerticalScrollIndicator={false}>
         <BackButton fallbackHref="/(tabs)/profile" handleHardwareBack />
         <View style={{ gap: 4 }}>
           <Text style={{ ...TYPE.screenTitle, color: theme.text }}>Settings</Text>

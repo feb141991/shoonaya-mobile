@@ -13,6 +13,8 @@ import {
 import Feather from '@expo/vector-icons/Feather';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useFocusEffect, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import * as Haptics from 'expo-haptics';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
@@ -334,6 +336,7 @@ async function openLegalUrl(path: '/terms' | '/privacy' | '/sources') {
 }
 
 export function SettingsDetailScreen({ section }: { section: SettingsSectionKey }) {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const appIdentity = useAppIdentity();
   const { setLanguage, language } = useLanguage();
@@ -1008,7 +1011,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
 
   return (
     <Screen style={{ backgroundColor: theme.bg }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 28, gap: 20 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + NAV_BAR_CLEARANCE + 20, gap: 20 }} showsVerticalScrollIndicator={false}>
         <BackButton fallbackHref="/settings" handleHardwareBack />
 
         <View style={{ gap: 2 }}>
