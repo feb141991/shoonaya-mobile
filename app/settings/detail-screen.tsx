@@ -123,7 +123,7 @@ const NOTIFICATION_TOGGLES: { key: keyof SettingsState; label: string; subtitle:
   { key: 'wants_vrat_reminders', label: 'Vrats & fasting', subtitle: 'Ekadashi, Pradosha, Purnima & fasting days' },
   { key: 'wants_tithi_reminders', label: 'Tithi alerts', subtitle: 'Daily lunar phase transitions' },
   { key: 'wants_community_notifications', label: 'Community', subtitle: 'Mandali posts, reactions & connections' },
-  { key: 'wants_family_notifications', label: 'Family', subtitle: 'Kul & lineage activity', disabled: true, badge: 'Coming soon' },
+  { key: 'wants_family_notifications', label: 'Family', subtitle: 'Kul & lineage activity', requiresAccount: true },
   { key: 'wants_family_remembrance_reminders', label: 'Family remembrance', subtitle: 'A yearly, private reminder for family dates you link to a deceased relative', requiresAccount: true },
 ];
 
