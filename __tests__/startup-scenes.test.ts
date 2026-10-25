@@ -207,6 +207,7 @@ describe('Contextual Startup Scenes — Multilingual Greetings', () => {
   it('falls back to English when an unsupported language code is passed', () => {
     const greeting = getStartupGreeting({
       tradition: 'hindu',
+      timezone: 'Asia/Kolkata',
       language: 'fr',
       now: new Date('2026-08-28T12:00:00+05:30'),
     });

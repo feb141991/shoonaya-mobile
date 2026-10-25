@@ -1,5 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
 import path from 'path';
 
 import {
@@ -8,17 +9,32 @@ import {
   AstroChart,
 } from '@/lib/kundali-contract';
 
-// Import backend astro-engine directly to execute real numerical calculations
-const BACKEND_ROOT = path.resolve(__dirname, '../../Sanatan Sangam/Shoonaya');
-const { generateAstroChart, birthLocalToUTC } = require(path.join(BACKEND_ROOT, 'src/lib/jyotish/astro-engine.ts'));
-const { computeAstronomy } = require(path.join(BACKEND_ROOT, 'packages/panchang-engine/src/index.ts'));
+// This is intentionally a cross-repository integration suite. A standalone native
+// checkout (including GitHub Actions) does not contain the backend source tree, so
+// only run it when the backend checkout is present or explicitly configured.
+const BACKEND_ROOT = process.env.SHOONAYA_BACKEND_ROOT
+  ? path.resolve(process.env.SHOONAYA_BACKEND_ROOT)
+  : path.resolve(__dirname, '../../Sanatan Sangam/Shoonaya');
+const ASTRO_ENGINE_PATH = path.join(BACKEND_ROOT, 'src/lib/jyotish/astro-engine.ts');
+const PANCHANG_ENGINE_PATH = path.join(BACKEND_ROOT, 'packages/panchang-engine/src/index.ts');
+const backendIntegrationAvailable = existsSync(ASTRO_ENGINE_PATH) && existsSync(PANCHANG_ENGINE_PATH);
+
+const backendAstro = backendIntegrationAvailable ? require(ASTRO_ENGINE_PATH) : null;
+const backendPanchang = backendIntegrationAvailable ? require(PANCHANG_ENGINE_PATH) : null;
+const generateAstroChart = backendAstro?.generateAstroChart as ((input: unknown) => AstroChart) | undefined;
+const birthLocalToUTC = backendAstro?.birthLocalToUTC as ((date: string, time: string, timezone: string) => Date) | undefined;
+const computeAstronomy = backendPanchang?.computeAstronomy as ((instant: Date) => any) | undefined;
 
 function circularResidual(value: number, step: number): number {
   const mod = ((value % step) + step) % step;
   return Math.min(mod, step - mod);
 }
 
-describe('Astro Engine Real Numerical Calculations & Invariants', () => {
+describe('Astro Engine Real Numerical Calculations & Invariants', {
+  skip: backendIntegrationAvailable
+    ? false
+    : 'Set SHOONAYA_BACKEND_ROOT to a Shoonaya backend checkout to run this cross-repository suite',
+}, () => {
   // Fixture 1: Ordinary Known-Time Birth (Ujjain, India — Prime meridian of ancient Indian astronomy)
   it('calculates valid AstroChart v2 for ordinary known-time birth in Ujjain', () => {
     const input = {
@@ -30,7 +46,7 @@ describe('Astro Engine Real Numerical Calculations & Invariants', () => {
       timeUnknown: false,
     };
 
-    const chart: AstroChart = generateAstroChart(input);
+    const chart: AstroChart = generateAstroChart!(input);
 
     assert.strictEqual(chart.schemaVersion, 2);
     assert.strictEqual(chart.timeUnknown, false);
@@ -64,7 +80,7 @@ describe('Astro Engine Real Numerical Calculations & Invariants', () => {
     // Must pass native strict validator
     assert.ok(isValidAstroChart(chart), 'Generated chart must pass isValidAstroChart');
 
-    const atBirth = computeAstronomy(new Date(panchang.instantUtc));
+    const atBirth = computeAstronomy!(new Date(panchang.instantUtc));
     assert.strictEqual(panchang.tithi.index, Math.floor(atBirth.elongation / 12) + 1);
     assert.strictEqual(panchang.nakshatra.index, Math.floor(atBirth.moonSidereal / (360 / 27)) % 27);
     assert.strictEqual(
@@ -74,13 +90,13 @@ describe('Astro Engine Real Numerical Calculations & Invariants', () => {
     assert.strictEqual(panchang.karana.index, Math.floor(atBirth.elongation / 6) + 1);
 
     const boundaryChecks = [
-      [panchang.tithi.endsAtUtc, 12, (d: Date) => computeAstronomy(d).elongation],
-      [panchang.nakshatra.endsAtUtc, 360 / 27, (d: Date) => computeAstronomy(d).moonSidereal],
+      [panchang.tithi.endsAtUtc, 12, (d: Date) => computeAstronomy!(d).elongation],
+      [panchang.nakshatra.endsAtUtc, 360 / 27, (d: Date) => computeAstronomy!(d).moonSidereal],
       [panchang.yoga.endsAtUtc, 360 / 27, (d: Date) => {
-        const a = computeAstronomy(d);
+        const a = computeAstronomy!(d);
         return a.sunSidereal + a.moonSidereal;
       }],
-      [panchang.karana.endsAtUtc, 6, (d: Date) => computeAstronomy(d).elongation],
+      [panchang.karana.endsAtUtc, 6, (d: Date) => computeAstronomy!(d).elongation],
     ] as const;
     for (const [boundary, step, positionAt] of boundaryChecks) {
       assert.ok(boundary, 'every known-time limb must expose its solved transition');
@@ -99,7 +115,7 @@ describe('Astro Engine Real Numerical Calculations & Invariants', () => {
       timeUnknown: false,
     };
 
-    const chart: AstroChart = generateAstroChart(input);
+    const chart: AstroChart = generateAstroChart!(input);
     assert.ok(chart.birthPanchang !== null);
     assert.strictEqual(chart.birthPanchang.localDate, '2020-12-31');
     assert.strictEqual(chart.birthPanchang.localTime, '23:45');
@@ -122,7 +138,7 @@ describe('Astro Engine Real Numerical Calculations & Invariants', () => {
       timeUnknown: false,
     };
 
-    const chart: AstroChart = generateAstroChart(input);
+    const chart: AstroChart = generateAstroChart!(input);
     assert.strictEqual(chart.utcBirthTime, '2024-07-15T18:30:00.000Z');
     assert.strictEqual(chart.birthPanchang?.vara.name, 'Somavara'); // Monday
     assert.strictEqual(chart.birthPanchang?.vara.index, 1);
@@ -131,14 +147,14 @@ describe('Astro Engine Real Numerical Calculations & Invariants', () => {
 
   it('rejects a nonexistent local time in the New York spring-forward gap', () => {
     assert.throws(
-      () => birthLocalToUTC('2024-03-10', '02:30', 'America/New_York'),
+      () => birthLocalToUTC!('2024-03-10', '02:30', 'America/New_York'),
       /does not exist.*daylight-saving transition/,
     );
   });
 
   it('rejects an ambiguous local time in the New York fall-back fold', () => {
     assert.throws(
-      () => birthLocalToUTC('2024-11-03', '01:30', 'America/New_York'),
+      () => birthLocalToUTC!('2024-11-03', '01:30', 'America/New_York'),
       /ambiguous.*daylight-saving transition/,
     );
   });
@@ -154,7 +170,7 @@ describe('Astro Engine Real Numerical Calculations & Invariants', () => {
       timeUnknown: true,
     };
 
-    const chart: AstroChart = generateAstroChart(input);
+    const chart: AstroChart = generateAstroChart!(input);
 
     assert.strictEqual(chart.schemaVersion, 2);
     assert.strictEqual(chart.timeUnknown, true);
