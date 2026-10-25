@@ -122,9 +122,15 @@ export default function MemberProfileScreen() {
       }
       setLoading(true);
       try {
-        const { data: authData } = await supabase.auth.getUser();
-        const uid = authData.user?.id ?? null;
-        if (!cancelled) setCurrentUserId(uid);
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (authError) {
+          // A failed check is not "signed out" -- leave whatever viewer
+          // identity (and its block-check) was already established rather
+          // than silently dropping to a logged-out view on a refresh.
+          console.warn('[profile/[id]] viewer identity check unavailable', authError);
+        }
+        const uid = authError ? currentUserId : (authData.user?.id ?? null);
+        if (!cancelled && !authError) setCurrentUserId(uid);
 
         if (uid && uid !== id) {
           try {

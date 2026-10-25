@@ -147,12 +147,15 @@ export default function QuizScreen() {
       setLoading(false);
     }
 
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('tradition, timezone, full_name, username')
       .eq('id', userId)
       .maybeSingle();
     if (!isCurrent()) return;
+    // A failed read is not "no saved timezone" -- defaulting to UTC can
+    // request the wrong day's daily quiz near a midnight boundary.
+    if (profileError) throw profileError;
 
     const tradition = (profile?.tradition ?? 'hindu') as Tradition;
     const timezone = profile?.timezone ?? 'UTC';

@@ -91,11 +91,12 @@ function LiveDarshanContent() {
           try {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
-              const { data } = await supabase
+              const { data, error } = await supabase
                 .from('profiles')
                 .select('tradition')
                 .eq('id', user.id)
                 .maybeSingle();
+              if (error) console.warn('[live-darshan] profile tradition lookup unavailable', error);
               if (data?.tradition) {
                 return data.tradition.toLowerCase();
               }

@@ -693,7 +693,8 @@ export default function LoginScreen() {
         throw error;
       }
 
-      const { data } = await supabase.auth.getSession();
+      const { data, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) console.warn('[auth] post-Apple-signin session check unavailable', sessionError);
       if (!data.session) {
         await waitForStoredSession(2800);
       }

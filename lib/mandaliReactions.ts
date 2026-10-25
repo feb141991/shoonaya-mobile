@@ -66,10 +66,13 @@ export async function fetchPostReactionSummaries(
   // Batch query public_profiles for display names
   const profileNameMap = new Map<string, string>();
   if (neededUserIds.size > 0) {
-    const { data: profileRows } = await supabase
+    const { data: profileRows, error: profileRowsError } = await supabase
       .from('public_profiles')
       .select('id, username')
       .in('id', Array.from(neededUserIds));
+    // Cosmetic display-name enrichment only -- log and degrade to no
+    // username rather than failing the whole reaction summary over it.
+    if (profileRowsError) console.warn('[mandali-reactions] display name lookup unavailable', profileRowsError);
 
     for (const p of (profileRows ?? []) as Array<{ id: string; username?: string | null }>) {
       if (p.username) {

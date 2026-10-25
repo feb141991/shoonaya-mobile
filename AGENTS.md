@@ -302,9 +302,24 @@ Rules:
 - Progress mutations must preserve existing progress unless a clearly named
   restart action intentionally resets it. Never let an empty map produced by a
   failed query drive a Day-1 upsert.
+- A repo-wide sweep for the same unchecked-`error` shape is not optional once
+  one instance is fixed. Classify each hit by what its failure actually
+  changes before calling it cosmetic -- a "generic fallback" can be a wrong
+  calendar-day boundary (Panchang's tithi/muhurta, Nitya Dincharya's and the
+  daily quiz's `spiritualDate(timezone ?? 'UTC')`), not just a blank label.
+  A grep match is a candidate, not a confirmed bug: read the surrounding
+  code before fixing it -- Vrat's `if (profile)` presence guard already
+  skipped applying defaults on a failed read, so despite matching the same
+  grep pattern it needed no change; "fixing" it anyway would have been
+  needless churn.
 - Why this rule exists: on 2026-10-25 a cold-start review found startup errors
   could mark routing ready before any decision; profile query errors could be
   interpreted as no row; and a failed guided-plan read could show a new-plan
   action whose upsert reset saved progress. A similar Ashrama read could show
   setup again, and the dormant AuthCoordinator had the same ignored-error
-  adapter. This applies equally to human and AI-agent contributors.
+  adapter. The same-day follow-up sweep found the identical shape in 13 more
+  call sites (Panchang, Nitya Dincharya, the quiz, the profile-recovery Retry
+  button, KUL enrichment, Mandali reactions and nearby search, another
+  profile's viewer check, Live Darshan, Kundali, Zen, and post-Apple-signin
+  login) and one false positive (Vrat, already guarded). This applies equally
+  to human and AI-agent contributors.

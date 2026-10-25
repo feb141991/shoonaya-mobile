@@ -106,15 +106,17 @@ function KundaliScreenForIdentity({ appIdentity }: { appIdentity: AppIdentity })
   const fetchSelfAccount = useCallback(async () => {
     if (appIdentity.kind !== 'authenticated') return;
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select('full_name, date_of_birth')
         .eq('id', appIdentity.userId)
         .maybeSingle();
+      if (error) throw error;
 
       let fullName = data?.full_name?.trim() || '';
       if (!fullName) {
-        const { data: userData } = await supabase.auth.getUser();
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        if (userError) throw userError;
         fullName = userData?.user?.user_metadata?.full_name || userData?.user?.user_metadata?.name || '';
       }
 

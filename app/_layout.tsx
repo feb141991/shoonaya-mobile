@@ -897,7 +897,15 @@ function RootLayout() {
     if (retryingProfileResolution) return;
     setRetryingProfileResolution(true);
     try {
-      const { data } = await supabase.auth.getSession();
+      const { data, error } = await supabase.auth.getSession();
+      if (error) {
+        // A failed session check here is not "signed out" -- dispatching it
+        // as one would run routeForSession's null-session branch, clearing
+        // this very recovery screen and every local cache as if the user
+        // had deliberately signed out. Stay on the recovery screen instead.
+        console.warn('[auth-profile] retry could not confirm session', error);
+        return;
+      }
       lastAuthRouteKeyRef.current = undefined;
       authCoordinatorRef.current?.resetRouteDedup();
       await dispatchRouteForSession(data.session);

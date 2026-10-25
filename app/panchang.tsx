@@ -507,12 +507,16 @@ export default function PanchangScreen() {
       }
       identity = { kind: 'authenticated', userId: appIdentity.userId };
 
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('latitude, longitude, timezone, tradition, rashi, city, neighbourhood')
         .eq('id', appIdentity.userId)
         .single();
       if (!lease.isCurrent()) return { outcome: 'redirected', identity: null };
+      // A failed profile read is not "no saved location" -- it must not
+      // silently overwrite an already-shown (cached or prior) profile state
+      // with INITIAL_STATE's generic defaults.
+      if (profileError) return { outcome: 'failed', identity };
 
       const nextState: PanchangState = {
         lat: profile?.latitude ?? INITIAL_STATE.lat,

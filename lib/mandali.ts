@@ -260,7 +260,7 @@ function parseErrorMessage(error: unknown, fallback: string) {
 export async function fetchNearbyMandalis(lat: number, lon: number): Promise<NearbyMandali[]> {
   const LAT_DELTA = NEARBY_MANDALI_RADIUS_KM / 111;
   const LON_DELTA = NEARBY_MANDALI_RADIUS_KM / 85;
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('mandalis')
     .select('id, name, city, country, member_count, latitude, longitude')
     .gte('latitude', lat - LAT_DELTA)
@@ -268,6 +268,10 @@ export async function fetchNearbyMandalis(lat: number, lon: number): Promise<Nea
     .gte('longitude', lon - LON_DELTA)
     .lte('longitude', lon + LON_DELTA)
     .limit(20);
+  // A failed query is not proof there are no nearby mandalis -- let the
+  // caller's existing error handling see it instead of silently returning
+  // an empty list indistinguishable from a genuine "none nearby" result.
+  if (error) throw error;
 
   const nearby = ((data ?? []) as NearbyMandali[])
     .map((m) => (m.latitude != null && m.longitude != null ? { ...m, distanceKm: haversineKm(lat, lon, m.latitude, m.longitude) } : m))

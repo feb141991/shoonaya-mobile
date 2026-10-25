@@ -573,14 +573,21 @@ export default function ProfileScreen() {
       recordRouteOpen(cacheIdentity, 'profile', { cacheHit: false, durationMs: Date.now() - loadStartedAt });
     }
 
-    const { data: profileRow } = await supabase
+    const { data: profileRow, error: kulError } = await supabase
       .from('profiles')
       .select('kul_id, kuls(name)')
       .eq('id', payload.profile.id)
       .single();
     if (!isCurrentLoad()) return;
 
-    const kulName = getKulName((profileRow?.kuls ?? null) as KulRelation);
+    // A failed lookup is not proof the KUL link was removed -- it would
+    // otherwise silently flip an already-shown KUL to "none" (see the
+    // early-paint preservation above for the identical concern while the
+    // lookup is still in flight).
+    if (kulError) {
+      console.warn('[profile] KUL lookup unavailable', kulError);
+    }
+    const kulName = kulError ? undefined : getKulName((profileRow?.kuls ?? null) as KulRelation);
 
     const nextProfile: ProfileData = {
       id: payload.profile.id,
@@ -596,11 +603,20 @@ export default function ProfileScreen() {
       app_language: payload.profile.appLanguage,
       active_symbol_id: payload.profile.activeSymbolId,
       seva_score: payload.profile.sevaScore,
-      kul_id: profileRow?.kul_id ?? null,
-      kul_name: kulName,
+      kul_id: null,
+      kul_name: null,
     };
 
-    setProfile(nextProfile);
+    // On a failed KUL lookup, carry over whatever this same profile was
+    // already showing instead of committing the "null" placeholder above --
+    // same preservation the early paint above already does while the
+    // lookup is in flight.
+    setProfile((cur) => {
+      const preserved = kulError && cur && cur.id === nextProfile.id;
+      nextProfile.kul_id = preserved ? cur!.kul_id : (profileRow?.kul_id ?? null);
+      nextProfile.kul_name = preserved ? cur!.kul_name : kulName ?? null;
+      return nextProfile;
+    });
     setAvatarFailed(false);
 
     if (nextProfile) {

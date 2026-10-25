@@ -982,17 +982,23 @@ function MandaliScreen() {
 
     const allCommentIds = previewComments.map((comment) => comment.id);
     if (allCommentIds.length > 0) {
-      const { data: commentUpvoteRows } = await supabase
+      const { data: commentUpvoteRows, error: upvoteError } = await supabase
         .from('comment_upvotes')
         .select('comment_id, reaction_type')
         .eq('user_id', userId)
         .in('comment_id', allCommentIds);
       if (!isCurrentLoad()) return { cacheHit, readyAt };
-      setMyCommentReactions(
-        Object.fromEntries(
-          (commentUpvoteRows ?? []).map((row) => [row.comment_id, (row.reaction_type ?? 'love') as ReactionType])
-        )
-      );
+      if (upvoteError) {
+        // A failed read is not "you reacted to nothing" -- leave whatever
+        // reaction highlighting was already showing rather than clear it.
+        console.warn('[mandali] comment upvote lookup unavailable', upvoteError);
+      } else {
+        setMyCommentReactions(
+          Object.fromEntries(
+            (commentUpvoteRows ?? []).map((row) => [row.comment_id, (row.reaction_type ?? 'love') as ReactionType])
+          )
+        );
+      }
     } else {
       setMyCommentReactions({});
     }

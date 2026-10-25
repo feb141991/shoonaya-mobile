@@ -153,10 +153,11 @@ export default function SattvicModeScreen() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
-        const { data } = await supabase.from('profiles').select('tradition').eq('id', user.id).maybeSingle();
+        const { data, error } = await supabase.from('profiles').select('tradition').eq('id', user.id).maybeSingle();
+        if (error) throw error;
         setTradition(data?.tradition ?? 'hindu');
       } catch {
-        // guest — keep default
+        // guest, or a failed read -- keep default
       }
     })();
   }, []);

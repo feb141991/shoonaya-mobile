@@ -136,12 +136,15 @@ export default function NityaKarmaScreen() {
     }
     const userId = appIdentity.userId;
 
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('timezone, tradition, full_name, username')
       .eq('id', userId)
       .maybeSingle();
     if (!isCurrent()) return;
+    // A failed read is not "no saved timezone" -- defaulting to UTC here
+    // can pick the wrong calendar day for "today's" Nitya Karma checklist.
+    if (profileError) throw profileError;
 
     const tradition = profile?.tradition ?? 'hindu';
     const userName = profile?.full_name || profile?.username || 'Seeker';
