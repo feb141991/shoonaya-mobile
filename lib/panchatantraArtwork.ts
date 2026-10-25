@@ -52,6 +52,9 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-donkey-and-jackal': require('@/assets/panchatantra/donkey-jackal-1.webp'),
   'panchatantra-potter-as-warrior': require('@/assets/panchatantra/potter-warrior-1.webp'),
   'panchatantra-greedy-brahmin-dream': require('@/assets/panchatantra/greedy-brahmin-1.webp'),
+  'panchatantra-snake-and-frogs': require('@/assets/panchatantra/snake-frogs-1.webp'),
+  'panchatantra-lion-makers': require('@/assets/panchatantra/lion-makers-1.webp'),
+  'panchatantra-sage-and-mouse': require('@/assets/panchatantra/sage-mouse-1.webp'),
 };
 
 /**
@@ -322,6 +325,22 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/greedy-brahmin-4.webp'),
     require('@/assets/panchatantra/greedy-brahmin-5.webp'),
     require('@/assets/panchatantra/greedy-brahmin-6.webp'),
+  ],
+  'panchatantra-snake-and-frogs': [
+    require('@/assets/panchatantra/snake-frogs-1.webp'),
+    require('@/assets/panchatantra/snake-frogs-2.webp'),
+    require('@/assets/panchatantra/snake-frogs-3.webp'),
+    require('@/assets/panchatantra/snake-frogs-4.webp'),
+    require('@/assets/panchatantra/snake-frogs-5.webp'),
+    require('@/assets/panchatantra/snake-frogs-6.webp'),
+  ],
+  'panchatantra-lion-makers': [
+    require('@/assets/panchatantra/lion-makers-1.webp'),
+    require('@/assets/panchatantra/lion-makers-2.webp'),
+    require('@/assets/panchatantra/lion-makers-3.webp'),
+    require('@/assets/panchatantra/lion-makers-4.webp'),
+    require('@/assets/panchatantra/lion-makers-5.webp'),
+    require('@/assets/panchatantra/lion-makers-6.webp'),
   ],
 };
 
