@@ -132,8 +132,8 @@ export function LineageGraphCanvas({
             >
               <Defs>
                 <LinearGradient id="edgeGradient" x1="0" y1="0" x2="0" y2="1">
-                  <Stop offset="0" stopColor={isDark ? '#D97706' : '#B45309'} stopOpacity="0.85" />
-                  <Stop offset="1" stopColor={isDark ? '#F59E0B' : '#D97706'} stopOpacity="0.45" />
+                  <Stop offset="0" stopColor={theme.brand} stopOpacity="0.85" />
+                  <Stop offset="1" stopColor={theme.brandStrong} stopOpacity="0.45" />
                 </LinearGradient>
               </Defs>
 
@@ -143,7 +143,7 @@ export function LineageGraphCanvas({
                   <Path
                     d={edge.pathD}
                     fill="none"
-                    stroke={isDark ? 'rgba(217, 119, 6, 0.28)' : 'rgba(180, 83, 9, 0.2)'}
+                    stroke={isDark ? COLORS.navGlowGoldDark : COLORS.navGlowGoldLight}
                     strokeWidth={6.5}
                     strokeLinecap="round"
                   />
@@ -172,15 +172,15 @@ export function LineageGraphCanvas({
                     {
                       left: edge.labelX - 44,
                       top: edge.labelY,
-                      backgroundColor: isDark ? '#1F2937' : '#FEF3C7',
-                      borderColor: isDark ? '#374151' : '#FDE68A',
+                      backgroundColor: theme.brandSoft,
+                      borderColor: theme.brand,
                     },
                   ]}
                 >
                   <Text
                     style={[
                       styles.edgeLabelText,
-                      { color: isDark ? '#FDE68A' : '#92400E' },
+                      { color: theme.brand },
                     ]}
                     numberOfLines={1}
                   >
@@ -207,13 +207,9 @@ export function LineageGraphCanvas({
                       top,
                       width: node.width,
                       height: node.height,
-                      backgroundColor: isDark ? '#111827' : '#FFFFFF',
-                      borderColor: isSelected
-                        ? COLORS.brandGold
-                        : isDark
-                        ? '#374151'
-                        : '#E5E7EB',
-                      shadowColor: isSelected ? COLORS.brandGold : '#000',
+                      backgroundColor: theme.card,
+                      borderColor: isSelected ? COLORS.brandGold : theme.border,
+                      shadowColor: isSelected ? COLORS.brandGold : COLORS.darkBg,
                       shadowOpacity: isSelected ? 0.38 : 0.09,
                       shadowRadius: isSelected ? 12 : 4,
                     },
@@ -229,8 +225,8 @@ export function LineageGraphCanvas({
                     style={[
                       styles.nodeAvatar,
                       {
-                        backgroundColor: isDark ? 'rgba(217, 119, 6, 0.16)' : '#FEF3C7',
-                        borderColor: isDark ? 'rgba(217, 119, 6, 0.3)' : '#FDE68A',
+                        backgroundColor: theme.brandSoft,
+                        borderColor: theme.brand,
                       },
                     ]}
                   >
@@ -276,7 +272,7 @@ export function LineageGraphCanvas({
         style={[
           styles.zoomControlsHud,
           {
-            backgroundColor: isDark ? 'rgba(17, 24, 39, 0.88)' : 'rgba(255, 255, 255, 0.92)',
+            backgroundColor: theme.glass,
             borderColor: theme.borderSoft,
           },
         ]}

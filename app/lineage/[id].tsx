@@ -81,7 +81,7 @@ export default function LineageDetailScreen() {
           <Pressable
             onPress={handleShare}
             hitSlop={12}
-            style={[styles.actionIconBtn, { backgroundColor: isDark ? '#1F2937' : '#F3F4F6' }]}
+            style={[styles.actionIconBtn, { backgroundColor: theme.cardSoft }]}
             accessibilityLabel="Share Lineage"
           >
             <Feather name="share-2" size={17} color={theme.text} />
@@ -89,9 +89,9 @@ export default function LineageDetailScreen() {
         </View>
 
         {/* Informational Guidance Banner */}
-        <View style={[styles.infoBanner, { backgroundColor: isDark ? '#1E293B' : '#FEF3C7', borderColor: theme.borderSoft }]}>
+        <View style={[styles.infoBanner, { backgroundColor: theme.brandSoft, borderColor: theme.borderSoft }]}>
           <Feather name="info" size={14} color={theme.brand} style={styles.infoIcon} />
-          <Text style={[styles.infoText, { color: isDark ? '#FDE68A' : '#92400E' }]}>
+          <Text style={[styles.infoText, { color: theme.brand }]}>
             Pinch to zoom and drag to explore. Tap any sacred master or peetham for teachings and stotras.
           </Text>
         </View>

@@ -123,7 +123,7 @@ export function LineageNodeSheet({ node, visible, onClose }: LineageNodeSheetPro
           style={[
             styles.sheetContainer,
             {
-              backgroundColor: isDark ? '#111827' : '#FFFFFF',
+              backgroundColor: theme.card,
               borderColor: theme.border,
             },
           ]}
@@ -131,7 +131,7 @@ export function LineageNodeSheet({ node, visible, onClose }: LineageNodeSheetPro
         >
           {/* Handle bar */}
           <View style={styles.handleBarContainer}>
-            <View style={[styles.handleBar, { backgroundColor: isDark ? '#374151' : '#E5E7EB' }]} />
+            <View style={[styles.handleBar, { backgroundColor: theme.border }]} />
           </View>
 
           {/* Header Row */}
@@ -154,7 +154,7 @@ export function LineageNodeSheet({ node, visible, onClose }: LineageNodeSheetPro
               hitSlop={12}
               style={[
                 styles.closeButton,
-                { backgroundColor: isDark ? '#1F2937' : '#F3F4F6', borderColor: theme.borderSoft },
+                { backgroundColor: theme.cardSoft, borderColor: theme.borderSoft },
               ]}
               accessibilityLabel="Close detail sheet"
             >
@@ -170,13 +170,13 @@ export function LineageNodeSheet({ node, visible, onClose }: LineageNodeSheetPro
             {/* Meta Tags Row */}
             <View style={styles.tagsRow}>
               {node.location ? (
-                <View style={[styles.tag, { backgroundColor: isDark ? '#1E293B' : '#F1F5F9', borderColor: theme.borderSoft }]}>
+                <View style={[styles.tag, { backgroundColor: theme.cardSoft, borderColor: theme.borderSoft }]}>
                   <Feather name="map-pin" size={12} color={theme.brand} />
                   <Text style={[styles.tagText, { color: theme.text }]}>{node.location}</Text>
                 </View>
               ) : null}
               {node.vedaOrScripture ? (
-                <View style={[styles.tag, { backgroundColor: isDark ? '#1E293B' : '#F1F5F9', borderColor: theme.borderSoft }]}>
+                <View style={[styles.tag, { backgroundColor: theme.cardSoft, borderColor: theme.borderSoft }]}>
                   <Feather name="book-open" size={12} color={COLORS.brandGold} />
                   <Text style={[styles.tagText, { color: theme.text }]}>{node.vedaOrScripture}</Text>
                 </View>
@@ -185,9 +185,9 @@ export function LineageNodeSheet({ node, visible, onClose }: LineageNodeSheetPro
 
             {/* Mahavakya Highlight */}
             {node.mahavakya ? (
-              <View style={[styles.mahavakyaCard, { backgroundColor: isDark ? 'rgba(217, 119, 6, 0.12)' : '#FEF3C7', borderColor: theme.brandSoft }]}>
+              <View style={[styles.mahavakyaCard, { backgroundColor: theme.brandSoft, borderColor: theme.brandSoft }]}>
                 <Text style={[styles.mahavakyaLabel, { color: theme.brand }]}>VEDIC MAHAVAKYA</Text>
-                <Text style={[styles.mahavakyaText, { color: isDark ? '#FDE68A' : '#92400E' }]}>
+                <Text style={[styles.mahavakyaText, { color: theme.brand }]}>
                   {node.mahavakya}
                 </Text>
               </View>
@@ -215,7 +215,7 @@ export function LineageNodeSheet({ node, visible, onClose }: LineageNodeSheetPro
 
             {/* Stotra / Audio Section */}
             {node.stotraOrChant ? (
-              <View style={[styles.stotraCard, { backgroundColor: isDark ? '#1F2937' : '#F9FAFB', borderColor: theme.border }]}>
+              <View style={[styles.stotraCard, { backgroundColor: theme.cardSoft, borderColor: theme.border }]}>
                 <View style={styles.stotraHeader}>
                   <Feather name="volume-2" size={18} color={theme.brand} />
                   <Text style={[styles.stotraTitle, { color: theme.text }]}>
@@ -246,23 +246,23 @@ export function LineageNodeSheet({ node, visible, onClose }: LineageNodeSheetPro
                 >
                   {audioState === 'loading' ? (
                     <>
-                      <ActivityIndicator size="small" color="#FFFFFF" />
-                      <Text style={styles.audioButtonText}>Loading Chanting...</Text>
+                      <ActivityIndicator size="small" color={theme.textOnBrand} />
+                      <Text style={[styles.audioButtonText, { color: theme.textOnBrand }]}>Loading Chanting...</Text>
                     </>
                   ) : audioState === 'playing' ? (
                     <>
-                      <Feather name="pause" size={16} color="#FFFFFF" />
-                      <Text style={styles.audioButtonText}>Pause Chanting</Text>
+                      <Feather name="pause" size={16} color={theme.textOnBrand} />
+                      <Text style={[styles.audioButtonText, { color: theme.textOnBrand }]}>Pause Chanting</Text>
                     </>
                   ) : audioState === 'paused' ? (
                     <>
-                      <Feather name="play" size={16} color="#FFFFFF" />
-                      <Text style={styles.audioButtonText}>Resume Chanting</Text>
+                      <Feather name="play" size={16} color={theme.textOnBrand} />
+                      <Text style={[styles.audioButtonText, { color: theme.textOnBrand }]}>Resume Chanting</Text>
                     </>
                   ) : (
                     <>
-                      <Feather name="play" size={16} color="#FFFFFF" />
-                      <Text style={styles.audioButtonText}>Listen to Chanting</Text>
+                      <Feather name="play" size={16} color={theme.textOnBrand} />
+                      <Text style={[styles.audioButtonText, { color: theme.textOnBrand }]}>Listen to Chanting</Text>
                     </>
                   )}
                 </PressableSurface>
@@ -278,7 +278,7 @@ export function LineageNodeSheet({ node, visible, onClose }: LineageNodeSheetPro
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    backgroundColor: COLORS.bottomSheetScrim,
     justifyContent: 'flex-end',
   },
   sheetContainer: {
@@ -453,6 +453,5 @@ const styles = StyleSheet.create({
   audioButtonText: {
     fontFamily: FONTS.sansSemiBold,
     fontSize: 13,
-    color: '#FFFFFF',
   },
 });

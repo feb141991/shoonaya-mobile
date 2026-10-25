@@ -34,7 +34,7 @@ export function LineageCarousel() {
           <View
             style={[
               styles.headerIconContainer,
-              { backgroundColor: isDark ? 'rgba(217, 119, 6, 0.16)' : '#FEF3C7' },
+              { backgroundColor: theme.brandSoft },
             ]}
           >
             <Feather name="git-branch" size={15} color={theme.brand} />
@@ -64,8 +64,8 @@ export function LineageCarousel() {
               style={[
                 styles.card,
                 {
-                  backgroundColor: isDark ? '#111827' : '#FFFFFF',
-                  borderColor: isDark ? '#374151' : '#E5E7EB',
+                  backgroundColor: theme.card,
+                  borderColor: theme.border,
                 },
               ]}
               accessibilityLabel={`Explore ${lineage.title}`}
@@ -76,7 +76,7 @@ export function LineageCarousel() {
                   style={[
                     styles.traditionTag,
                     {
-                      backgroundColor: isDark ? 'rgba(217, 119, 6, 0.15)' : '#FEF3C7',
+                      backgroundColor: theme.brandSoft,
                       borderColor: theme.brandSoft,
                     },
                   ]}
@@ -105,7 +105,7 @@ export function LineageCarousel() {
               </Text>
 
               {/* CTA Action */}
-              <View style={styles.cardFooter}>
+              <View style={[styles.cardFooter, { borderTopColor: theme.borderSoft }]}>
                 <Text style={[styles.exploreText, { color: theme.brand }]}>
                   Explore Tree Map
                 </Text>
@@ -209,7 +209,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(156, 163, 175, 0.25)',
     paddingTop: 10,
   },
   exploreText: {
