@@ -98,7 +98,11 @@ import {
 import { syncDeviceTimezone } from '@/lib/timezoneSync';
 import { syncDeviceLocationIfPermitted } from '@/lib/locationSync';
 import { Animated, StyleSheet } from 'react-native';
-import { resolveStartupSurface } from '@/lib/startup-visibility';
+import {
+  isStartupAuthDestinationVisible,
+  resolveStartupSurface,
+  type StartupAuthDestination,
+} from '@/lib/startup-visibility';
 import { setAppIdentity, getAppIdentity, useAppIdentity } from '@/lib/appIdentity';
 import { initializeProductAnalytics } from '@/lib/productAnalyticsRuntime';
 import { trackAnalyticsEvent } from '@/lib/analytics';
@@ -160,6 +164,8 @@ function RootLayout() {
 
   const [authReady, setAuthReady] = useState(false);
   const [appIsReady, setAppIsReady] = useState(false);
+  const [startupRoutePending, setStartupRoutePending] = useState(false);
+  const [pendingStartupDestination, setPendingStartupDestination] = useState<StartupAuthDestination | null>(null);
   const startupStartedAtRef = useRef(Date.now());
   // Set true only if the 6-second emergency fail-safe below actually fires.
   // Lets markInteractive/the local receipt distinguish readiness reached
@@ -167,11 +173,16 @@ function RootLayout() {
   // stalled (see F01/F02, docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md).
   const emergencyFallbackUsedRef = useRef(false);
   const readyToRender = appIsReady && authReady;
+  // The six-second escape hatch may make the root technically ready while an
+  // authenticated profile/onboarding lookup is still unresolved. Keep the
+  // protected route tree covered until that lookup and any resulting redirect
+  // have actually landed in Expo Router's segments.
+  const startupRouteReady = readyToRender && !startupRoutePending && pendingStartupDestination === null;
   const isReaderScreen = isReaderRoute(segments);
   const isAiChatScreen = rootSegment === 'ai-chat';
   const isDyutaGameScreen = rootSegment === 'dyuta';
   const showBottomNav =
-    readyToRender &&
+    startupRouteReady &&
     rootSegment !== '(auth)' &&
     rootSegment !== 'auth' &&
     rootSegment !== undefined &&
@@ -179,16 +190,15 @@ function RootLayout() {
     !isAiChatScreen &&
     !isDyutaGameScreen;
 
-  // Explicit profile-resolution failure state -- set only when an
-  // authenticated session's profile row is missing AND the repair
-  // (bootstrap) attempt also failed. Previously a null profile fell
-  // through the onboarding gate as if `onboarding_completed` were true
-  // (only a definitive `=== false` triggered onboarding, so null silently
-  // qualified for Home). This blocks on a recoverable screen instead:
-  // only a confirmed complete or confirmed incomplete profile may
-  // continue past this point.
+  // Recovery state for an authenticated session whose profile/onboarding
+  // status could not be resolved. It also protects the six-second startup
+  // fallback from uncovering Home while that status is still pending.
   const [profileResolutionFailure, setProfileResolutionFailure] = useState<{ userId: string } | null>(null);
   const [retryingProfileResolution, setRetryingProfileResolution] = useState(false);
+  const startupRoutePendingRef = useRef(false);
+  const startupRoutePendingCallsRef = useRef(0);
+  const startupRouteResolvedRef = useRef(false);
+  const startupRouteUserIdRef = useRef<string | null>(null);
 
   // ── Contextual Startup Scene Orchestration ────────────────────────────
   const [startupPrefs, setStartupPrefs] = useState<StartupPreferences>(() => getDefaultStartupPreferences());
@@ -243,7 +253,7 @@ function RootLayout() {
       hideScene: () => setShowStartupScene(false),
     });
     startupLifecycleRef.current = controller;
-    controller.start(readyToRender);
+    controller.start(startupRouteReady);
 
     return () => {
       controller.dispose();
@@ -265,10 +275,10 @@ function RootLayout() {
   // it does not attempt to also wait for a specific destination screen's own
   // content (e.g. Home's cache hydration) to report itself ready, which
   // would need a cross-component signal this pass does not add.
-  const isAppInteractive = resolveStartupSurface({ readyToRender, showStartupScene }) === 'app';
+  const isAppInteractive = resolveStartupSurface({ readyToRender: startupRouteReady, showStartupScene }) === 'app';
 
   useEffect(() => {
-    startupLifecycleRef.current?.updateReady(readyToRender);
+    startupLifecycleRef.current?.updateReady(startupRouteReady);
     if (isAppInteractive) {
       // viaEmergencyFallback distinguishes normal readiness from the
       // 6-second escape hatch below reaching readiness by force -- both
@@ -297,7 +307,7 @@ function RootLayout() {
         );
       }
     }
-  }, [readyToRender, isAppInteractive, markInteractive]);
+  }, [startupRouteReady, isAppInteractive, markInteractive]);
 
   // ── Startup Account Restoration Check (30-day cool-off) ───────────────
   // Once per signed-in account per app session (an account switch re-checks).
@@ -307,7 +317,7 @@ function RootLayout() {
   const deletionPromptedUserRef = useRef<string | null>(null);
   const analyticsLaunchIdentityRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!readyToRender || deletionIdentity.kind === 'loading') return;
+    if (!startupRouteReady || deletionIdentity.kind === 'loading') return;
     const userId = deletionIdentity.kind === 'authenticated' ? deletionIdentity.userId : null;
     void initializeProductAnalytics(userId).then(() => {
       const currentIdentity = getAppIdentity();
@@ -316,7 +326,7 @@ function RootLayout() {
         void trackAnalyticsEvent('app_opened');
       }
     });
-  }, [readyToRender, deletionIdentity.kind, deletionIdentity.kind === 'authenticated' ? deletionIdentity.userId : null]);
+  }, [startupRouteReady, deletionIdentity.kind, deletionIdentity.kind === 'authenticated' ? deletionIdentity.userId : null]);
   // Root sits outside LanguageProvider; startup prefs carry the app language.
   const deletionLanguageRef = useRef(startupPrefs.language);
   deletionLanguageRef.current = startupPrefs.language;
@@ -400,6 +410,23 @@ function RootLayout() {
   useEffect(() => {
     segmentsRef.current = { rootSegment, childSegment };
   }, [rootSegment, childSegment]);
+
+  useEffect(() => {
+    if (
+      pendingStartupDestination &&
+      isStartupAuthDestinationVisible(pendingStartupDestination, rootSegment, childSegment)
+    ) {
+      setPendingStartupDestination(null);
+    }
+  }, [pendingStartupDestination, rootSegment, childSegment]);
+
+  const redirectForAuth = useCallback((destination: StartupAuthDestination) => {
+    const current = segmentsRef.current;
+    if (!isStartupAuthDestinationVisible(destination, current.rootSegment, current.childSegment)) {
+      setPendingStartupDestination(destination);
+    }
+    router.replace(destination);
+  }, [router]);
 
   const offerNotificationPermission = useCallback(async (userId: string) => {
     const permission = await getNotificationPermissionState();
@@ -509,14 +536,14 @@ function RootLayout() {
           void getOrReadProfileCache({ kind: 'guest' });
           setAppIdentity({ kind: 'guest' });
           if (inAuthGroup) {
-            router.replace('/(tabs)');
+            redirectForAuth('/(tabs)');
           }
           return;
         }
 
         setAppIdentity({ kind: 'unauthenticated' });
         if (!inAuthGroup) {
-          router.replace('/(auth)/login');
+          redirectForAuth('/(auth)/login');
         }
         return;
       }
@@ -604,7 +631,7 @@ function RootLayout() {
 
       if (cached === 'true') {
         if (inAuthGroup) {
-          router.replace('/(tabs)');
+          redirectForAuth('/(tabs)');
         }
         // Background revalidation: keep cache in sync without gating initial render
         void supabase
@@ -612,11 +639,18 @@ function RootLayout() {
           .select('onboarding_completed')
           .eq('id', session.user.id)
           .maybeSingle()
-          .then(({ data: p }) => {
+          .then(({ data: p, error }) => {
             if (!isCurrentRoute()) return;
+            if (error) {
+              console.warn('[auth-profile] onboarding revalidation unavailable', error);
+              return;
+            }
             if (p?.onboarding_completed === false) {
               void AsyncStorage.setItem(cacheKey, 'false').catch(() => {});
-              router.replace('/(auth)/onboarding');
+              // Successful cache hits stay immediate. Once a later server
+              // response proves the cache wrong, redirectForAuth holds the
+              // startup surface until onboarding is actually visible.
+              redirectForAuth('/(auth)/onboarding');
             } else if (p?.onboarding_completed === true) {
               void AsyncStorage.setItem(cacheKey, 'true').catch(() => {});
             }
@@ -626,11 +660,12 @@ function RootLayout() {
         return;
       }
 
-      let { data: profile } = await supabase
+      let { data: profile, error: profileReadError } = await supabase
         .from('profiles')
         .select('onboarding_completed')
         .eq('id', session.user.id)
         .maybeSingle();
+      if (profileReadError) throw profileReadError;
       if (!isCurrentRoute()) return;
 
       // The auth.users trigger should normally create this row. Repair only
@@ -681,12 +716,12 @@ function RootLayout() {
       const isOnboarding = inAuthGroup && childSegment === 'onboarding';
 
       if (needsOnboarding && !isOnboarding) {
-        router.replace('/(auth)/onboarding');
+        redirectForAuth('/(auth)/onboarding');
       } else if (!needsOnboarding && inAuthGroup) {
-        router.replace('/(tabs)');
+        redirectForAuth('/(tabs)');
       }
     },
-    [applyStartupPreferences, offerNotificationPermission, router]
+    [applyStartupPreferences, offerNotificationPermission, redirectForAuth]
   );
 
   // Stage 1 (docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md's reliability
@@ -704,7 +739,7 @@ function RootLayout() {
     authCoordinatorRef.current = new AuthCoordinator({
       setAppIdentity,
       setApiAccessTokenFromSession,
-      redirect: (path) => router.replace(path),
+      redirect: (path) => redirectForAuth(path),
       isGuestMode,
       setGuestMode,
       prewarmGuestCaches: () => {
@@ -779,11 +814,12 @@ function RootLayout() {
         await AsyncStorage.setItem(`shoonaya:onboarding_completed:${userId}`, value).catch(() => {});
       },
       fetchOnboardingStatus: async (userId): Promise<OnboardingStatus> => {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('profiles')
           .select('onboarding_completed')
           .eq('id', userId)
           .maybeSingle();
+        if (error) throw error;
         return data ?? null;
       },
       bootstrapProfile: async (): Promise<BootstrapProfileResult> => {
@@ -817,10 +853,31 @@ function RootLayout() {
   // thing that changes.
   const dispatchRouteForSession = useCallback(
     async (session: Awaited<ReturnType<typeof supabase.auth.getSession>>['data']['session']) => {
-      if (USE_AUTH_COORDINATOR) {
-        await authCoordinatorRef.current!.routeForSession(session, segmentsRef.current);
-      } else {
-        await routeForSession(session);
+      const tracksStartupResolution = !startupRouteResolvedRef.current;
+      if (tracksStartupResolution) {
+        startupRoutePendingCallsRef.current += 1;
+        startupRoutePendingRef.current = true;
+        startupRouteUserIdRef.current = session?.user.id ?? startupRouteUserIdRef.current;
+        setStartupRoutePending(true);
+      }
+      try {
+        if (USE_AUTH_COORDINATOR) {
+          await authCoordinatorRef.current!.routeForSession(session, segmentsRef.current);
+        } else {
+          await routeForSession(session);
+        }
+      } catch (error) {
+        if (session?.user.id) setProfileResolutionFailure({ userId: session.user.id });
+        throw error;
+      } finally {
+        if (tracksStartupResolution) {
+          startupRoutePendingCallsRef.current = Math.max(0, startupRoutePendingCallsRef.current - 1);
+          if (startupRoutePendingCallsRef.current === 0) {
+            startupRoutePendingRef.current = false;
+            startupRouteResolvedRef.current = true;
+            setStartupRoutePending(false);
+          }
+        }
       }
     },
     [routeForSession]
@@ -899,7 +956,7 @@ function RootLayout() {
       flushTimer = null;
     };
     const scheduleFlush = () => {
-      if (!readyToRender || AppState.currentState !== 'active') return;
+      if (!startupRouteReady || AppState.currentState !== 'active') return;
       cancelScheduledFlush();
       pendingFlush = true;
       flushTimer = setTimeout(() => {
@@ -918,7 +975,7 @@ function RootLayout() {
       }, TELEMETRY_UPLOAD_SETTLE_MS);
     };
 
-    if (readyToRender && AppState.currentState === 'active') scheduleFlush();
+    if (startupRouteReady && AppState.currentState === 'active') scheduleFlush();
     const subscription = AppState.addEventListener('change', (state) => {
       const previous = previousState;
       appBackgroundTransitionTracker.observe(state as AppLifecycleState);
@@ -933,13 +990,13 @@ function RootLayout() {
       cancelScheduledFlush();
       subscription.remove();
     };
-  }, [readyToRender]);
+  }, [startupRouteReady]);
 
   // ── Deferred Update Checks (EAS OTA & Store Binary) ──────────────────
   // Non-blocking: Runs 2.5s after readyToRender to guarantee time-to-first-paint is never delayed.
   // Also runs on app foreground resume.
   useEffect(() => {
-    if (!readyToRender) return;
+    if (!startupRouteReady) return;
 
     const timeoutId = setTimeout(() => {
       initialUpdateCheckCompleteRef.current = true;
@@ -958,15 +1015,15 @@ function RootLayout() {
       clearTimeout(timeoutId);
       subscription.remove();
     };
-  }, [readyToRender]);
+  }, [startupRouteReady]);
 
   // If startup or a foreground resume happened during a lesson, practice, or
   // community flow, recheck when the devotee returns to Home so optional
   // update prompts do not interrupt those focused activities.
   useEffect(() => {
-    if (!readyToRender || !updatePromptSafe || !initialUpdateCheckCompleteRef.current) return;
+    if (!startupRouteReady || !updatePromptSafe || !initialUpdateCheckCompleteRef.current) return;
     void runAutomaticUpdateCheck(() => updatePromptSafeRef.current);
-  }, [readyToRender, updatePromptSafe]);
+  }, [startupRouteReady, updatePromptSafe]);
 
   // ── Emergency Fail-safe: Force app to show after 6 seconds ───────────
   useEffect(() => {
@@ -974,6 +1031,12 @@ function RootLayout() {
 
     const timer = setTimeout(() => {
       emergencyFallbackUsedRef.current = true;
+      // The escape hatch may reveal a recovery surface, but it must not
+      // reveal Home while an authenticated profile/onboarding lookup is
+      // still in flight.
+      if (startupRoutePendingRef.current && startupRouteUserIdRef.current) {
+        setProfileResolutionFailure({ userId: startupRouteUserIdRef.current });
+      }
       setAuthReady(true);
       markAuthReady();
       setAppIsReady(true);
@@ -1007,13 +1070,13 @@ function RootLayout() {
 
   // ── Privacy-safe app analytics ────────────────────────────────────────
   useEffect(() => {
-    if (!readyToRender) return;
+    if (!startupRouteReady) return;
 
     const routeName = segments.filter(Boolean).join('/') || 'home';
     trackScreenView(routeName).catch(() => {
       // Analytics must never interrupt app navigation.
     });
-  }, [readyToRender, segments]);
+  }, [startupRouteReady, segments]);
 
   // ── Handle Auth and App State ─────────────────────────────────────
   useEffect(() => {
@@ -1027,22 +1090,33 @@ function RootLayout() {
     };
 
     const prepare = async () => {
+      let routedSessionUserId: string | null = null;
       try {
         // Initial URL lookup and session restore are independent; run them
         // together so cold start does not pay both async waits serially.
         const [initialUrl, sessionResult] = await Promise.all([
-          Linking.getInitialURL(),
+          Linking.getInitialURL().catch((error) => {
+            // The URL is an optional OAuth hint; a platform link-read error
+            // must not discard a session that restored successfully.
+            console.warn('[auth] initial URL lookup unavailable', error);
+            return null;
+          }),
           supabase.auth.getSession(),
         ]);
+        if (sessionResult.error) throw sessionResult.error;
 
         // Handle Auth Redirects — cold start only; see the live Linking
         // listener below for the app-already-running case. Only re-fetch the session
         // when an OAuth exchange actually took place.
         const didExchange = initialUrl ? await exchangeOAuthUrlIfPresent(initialUrl) : false;
 
-        const session = didExchange
-          ? (await supabase.auth.getSession()).data.session
-          : sessionResult.data.session;
+        let session = sessionResult.data.session;
+        if (didExchange) {
+          const exchangedSessionResult = await supabase.auth.getSession();
+          if (exchangedSessionResult.error) throw exchangedSessionResult.error;
+          session = exchangedSessionResult.data.session;
+        }
+        routedSessionUserId = session?.user.id ?? null;
         setApiAccessTokenFromSession(session);
 
         if (!mounted) return;
@@ -1067,7 +1141,16 @@ function RootLayout() {
         setAuthReady(true);
       } catch (e) {
         console.error('Initialization error:', e);
-        setAuthReady(true); // Proceed anyway
+        if (routedSessionUserId) {
+          // An authenticated startup whose routing failed must stay on the
+          // explicit profile-recovery surface, never reveal Home by default.
+          setProfileResolutionFailure({ userId: routedSessionUserId });
+        } else {
+          // Session restoration failed before any routing decision. Keep a
+          // protected screen covered and route to the safe sign-in surface.
+          redirectForAuth('/(auth)/login');
+        }
+        setAuthReady(true);
         markAuthReady();
       } finally {
         setAppIsReady(true);
@@ -1118,12 +1201,12 @@ function RootLayout() {
       subscription.unsubscribe();
       linkingSubscription.remove();
     };
-  }, [fontsLoaded, fontError, dispatchRouteForSession]);
+  }, [fontsLoaded, fontError, dispatchRouteForSession, redirectForAuth]);
 
   // Startup must never return null. If the scene disappears before auth/app
   // readiness, retain an opaque branded fallback instead of exposing the
   // native window's white default.
-  const showStartupFallback = resolveStartupSurface({ readyToRender, showStartupScene }) === 'fallback';
+  const showStartupFallback = resolveStartupSurface({ readyToRender: startupRouteReady, showStartupScene }) === 'fallback';
 
   return (
     <AppProviders>
@@ -1145,7 +1228,7 @@ function RootLayout() {
               StyleSheet.absoluteFill,
               { opacity: startupSceneOpacity, zIndex: 9999 },
             ]}
-            pointerEvents="none"
+            pointerEvents="auto"
           >
             <ContextualStartupScene
               scene={selectedScene}

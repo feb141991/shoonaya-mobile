@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -16,6 +16,7 @@ import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 import { BackButton } from '@/components/ui/BackButton';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { GUIDED_PLANS, type GuidedPlan, type GuidedPathStatus } from '@/lib/guided-paths';
@@ -94,7 +95,10 @@ export default function NityaPlansScreen() {
   const shadow = isDark ? SHADOWS.md.dark : SHADOWS.md.light;
 
   const [loading, setLoading] = useState(true);
+  const [progressLoadError, setProgressLoadError] = useState(false);
+  const [progressLoaded, setProgressLoaded] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const mountedRef = useRef(true);
   
   // Progress states
   const [statusMap, setStatusMap] = useState<Record<string, GuidedPathStatus>>({});
@@ -110,39 +114,56 @@ export default function NityaPlansScreen() {
   const [showConfetti, setShowConfetti] = useState(false);
 
   const fetchProgress = useCallback(async (uId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('guided_path_progress')
-        .select('path_id, status, day_reached')
-        .eq('user_id', uId);
+    const { data, error } = await supabase
+      .from('guided_path_progress')
+      .select('path_id, status, day_reached')
+      .eq('user_id', uId);
 
-      if (error) throw error;
+    if (error) throw error;
+    if (!mountedRef.current) return;
 
-      const newStatusMap: Record<string, GuidedPathStatus> = {};
-      const newDayMap: Record<string, number> = {};
-      for (const row of data || []) {
-        newStatusMap[row.path_id] = row.status as GuidedPathStatus;
-        newDayMap[row.path_id] = row.day_reached ?? 1;
-      }
-      setStatusMap(newStatusMap);
-      setDayMap(newDayMap);
-    } catch (err) {
-      console.warn('Failed to fetch plan progress:', err);
-    } finally {
-      setLoading(false);
+    const newStatusMap: Record<string, GuidedPathStatus> = {};
+    const newDayMap: Record<string, number> = {};
+    for (const row of data || []) {
+      newStatusMap[row.path_id] = row.status as GuidedPathStatus;
+      newDayMap[row.path_id] = row.day_reached ?? 1;
     }
+    setStatusMap(newStatusMap);
+    setDayMap(newDayMap);
+    setProgressLoaded(true);
+    setLoading(false);
   }, []);
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        setUserId(user.id);
-        fetchProgress(user.id);
-      } else {
+  const loadProgress = useCallback(async () => {
+    setLoading(true);
+    setProgressLoadError(false);
+    setProgressLoaded(false);
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error) throw error;
+      if (!user) {
         router.replace('/(auth)/login');
+        return;
       }
-    });
+      if (!mountedRef.current) return;
+      setUserId(user.id);
+      await fetchProgress(user.id);
+    } catch (error) {
+      console.warn('Failed to load plan progress:', error);
+      if (mountedRef.current) {
+        setProgressLoadError(true);
+        setProgressLoaded(false);
+      }
+    } finally {
+      if (mountedRef.current) setLoading(false);
+    }
   }, [fetchProgress, router]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    void loadProgress();
+    return () => { mountedRef.current = false; };
+  }, [loadProgress]);
 
   const filteredPlans = GUIDED_PLANS.filter((p) => {
     if (filter === 'all') return true;
@@ -152,26 +173,48 @@ export default function NityaPlansScreen() {
   const activePlan = GUIDED_PLANS.find((p) => statusMap[p.id] === 'active');
 
   const handleStartPlan = async (plan: GuidedPlan) => {
-    if (!userId) return;
+    // Do not let an unknown progress state reset an existing journey to Day 1.
+    // Completed journeys use the explicit Begin Again action; active journeys
+    // use Restart.
+    if (!userId || !progressLoaded || progressLoadError || loading) return;
     setActionLoading(true);
     try {
-      const { error } = await supabase
-        .from('guided_path_progress')
-        .upsert({
-          user_id: userId,
-          path_id: plan.id,
-          status: 'active',
-          started_at: new Date().toISOString(),
-          completed_at: null,
-          day_reached: 1,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id,path_id' });
+      const existingStatus = statusMap[plan.id];
+      const now = new Date().toISOString();
+      if (existingStatus === 'dismissed') {
+        const { data, error } = await supabase
+          .from('guided_path_progress')
+          .update({ status: 'active', updated_at: now })
+          .eq('user_id', userId)
+          .eq('path_id', plan.id)
+          .select('path_id')
+          .maybeSingle();
+        if (error) throw error;
+        if (!data) throw new Error('Paused plan progress no longer exists');
+      } else {
+        const { error } = await supabase
+          .from('guided_path_progress')
+          .insert({
+            user_id: userId,
+            path_id: plan.id,
+            status: 'active',
+            started_at: now,
+            completed_at: null,
+            day_reached: 1,
+            updated_at: now,
+          });
+        if (error) throw error;
+      }
 
-      if (error) throw error;
-
+      const day = existingStatus === 'dismissed' ? (dayMap[plan.id] ?? 1) : 1;
       setStatusMap(prev => ({ ...prev, [plan.id]: 'active' }));
-      setDayMap(prev => ({ ...prev, [plan.id]: 1 }));
-      Alert.alert('Plan Started!', `"${plan.title}" has begun. Day 1 awaits 🙏`);
+      setDayMap(prev => ({ ...prev, [plan.id]: day }));
+      Alert.alert(
+        existingStatus === 'dismissed' ? 'Plan Resumed' : 'Plan Started!',
+        existingStatus === 'dismissed'
+          ? `"${plan.title}" is ready to continue at Day ${day}.`
+          : `"${plan.title}" has begun. Day 1 awaits 🙏`,
+      );
       setSelectedPlan(null);
     } catch (err) {
       Alert.alert('Error', 'Could not start plan. Try again.');
@@ -312,6 +355,23 @@ export default function NityaPlansScreen() {
       <Screen style={{ backgroundColor: theme.bg }}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator color={theme.brand} />
+        </View>
+      </Screen>
+    );
+  }
+
+  if (progressLoadError || !progressLoaded) {
+    return (
+      <Screen style={{ backgroundColor: theme.bg }}>
+        <BackButton fallbackHref="/nitya-karma" handleHardwareBack />
+        <View style={{ flex: 1, justifyContent: 'center' }}>
+          <EmptyState
+            icon="refresh-cw"
+            title="Could not load your practice progress"
+            subtitle="Your saved journey is safe. Please retry before starting or changing a plan."
+            ctaLabel="Retry"
+            onCta={() => { void loadProgress(); }}
+          />
         </View>
       </Screen>
     );
@@ -848,7 +908,7 @@ export default function NityaPlansScreen() {
 
                     {isCompleted && (
                       <PressableSurface
-                        onPress={() => handleStartPlan(plan)}
+                        onPress={() => handleRestartPlan(plan)}
                         disabled={actionLoading}
                         style={{
                           borderColor: plan.accentColor,

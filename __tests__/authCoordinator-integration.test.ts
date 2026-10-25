@@ -30,9 +30,10 @@ const coordinatorSource = readFileSync(new URL('../lib/authCoordinator.ts', impo
 
 describe('1. Structural parity between app/_layout.tsx routeForSession and AuthCoordinator', () => {
   it('both files redirect to exactly the same three route targets, nothing more or fewer', () => {
-    const layoutTargets = new Set([...layoutSource.matchAll(/router\.replace\('([^']+)'\)/g)].map((m) => m[1]));
+    const layoutTargets = new Set([...layoutSource.matchAll(/redirectForAuth\('([^']+)'\)/g)].map((m) => m[1]));
     const coordinatorTargets = new Set([...coordinatorSource.matchAll(/d\.redirect\('([^']+)'\)/g)].map((m) => m[1]));
 
+    assert.match(layoutSource, /const redirectForAuth = useCallback\([\s\S]*?router\.replace\(destination\);/);
     assert.deepEqual(layoutTargets, new Set(['/(tabs)', '/(auth)/login', '/(auth)/onboarding']));
     assert.deepEqual(
       coordinatorTargets, layoutTargets,

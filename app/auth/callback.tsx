@@ -38,15 +38,18 @@ export default function AuthCallbackScreen() {
         // listener in _layout.tsx (which also fires once exchangeCodeForSession
         // resolves) reproduces the loop documented in web's
         // ONBOARDING_REDIRECT_LOOP_FOLLOWUP.md.
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('onboarding_completed')
           .eq('id', session.user.id)
           .maybeSingle();
+        if (profileError) throw profileError;
 
         if (cancelled) return;
 
-        const needsOnboarding = profile?.onboarding_completed === false;
+        // A missing row is not proof of completed onboarding. Root routing
+        // can repair it, but this callback must never send a new user Home.
+        const needsOnboarding = profile?.onboarding_completed !== true;
         router.replace(needsOnboarding ? '/(auth)/onboarding' : '/(tabs)');
       } catch (error) {
         if (cancelled) return;

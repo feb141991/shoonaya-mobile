@@ -284,6 +284,39 @@ describe('AuthCoordinator -- unit matrix for the implementation behind USE_AUTH_
     assert.deepEqual(online.rec.onboardingCacheWrites, [{ userId: 'u1', value: 'true' }], 'control run: a successful revalidation still writes its cache value');
   });
 
+  it('8a. cached completion remains fast, then a confirmed server disagreement routes to onboarding', async () => {
+    let resolveStatus!: (value: OnboardingStatus) => void;
+    const status = new Promise<OnboardingStatus>((resolve) => { resolveStatus = resolve; });
+    const { deps, rec } = makeDeps({
+      getOnboardingCache: async () => 'true',
+      fetchOnboardingStatus: async () => status,
+    });
+    const coordinator = new AuthCoordinator(deps);
+
+    await coordinator.routeForSession(fakeSession('u1'), tabsSegments());
+    assert.deepEqual(rec.redirects, [], 'cached route returns without waiting for the server revalidation');
+
+    resolveStatus({ onboarding_completed: false });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    assert.deepEqual(rec.redirects, ['/(auth)/onboarding']);
+    assert.deepEqual(rec.onboardingCacheWrites, [{ userId: 'u1', value: 'false' }]);
+  });
+
+  it('8b. onboarding query failure is not treated as a missing profile eligible for bootstrap or Home', async () => {
+    const { deps, rec } = makeDeps({
+      fetchOnboardingStatus: async () => { throw new Error('profile read unavailable'); },
+    });
+    const coordinator = new AuthCoordinator(deps);
+
+    await assert.rejects(
+      coordinator.routeForSession(fakeSession('u1'), tabsSegments()),
+      /profile read unavailable/,
+    );
+    assert.equal(rec.bootstrapCalls, 0, 'a failed read must not trigger missing-row repair');
+    assert.deepEqual(rec.redirects, [], 'a failed read must not route to Home or onboarding as a guess');
+  });
+
   it('9. missing profile repair: a null profiles row is repaired via bootstrap and then treated as complete', async () => {
     let fetchCalls = 0;
     const { deps, rec } = makeDeps({

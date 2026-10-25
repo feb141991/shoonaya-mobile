@@ -3,7 +3,15 @@ import test from 'node:test';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { resolveStartupSurface } from '../lib/startup-visibility';
+import { isStartupAuthDestinationVisible, resolveStartupSurface } from '../lib/startup-visibility';
+
+test('protected route handoff remains pending until Expo Router reports the destination', () => {
+  assert.equal(isStartupAuthDestinationVisible('/(auth)/onboarding', '(tabs)', 'index'), false);
+  assert.equal(isStartupAuthDestinationVisible('/(auth)/onboarding', '(auth)', 'login'), false);
+  assert.equal(isStartupAuthDestinationVisible('/(auth)/onboarding', '(auth)', 'onboarding'), true);
+  assert.equal(isStartupAuthDestinationVisible('/(tabs)', '(auth)', 'onboarding'), false);
+  assert.equal(isStartupAuthDestinationVisible('/(tabs)', '(tabs)', 'index'), true);
+});
 
 test('startup always resolves to a visible surface', () => {
   assert.equal(resolveStartupSurface({ readyToRender: false, showStartupScene: true }), 'scene');
@@ -22,6 +30,15 @@ test('root startup cannot regress to a null or initially transparent surface', (
   assert.match(motion, /enabled=\{hasMounted\.current\}/);
 });
 
+test('startup does not uncover the default route while session routing is pending', () => {
+  const root = fs.readFileSync(path.join(process.cwd(), 'app/_layout.tsx'), 'utf8');
+
+  assert.match(root, /const startupRouteReady = readyToRender && !startupRoutePending && pendingStartupDestination === null;/);
+  assert.match(root, /const showStartupFallback = resolveStartupSurface\(\{ readyToRender: startupRouteReady, showStartupScene \}\)/);
+  assert.match(root, /pointerEvents="auto"/);
+  assert.match(root, /if \(startupRoutePendingRef\.current && startupRouteUserIdRef\.current\)\s*\{\s*setProfileResolutionFailure\(\{ userId: startupRouteUserIdRef\.current \}\);\s*\}\s*setAuthReady\(true\);/);
+});
+
 test('markInteractive fires on real interactivity, not bare readyToRender (F01 regression)', () => {
   const root = fs.readFileSync(path.join(process.cwd(), 'app/_layout.tsx'), 'utf8');
 
@@ -32,13 +49,13 @@ test('markInteractive fires on real interactivity, not bare readyToRender (F01 r
   // The fix: gated on resolveStartupSurface(...) === 'app' (the one state
   // where the overlay is gone AND the app is ready), computed once and
   // reused so the effect and its dependency array can't drift apart.
-  assert.match(root, /const isAppInteractive = resolveStartupSurface\(\{ readyToRender, showStartupScene \}\) === 'app';/);
+  assert.match(root, /const isAppInteractive = resolveStartupSurface\(\{ readyToRender: startupRouteReady, showStartupScene \}\) === 'app';/);
   assert.match(root, /if \(isAppInteractive\)\s*\{\s*[\s\S]*?markInteractive\(/);
 
   // Emergency-fallback classification: the 6-second escape hatch must tag
   // the ref before forcing readiness, and markInteractive must read it, so
   // forced readiness is never indistinguishable from normal readiness in
   // Observe metrics or the local startup receipt.
-  assert.match(root, /emergencyFallbackUsedRef\.current = true;\s*\n\s*setAuthReady\(true\);/);
+  assert.match(root, /emergencyFallbackUsedRef\.current = true;[\s\S]*?if \(startupRoutePendingRef\.current && startupRouteUserIdRef\.current\)\s*\{\s*setProfileResolutionFailure\(\{ userId: startupRouteUserIdRef\.current \}\);\s*\}\s*setAuthReady\(true\);/);
   assert.match(root, /markInteractive\(\{ params: \{ viaEmergencyFallback: emergencyFallbackUsedRef\.current \} \}\)/);
 });

@@ -287,3 +287,24 @@ Rules:
 - Without `flex: 1`, React Native does not bound the text node's width to the remaining horizontal space of the row; the text expands past parent container padding and clips or wraps abruptly against the card/screen border.
 - Pair multi-line text in row items with explicit `lineHeight` to prevent descender clipping or cramped vertical rhythm on custom fonts.
 - Why this rule exists: on 2026-10-23, onboarding Step 9 (Location) had text alignment and clipping issues on iOS devices: labels in the feature card ("Accurate sunrise...", "Brahma Muhurta wake-up reminder at your real dawn") lacked `flex: 1`, causing text to bleed past the 20px card padding and touch the right border. This applies equally to human and AI-agent contributors.
+
+### 18. Query Failures Must Not Become Empty State or Authorize Mutations
+- Check both `data` and `error` on every Supabase read. A failed read is not a
+  missing row, an empty collection, a completed onboarding state, or an unset
+  profile preference. Keep the current identity's cached state when it is
+  usable; otherwise show a retryable error state and do not offer dependent
+  mutations until a successful read establishes the state.
+- Auth routing must have an explicit safe outcome when session/profile
+  preparation fails. A thrown startup error before the routing dispatcher runs
+  must never mark the app ready on the default protected route. A cached
+  onboarding result can keep the fast path, but a confirmed server disagreement
+  must hold the startup surface until the corrected route is visible.
+- Progress mutations must preserve existing progress unless a clearly named
+  restart action intentionally resets it. Never let an empty map produced by a
+  failed query drive a Day-1 upsert.
+- Why this rule exists: on 2026-10-25 a cold-start review found startup errors
+  could mark routing ready before any decision; profile query errors could be
+  interpreted as no row; and a failed guided-plan read could show a new-plan
+  action whose upsert reset saved progress. A similar Ashrama read could show
+  setup again, and the dormant AuthCoordinator had the same ignored-error
+  adapter. This applies equally to human and AI-agent contributors.

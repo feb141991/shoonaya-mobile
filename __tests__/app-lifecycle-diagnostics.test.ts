@@ -45,7 +45,7 @@ test('root layout delays diagnostic sends until ready foreground and cancels on 
   const end = source.indexOf('Deferred Update Checks', start);
   const effect = source.slice(start, end);
   assert.notEqual(start, -1);
-  assert.match(effect, /readyToRender && AppState\.currentState === 'active'/);
+  assert.match(effect, /startupRouteReady && AppState\.currentState === 'active'/);
   assert.match(effect, /setTimeout\([\s\S]*?TELEMETRY_UPLOAD_SETTLE_MS/);
   assert.match(effect, /if \(state !== 'active'\) \{\s*cancelScheduledFlush\(\);/);
   assert.match(effect, /shouldScheduleTelemetryFlush\(previous, state/);

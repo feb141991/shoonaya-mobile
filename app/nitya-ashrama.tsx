@@ -17,6 +17,7 @@ import { Card } from '@/components/ui/Card';
 import { BackButton } from '@/components/ui/BackButton';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { spiritualDate } from '@/lib/spiritualDate';
@@ -63,6 +64,7 @@ export default function NityaAshramaScreen() {
   const theme = themeColor(isDark);
 
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [profile, setProfile] = useState<{
     lifeStage: LifeStage | null;
@@ -82,19 +84,23 @@ export default function NityaAshramaScreen() {
   const [storageKey, setStorageKey] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
+    setLoading(true);
+    setLoadError(false);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
       if (!user) {
         router.replace('/(auth)/login');
         return;
       }
       setUserId(user.id);
 
-      const { data: prof } = await supabase
+      const { data: prof, error: profileError } = await supabase
         .from('profiles')
         .select('life_stage, gender_context, tradition, timezone')
         .eq('id', user.id)
         .maybeSingle();
+      if (profileError) throw profileError;
 
       const stage = prof?.life_stage as LifeStage | null;
       const gc = prof?.gender_context as GenderContext | null;
@@ -121,6 +127,7 @@ export default function NityaAshramaScreen() {
       }
     } catch (err) {
       console.warn(err);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -187,6 +194,23 @@ export default function NityaAshramaScreen() {
       <Screen style={{ backgroundColor: theme.bg }}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator color={theme.brand} />
+        </View>
+      </Screen>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <Screen style={{ backgroundColor: theme.bg }}>
+        <BackButton fallbackHref="/nitya-karma" handleHardwareBack />
+        <View style={{ flex: 1, justifyContent: 'center' }}>
+          <EmptyState
+            icon="refresh-cw"
+            title="Could not load your Ashrama details"
+            subtitle="Your saved life-stage details are safe. Please retry before changing your setup."
+            ctaLabel="Retry"
+            onCta={() => { void loadData(); }}
+          />
         </View>
       </Screen>
     );
