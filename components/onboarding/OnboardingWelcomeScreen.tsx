@@ -174,7 +174,7 @@ export function OnboardingWelcomeScreen({
             }}
           >
             <Feather name="compass" size={17} color={theme.brand} />
-            <Text style={{ ...TYPE.label, color: theme.text, fontSize: 13.5 }}>
+            <Text numberOfLines={1} style={{ ...TYPE.label, color: theme.text, fontSize: 13.5, flex: 1, textAlign: "center", lineHeight: 18 }}>
               {isHindi ? "एक त्वरित झलक देखें (30 सेकंड)" : "Take a quick tour (30 sec)"}
             </Text>
             <Feather name="chevron-right" size={16} color={theme.dim} />

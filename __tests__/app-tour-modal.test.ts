@@ -113,15 +113,49 @@ describe("Interactive App Tour — Architectural & Bloat Prevention Constraints"
     assert.ok(!content.includes(".mkv"), "Must not bundle .mkv video files");
   });
 
-  it("conforms to Rule 8: text in flex rows alongside icons or badges carries flex: 1 and explicit lineHeight", () => {
+  it("uses Haptics for the bead tap and accessible labels on close/navigation controls", () => {
     const content = fs.readFileSync(tourModalPath, "utf-8");
 
-    // Check that Haptics is used for the bead tap
     assert.ok(content.includes("Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)"));
-
-    // Check that close and navigation buttons meet accessibility standards
     assert.ok(content.includes('"Close tour"'));
     assert.ok(content.includes('"Previous tour slide"'));
     assert.ok(content.includes('"Next tour slide"'));
+  });
+
+  it("conforms to Rule 17: every row-adjacent Text next to an icon/badge sibling carries flex: 1 or flexShrink, with lineHeight", () => {
+    const content = fs.readFileSync(tourModalPath, "utf-8");
+
+    // Every row that pairs a label Text with a badge/count/icon cluster must
+    // bound the label (flex: 1) and shrink-protect the cluster (flexShrink: 0)
+    // — the exact shape of the 2026-10-23 onboarding clipping incident Rule 17
+    // documents, reproduced here with the tour's longer Hindi strings.
+    const boundedLabelRows = [
+      /flexDirection: "row", alignItems: "center", gap: 6, flex: 1 \}\}>\s*<Feather name="map-pin"/,
+      /style=\{\{ \.\.\.TYPE\.label, color: theme\.text, flex: 1, lineHeight: 19 \}\}>\s*\{isHindi \? "महामृत्युंजय/,
+      /style=\{\{ \.\.\.TYPE\.caption, color: theme\.brand, fontWeight: "600", fontSize: 11, flex: 1, lineHeight: 15 \}\}>\s*\{isHindi \? "दैनिक श्लोक/,
+      /flex: 1 \}\}>\s*<Text style=\{\{ fontSize: 16 \}\}>🏡/,
+      /style=\{\{ \.\.\.TYPE\.caption, color: theme\.brand, fontWeight: "600", fontSize: 11\.5, flex: 1, lineHeight: 15 \}\}>\s*\{isHindi \? "मंडली/,
+    ];
+    for (const pattern of boundedLabelRows) {
+      assert.match(content, pattern, `Expected a bounded (flex: 1) label Text matching ${pattern}`);
+    }
+
+    // Mutation check: if the Mantra-name label's flex: 1 guard were removed,
+    // this test must fail -- proving the assertion is load-bearing, not
+    // tautological against whatever the file happens to contain.
+    const withoutGuard = content.replace(
+      'style={{ ...TYPE.label, color: theme.text, flex: 1, lineHeight: 19 }}',
+      'style={{ ...TYPE.label, color: theme.text }}'
+    );
+    assert.throws(() => assert.match(withoutGuard, boundedLabelRows[1]));
+  });
+
+  it("labels every mockup frame as illustrative so specific-looking panchang/muhurta/shloka data is never read as today's real values", () => {
+    const content = fs.readFileSync(tourModalPath, "utf-8");
+    const previewLabelCount = (content.match(/Illustrative preview/g) ?? []).length;
+    // One per "Faithful Mockup Frame" (slides 1, 3, 4) that shows specific
+    // time/verse-looking values which are frozen, not live data.
+    assert.equal(previewLabelCount, 3, "Each specific-data mockup frame needs an illustrative-preview label");
+    assert.ok(content.includes("उदाहरणात्मक झलक"), "Hindi illustrative-preview label must be present too");
   });
 });
