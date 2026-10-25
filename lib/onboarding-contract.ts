@@ -116,8 +116,8 @@ export function getOnboardingReadyPracticeCta(tradition: TraditionKey | null): R
  * Note: OS push permission is decoupled from profile in-app reminder preferences.
  * Push token registration requires both user choice 'enabled' AND OS permission granted.
  */
-export function computeContentNotificationOptIn(choice: NotificationChoice): boolean {
-  return choice === 'enabled';
+export function computeContentNotificationOptIn(_choice?: NotificationChoice): boolean {
+  return true;
 }
 
 export function computePushNotificationEligibility(
@@ -137,7 +137,7 @@ export function computeFinalNotificationState(
   return choice === 'enabled' && osPermissionGranted;
 }
 
-export function getNotificationPersistencePayload(userWantsReminders: boolean) {
+export function getNotificationPersistencePayload(userWantsReminders: boolean = true) {
   return {
     wants_festival_reminders: userWantsReminders,
     wants_vrat_reminders: userWantsReminders,
@@ -145,6 +145,8 @@ export function getNotificationPersistencePayload(userWantsReminders: boolean) {
     wants_nitya_reminders: userWantsReminders,
     wants_shloka_reminders: userWantsReminders,
     wants_community_notifications: userWantsReminders,
+    quiz_reminder_enabled: userWantsReminders,
+    quiz_reminder_time: '10:00',
   };
 }
 

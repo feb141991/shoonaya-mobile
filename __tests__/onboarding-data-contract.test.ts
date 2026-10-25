@@ -139,6 +139,8 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
         wants_nitya_reminders: true,
         wants_shloka_reminders: true,
         wants_community_notifications: true,
+        quiz_reminder_enabled: true,
+        quiz_reminder_time: '10:00',
       });
     });
 
@@ -158,46 +160,51 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
         wants_nitya_reminders: true,
         wants_shloka_reminders: true,
         wants_community_notifications: true,
+        quiz_reminder_enabled: true,
+        quiz_reminder_time: '10:00',
       });
     });
 
-    it('Not now + OS granted => preferences false, token registration disabled', () => {
+    it('Not now + OS granted => in-app preferences true, token registration disabled', () => {
       const choice: NotificationChoice = 'disabled';
       const osGranted = true;
       const contentOptIn = computeContentNotificationOptIn(choice);
       const pushEligible = computePushNotificationEligibility(choice, osGranted);
-      assert.equal(contentOptIn, false, 'User explicit "Not now" must override already-granted OS permission');
-      assert.equal(pushEligible, false);
+      assert.equal(contentOptIn, true, 'User "Not now" declines immediate OS push prompt while preserving in-app reminder preferences');
+      assert.equal(pushEligible, false, 'Push token registration must be false when user deferred via Not now');
 
       const payload = getNotificationPersistencePayload(contentOptIn);
-      assert.equal(payload.wants_festival_reminders, false);
-      assert.equal(payload.wants_vrat_reminders, false);
+      assert.equal(payload.wants_festival_reminders, true);
+      assert.equal(payload.wants_vrat_reminders, true);
       assert.equal(payload.wants_tithi_reminders, false);
-      assert.equal(payload.wants_nitya_reminders, false);
-      assert.equal(payload.wants_shloka_reminders, false);
-      assert.equal(payload.wants_community_notifications, false);
+      assert.equal(payload.wants_nitya_reminders, true);
+      assert.equal(payload.wants_shloka_reminders, true);
+      assert.equal(payload.wants_community_notifications, true);
+      assert.equal(payload.quiz_reminder_enabled, true);
+      assert.equal(payload.quiz_reminder_time, '10:00');
     });
 
-    it('Not now + OS denied => preferences false, token registration disabled', () => {
+    it('Not now + OS denied => in-app preferences true, token registration disabled', () => {
       const choice: NotificationChoice = 'disabled';
       const osGranted = false;
       const contentOptIn = computeContentNotificationOptIn(choice);
       const pushEligible = computePushNotificationEligibility(choice, osGranted);
-      assert.equal(contentOptIn, false);
+      assert.equal(contentOptIn, true);
       assert.equal(pushEligible, false);
     });
 
-    it('Restored disabled choice + OS granted => preferences false', () => {
+    it('Restored disabled choice + OS granted => in-app preferences true, push registration disabled', () => {
       const restoredChoice: NotificationChoice = 'disabled';
       const liveOsPermission = true;
       const contentOptIn = computeContentNotificationOptIn(restoredChoice);
       const pushEligible = computePushNotificationEligibility(restoredChoice, liveOsPermission);
-      assert.equal(contentOptIn, false, 'Restored "disabled" choice must keep reminder preferences false');
+      assert.equal(contentOptIn, true, 'Restored "disabled" choice preserves reminder preferences in profile');
       assert.equal(pushEligible, false);
     });
 
-    it('Unset choice => preferences false', () => {
+    it('Unset choice => in-app preferences true, push registration disabled', () => {
       const unsetChoice: NotificationChoice = 'unset';
+      assert.equal(computeContentNotificationOptIn(unsetChoice), true);
       assert.equal(computeFinalNotificationState(unsetChoice, true), false);
       assert.equal(computeFinalNotificationState(unsetChoice, false), false);
     });
@@ -225,6 +232,8 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
       assert.equal(profile.wants_nitya_reminders, true);
       assert.equal(profile.wants_shloka_reminders, true);
       assert.equal(profile.wants_community_notifications, true);
+      assert.equal(profile.quiz_reminder_enabled, true);
+      assert.equal(profile.quiz_reminder_time, '10:00');
       assert.equal(profile.onboarding_completed, true);
     });
 

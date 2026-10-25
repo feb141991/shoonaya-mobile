@@ -54,7 +54,6 @@ import {
   getOnboardingReadyPracticeCta,
   computeContentNotificationOptIn,
   computePushNotificationEligibility,
-  computeFinalNotificationState,
 } from '@/lib/onboarding-contract';
 import { describeSaveError } from '@/lib/save-error';
 import { saveOnboardingDraft, readOnboardingDraft, clearOnboardingDraft, type OnboardingDraftData } from '@/lib/onboardingDraft';
@@ -1606,40 +1605,61 @@ export default function OnboardingScreen() {
           <>
             <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 15, lineHeight: isHindi ? 23 : 21, color: dim }}>
               {translated(
-                'Receive gentle reminders for daily wisdom, practice streaks and Mandali mentions. You can change this anytime in Settings.',
-                'दैनिक ज्ञान, अभ्यास क्रम और मंडली संदेशों के लिए सहज स्मरण पाएँ। इसे कभी भी सेटिंग्स में बदला जा सकता है।'
+                'Receive timely reminders for sacred festivals, daily wisdom, and the 10:00 AM daily quiz challenge. Zero spam, quiet hours respected automatically. You can customize anytime in Settings.',
+                'पावन पर्वों, दैनिक ज्ञान और प्रातः 10:00 बजे दैनिक क्विज़ के लिए शांत स्मरण पाएँ। कोई स्पैम नहीं, शांत पहर का स्वतः सम्मान। आप सेटिंग्स में कभी भी बदलाव कर सकते हैं।'
               )}
             </Text>
-            <View style={{ borderRadius: RADII.xl, borderWidth: 1, borderColor: border, backgroundColor: cardBg, padding: 20, gap: 16 }}>
+            <View style={{ borderRadius: RADII.xl, borderWidth: 1, borderColor: border, backgroundColor: cardBg, padding: 18, gap: 14 }}>
               {[
-                { icon: 'book-open' as const, label: translated('Daily wisdom notification', 'दैनिक ज्ञान स्मरण') },
-                { icon: 'calendar' as const, label: translated('Sacred day and festival reminders', 'पर्व और पावन दिवस स्मरण') },
-                { icon: 'zap' as const, label: translated('Daily practice sequence reminders', 'दैनिक अभ्यास क्रम स्मरण') },
-                { icon: 'users' as const, label: translated('Mandali messages and community updates', 'मंडली संदेश और समुदाय सूचनाएँ') },
+                {
+                  icon: 'calendar' as const,
+                  title: translated('Sacred Festivals & Vrats', 'पावन पर्व और व्रत'),
+                  desc: translated('Ekadashi, Pradosha, Purnima & major holy days', 'एकादशी, प्रदोष, पूर्णिमा और प्रमुख पवित्र दिवस'),
+                },
+                {
+                  icon: 'book-open' as const,
+                  title: translated('Daily Wisdom & Sadhana', 'दैनिक ज्ञान और साधना'),
+                  desc: translated('Morning shloka, reflection & peaceful guidance', 'प्रातः श्लोक, आत्मचिंतन और शांतिपूर्ण मार्गदर्शन'),
+                },
+                {
+                  icon: 'award' as const,
+                  title: translated('Daily Quiz Challenge', 'दैनिक ज्ञानोत्कर्ष क्विज़'),
+                  desc: translated('Ready at 10:00 AM to deepen your learning', 'प्रातः 10:00 बजे धर्म ज्ञान संवर्धन के लिए'),
+                },
+                {
+                  icon: 'users' as const,
+                  title: translated('Mandali & Community', 'मंडली और समुदाय'),
+                  desc: translated('Shared blessings, satsang reflections & streaks', 'आशीर्वाद, सत्संग और साधना क्रम'),
+                },
               ].map((item) => (
-                <View key={item.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <View style={{ width: 34, height: 34, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: wellBg }}>
-                    <Feather name={item.icon} size={16} color={accent} />
+                <View key={item.title} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <View style={{ width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: wellBg }}>
+                    <Feather name={item.icon} size={18} color={accent} />
                   </View>
-                  <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sansMedium, fontSize: 14, color: text }}>
-                    {item.label}
-                  </Text>
+                  <View style={{ flex: 1, flexShrink: 1, gap: 2 }}>
+                    <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansMedium, fontSize: 14, lineHeight: isHindi ? 20 : 18, color: text }}>
+                      {item.title}
+                    </Text>
+                    <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 12, lineHeight: isHindi ? 17 : 16, color: dim }}>
+                      {item.desc}
+                    </Text>
+                  </View>
                 </View>
               ))}
             </View>
             {notificationsDenied ? (
               <View style={{ borderRadius: RADII.lg, borderWidth: 1, borderColor: COLORS.dangerBorder, backgroundColor: COLORS.dangerBg, padding: 14, gap: 4 }}>
-                <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 13, color: COLORS.danger }}>
+                <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 13, lineHeight: isHindi ? 19 : 17, color: COLORS.danger }}>
                   {translated('Notifications not enabled', 'सूचना अनुमति नहीं मिली')}
                 </Text>
                 <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 12, lineHeight: 18, color: COLORS.danger }}>
                   {translated(
                     notificationsCanAskAgain
-                      ? 'Permission was not granted. You can try again or continue without reminders.'
-                      : 'Notifications are blocked in device settings. Open Settings to enable them, or continue without reminders.',
+                      ? 'Permission was not granted. You can try again or continue—festival dates and daily quiz will always be available inside the app.'
+                      : 'Notifications are blocked in device settings. Open Settings to enable them, or continue—festivals and daily quiz remain available inside the app.',
                     notificationsCanAskAgain
-                      ? 'अनुमति नहीं मिली। आप फिर से प्रयास कर सकते हैं या बिना स्मरण के आगे बढ़ सकते हैं।'
-                      : 'डिवाइस सेटिंग्स में सूचनाएँ बंद हैं। उन्हें चालू करने के लिए सेटिंग्स खोलें, या बिना स्मरण के आगे बढ़ें।'
+                      ? 'अनुमति नहीं मिली। आप फिर से प्रयास कर सकते हैं या आगे बढ़ सकते हैं—पर्व तिथियाँ और दैनिक क्विज़ हमेशा ऐप में उपलब्ध रहेंगे।'
+                      : 'डिवाइस सेटिंग्स में सूचनाएँ बंद हैं। उन्हें चालू करने के लिए सेटिंग्स खोलें, या आगे बढ़ें—पर्व और क्विज़ ऐप में उपलब्ध रहेंगे।'
                   )}
                 </Text>
               </View>

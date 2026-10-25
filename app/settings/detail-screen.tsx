@@ -92,8 +92,8 @@ const THEME_STORAGE_KEY = 'sangam_theme_preference';
 const INITIAL_SETTINGS: SettingsState = {
   japa_reminder_enabled: false,
   japa_reminder_time: '07:00',
-  quiz_reminder_enabled: false,
-  quiz_reminder_time: '08:00',
+  quiz_reminder_enabled: true,
+  quiz_reminder_time: '10:00',
   wants_festival_reminders: true,
   wants_vrat_reminders: true,
   wants_tithi_reminders: false,
@@ -117,7 +117,7 @@ const INITIAL_SETTINGS: SettingsState = {
 
 const NOTIFICATION_TOGGLES: { key: keyof SettingsState; label: string; subtitle: string; disabled?: boolean; requiresAccount?: boolean; badge?: string }[] = [
   { key: 'japa_reminder_enabled', label: 'Japa practice reminder', subtitle: 'A gentle daily reminder at your chosen time', requiresAccount: true },
-  { key: 'quiz_reminder_enabled', label: 'Daily quiz reminders', subtitle: 'When the daily quiz is ready, plus one 6:00 PM nudge if it is still unfinished', requiresAccount: true },
+  { key: 'quiz_reminder_enabled', label: 'Daily quiz reminders', subtitle: 'Daily quiz challenge at 10:00 AM, plus a 6:00 PM nudge if still unfinished', requiresAccount: true },
   { key: 'wants_shloka_reminders', label: 'Daily wisdom', subtitle: 'Your daily shloka & reflection' },
   { key: 'wants_nitya_reminders', label: 'Nitya reminders', subtitle: 'Morning sadhana nudges' },
   { key: 'wants_brahma_muhurta_reminders', label: 'Brahma Muhurta', subtitle: 'A pre-dawn reminder about 1½ hours before sunrise at your saved location. It arrives at night.', requiresAccount: true },
