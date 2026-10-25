@@ -68,6 +68,7 @@ import { AccountDeletionBanner } from '@/components/profile/AccountDeletionBanne
 import { accountDeletion, useAccountDeletionStatus } from '@/lib/accountDeletion';
 import { accountDeletionCopy } from '@/lib/accountDeletionCopy';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { AppTourModal } from '@/components/tour/AppTourModal';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
@@ -390,6 +391,7 @@ export default function ProfileScreen() {
   const [locationSyncing, setLocationSyncing] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [catalog, setCatalog] = useState<any[] | null>(null);
+  const [tourVisible, setTourVisible] = useState(false);
   const deletionStatus = useAccountDeletionStatus();
   const { language: deletionLanguage, setLanguage } = useLanguage();
   const updateCopy = getUpdateCopy(deletionLanguage);
@@ -1543,6 +1545,48 @@ export default function ProfileScreen() {
 
         <PressableSurface
           haptic="selection"
+          accessibilityLabel={deletionLanguage === 'hi' ? 'शून्या की झलक देखें' : 'Tour Shoonaya'}
+          onPress={() => setTourVisible(true)}
+          style={{
+            minHeight: 68,
+            borderRadius: 16,
+            backgroundColor: theme.glass,
+            borderWidth: 1,
+            borderColor: theme.borderSoft,
+            paddingHorizontal: 14,
+            paddingVertical: 12,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 14,
+          }}
+        >
+          <View
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: theme.brandSoft,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Feather name="compass" size={20} color={theme.brand} />
+          </View>
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text style={{ ...TYPE.label, color: theme.text, lineHeight: 20 }}>
+              {deletionLanguage === 'hi' ? 'शून्या की झलक देखें' : 'Tour Shoonaya'}
+            </Text>
+            <Text style={{ ...TYPE.caption, color: theme.dim, lineHeight: 16 }}>
+              {deletionLanguage === 'hi'
+                ? 'पंचांग, जप, भक्ति और कुल का दृश्य परिचय'
+                : 'Visual tour of Panchang, Japa, Bhakti & KUL'}
+            </Text>
+          </View>
+          <Feather name="chevron-right" size={20} color={theme.dim} />
+        </PressableSurface>
+
+        <PressableSurface
+          haptic="selection"
           accessibilityLabel={profile.city ? `Location: ${profile.city}. Tap to update.` : 'Set your location'}
           onPress={() => { void updateLocation(); }}
           style={{
@@ -2124,6 +2168,12 @@ export default function ProfileScreen() {
         onClose={() => setAuthGateVisible(false)}
         title="Join Shoonaya"
         message="Sign in to save your sadhana."
+      />
+
+      <AppTourModal
+        visible={tourVisible}
+        onClose={() => setTourVisible(false)}
+        isHindi={deletionLanguage === 'hi'}
       />
     </Screen>
   );

@@ -20,6 +20,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { OnboardingShell } from '@/components/onboarding/OnboardingShell';
 import { NakshatraPicker } from '@/components/onboarding/NakshatraPicker';
 import { OnboardingWelcomeScreen } from '@/components/onboarding/OnboardingWelcomeScreen';
+import { AppTourModal } from '@/components/tour/AppTourModal';
 import { FounderNoteInterlude } from '@/components/onboarding/FounderNoteInterlude';
 import { ReligiousDataConsentCard } from '@/components/onboarding/ReligiousDataConsentCard';
 import { AgeGuidanceNotice } from '@/components/privacy/AgeGuidanceNotice';
@@ -248,6 +249,7 @@ export default function OnboardingScreen() {
   const wellBgSelected = COLORS.selectionWellSelected;
 
   const [step, setStep] = useState<Step>('preferences');
+  const [tourVisible, setTourVisible] = useState(false);
   const [founderNoteContext, setFounderNoteContext] = useState<{
     tradition: TraditionKey;
     language: LanguageKey;
@@ -1751,10 +1753,17 @@ export default function OnboardingScreen() {
             hasNotifications={notificationChoice === 'enabled'}
             recommendedPractice={getOnboardingReadyPracticeCta(tradition)}
             onComplete={(dest) => { void complete(dest); }}
+            onStartTour={() => setTourVisible(true)}
             saving={saving}
           />
         )}
       </OnboardingShell>
+
+      <AppTourModal
+        visible={tourVisible}
+        onClose={() => setTourVisible(false)}
+        isHindi={isHindi}
+      />
     </Screen>
   );
 }

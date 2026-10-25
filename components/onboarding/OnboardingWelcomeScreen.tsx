@@ -1,5 +1,6 @@
 import { Href } from 'expo-router';
 import { Text, View, useColorScheme, useWindowDimensions } from 'react-native';
+import Feather from '@expo/vector-icons/Feather';
 
 import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
@@ -17,6 +18,7 @@ type WelcomeScreenProps = {
   hasNotifications: boolean;
   recommendedPractice: ReadyPracticeCta | null;
   onComplete: (destination?: Href) => void;
+  onStartTour?: () => void;
   saving: boolean;
 };
 
@@ -53,6 +55,7 @@ export function OnboardingWelcomeScreen({
   hasNotifications,
   recommendedPractice,
   onComplete,
+  onStartTour,
   saving,
 }: WelcomeScreenProps) {
   const isDark = useColorScheme() === 'dark';
@@ -147,6 +150,36 @@ export function OnboardingWelcomeScreen({
             </PressableSurface>
           ))}
         </View>
+
+        {onStartTour ? (
+          <PressableSurface
+            accessibilityRole="button"
+            accessibilityLabel={isHindi ? "ऐप की एक त्वरित झलक देखें" : "Take a quick visual tour"}
+            accessibilityHint={isHindi ? "चार मुख्य पृष्ठों की झलक" : "Visual preview of the four core sections"}
+            onPress={onStartTour}
+            disabled={saving}
+            haptic="selection"
+            style={{
+              minHeight: 48,
+              borderRadius: RADII.lg,
+              borderWidth: 1,
+              borderColor: theme.border,
+              backgroundColor: theme.card,
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 10,
+            }}
+          >
+            <Feather name="compass" size={17} color={theme.brand} />
+            <Text style={{ ...TYPE.label, color: theme.text, fontSize: 13.5 }}>
+              {isHindi ? "एक त्वरित झलक देखें (30 सेकंड)" : "Take a quick tour (30 sec)"}
+            </Text>
+            <Feather name="chevron-right" size={16} color={theme.dim} />
+          </PressableSurface>
+        ) : null}
       </View>
 
       {selectedGoalLabels.length > 0 ? (

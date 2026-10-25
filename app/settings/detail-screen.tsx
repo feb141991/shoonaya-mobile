@@ -61,6 +61,7 @@ import {
   type PendingSettingsWrite,
 } from '@/lib/settingsCache';
 import { recordRouteOpen, recordRefreshFailure, recordMutationRetryOutcome } from '@/lib/telemetry';
+import { AppTourModal } from '@/components/tour/AppTourModal';
 import { HeroBackdropPicker } from '@/components/home/HeroBackdropPicker';
 import { GreetingPicker } from '@/components/home/GreetingPicker';
 import {
@@ -337,6 +338,7 @@ async function openLegalUrl(path: '/terms' | '/privacy' | '/sources') {
 
 export function SettingsDetailScreen({ section }: { section: SettingsSectionKey }) {
   const insets = useSafeAreaInsets();
+  const [tourVisible, setTourVisible] = useState(false);
   const router = useRouter();
   const appIdentity = useAppIdentity();
   const { setLanguage, language } = useLanguage();
@@ -1366,6 +1368,12 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                   Alert.alert('Tips reset', 'You will see onboarding hints again as you use the app.');
                 }}
               />
+              <Button
+                label={language === 'hi' ? 'ऐप की मुख्य झलक देखें' : 'Take the visual tour'}
+                variant="secondary"
+                accessibilityLabel={language === 'hi' ? 'चार मुख्य पृष्ठों की झलक' : 'Visual preview of the four core sections'}
+                onPress={() => setTourVisible(true)}
+              />
             </SettingsSection> : null}
 
             {/* ── Community & Socials ─────────────────────────────────── */}
@@ -1621,6 +1629,12 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
         onConfirmDeletion={confirmDeletionRequest}
         onPauseNotificationsInstead={handlePauseNotificationsInstead}
         onExportData={handleDownloadData}
+      />
+
+      <AppTourModal
+        visible={tourVisible}
+        onClose={() => setTourVisible(false)}
+        isHindi={language === 'hi'}
       />
     </Screen>
   );
