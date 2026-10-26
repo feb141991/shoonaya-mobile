@@ -57,6 +57,8 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-sage-and-mouse': require('@/assets/panchatantra/sage-mouse-1.webp'),
   'panchatantra-three-fish': require('@/assets/panchatantra/three-fish-1.webp'),
   'panchatantra-dharmabuddhi-papabuddhi': require('@/assets/panchatantra/dharmabuddhi-1.webp'),
+  'panchatantra-musical-donkey': require('@/assets/panchatantra/musical-donkey-1.webp'),
+  'panchatantra-monk-and-jackal': require('@/assets/panchatantra/monk-jackal-1.webp'),
 };
 
 /**
@@ -359,6 +361,30 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/three-fish-4.webp'),
     require('@/assets/panchatantra/three-fish-5.webp'),
     require('@/assets/panchatantra/three-fish-6.webp'),
+  ],
+  'panchatantra-dharmabuddhi-papabuddhi': [
+    require('@/assets/panchatantra/dharmabuddhi-1.webp'),
+    require('@/assets/panchatantra/dharmabuddhi-2.webp'),
+    require('@/assets/panchatantra/dharmabuddhi-3.webp'),
+    require('@/assets/panchatantra/dharmabuddhi-4.webp'),
+    require('@/assets/panchatantra/dharmabuddhi-5.webp'),
+    require('@/assets/panchatantra/dharmabuddhi-6.webp'),
+  ],
+  'panchatantra-musical-donkey': [
+    require('@/assets/panchatantra/musical-donkey-1.webp'),
+    require('@/assets/panchatantra/musical-donkey-2.webp'),
+    require('@/assets/panchatantra/musical-donkey-3.webp'),
+    require('@/assets/panchatantra/musical-donkey-4.webp'),
+    require('@/assets/panchatantra/musical-donkey-5.webp'),
+    require('@/assets/panchatantra/musical-donkey-6.webp'),
+  ],
+  'panchatantra-monk-and-jackal': [
+    require('@/assets/panchatantra/monk-jackal-1.webp'),
+    require('@/assets/panchatantra/monk-jackal-2.webp'),
+    require('@/assets/panchatantra/monk-jackal-3.webp'),
+    require('@/assets/panchatantra/monk-jackal-4.webp'),
+    require('@/assets/panchatantra/monk-jackal-5.webp'),
+    require('@/assets/panchatantra/monk-jackal-6.webp'),
   ],
 };
 

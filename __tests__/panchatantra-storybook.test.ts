@@ -147,6 +147,9 @@ test('Panchatantra Artwork Resolution', async (t) => {
       'panchatantra-lion-makers',
       'panchatantra-sage-and-mouse',
       'panchatantra-three-fish',
+      'panchatantra-dharmabuddhi-papabuddhi',
+      'panchatantra-musical-donkey',
+      'panchatantra-monk-and-jackal',
     ];
 
     for (const storyId of storiesWithScenes) {
@@ -287,38 +290,36 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-lion-makers'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-sage-and-mouse'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-three-fish'), 2);
-
-    // Tier 1: Story with bundled cover art
-    assert.equal(getPanchatantraStoryVisualTier('panchatantra-dharmabuddhi-papabuddhi'), 1);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-dharmabuddhi-papabuddhi'), 2);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-musical-donkey'), 2);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-monk-and-jackal'), 2);
 
     // Tier 0: Manuscript folios without local art
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-wedge-pulling-monkey'), 0);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-nonexistent'), 0);
   });
 
-  await t.test('sorts stories so full scene storybooks appear first, then cover art, then manuscript', () => {
+  await t.test('sorts stories so full scene storybooks appear first, then manuscript', () => {
     const mixed = [
-      { id: 'panchatantra-monk-and-jackal', title: 'The Monk and the Jackal' },
-      { id: 'panchatantra-dharmabuddhi-papabuddhi', title: 'Dharmabuddhi and Papabuddhi' },
-      { id: 'panchatantra-dove-king-and-net', title: 'The Dove King and the Net' },
       { id: 'panchatantra-wedge-pulling-monkey', title: 'Wedge Pulling Monkey' },
+      { id: 'panchatantra-monk-and-jackal', title: 'The Monk and the Jackal' },
+      { id: 'panchatantra-dove-king-and-net', title: 'The Dove King and the Net' },
+      { id: 'panchatantra-hunter-and-pigeons', title: 'The Hunter and the Pigeons' },
+      { id: 'panchatantra-musical-donkey', title: 'The Musical Donkey' },
       { id: 'panchatantra-lion-and-rabbit', title: 'The Lion and the Rabbit' },
-      { id: 'panchatantra-moon-lake-rabbits', title: 'Moon Lake Rabbits' },
     ];
 
     const sorted = sortPanchatantraStoriesByVisualTier(mixed);
 
-    // Tier 2 items must appear at indices 0, 1, and 2
-    assert.equal(sorted[0].id, 'panchatantra-dove-king-and-net');
-    assert.equal(sorted[1].id, 'panchatantra-lion-and-rabbit');
-    assert.equal(sorted[2].id, 'panchatantra-moon-lake-rabbits');
-
-    // Tier 1 item at index 3
-    assert.equal(sorted[3].id, 'panchatantra-dharmabuddhi-papabuddhi');
+    // Tier 2 items must appear at indices 0, 1, 2, and 3
+    assert.equal(sorted[0].id, 'panchatantra-monk-and-jackal');
+    assert.equal(sorted[1].id, 'panchatantra-dove-king-and-net');
+    assert.equal(sorted[2].id, 'panchatantra-musical-donkey');
+    assert.equal(sorted[3].id, 'panchatantra-lion-and-rabbit');
 
     // Tier 0 items must follow at indices 4 and 5
-    assert.equal(sorted[4].id, 'panchatantra-monk-and-jackal');
-    assert.equal(sorted[5].id, 'panchatantra-wedge-pulling-monkey');
+    assert.equal(sorted[4].id, 'panchatantra-wedge-pulling-monkey');
+    assert.equal(sorted[5].id, 'panchatantra-hunter-and-pigeons');
   });
 
   await t.test('katha.tsx integrates visual tier sorting and thumbnail priority for Story of the Day', () => {
@@ -444,7 +445,35 @@ test('The Three Fish story uses six paragraph-aligned offline scenes', () => {
   }
 });
 
-test('Dharmabuddhi and Papabuddhi story has bundled Tier 1 cover artwork', () => {
+test('Dharmabuddhi and Papabuddhi story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-dharmabuddhi-papabuddhi');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
   assert.equal(hasPanchatantraArtwork('panchatantra-dharmabuddhi-papabuddhi'), true);
-  assert.ok(getPanchatantraArtworkSource('panchatantra-dharmabuddhi-papabuddhi'));
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-dharmabuddhi-papabuddhi'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-dharmabuddhi-papabuddhi', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('The Musical Donkey story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-musical-donkey');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-musical-donkey'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-musical-donkey'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-musical-donkey', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('The Monk and the Jackal story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-monk-and-jackal');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-monk-and-jackal'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-monk-and-jackal'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-monk-and-jackal', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
 });
