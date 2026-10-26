@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { TraditionKey, LanguageKey, Step, NotificationChoice } from './onboarding-contract';
+import type { TraditionKey, LanguageKey, Step, NotificationChoice, NotificationCategoryChoices } from './onboarding-contract';
 import type { GenderKey, LifeStageKey, CalendarProfileSlug, CalendarScopeSlug } from './profile-constants';
 
 export const ONBOARDING_DRAFT_SCHEMA_VERSION = 1;
@@ -66,6 +66,12 @@ export type OnboardingDraftData = {
   name: string;
   notificationChoice?: NotificationChoice;
   deniedNotificationPromptShown?: boolean;
+  // Per-category reminder toggles, each shown and chosen on its own in the
+  // notifications step -- independent of notificationChoice, which only
+  // tracks the OS push permission intent. A draft written before these
+  // existed has no value, which the screen reads as DEFAULT_NOTIFICATION_CATEGORY_CHOICES,
+  // not as every category already answered.
+  notificationCategories?: Partial<NotificationCategoryChoices>;
   // Intent only, mirroring notificationChoice -- the actual captured
   // latitude/longitude/city are never persisted here (see invariant 2).
   locationChoice?: NotificationChoice;

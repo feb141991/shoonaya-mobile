@@ -9,7 +9,7 @@ import {
   storableTradition,
   traditionNeedsReligiousDataConsent,
 } from '../lib/religious-data-consent';
-import { buildOnboardingProfilePayload, type TraditionKey } from '../lib/onboarding-contract';
+import { buildOnboardingProfilePayload, DEFAULT_NOTIFICATION_CATEGORY_CHOICES, type TraditionKey } from '../lib/onboarding-contract';
 import { OnboardingDraftStore, getDraftStorageKey, type OnboardingDraftData, type StorageAdapter } from '../lib/onboardingDraft';
 
 const NOW = '2026-10-15T08:00:00.000Z';
@@ -27,7 +27,7 @@ const base = {
   calendarProfile: 'north_indian_purnimanta' as const,
   calendarScope: 'all_observances' as const,
   goals: ['peace'],
-  notificationsEnabled: true,
+  notificationCategories: DEFAULT_NOTIFICATION_CATEGORY_CHOICES,
   consentRecordedAt: NOW,
 };
 

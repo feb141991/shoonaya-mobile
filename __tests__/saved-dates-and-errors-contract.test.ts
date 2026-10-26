@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { buildOnboardingProfilePayload } from '../lib/onboarding-contract';
+import { buildOnboardingProfilePayload, DEFAULT_NOTIFICATION_CATEGORY_CHOICES } from '../lib/onboarding-contract';
 import { InvalidDateInputError } from '../lib/date-input';
 import { describeSaveError } from '../lib/save-error';
 import { KUNDALI_MIN_BIRTH_DATE } from '../lib/kundali-contract';
@@ -23,7 +23,7 @@ const base = {
   calendarProfile: '' as const,
   calendarScope: '' as const,
   goals: [],
-  notificationsEnabled: false,
+  notificationCategories: DEFAULT_NOTIFICATION_CATEGORY_CHOICES,
   religiousDataConsent: false,
   consentRecordedAt: '2026-10-16T08:00:00.000Z',
 };

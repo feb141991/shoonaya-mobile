@@ -10,12 +10,13 @@ import {
   getMarketingConsentPayload,
   getOnboardingReadyPracticeCta,
   getPermissionRecoveryAction,
-  computeContentNotificationOptIn,
   computePushNotificationEligibility,
   computeFinalNotificationState,
+  DEFAULT_NOTIFICATION_CATEGORY_CHOICES,
   type Step,
   type TraditionKey,
   type NotificationChoice,
+  type NotificationCategoryChoices,
 } from '../lib/onboarding-contract';
 import {
   OnboardingDraftStore,
@@ -157,56 +158,54 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
       wants_family_remembrance_reminders: false,
     };
 
-    it('Allow + OS granted => preferences true, token registration eligible', () => {
-      const choice: NotificationChoice = 'enabled';
-      const osGranted = true;
-      const contentOptIn = computeContentNotificationOptIn(choice);
-      const pushEligible = computePushNotificationEligibility(choice, osGranted);
-      assert.equal(contentOptIn, true);
-      assert.equal(pushEligible, true);
+    const ALL_TRUE: NotificationCategoryChoices = {
+      festivalsAndVrats: true, dailySadhana: true, dailyQuiz: true, communityAndFamily: true, brahmaMuhurta: true,
+    };
+    const ALL_FALSE: NotificationCategoryChoices = {
+      festivalsAndVrats: false, dailySadhana: false, dailyQuiz: false, communityAndFamily: false, brahmaMuhurta: false,
+    };
 
-      const payload = getNotificationPersistencePayload(contentOptIn);
-      assert.deepEqual(payload, expectedAllEnabledPayload);
+    it('OS push eligibility depends only on the OS choice and live permission, never on category preference', () => {
+      assert.equal(computePushNotificationEligibility('enabled', true), true);
+      assert.equal(computePushNotificationEligibility('enabled', false), false, 'Push token registration must be false when OS denied');
+      assert.equal(computePushNotificationEligibility('disabled', true), false, 'Push token registration must be false when user deferred via Not now');
+      assert.equal(computePushNotificationEligibility('disabled', false), false);
+      assert.equal(computeFinalNotificationState('unset', true), false);
+      assert.equal(computeFinalNotificationState('unset', false), false);
     });
 
-    it('Allow + OS denied/revoked => in-app preferences true, token registration disabled', () => {
-      const choice: NotificationChoice = 'enabled';
-      const osGranted = false;
-      const contentOptIn = computeContentNotificationOptIn(choice);
-      const pushEligible = computePushNotificationEligibility(choice, osGranted);
-      assert.equal(contentOptIn, true, 'An explicit "Allow" is in-app consent on its own, independent of whether the OS prompt itself was later denied/revoked');
-      assert.equal(pushEligible, false, 'Push token registration must be false when OS denied');
-
-      const payload = getNotificationPersistencePayload(contentOptIn);
-      assert.deepEqual(payload, expectedAllEnabledPayload);
+    it('every category true maps to every flag true, independent of the OS push choice', () => {
+      assert.deepEqual(getNotificationPersistencePayload(ALL_TRUE), expectedAllEnabledPayload);
     });
 
-    it('Not now + OS granted => in-app preferences false, token registration disabled', () => {
-      const choice: NotificationChoice = 'disabled';
-      const osGranted = true;
-      const contentOptIn = computeContentNotificationOptIn(choice);
-      const pushEligible = computePushNotificationEligibility(choice, osGranted);
-      assert.equal(contentOptIn, false, '"Not now" answers only the OS prompt; it is not consent to any individual in-app reminder category');
-      assert.equal(pushEligible, false, 'Push token registration must be false when user deferred via Not now');
-
-      const payload = getNotificationPersistencePayload(contentOptIn);
-      assert.deepEqual(payload, expectedAllDisabledPayload);
+    it('every category false maps to every flag false', () => {
+      assert.deepEqual(getNotificationPersistencePayload(ALL_FALSE), expectedAllDisabledPayload);
     });
 
-    it('Not now + OS denied => in-app preferences false, token registration disabled', () => {
-      const choice: NotificationChoice = 'disabled';
-      const osGranted = false;
-      const contentOptIn = computeContentNotificationOptIn(choice);
-      const pushEligible = computePushNotificationEligibility(choice, osGranted);
-      assert.equal(contentOptIn, false);
-      assert.equal(pushEligible, false);
+    it('default category choices enable everything except Brahma Muhurta', () => {
+      assert.deepEqual(DEFAULT_NOTIFICATION_CATEGORY_CHOICES, {
+        festivalsAndVrats: true, dailySadhana: true, dailyQuiz: true, communityAndFamily: true, brahmaMuhurta: false,
+      });
+      const payload = getNotificationPersistencePayload(DEFAULT_NOTIFICATION_CATEGORY_CHOICES);
+      assert.equal(payload.wants_brahma_muhurta_reminders, false, 'the pre-dawn, night-delivered reminder needs its own deliberate opt-in');
+      assert.equal(payload.quiz_reminder_enabled, true);
+      assert.equal(payload.wants_festival_reminders, true);
+      assert.equal(payload.wants_nitya_reminders, true);
+      assert.equal(payload.wants_family_remembrance_reminders, true);
     });
 
-    it('Unset choice => in-app preferences false (conservative default), push registration disabled', () => {
-      const unsetChoice: NotificationChoice = 'unset';
-      assert.equal(computeContentNotificationOptIn(unsetChoice), false, 'never having been asked is not consent either -- same conservative default as an explicit decline');
-      assert.equal(computeFinalNotificationState(unsetChoice, true), false);
-      assert.equal(computeFinalNotificationState(unsetChoice, false), false);
+    it('each category only writes its own flags, never bleeding into another category’s columns', () => {
+      const onlyBrahmaMuhurta = getNotificationPersistencePayload({ ...ALL_FALSE, brahmaMuhurta: true });
+      assert.equal(onlyBrahmaMuhurta.wants_brahma_muhurta_reminders, true);
+      assert.equal(onlyBrahmaMuhurta.quiz_reminder_enabled, false);
+      assert.equal(onlyBrahmaMuhurta.wants_festival_reminders, false);
+      assert.equal(onlyBrahmaMuhurta.wants_community_notifications, false);
+      assert.equal(onlyBrahmaMuhurta.japa_reminder_enabled, false);
+
+      const onlyDailyQuiz = getNotificationPersistencePayload({ ...ALL_FALSE, dailyQuiz: true });
+      assert.equal(onlyDailyQuiz.quiz_reminder_enabled, true);
+      assert.equal(onlyDailyQuiz.wants_brahma_muhurta_reminders, false);
+      assert.equal(onlyDailyQuiz.wants_shloka_reminders, false);
     });
 
     it('builds full profile payload reflecting final notification decision', () => {
@@ -223,7 +222,9 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
         calendarProfile: 'north_indian_purnimanta',
         calendarScope: 'all_observances',
         goals: ['peace'],
-        notificationsEnabled: true,
+        notificationCategories: {
+          festivalsAndVrats: true, dailySadhana: true, dailyQuiz: true, communityAndFamily: true, brahmaMuhurta: true,
+        },
         religiousDataConsent: true,
         consentRecordedAt: '2026-10-15T08:00:00.000Z',
       });
@@ -260,7 +261,7 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
         calendarProfile: 'north_indian_purnimanta' as const,
         calendarScope: 'all_observances' as const,
         goals: ['peace'],
-        notificationsEnabled: true,
+        notificationCategories: DEFAULT_NOTIFICATION_CATEGORY_CHOICES,
         religiousDataConsent: true,
         consentRecordedAt: '2026-10-15T08:00:00.000Z',
       };
@@ -653,7 +654,7 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
         calendarProfile: '',
         calendarScope: '',
         goals: [],
-        notificationsEnabled: false,
+        notificationCategories: DEFAULT_NOTIFICATION_CATEGORY_CHOICES,
         religiousDataConsent: true,
         consentRecordedAt: '2026-10-15T08:00:00.000Z',
       });
@@ -699,9 +700,12 @@ describe('4. Marketing email consent from onboarding', () => {
     calendarProfile: 'north_indian_purnimanta' as const,
     calendarScope: 'all_observances' as const,
     goals: ['peace'],
-    notificationsEnabled: true,
+    notificationCategories: DEFAULT_NOTIFICATION_CATEGORY_CHOICES,
     religiousDataConsent: false,
     consentRecordedAt: '2026-10-15T08:00:00.000Z',
+  };
+  const ALL_CATEGORIES_FALSE: NotificationCategoryChoices = {
+    festivalsAndVrats: false, dailySadhana: false, dailyQuiz: false, communityAndFamily: false, brahmaMuhurta: false,
   };
   const MARKETING_KEYS = ['marketing_consent', 'email_newsletter', 'consent_updated_at'];
 
@@ -734,13 +738,13 @@ describe('4. Marketing email consent from onboarding', () => {
   });
 
   it('turning reminders on does not turn marketing email on (they are separate choices)', () => {
-    const payload = buildOnboardingProfilePayload({ ...base, notificationsEnabled: true });
+    const payload = buildOnboardingProfilePayload({ ...base, notificationCategories: DEFAULT_NOTIFICATION_CATEGORY_CHOICES });
     assert.equal(payload.wants_festival_reminders, true);
     assert.equal('marketing_consent' in payload, false);
   });
 
   it('turning marketing on does not turn reminders on', () => {
-    const payload = buildOnboardingProfilePayload({ ...base, notificationsEnabled: false, marketingOptIn: true });
+    const payload = buildOnboardingProfilePayload({ ...base, notificationCategories: ALL_CATEGORIES_FALSE, marketingOptIn: true });
     assert.equal(payload.wants_festival_reminders, false);
     assert.equal(payload.marketing_consent, true);
     assert.equal(payload.email_newsletter, true);

@@ -106,19 +106,27 @@ export function getOnboardingReadyPracticeCta(tradition: TraditionKey | null): R
 }
 
 /**
- * Pure helper determining whether notification reminders should be enabled in the profile.
- *
- * Rules:
- * - User choice 'enabled' => true (in-app reminders enabled in profile)
- * - User choice 'disabled' => false (explicit opt-out)
- * - User choice 'unset' => false (conservative fail-closed default)
- *
- * Note: OS push permission is decoupled from profile in-app reminder preferences.
- * Push token registration requires both user choice 'enabled' AND OS permission granted.
+ * Per-category reminder choices, each shown and toggled on its own in the
+ * onboarding notifications step -- never inferred from the single OS push
+ * permission answer (AGENTS.md rule 19). Brahma Muhurta defaults to false:
+ * it is a pre-dawn, night-delivered wake reminder and needs its own
+ * deliberate opt-in, distinct from the other categories' gentler defaults.
  */
-export function computeContentNotificationOptIn(choice?: NotificationChoice): boolean {
-  return choice === 'enabled';
-}
+export type NotificationCategoryChoices = {
+  festivalsAndVrats: boolean;
+  dailySadhana: boolean;
+  dailyQuiz: boolean;
+  communityAndFamily: boolean;
+  brahmaMuhurta: boolean;
+};
+
+export const DEFAULT_NOTIFICATION_CATEGORY_CHOICES: NotificationCategoryChoices = {
+  festivalsAndVrats: true,
+  dailySadhana: true,
+  dailyQuiz: true,
+  communityAndFamily: true,
+  brahmaMuhurta: false,
+};
 
 export function computePushNotificationEligibility(
   choice: NotificationChoice,
@@ -137,23 +145,25 @@ export function computeFinalNotificationState(
   return choice === 'enabled' && osPermissionGranted;
 }
 
-export function getNotificationPersistencePayload(userWantsReminders: boolean = true) {
+export function getNotificationPersistencePayload(
+  categories: NotificationCategoryChoices = DEFAULT_NOTIFICATION_CATEGORY_CHOICES
+) {
   return {
-    wants_festival_reminders: userWantsReminders,
-    wants_vrat_reminders: userWantsReminders,
-    wants_tithi_reminders: userWantsReminders,
-    wants_nitya_reminders: userWantsReminders,
-    wants_shloka_reminders: userWantsReminders,
-    wants_community_notifications: userWantsReminders,
-    wants_family_notifications: userWantsReminders,
-    quiz_reminder_enabled: userWantsReminders,
-    quiz_reminder_time: '10:00',
-    japa_reminder_enabled: userWantsReminders,
+    wants_festival_reminders: categories.festivalsAndVrats,
+    wants_vrat_reminders: categories.festivalsAndVrats,
+    wants_tithi_reminders: categories.festivalsAndVrats,
+    wants_sankalpa_midpoint_reminders: categories.festivalsAndVrats,
+    wants_nitya_reminders: categories.dailySadhana,
+    wants_shloka_reminders: categories.dailySadhana,
+    japa_reminder_enabled: categories.dailySadhana,
     japa_reminder_time: '07:00',
-    wants_brahma_muhurta_reminders: userWantsReminders,
-    wants_sankalpa_midpoint_reminders: userWantsReminders,
-    wants_family_remembrance_reminders: userWantsReminders,
+    quiz_reminder_enabled: categories.dailyQuiz,
+    quiz_reminder_time: '10:00',
+    wants_community_notifications: categories.communityAndFamily,
+    wants_family_notifications: categories.communityAndFamily,
+    wants_family_remembrance_reminders: categories.communityAndFamily,
     family_remembrance_time: '09:00',
+    wants_brahma_muhurta_reminders: categories.brahmaMuhurta,
   };
 }
 
@@ -189,7 +199,7 @@ export function buildOnboardingProfilePayload({
   calendarProfile,
   calendarScope,
   goals,
-  notificationsEnabled,
+  notificationCategories,
   marketingOptIn = false,
   religiousDataConsent,
   consentRecordedAt,
@@ -207,7 +217,7 @@ export function buildOnboardingProfilePayload({
   calendarProfile: CalendarProfileSlug | '';
   calendarScope: CalendarScopeSlug | '';
   goals: string[];
-  notificationsEnabled: boolean;
+  notificationCategories: NotificationCategoryChoices;
   /** Optional email updates switch. Absent means no consent. */
   marketingOptIn?: boolean;
   /** The switch the person turned on (or not) when choosing a tradition. Required so no caller can forget it. */
@@ -242,7 +252,7 @@ export function buildOnboardingProfilePayload({
     calendar_profile: isHinduProfile ? calendarProfile || null : null,
     calendar_scope: isHinduProfile ? calendarScope || null : null,
     onboarding_goal: goals.join(','),
-    ...getNotificationPersistencePayload(notificationsEnabled),
+    ...getNotificationPersistencePayload(notificationCategories),
     ...getMarketingConsentPayload(marketingOptIn),
     // Omitted entirely (not written as null) when the user skipped or denied
     // location during onboarding -- never overwrite an existing value with

@@ -52,8 +52,9 @@ import {
   getPermissionRecoveryAction,
   buildOnboardingProfilePayload,
   getOnboardingReadyPracticeCta,
-  computeContentNotificationOptIn,
   computePushNotificationEligibility,
+  DEFAULT_NOTIFICATION_CATEGORY_CHOICES,
+  type NotificationCategoryChoices,
 } from '@/lib/onboarding-contract';
 import { describeSaveError } from '@/lib/save-error';
 import { saveOnboardingDraft, readOnboardingDraft, clearOnboardingDraft, type OnboardingDraftData } from '@/lib/onboardingDraft';
@@ -269,6 +270,13 @@ export default function OnboardingScreen() {
   const [religiousDataConsent, setReligiousDataConsent] = useState(false);
   const [name, setName] = useState('');
   const [notificationChoice, setNotificationChoice] = useState<NotificationChoice>('unset');
+  // Independent of notificationChoice (which only tracks the OS push
+  // permission intent): each category is its own visible, reviewable choice
+  // in the notifications step, per AGENTS.md rule 19 -- never inferred from
+  // whichever button the person taps for the OS prompt.
+  const [notificationCategories, setNotificationCategories] = useState<NotificationCategoryChoices>(
+    DEFAULT_NOTIFICATION_CATEGORY_CHOICES
+  );
   // Optional email updates: off unless the person turns it on, and deliberately not kept in the onboarding
   // draft, so a resumed session never starts from a remembered "yes".
   const [marketingOptIn, setMarketingOptIn] = useState(false);
@@ -349,6 +357,9 @@ export default function OnboardingScreen() {
           if (draft.name) setName(draft.name);
           if (draft.notificationChoice) {
             setNotificationChoice(draft.notificationChoice);
+          }
+          if (draft.notificationCategories) {
+            setNotificationCategories((current) => ({ ...current, ...draft.notificationCategories }));
           }
           if (draft.notificationChoice === 'enabled' || draft.deniedNotificationPromptShown) {
             const permission = await getNotificationPermissionDetails();
@@ -484,6 +495,14 @@ export default function OnboardingScreen() {
     void syncDraft(step, { religiousDataConsent: agreed });
     const plan = planConsentChange({ tradition, agreed, now: new Date().toISOString() });
     if (plan) void persistPreferenceEarly(plan);
+  };
+
+  const handleNotificationCategoryToggle = (key: keyof NotificationCategoryChoices, value: boolean) => {
+    setNotificationCategories((current) => {
+      const next = { ...current, [key]: value };
+      void syncDraft('notifications', { notificationCategories: next });
+      return next;
+    });
   };
 
   const goBack = () => {
@@ -726,9 +745,9 @@ export default function OnboardingScreen() {
       // to what could by then be a different (or no) signed-in account.
       const identityAtStart = getAppIdentity();
 
-      // Re-check live OS permission, decoupling in-app content opt-in from OS push permission
+      // Re-check live OS permission. Push eligibility is still gated on the
+      // OS answer; the in-app category choices below are independent of it.
       const osPermissionGranted = await checkNotificationPermission();
-      const contentNotificationsEnabled = computeContentNotificationOptIn(notificationChoice);
       const pushEligible = computePushNotificationEligibility(notificationChoice, osPermissionGranted);
 
       const displayName = name.trim() || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Seeker';
@@ -745,7 +764,7 @@ export default function OnboardingScreen() {
         calendarProfile,
         calendarScope,
         goals,
-        notificationsEnabled: contentNotificationsEnabled,
+        notificationCategories,
         marketingOptIn,
         religiousDataConsent,
         consentRecordedAt: new Date().toISOString(),
@@ -1605,34 +1624,55 @@ export default function OnboardingScreen() {
           <>
             <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 15, lineHeight: isHindi ? 23 : 21, color: dim }}>
               {translated(
-                'Receive timely reminders for sacred festivals, daily wisdom, and the 10:00 AM daily quiz challenge. Zero spam, quiet hours respected automatically. You can customize anytime in Settings.',
-                'पावन पर्वों, दैनिक ज्ञान और प्रातः 10:00 बजे दैनिक क्विज़ के लिए शांत स्मरण पाएँ। कोई स्पैम नहीं, शांत पहर का स्वतः सम्मान। आप सेटिंग्स में कभी भी बदलाव कर सकते हैं।'
+                'Choose which reminders you’d like. Zero spam, quiet hours respected automatically. You can customize anytime in Settings.',
+                'अपनी पसंद के स्मरण चुनें। कोई स्पैम नहीं, शांत पहर का स्वतः सम्मान। आप सेटिंग्स में कभी भी बदलाव कर सकते हैं।'
               )}
             </Text>
-            <View style={{ borderRadius: RADII.xl, borderWidth: 1, borderColor: border, backgroundColor: cardBg, padding: 18, gap: 14 }}>
-              {[
+            <View style={{ borderRadius: RADII.xl, borderWidth: 1, borderColor: border, backgroundColor: cardBg, padding: 6, gap: 2 }}>
+              {([
                 {
+                  key: 'festivalsAndVrats' as const,
                   icon: 'calendar' as const,
                   title: translated('Sacred Festivals & Vrats', 'पावन पर्व और व्रत'),
                   desc: translated('Ekadashi, Pradosha, Purnima & major holy days', 'एकादशी, प्रदोष, पूर्णिमा और प्रमुख पवित्र दिवस'),
                 },
                 {
+                  key: 'dailySadhana' as const,
                   icon: 'book-open' as const,
                   title: translated('Daily Wisdom & Sadhana', 'दैनिक ज्ञान और साधना'),
                   desc: translated('Morning shloka, reflection & peaceful guidance', 'प्रातः श्लोक, आत्मचिंतन और शांतिपूर्ण मार्गदर्शन'),
                 },
                 {
+                  key: 'dailyQuiz' as const,
                   icon: 'award' as const,
                   title: translated('Daily Quiz Challenge', 'दैनिक ज्ञानोत्कर्ष क्विज़'),
                   desc: translated('Ready at 10:00 AM to deepen your learning', 'प्रातः 10:00 बजे धर्म ज्ञान संवर्धन के लिए'),
                 },
                 {
+                  key: 'communityAndFamily' as const,
                   icon: 'users' as const,
                   title: translated('Mandali & Community', 'मंडली और समुदाय'),
                   desc: translated('Shared blessings, satsang reflections & streaks', 'आशीर्वाद, सत्संग और साधना क्रम'),
                 },
-              ].map((item) => (
-                <View key={item.title} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                {
+                  key: 'brahmaMuhurta' as const,
+                  icon: 'sunrise' as const,
+                  title: translated('Brahma Muhurta', 'ब्रह्म मुहूर्त'),
+                  desc: translated(
+                    'A pre-dawn wake reminder – arrives at night, about 1½ hours before sunrise',
+                    'एक प्रातःपूर्व स्मरण – रात में प्राप्त होता है, सूर्योदय से लगभग डेढ़ घंटे पहले'
+                  ),
+                },
+              ]).map((item) => (
+                <Pressable
+                  key={item.key}
+                  onPress={() => handleNotificationCategoryToggle(item.key, !notificationCategories[item.key])}
+                  accessibilityRole="switch"
+                  accessibilityState={{ checked: notificationCategories[item.key] }}
+                  accessibilityLabel={item.title}
+                  accessibilityHint={item.desc}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingVertical: 8, paddingHorizontal: 10 }}
+                >
                   <View style={{ width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: wellBg }}>
                     <Feather name={item.icon} size={18} color={accent} />
                   </View>
@@ -1644,7 +1684,15 @@ export default function OnboardingScreen() {
                       {item.desc}
                     </Text>
                   </View>
-                </View>
+                  <Switch
+                    value={notificationCategories[item.key]}
+                    onValueChange={(next) => handleNotificationCategoryToggle(item.key, next)}
+                    trackColor={{ true: accent }}
+                    pointerEvents="none"
+                    accessible={false}
+                    importantForAccessibility="no-hide-descendants"
+                  />
+                </Pressable>
               ))}
             </View>
             {notificationsDenied ? (
