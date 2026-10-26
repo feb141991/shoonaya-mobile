@@ -1477,6 +1477,17 @@ export default function KulScreen() {
                               Add a person in your family tree and mark them as deceased before creating a remembrance date.
                             </Text>
                           )}
+                          <PressableSurface
+                            onPress={() => router.push("/festival/pitru-paksha")}
+                            accessibilityLabel="Read Hindu Pitru Paksha remembrance guidance"
+                            style={{ minHeight: MIN_TOUCH_TARGET, flexDirection: "row", alignItems: "center", gap: 7 }}
+                          >
+                            <Feather name="book-open" size={15} color={theme.brand} />
+                            <Text numberOfLines={1} style={{ ...TYPE.caption, color: theme.brand, flex: 1 }}>
+                              Hindu Pitru Paksha remembrance guidance
+                            </Text>
+                            <Feather name="chevron-right" size={15} color={theme.brand} />
+                          </PressableSurface>
                         </>
                       ) : null}
                       <Text style={{ ...TYPE.caption, color: theme.dim }}>Calendar type</Text>
@@ -1498,19 +1509,6 @@ export default function KulScreen() {
                               ? "For a Pitru Paksha remembrance, enter the tithi your family follows. KUL resolves its civil date at sunrise for this family calendar; it does not calculate a Shraddha muhurta."
                               : "The next date is calculated at sunrise using your family calendar reference. Confirm ritual timing with your tradition."}
                           </Text>
-                          {eventType === "death_anniversary" ? (
-                            <PressableSurface
-                              onPress={() => router.push("/festival/pitru-paksha")}
-                              accessibilityLabel="Learn about the Pitru Paksha observance in Pathshala"
-                              style={{ minHeight: MIN_TOUCH_TARGET, flexDirection: "row", alignItems: "center", gap: 7 }}
-                            >
-                              <Feather name="book-open" size={15} color={theme.brand} />
-                              <Text numberOfLines={1} style={{ ...TYPE.caption, color: theme.brand, flex: 1 }}>
-                                Learn about Pitru Paksha observance
-                              </Text>
-                              <Feather name="chevron-right" size={15} color={theme.brand} />
-                            </PressableSurface>
-                          ) : null}
                           <Text style={{ ...TYPE.caption, color: theme.dim }}>Lunar month</Text>
                           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
                             {MASA_NAMES.map((name, index) => <Choice key={name} label={name} selected={eventMasa === index + 1} onPress={() => setEventMasa(index + 1)} theme={theme} />)}
