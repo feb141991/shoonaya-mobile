@@ -157,8 +157,20 @@ export function getNotificationPersistencePayload(
     wants_shloka_reminders: categories.dailySadhana,
     japa_reminder_enabled: categories.dailySadhana,
     japa_reminder_time: '07:00',
+    // Evening/midday Nitya nudges, the Sattvic Mode evening prompt, and
+    // mood check-ins are the same "daily practice" bucket as Nitya/shloka/
+    // japa above -- see AGENTS.md rule 6's 2026-10-27 notification coverage
+    // gap entry. They already existed (or now exist) as live, always-on
+    // columns with no prior UI; this is the first time they're visible.
+    wants_evening_reminder: categories.dailySadhana,
+    wants_madhyahn_reminder: categories.dailySadhana,
+    wants_sattvic_reminders: categories.dailySadhana,
+    wants_mood_reminders: categories.dailySadhana,
     quiz_reminder_enabled: categories.dailyQuiz,
     quiz_reminder_time: '10:00',
+    // Dharm Veer learning-engagement nudges ride the same cron as the quiz
+    // reminder (learning-engagement-candidates) -- same coverage-gap entry.
+    dharm_veer_reminder_enabled: categories.dailyQuiz,
     wants_community_notifications: categories.communityAndFamily,
     wants_family_notifications: categories.communityAndFamily,
     wants_family_remembrance_reminders: categories.communityAndFamily,

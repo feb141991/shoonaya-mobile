@@ -107,6 +107,11 @@ const INITIAL_SETTINGS: SettingsState = {
   wants_family_remembrance_reminders: true,
   family_remembrance_time: '09:00',
   wants_brahma_muhurta_reminders: true,
+  wants_evening_reminder: true,
+  wants_madhyahn_reminder: true,
+  dharm_veer_reminder_enabled: true,
+  wants_mood_reminders: true,
+  wants_sattvic_reminders: true,
   app_language: 'en',
   transliteration_language: 'en',
   meaning_language: 'en',
@@ -128,6 +133,18 @@ const NOTIFICATION_TOGGLES: { key: keyof SettingsState; label: string; subtitle:
   { key: 'wants_community_notifications', label: 'Community', subtitle: 'Mandali posts, reactions & connections' },
   { key: 'wants_family_notifications', label: 'Family', subtitle: 'Kul & lineage activity', requiresAccount: true },
   { key: 'wants_family_remembrance_reminders', label: 'Family remembrance', subtitle: 'A yearly, private reminder for family dates you link to a deceased relative', requiresAccount: true },
+  { key: 'wants_evening_reminder', label: 'Evening Sandhya', subtitle: 'A second daily nudge for evening twilight practice' },
+  { key: 'wants_madhyahn_reminder', label: 'Midday Nitya', subtitle: 'A midday nudge for your Nitya Karma practice' },
+  { key: 'wants_sattvic_reminders', label: 'Sattvic Mode evening', subtitle: 'An evening nudge into prāṇāyāma, kīrtana, or quiet reflection' },
+  { key: 'dharm_veer_reminder_enabled', label: 'Dharm Veer stories', subtitle: 'A nudge toward unread Dharm Veer stories', requiresAccount: true },
+  { key: 'wants_mood_reminders', label: 'Mood check-ins', subtitle: 'Midday and evening prompts to note how you are feeling' },
+];
+
+// Shipped together in one migration (AGENTS.md rule 6, 2026-10-27), so they
+// share a single schema-ready flag rather than one each.
+const REMINDER_COVERAGE_GAP_KEYS: (keyof SettingsState)[] = [
+  'wants_evening_reminder', 'wants_madhyahn_reminder', 'dharm_veer_reminder_enabled',
+  'wants_mood_reminders', 'wants_sattvic_reminders',
 ];
 
 const LANGUAGE_LABELS: Record<AppLanguage, string> = {
@@ -196,6 +213,11 @@ function toSettingsState(value: Partial<SettingsState> | null | undefined): Sett
     wants_family_remembrance_reminders: value?.wants_family_remembrance_reminders ?? INITIAL_SETTINGS.wants_family_remembrance_reminders,
     family_remembrance_time: value?.family_remembrance_time ?? INITIAL_SETTINGS.family_remembrance_time,
     wants_brahma_muhurta_reminders: value?.wants_brahma_muhurta_reminders ?? INITIAL_SETTINGS.wants_brahma_muhurta_reminders,
+    wants_evening_reminder: value?.wants_evening_reminder ?? INITIAL_SETTINGS.wants_evening_reminder,
+    wants_madhyahn_reminder: value?.wants_madhyahn_reminder ?? INITIAL_SETTINGS.wants_madhyahn_reminder,
+    dharm_veer_reminder_enabled: value?.dharm_veer_reminder_enabled ?? INITIAL_SETTINGS.dharm_veer_reminder_enabled,
+    wants_mood_reminders: value?.wants_mood_reminders ?? INITIAL_SETTINGS.wants_mood_reminders,
+    wants_sattvic_reminders: value?.wants_sattvic_reminders ?? INITIAL_SETTINGS.wants_sattvic_reminders,
     app_language: value?.app_language ?? INITIAL_SETTINGS.app_language,
     transliteration_language: value?.transliteration_language ?? INITIAL_SETTINGS.transliteration_language,
     meaning_language: value?.meaning_language ?? INITIAL_SETTINGS.meaning_language,
@@ -369,6 +391,11 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   const [familyRemembranceSchemaReady, setFamilyRemembranceSchemaReady] = useState(false);
   const [brahmaMuhurtaSchemaReady, setBrahmaMuhurtaSchemaReady] = useState(false);
   const [productAnalyticsSchemaReady, setProductAnalyticsSchemaReady] = useState(false);
+  // wants_evening_reminder/wants_madhyahn_reminder/dharm_veer_reminder_enabled already
+  // existed; wants_mood_reminders/wants_sattvic_reminders are new. All five ship in one
+  // migration together, so one combined flag (not five) is enough -- AGENTS.md rule 6,
+  // 2026-10-27 notification coverage gap entry.
+  const [reminderCoverageGapSchemaReady, setReminderCoverageGapSchemaReady] = useState(false);
   const [themePref, setThemePref] = useState<ThemePref>('system');
   const [isGuest, setIsGuest] = useState(false);
   const [pendingWrite, setPendingWrite] = useState<PendingSettingsWrite | null>(null);
@@ -544,33 +571,42 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     setFamilyRemembranceSchemaReady(false);
     setBrahmaMuhurtaSchemaReady(false);
     setProductAnalyticsSchemaReady(false);
+    setReminderCoverageGapSchemaReady(false);
     const profileSettingsPromise = (async () => {
       const baseColumns = 'tradition, japa_reminder_enabled, japa_reminder_time, quiz_reminder_enabled, quiz_reminder_time, wants_festival_reminders, wants_vrat_reminders, wants_tithi_reminders, observance_reminder_lead_days, observance_reminder_time, wants_shloka_reminders, wants_nitya_reminders, wants_sankalpa_midpoint_reminders, wants_community_notifications, wants_family_notifications, app_language, transliteration_language, meaning_language, consent_religious_data, consent_activity_personalization';
       const familyColumns = `${baseColumns}, wants_family_remembrance_reminders, family_remembrance_time`;
+      const reminderCoverageGapColumns = 'wants_evening_reminder, wants_madhyahn_reminder, dharm_veer_reminder_enabled, wants_mood_reminders, wants_sattvic_reminders';
       const read = (columns: string) => supabase.from('profiles').select(columns).eq('id', appIdentity.userId).single();
       const isMissingColumn = (error: unknown) => (error as { code?: string } | null)?.code === '42703';
+
+      // The 2026-10-27 coverage-gap columns (AGENTS.md rule 6) all ship in one
+      // migration, so they get a single outer attempt/fallback rather than
+      // being threaded into every branch of the cascade below.
+      const withCoverageGap = await read(`${familyColumns}, wants_brahma_muhurta_reminders, consent_product_analytics, ${reminderCoverageGapColumns}`);
+      if (!withCoverageGap.error) return { ...withCoverageGap, familyRemembranceSchemaReady: true, brahmaMuhurtaSchemaReady: true, productAnalyticsSchemaReady: true, reminderCoverageGapSchemaReady: true };
+      if (!isMissingColumn(withCoverageGap.error)) return { ...withCoverageGap, familyRemembranceSchemaReady: false, brahmaMuhurtaSchemaReady: false, reminderCoverageGapSchemaReady: false };
 
       // The Native bundle may be installed before an additive DB migration.
       // Keep all existing settings readable and keep each newer control
       // disabled until its server column exists.
       const current = await read(`${familyColumns}, wants_brahma_muhurta_reminders, consent_product_analytics`);
-      if (!current.error) return { ...current, familyRemembranceSchemaReady: true, brahmaMuhurtaSchemaReady: true, productAnalyticsSchemaReady: true };
-      if (!isMissingColumn(current.error)) return { ...current, familyRemembranceSchemaReady: false, brahmaMuhurtaSchemaReady: false };
+      if (!current.error) return { ...current, familyRemembranceSchemaReady: true, brahmaMuhurtaSchemaReady: true, productAnalyticsSchemaReady: true, reminderCoverageGapSchemaReady: false };
+      if (!isMissingColumn(current.error)) return { ...current, familyRemembranceSchemaReady: false, brahmaMuhurtaSchemaReady: false, reminderCoverageGapSchemaReady: false };
 
       const familyAndAnalytics = await read(`${familyColumns}, consent_product_analytics`);
-      if (!familyAndAnalytics.error) return { ...familyAndAnalytics, familyRemembranceSchemaReady: true, brahmaMuhurtaSchemaReady: false, productAnalyticsSchemaReady: true };
-      if (!isMissingColumn(familyAndAnalytics.error)) return { ...familyAndAnalytics, familyRemembranceSchemaReady: false, brahmaMuhurtaSchemaReady: false, productAnalyticsSchemaReady: false };
+      if (!familyAndAnalytics.error) return { ...familyAndAnalytics, familyRemembranceSchemaReady: true, brahmaMuhurtaSchemaReady: false, productAnalyticsSchemaReady: true, reminderCoverageGapSchemaReady: false };
+      if (!isMissingColumn(familyAndAnalytics.error)) return { ...familyAndAnalytics, familyRemembranceSchemaReady: false, brahmaMuhurtaSchemaReady: false, productAnalyticsSchemaReady: false, reminderCoverageGapSchemaReady: false };
 
       const familyWithoutNewFields = await read(familyColumns);
-      if (!familyWithoutNewFields.error) return { ...familyWithoutNewFields, familyRemembranceSchemaReady: true, brahmaMuhurtaSchemaReady: false, productAnalyticsSchemaReady: false };
-      if (!isMissingColumn(familyWithoutNewFields.error)) return { ...familyWithoutNewFields, familyRemembranceSchemaReady: false, brahmaMuhurtaSchemaReady: false, productAnalyticsSchemaReady: false };
+      if (!familyWithoutNewFields.error) return { ...familyWithoutNewFields, familyRemembranceSchemaReady: true, brahmaMuhurtaSchemaReady: false, productAnalyticsSchemaReady: false, reminderCoverageGapSchemaReady: false };
+      if (!isMissingColumn(familyWithoutNewFields.error)) return { ...familyWithoutNewFields, familyRemembranceSchemaReady: false, brahmaMuhurtaSchemaReady: false, productAnalyticsSchemaReady: false, reminderCoverageGapSchemaReady: false };
 
       const analyticsOnly = await read(`${baseColumns}, consent_product_analytics`);
-      if (!analyticsOnly.error) return { ...analyticsOnly, familyRemembranceSchemaReady: false, brahmaMuhurtaSchemaReady: false, productAnalyticsSchemaReady: true };
-      if (!isMissingColumn(analyticsOnly.error)) return { ...analyticsOnly, familyRemembranceSchemaReady: false, brahmaMuhurtaSchemaReady: false, productAnalyticsSchemaReady: false };
+      if (!analyticsOnly.error) return { ...analyticsOnly, familyRemembranceSchemaReady: false, brahmaMuhurtaSchemaReady: false, productAnalyticsSchemaReady: true, reminderCoverageGapSchemaReady: false };
+      if (!isMissingColumn(analyticsOnly.error)) return { ...analyticsOnly, familyRemembranceSchemaReady: false, brahmaMuhurtaSchemaReady: false, productAnalyticsSchemaReady: false, reminderCoverageGapSchemaReady: false };
 
       const legacy = await read(baseColumns);
-      return { ...legacy, familyRemembranceSchemaReady: false, brahmaMuhurtaSchemaReady: false, productAnalyticsSchemaReady: false };
+      return { ...legacy, familyRemembranceSchemaReady: false, brahmaMuhurtaSchemaReady: false, productAnalyticsSchemaReady: false, reminderCoverageGapSchemaReady: false };
     })();
 
     const [profileRes, cached, localTheme] = await Promise.all([
@@ -585,6 +621,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     setFamilyRemembranceSchemaReady(profileRes.familyRemembranceSchemaReady);
     setBrahmaMuhurtaSchemaReady(profileRes.brahmaMuhurtaSchemaReady);
     setProductAnalyticsSchemaReady(profileRes.productAnalyticsSchemaReady);
+    setReminderCoverageGapSchemaReady(profileRes.reminderCoverageGapSchemaReady);
     const profileRow = (profileRes.data ?? null) as (Partial<SettingsState> & { tradition?: string | null }) | null;
     setProfileTradition(profileRow?.tradition || 'hindu');
     const remote = toSettingsState(profileRow ?? INITIAL_SETTINGS);
@@ -1125,7 +1162,8 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                 // Newer opt-ins stay disabled until their profile column exists.
                 const awaitingServerUpdate =
                   (item.key === 'wants_family_remembrance_reminders' && !familyRemembranceSchemaReady) ||
-                  (item.key === 'wants_brahma_muhurta_reminders' && !brahmaMuhurtaSchemaReady);
+                  (item.key === 'wants_brahma_muhurta_reminders' && !brahmaMuhurtaSchemaReady) ||
+                  (REMINDER_COVERAGE_GAP_KEYS.includes(item.key) && !reminderCoverageGapSchemaReady);
                 return (
                 <View key={item.key}>
                   {index > 0 ? (

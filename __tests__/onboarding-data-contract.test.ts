@@ -130,10 +130,15 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
       wants_tithi_reminders: true,
       wants_nitya_reminders: true,
       wants_shloka_reminders: true,
+      wants_evening_reminder: true,
+      wants_madhyahn_reminder: true,
+      wants_sattvic_reminders: true,
+      wants_mood_reminders: true,
       wants_community_notifications: true,
       wants_family_notifications: true,
       quiz_reminder_enabled: true,
       quiz_reminder_time: '10:00',
+      dharm_veer_reminder_enabled: true,
       japa_reminder_enabled: true,
       japa_reminder_time: '07:00',
       wants_brahma_muhurta_reminders: true,
@@ -149,9 +154,14 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
       wants_tithi_reminders: false,
       wants_nitya_reminders: false,
       wants_shloka_reminders: false,
+      wants_evening_reminder: false,
+      wants_madhyahn_reminder: false,
+      wants_sattvic_reminders: false,
+      wants_mood_reminders: false,
       wants_community_notifications: false,
       wants_family_notifications: false,
       quiz_reminder_enabled: false,
+      dharm_veer_reminder_enabled: false,
       japa_reminder_enabled: false,
       wants_brahma_muhurta_reminders: false,
       wants_sankalpa_midpoint_reminders: false,
@@ -192,6 +202,14 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
       assert.equal(payload.wants_festival_reminders, true);
       assert.equal(payload.wants_nitya_reminders, true);
       assert.equal(payload.wants_family_remembrance_reminders, true);
+      // 2026-10-27 coverage-gap columns (AGENTS.md rule 6): already-live crons
+      // that had never been exposed in any UI must come up through the same
+      // default-on category as their sibling columns, not separately.
+      assert.equal(payload.wants_evening_reminder, true);
+      assert.equal(payload.wants_madhyahn_reminder, true);
+      assert.equal(payload.wants_sattvic_reminders, true);
+      assert.equal(payload.wants_mood_reminders, true);
+      assert.equal(payload.dharm_veer_reminder_enabled, true);
     });
 
     it('each category only writes its own flags, never bleeding into another category’s columns', () => {
@@ -201,11 +219,26 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
       assert.equal(onlyBrahmaMuhurta.wants_festival_reminders, false);
       assert.equal(onlyBrahmaMuhurta.wants_community_notifications, false);
       assert.equal(onlyBrahmaMuhurta.japa_reminder_enabled, false);
+      assert.equal(onlyBrahmaMuhurta.wants_evening_reminder, false);
+      assert.equal(onlyBrahmaMuhurta.wants_mood_reminders, false);
+      assert.equal(onlyBrahmaMuhurta.dharm_veer_reminder_enabled, false);
 
       const onlyDailyQuiz = getNotificationPersistencePayload({ ...ALL_FALSE, dailyQuiz: true });
       assert.equal(onlyDailyQuiz.quiz_reminder_enabled, true);
+      assert.equal(onlyDailyQuiz.dharm_veer_reminder_enabled, true, 'Dharm Veer rides the same learning-engagement cron as the quiz reminder');
       assert.equal(onlyDailyQuiz.wants_brahma_muhurta_reminders, false);
       assert.equal(onlyDailyQuiz.wants_shloka_reminders, false);
+      assert.equal(onlyDailyQuiz.wants_evening_reminder, false);
+      assert.equal(onlyDailyQuiz.wants_mood_reminders, false);
+
+      const onlyDailySadhana = getNotificationPersistencePayload({ ...ALL_FALSE, dailySadhana: true });
+      assert.equal(onlyDailySadhana.wants_nitya_reminders, true);
+      assert.equal(onlyDailySadhana.wants_evening_reminder, true, 'evening Sandhya is the same daily-practice bucket as Nitya/shloka/japa');
+      assert.equal(onlyDailySadhana.wants_madhyahn_reminder, true);
+      assert.equal(onlyDailySadhana.wants_sattvic_reminders, true);
+      assert.equal(onlyDailySadhana.wants_mood_reminders, true);
+      assert.equal(onlyDailySadhana.dharm_veer_reminder_enabled, false, 'Dharm Veer belongs to the quiz/learning category, not Sadhana');
+      assert.equal(onlyDailySadhana.quiz_reminder_enabled, false);
     });
 
     it('builds full profile payload reflecting final notification decision', () => {
@@ -234,10 +267,15 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
       assert.equal(profile.wants_tithi_reminders, true);
       assert.equal(profile.wants_nitya_reminders, true);
       assert.equal(profile.wants_shloka_reminders, true);
+      assert.equal(profile.wants_evening_reminder, true);
+      assert.equal(profile.wants_madhyahn_reminder, true);
+      assert.equal(profile.wants_sattvic_reminders, true);
+      assert.equal(profile.wants_mood_reminders, true);
       assert.equal(profile.wants_community_notifications, true);
       assert.equal(profile.wants_family_notifications, true);
       assert.equal(profile.quiz_reminder_enabled, true);
       assert.equal(profile.quiz_reminder_time, '10:00');
+      assert.equal(profile.dharm_veer_reminder_enabled, true);
       assert.equal(profile.japa_reminder_enabled, true);
       assert.equal(profile.japa_reminder_time, '07:00');
       assert.equal(profile.wants_brahma_muhurta_reminders, true);

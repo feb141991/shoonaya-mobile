@@ -51,6 +51,15 @@ export type SettingsFields = {
   family_remembrance_time: string;
   // Optional: envelopes cached before this field existed do not carry it.
   wants_brahma_muhurta_reminders?: boolean;
+  // Optional: these columns already existed on the server (or are new) but
+  // were never settable through this app until the notification coverage
+  // gap audit of 2026-10-27 -- see AGENTS.md rule 6. Envelopes cached before
+  // that date do not carry them.
+  wants_evening_reminder?: boolean;
+  wants_madhyahn_reminder?: boolean;
+  dharm_veer_reminder_enabled?: boolean;
+  wants_mood_reminders?: boolean;
+  wants_sattvic_reminders?: boolean;
   app_language: AppLanguage;
   transliteration_language: AppLanguage;
   meaning_language: AppLanguage;
