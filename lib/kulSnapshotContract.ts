@@ -59,9 +59,14 @@ function isKulMessage(value: unknown): value is KulMessage {
 }
 
 function isKulFamilyMember(value: unknown): value is KulFamilyMember {
+  // linked_user_id may be absent, not just null, if this response arrived
+  // from a backend deploy that predates the native OTA shipping this field
+  // (the two deploy independently) -- tolerate that gap rather than
+  // rejecting the whole snapshot.
   return isRecord(value) && isString(value.id) && isString(value.name) &&
     isNullableString(value.role) && (value.generation === null || (typeof value.generation === "number" && Number.isInteger(value.generation))) &&
-    isNullableString(value.parent_id) && isNullableString(value.spouse_id) && typeof value.is_alive === "boolean";
+    isNullableString(value.parent_id) && isNullableString(value.spouse_id) && typeof value.is_alive === "boolean" &&
+    (value.linked_user_id === undefined || isNullableString(value.linked_user_id));
 }
 
 function isKulTirthaItem(value: unknown): value is KulTirthaItem {

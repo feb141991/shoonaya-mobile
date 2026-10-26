@@ -2200,6 +2200,7 @@ export default function KulScreen() {
                           {selectedFamilyMember.generation == null ? " (inferred from family links)" : ""}
                           {selectedTreeNode && selectedFamilyMember.generation != null && selectedFamilyMember.generation !== selectedTreeNode.generation ? ` (recorded as ${selectedFamilyMember.generation}; adjusted to keep the parent link downward)` : ""}
                           {selectedFamilyMember.is_alive ? " · Living" : " · Remembered"}
+                          {selectedFamilyMember.linked_user_id ? " · On Shoonaya" : ""}
                         </Text>
                       </View>
                       <PressableSurface

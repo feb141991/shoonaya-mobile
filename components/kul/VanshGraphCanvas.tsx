@@ -332,6 +332,14 @@ export function VanshGraphCanvas({
                     <Text style={[styles.memberRole, { color: theme.dim }]} numberOfLines={1}>
                       {member.role || 'Family member'}
                     </Text>
+                    {member.linked_user_id ? (
+                      <View style={styles.linkedBadgeRow}>
+                        <Feather name="check-circle" size={9} color={theme.brand} />
+                        <Text numberOfLines={1} style={[styles.linkedBadgeText, { color: theme.brand, flex: 1 }]}>
+                          On Shoonaya
+                        </Text>
+                      </View>
+                    ) : null}
                   </View>
 
                 </Pressable>
@@ -485,6 +493,16 @@ const styles = StyleSheet.create({
   },
   memberRole: {
     fontSize: 11,
+  },
+  linkedBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginTop: 2,
+  },
+  linkedBadgeText: {
+    fontSize: 9.5,
+    fontWeight: '600',
   },
   controlsDock: {
     position: 'absolute',

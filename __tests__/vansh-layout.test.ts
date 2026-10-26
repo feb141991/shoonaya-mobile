@@ -35,7 +35,7 @@ describe('KUL Vansh (Family Lineage) Layout Engine', () => {
         generation: 1,
         parent_id: null,
         spouse_id: 'ancestor-2',
-        is_alive: false,
+        is_alive: false, linked_user_id: null,
       },
       {
         id: 'ancestor-2',
@@ -44,7 +44,7 @@ describe('KUL Vansh (Family Lineage) Layout Engine', () => {
         generation: 1,
         parent_id: null,
         spouse_id: 'ancestor-1',
-        is_alive: false,
+        is_alive: false, linked_user_id: null,
       },
       {
         id: 'gen2-1',
@@ -53,7 +53,7 @@ describe('KUL Vansh (Family Lineage) Layout Engine', () => {
         generation: 2,
         parent_id: 'ancestor-1',
         spouse_id: 'gen2-2',
-        is_alive: false,
+        is_alive: false, linked_user_id: null,
       },
       {
         id: 'gen2-2',
@@ -62,7 +62,7 @@ describe('KUL Vansh (Family Lineage) Layout Engine', () => {
         generation: 2,
         parent_id: null,
         spouse_id: 'gen2-1',
-        is_alive: true,
+        is_alive: true, linked_user_id: null,
       },
       {
         id: 'gen3-1',
@@ -71,7 +71,7 @@ describe('KUL Vansh (Family Lineage) Layout Engine', () => {
         generation: 3,
         parent_id: 'gen2-1',
         spouse_id: null,
-        is_alive: true,
+        is_alive: true, linked_user_id: null,
       },
     ];
 
@@ -146,7 +146,7 @@ describe('KUL Vansh (Family Lineage) Layout Engine', () => {
         generation: 1,
         parent_id: null,
         spouse_id: null,
-        is_alive: false,
+        is_alive: false, linked_user_id: null,
       },
       {
         id: 'm2',
@@ -155,7 +155,7 @@ describe('KUL Vansh (Family Lineage) Layout Engine', () => {
         generation: 2,
         parent_id: 'm1',
         spouse_id: null,
-        is_alive: true,
+        is_alive: true, linked_user_id: null,
       },
     ];
 
@@ -168,9 +168,9 @@ describe('KUL Vansh (Family Lineage) Layout Engine', () => {
 
   it('derives every generation from parent links when generation values are missing', () => {
     const members: KulFamilyMember[] = [
-      { id: 'child', name: 'Child', role: null, generation: null, parent_id: 'parent', spouse_id: null, is_alive: true },
-      { id: 'root', name: 'Root', role: null, generation: null, parent_id: null, spouse_id: null, is_alive: false },
-      { id: 'parent', name: 'Parent', role: null, generation: null, parent_id: 'root', spouse_id: null, is_alive: true },
+      { id: 'child', name: 'Child', role: null, generation: null, parent_id: 'parent', spouse_id: null, is_alive: true, linked_user_id: null },
+      { id: 'root', name: 'Root', role: null, generation: null, parent_id: null, spouse_id: null, is_alive: false, linked_user_id: null },
+      { id: 'parent', name: 'Parent', role: null, generation: null, parent_id: 'root', spouse_id: null, is_alive: true, linked_user_id: null },
     ];
 
     const layout = computeVanshLayout(members);
@@ -186,8 +186,8 @@ describe('KUL Vansh (Family Lineage) Layout Engine', () => {
 
   it('keeps parent links downward when entered generation numbers conflict', () => {
     const members: KulFamilyMember[] = [
-      { id: 'parent', name: 'Parent', role: null, generation: 5, parent_id: null, spouse_id: null, is_alive: true },
-      { id: 'child', name: 'Child', role: null, generation: 1, parent_id: 'parent', spouse_id: null, is_alive: true },
+      { id: 'parent', name: 'Parent', role: null, generation: 5, parent_id: null, spouse_id: null, is_alive: true, linked_user_id: null },
+      { id: 'child', name: 'Child', role: null, generation: 1, parent_id: 'parent', spouse_id: null, is_alive: true, linked_user_id: null },
     ];
 
     const layout = computeVanshLayout(members);
@@ -201,9 +201,9 @@ describe('KUL Vansh (Family Lineage) Layout Engine', () => {
 
   it('drops the cycle-closing parent link and does not draw self-parent links', () => {
     const members: KulFamilyMember[] = [
-      { id: 'a', name: 'A', role: null, generation: null, parent_id: 'b', spouse_id: null, is_alive: true },
-      { id: 'b', name: 'B', role: null, generation: null, parent_id: 'a', spouse_id: null, is_alive: true },
-      { id: 'self', name: 'Self', role: null, generation: 1, parent_id: 'self', spouse_id: null, is_alive: true },
+      { id: 'a', name: 'A', role: null, generation: null, parent_id: 'b', spouse_id: null, is_alive: true, linked_user_id: null },
+      { id: 'b', name: 'B', role: null, generation: null, parent_id: 'a', spouse_id: null, is_alive: true, linked_user_id: null },
+      { id: 'self', name: 'Self', role: null, generation: 1, parent_id: 'self', spouse_id: null, is_alive: true, linked_user_id: null },
     ];
 
     const layout = computeVanshLayout(members);
@@ -243,10 +243,10 @@ describe('KUL Vansh (Family Lineage) Layout Engine', () => {
 
   it('prevents selecting the edited member or one of its descendants as its parent', () => {
     const members: KulFamilyMember[] = [
-      { id: 'grandparent', name: 'Grandparent', role: null, generation: 1, parent_id: null, spouse_id: null, is_alive: true },
-      { id: 'parent', name: 'Parent', role: null, generation: 2, parent_id: 'grandparent', spouse_id: null, is_alive: true },
-      { id: 'child', name: 'Child', role: null, generation: 3, parent_id: 'parent', spouse_id: null, is_alive: true },
-      { id: 'other', name: 'Other branch', role: null, generation: 1, parent_id: null, spouse_id: null, is_alive: true },
+      { id: 'grandparent', name: 'Grandparent', role: null, generation: 1, parent_id: null, spouse_id: null, is_alive: true, linked_user_id: null },
+      { id: 'parent', name: 'Parent', role: null, generation: 2, parent_id: 'grandparent', spouse_id: null, is_alive: true, linked_user_id: null },
+      { id: 'child', name: 'Child', role: null, generation: 3, parent_id: 'parent', spouse_id: null, is_alive: true, linked_user_id: null },
+      { id: 'other', name: 'Other branch', role: null, generation: 1, parent_id: null, spouse_id: null, is_alive: true, linked_user_id: null },
     ];
 
     assert.deepEqual(getEligibleParentIds(members, 'parent'), ['grandparent', 'other']);

@@ -64,6 +64,7 @@ export type KulFamilyMember = {
   parent_id: string | null;
   spouse_id: string | null;
   is_alive: boolean;
+  linked_user_id: string | null;
 };
 
 export type KulLineage = {
