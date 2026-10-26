@@ -116,8 +116,8 @@ export function getOnboardingReadyPracticeCta(tradition: TraditionKey | null): R
  * Note: OS push permission is decoupled from profile in-app reminder preferences.
  * Push token registration requires both user choice 'enabled' AND OS permission granted.
  */
-export function computeContentNotificationOptIn(_choice?: NotificationChoice): boolean {
-  return true;
+export function computeContentNotificationOptIn(choice?: NotificationChoice): boolean {
+  return choice === 'enabled';
 }
 
 export function computePushNotificationEligibility(

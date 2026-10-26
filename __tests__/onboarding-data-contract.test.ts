@@ -141,6 +141,22 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
       family_remembrance_time: '09:00',
     };
 
+    const expectedAllDisabledPayload = {
+      ...expectedAllEnabledPayload,
+      wants_festival_reminders: false,
+      wants_vrat_reminders: false,
+      wants_tithi_reminders: false,
+      wants_nitya_reminders: false,
+      wants_shloka_reminders: false,
+      wants_community_notifications: false,
+      wants_family_notifications: false,
+      quiz_reminder_enabled: false,
+      japa_reminder_enabled: false,
+      wants_brahma_muhurta_reminders: false,
+      wants_sankalpa_midpoint_reminders: false,
+      wants_family_remembrance_reminders: false,
+    };
+
     it('Allow + OS granted => preferences true, token registration eligible', () => {
       const choice: NotificationChoice = 'enabled';
       const osGranted = true;
@@ -158,46 +174,37 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
       const osGranted = false;
       const contentOptIn = computeContentNotificationOptIn(choice);
       const pushEligible = computePushNotificationEligibility(choice, osGranted);
-      assert.equal(contentOptIn, true, 'Devotee choice must preserve in-app reminders even when OS push denied');
+      assert.equal(contentOptIn, true, 'An explicit "Allow" is in-app consent on its own, independent of whether the OS prompt itself was later denied/revoked');
       assert.equal(pushEligible, false, 'Push token registration must be false when OS denied');
 
       const payload = getNotificationPersistencePayload(contentOptIn);
       assert.deepEqual(payload, expectedAllEnabledPayload);
     });
 
-    it('Not now + OS granted => in-app preferences true, token registration disabled', () => {
+    it('Not now + OS granted => in-app preferences false, token registration disabled', () => {
       const choice: NotificationChoice = 'disabled';
       const osGranted = true;
       const contentOptIn = computeContentNotificationOptIn(choice);
       const pushEligible = computePushNotificationEligibility(choice, osGranted);
-      assert.equal(contentOptIn, true, 'User "Not now" declines immediate OS push prompt while preserving in-app reminder preferences');
+      assert.equal(contentOptIn, false, '"Not now" answers only the OS prompt; it is not consent to any individual in-app reminder category');
       assert.equal(pushEligible, false, 'Push token registration must be false when user deferred via Not now');
 
       const payload = getNotificationPersistencePayload(contentOptIn);
-      assert.deepEqual(payload, expectedAllEnabledPayload);
+      assert.deepEqual(payload, expectedAllDisabledPayload);
     });
 
-    it('Not now + OS denied => in-app preferences true, token registration disabled', () => {
+    it('Not now + OS denied => in-app preferences false, token registration disabled', () => {
       const choice: NotificationChoice = 'disabled';
       const osGranted = false;
       const contentOptIn = computeContentNotificationOptIn(choice);
       const pushEligible = computePushNotificationEligibility(choice, osGranted);
-      assert.equal(contentOptIn, true);
+      assert.equal(contentOptIn, false);
       assert.equal(pushEligible, false);
     });
 
-    it('Restored disabled choice + OS granted => in-app preferences true, push registration disabled', () => {
-      const restoredChoice: NotificationChoice = 'disabled';
-      const liveOsPermission = true;
-      const contentOptIn = computeContentNotificationOptIn(restoredChoice);
-      const pushEligible = computePushNotificationEligibility(restoredChoice, liveOsPermission);
-      assert.equal(contentOptIn, true, 'Restored "disabled" choice preserves reminder preferences in profile');
-      assert.equal(pushEligible, false);
-    });
-
-    it('Unset choice => in-app preferences true, push registration disabled', () => {
+    it('Unset choice => in-app preferences false (conservative default), push registration disabled', () => {
       const unsetChoice: NotificationChoice = 'unset';
-      assert.equal(computeContentNotificationOptIn(unsetChoice), true);
+      assert.equal(computeContentNotificationOptIn(unsetChoice), false, 'never having been asked is not consent either -- same conservative default as an explicit decline');
       assert.equal(computeFinalNotificationState(unsetChoice, true), false);
       assert.equal(computeFinalNotificationState(unsetChoice, false), false);
     });
