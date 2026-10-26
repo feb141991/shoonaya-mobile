@@ -141,12 +141,19 @@ export function getNotificationPersistencePayload(userWantsReminders: boolean = 
   return {
     wants_festival_reminders: userWantsReminders,
     wants_vrat_reminders: userWantsReminders,
-    wants_tithi_reminders: false,
+    wants_tithi_reminders: userWantsReminders,
     wants_nitya_reminders: userWantsReminders,
     wants_shloka_reminders: userWantsReminders,
     wants_community_notifications: userWantsReminders,
+    wants_family_notifications: userWantsReminders,
     quiz_reminder_enabled: userWantsReminders,
     quiz_reminder_time: '10:00',
+    japa_reminder_enabled: userWantsReminders,
+    japa_reminder_time: '07:00',
+    wants_brahma_muhurta_reminders: userWantsReminders,
+    wants_sankalpa_midpoint_reminders: userWantsReminders,
+    wants_family_remembrance_reminders: userWantsReminders,
+    family_remembrance_time: '09:00',
   };
 }
 

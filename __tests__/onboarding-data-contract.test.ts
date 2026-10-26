@@ -123,6 +123,24 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
       assert.equal(getPermissionRecoveryAction(true, false), 'settings', 'a hard denial must recover through device settings');
     });
 
+    const expectedAllEnabledPayload = {
+      wants_festival_reminders: true,
+      wants_vrat_reminders: true,
+      wants_tithi_reminders: true,
+      wants_nitya_reminders: true,
+      wants_shloka_reminders: true,
+      wants_community_notifications: true,
+      wants_family_notifications: true,
+      quiz_reminder_enabled: true,
+      quiz_reminder_time: '10:00',
+      japa_reminder_enabled: true,
+      japa_reminder_time: '07:00',
+      wants_brahma_muhurta_reminders: true,
+      wants_sankalpa_midpoint_reminders: true,
+      wants_family_remembrance_reminders: true,
+      family_remembrance_time: '09:00',
+    };
+
     it('Allow + OS granted => preferences true, token registration eligible', () => {
       const choice: NotificationChoice = 'enabled';
       const osGranted = true;
@@ -132,16 +150,7 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
       assert.equal(pushEligible, true);
 
       const payload = getNotificationPersistencePayload(contentOptIn);
-      assert.deepEqual(payload, {
-        wants_festival_reminders: true,
-        wants_vrat_reminders: true,
-        wants_tithi_reminders: false,
-        wants_nitya_reminders: true,
-        wants_shloka_reminders: true,
-        wants_community_notifications: true,
-        quiz_reminder_enabled: true,
-        quiz_reminder_time: '10:00',
-      });
+      assert.deepEqual(payload, expectedAllEnabledPayload);
     });
 
     it('Allow + OS denied/revoked => in-app preferences true, token registration disabled', () => {
@@ -153,16 +162,7 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
       assert.equal(pushEligible, false, 'Push token registration must be false when OS denied');
 
       const payload = getNotificationPersistencePayload(contentOptIn);
-      assert.deepEqual(payload, {
-        wants_festival_reminders: true,
-        wants_vrat_reminders: true,
-        wants_tithi_reminders: false,
-        wants_nitya_reminders: true,
-        wants_shloka_reminders: true,
-        wants_community_notifications: true,
-        quiz_reminder_enabled: true,
-        quiz_reminder_time: '10:00',
-      });
+      assert.deepEqual(payload, expectedAllEnabledPayload);
     });
 
     it('Not now + OS granted => in-app preferences true, token registration disabled', () => {
@@ -174,14 +174,7 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
       assert.equal(pushEligible, false, 'Push token registration must be false when user deferred via Not now');
 
       const payload = getNotificationPersistencePayload(contentOptIn);
-      assert.equal(payload.wants_festival_reminders, true);
-      assert.equal(payload.wants_vrat_reminders, true);
-      assert.equal(payload.wants_tithi_reminders, false);
-      assert.equal(payload.wants_nitya_reminders, true);
-      assert.equal(payload.wants_shloka_reminders, true);
-      assert.equal(payload.wants_community_notifications, true);
-      assert.equal(payload.quiz_reminder_enabled, true);
-      assert.equal(payload.quiz_reminder_time, '10:00');
+      assert.deepEqual(payload, expectedAllEnabledPayload);
     });
 
     it('Not now + OS denied => in-app preferences true, token registration disabled', () => {
@@ -229,11 +222,20 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
       });
 
       assert.equal(profile.wants_festival_reminders, true);
+      assert.equal(profile.wants_vrat_reminders, true);
+      assert.equal(profile.wants_tithi_reminders, true);
       assert.equal(profile.wants_nitya_reminders, true);
       assert.equal(profile.wants_shloka_reminders, true);
       assert.equal(profile.wants_community_notifications, true);
+      assert.equal(profile.wants_family_notifications, true);
       assert.equal(profile.quiz_reminder_enabled, true);
       assert.equal(profile.quiz_reminder_time, '10:00');
+      assert.equal(profile.japa_reminder_enabled, true);
+      assert.equal(profile.japa_reminder_time, '07:00');
+      assert.equal(profile.wants_brahma_muhurta_reminders, true);
+      assert.equal(profile.wants_sankalpa_midpoint_reminders, true);
+      assert.equal(profile.wants_family_remembrance_reminders, true);
+      assert.equal(profile.family_remembrance_time, '09:00');
       assert.equal(profile.onboarding_completed, true);
     });
 
