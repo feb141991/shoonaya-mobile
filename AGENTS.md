@@ -323,3 +323,28 @@ Rules:
   profile's viewer check, Live Darshan, Kundali, Zen, and post-Apple-signin
   login) and one false positive (Vrat, already guarded). This applies equally
   to human and AI-agent contributors.
+
+### 19. "Not Now" on the Push Prompt Is Not Consent to Every Reminder Category
+- `getNotificationPersistencePayload` must not set every reminder flag
+  (`wants_festival_reminders`, `wants_vrat_reminders`, `wants_shloka_reminders`,
+  `wants_nitya_reminders`, `wants_community_notifications`,
+  `quiz_reminder_enabled`, Japa, Brahma Muhurta, family remembrance, etc.) to
+  `true` regardless of whether the seeker tapped "Not now" on the OS push
+  prompt or completed onboarding without ever seeing it. The OS prompt answers
+  one question -- can this app push at all -- and must never stand in for a
+  choice about any specific reminder category.
+- Preserving an *existing* in-app preference across a re-prompt (so a later
+  "Not now" cannot silently erase a choice someone already made in Settings)
+  is correct and must stay. Defaulting every category to `true` for a seeker
+  who has never been asked at all is a different, separate decision --
+  calendar-governance-grade: it must come from an explicit, visible, per-
+  category choice during onboarding or a dismissible later prompt, never
+  a blanket write baked into the persistence payload.
+- Why this rule exists: on 2026-10-26, the backend half of this same defect
+  (nine reminder columns backfilled with `WHERE x = false OR x IS NULL`,
+  destroying the record of real opt-outs) was recorded in the Shoonaya
+  backend's AGENTS.md section 6. Auditing the Native contract for the same
+  shape found `getNotificationPersistencePayload` already did the client-side
+  equivalent: every reminder flag set `true` on "Not now" or "unset," making
+  the OS prompt's answer carry no information about any individual category.
+  This applies equally to human and AI-agent contributors.
