@@ -55,6 +55,8 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-snake-and-frogs': require('@/assets/panchatantra/snake-frogs-1.webp'),
   'panchatantra-lion-makers': require('@/assets/panchatantra/lion-makers-1.webp'),
   'panchatantra-sage-and-mouse': require('@/assets/panchatantra/sage-mouse-1.webp'),
+  'panchatantra-three-fish': require('@/assets/panchatantra/three-fish-1.webp'),
+  'panchatantra-dharmabuddhi-papabuddhi': require('@/assets/panchatantra/dharmabuddhi-1.webp'),
 };
 
 /**
@@ -341,6 +343,22 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/lion-makers-4.webp'),
     require('@/assets/panchatantra/lion-makers-5.webp'),
     require('@/assets/panchatantra/lion-makers-6.webp'),
+  ],
+  'panchatantra-sage-and-mouse': [
+    require('@/assets/panchatantra/sage-mouse-1.webp'),
+    require('@/assets/panchatantra/sage-mouse-2.webp'),
+    require('@/assets/panchatantra/sage-mouse-3.webp'),
+    require('@/assets/panchatantra/sage-mouse-4.webp'),
+    require('@/assets/panchatantra/sage-mouse-5.webp'),
+    require('@/assets/panchatantra/sage-mouse-6.webp'),
+  ],
+  'panchatantra-three-fish': [
+    require('@/assets/panchatantra/three-fish-1.webp'),
+    require('@/assets/panchatantra/three-fish-2.webp'),
+    require('@/assets/panchatantra/three-fish-3.webp'),
+    require('@/assets/panchatantra/three-fish-4.webp'),
+    require('@/assets/panchatantra/three-fish-5.webp'),
+    require('@/assets/panchatantra/three-fish-6.webp'),
   ],
 };
 
