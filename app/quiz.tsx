@@ -475,7 +475,7 @@ export default function QuizScreen() {
             </View>
 
             <View style={{ gap: 10 }}>
-              <Text style={{ color: text, ...TYPE.hero, lineHeight: 32 }}>{activeQuiz.question}</Text>
+              <Text style={{ color: text, ...TYPE.hero }}>{activeQuiz.question}</Text>
               <View
                 style={{
                   height: 6,

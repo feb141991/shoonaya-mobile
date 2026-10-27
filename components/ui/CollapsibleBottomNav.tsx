@@ -18,6 +18,7 @@ import { SacredIcon } from '@/components/ui/SacredIcon';
 import { COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { subscribeNavScroll } from '@/lib/navScrollBus';
 import { subscribeBottomNavHidden, setBottomNavHidden } from '@/lib/nav-bar';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 // Custom-rendered bottom nav replacing Expo Router's built-in tab bar
 // (hidden via tabBarStyle:{display:'none'} in app/(tabs)/_layout.tsx).
@@ -63,6 +64,7 @@ export function CollapsibleBottomNav() {
   const { width: windowWidth } = useWindowDimensions();
   const pathname = usePathname();
   const router = useRouter();
+  const { language } = useLanguage();
 
   const [collapsed, setCollapsed] = useState(!HOME_PATHS.has(pathname));
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -142,19 +144,21 @@ export function CollapsibleBottomNav() {
     }).start();
   }, [collapsed, reducedMotion, collapseProgress]);
 
+  const isHindi = language === 'hi';
+
   const TABS: TabDef[] = useMemo(
     () => [
       {
         key: 'home',
         href: '/',
-        label: 'Home',
+        label: isHindi ? 'होम' : 'Home',
         match: (p) => HOME_PATHS.has(p),
         renderIcon: (color, size) => <Feather name="home" color={color} size={size} />,
       },
       {
         key: 'japa',
         href: '/japa',
-        label: 'Japa',
+        label: isHindi ? 'जाप' : 'Japa',
         match: (p) => matchesAny(p, ['/japa', '/japa-insights']),
         renderIcon: (color, size) => <SacredIcon name="japa" fallbackGlyph="heart" color={color} size={size} />,
       },
@@ -166,7 +170,7 @@ export function CollapsibleBottomNav() {
         // No clay-art SacredIcon exists for KUL yet, so it uses Feather.
         key: 'kul',
         href: '/kul' as Href,
-        label: 'KUL',
+        label: isHindi ? 'कुल' : 'KUL',
         match: (p) => matchesAny(p, ['/kul']),
         isCenter: true,
         renderIcon: (color, size) => <Feather name="users" color={color} size={size} />,
@@ -174,19 +178,19 @@ export function CollapsibleBottomNav() {
       {
         key: 'pathshala',
         href: '/pathshala',
-        label: 'Pathshala',
+        label: isHindi ? 'पाठशाला' : 'Pathshala',
         match: (p) => matchesAny(p, ['/pathshala', '/lineage']),
         renderIcon: (color, size) => <SacredIcon name="pathshala" fallbackGlyph="book-open" color={color} size={size} />,
       },
       {
         key: 'mandali',
         href: '/mandali',
-        label: 'Mandali',
+        label: isHindi ? 'मंडली' : 'Mandali',
         match: (p) => matchesAny(p, ['/mandali']),
         renderIcon: (color, size) => <SacredIcon name="mandali" fallbackGlyph="users" color={color} size={size} />,
       },
     ],
-    []
+    [isHindi]
   );
 
   const activeTab = TABS.find((tab) => tab.match(pathname)) ?? TABS[0];

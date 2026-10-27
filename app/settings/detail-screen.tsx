@@ -77,7 +77,7 @@ import { accountDeletion, readDeletionReasons, useAccountDeletionStatus } from '
 import { accountDeletionCopy } from '@/lib/accountDeletionCopy';
 import { getGreetingPick } from '@/lib/greetingPreference';
 import { applyPracticeAnalyticsConsent, applyProductAnalyticsConsent, revokePracticeAnalyticsConsent, revokeProductAnalyticsConsent } from '@/lib/productAnalyticsRuntime';
-import { describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
+import { classifyFailure, describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
 
 type ThemePref = 'light' | 'dark' | 'system';
 export type SettingsSectionKey = 'account' | 'notifications' | 'appearance' | 'privacy' | 'about';
@@ -88,6 +88,20 @@ export type SettingsSectionKey = 'account' | 'notifications' | 'appearance' | 'p
 type SettingsState = SettingsFields;
 
 const THEME_STORAGE_KEY = 'sangam_theme_preference';
+
+// A refused value, an expired session, or a forbidden account can't be
+// fixed by resending the exact same fields -- only network/server/rate-limit
+// causes are worth a blind Retry. See AGENTS.md rule 12/13.
+function classifyPendingWriteFailure(
+  error: unknown,
+  language: AppLanguage
+): { message: string; retryable: boolean } {
+  const { kind } = classifyFailure(error);
+  return {
+    message: describeFailure(error, 'Could not save this change. Please try again.', language),
+    retryable: kind === 'network' || kind === 'server' || kind === 'rate_limited',
+  };
+}
 
 const INITIAL_SETTINGS: SettingsState = {
   japa_reminder_enabled: true,
@@ -120,24 +134,28 @@ const INITIAL_SETTINGS: SettingsState = {
   consent_product_analytics: false,
 };
 
-const NOTIFICATION_TOGGLES: { key: keyof SettingsState; label: string; subtitle: string; disabled?: boolean; requiresAccount?: boolean; badge?: string }[] = [
-  { key: 'japa_reminder_enabled', label: 'Japa practice reminder', subtitle: 'A gentle daily reminder at your chosen time', requiresAccount: true },
-  { key: 'quiz_reminder_enabled', label: 'Daily quiz reminders', subtitle: 'Daily quiz challenge at 10:00 AM, plus a 6:00 PM nudge if still unfinished', requiresAccount: true },
-  { key: 'wants_shloka_reminders', label: 'Daily wisdom', subtitle: 'Your daily shloka & reflection' },
-  { key: 'wants_nitya_reminders', label: 'Nitya reminders', subtitle: 'Morning sadhana nudges' },
-  { key: 'wants_brahma_muhurta_reminders', label: 'Brahma Muhurta', subtitle: 'A pre-dawn reminder about 1½ hours before sunrise at your saved location. It arrives at night.', requiresAccount: true },
-  { key: 'wants_sankalpa_midpoint_reminders', label: 'Sankalpa midpoint', subtitle: 'One gentle reminder halfway through an active vow', requiresAccount: true },
-  { key: 'wants_festival_reminders', label: 'Sacred festivals', subtitle: 'Major and regional sacred festivals' },
-  { key: 'wants_vrat_reminders', label: 'Vrats & fasting', subtitle: 'Ekadashi, Pradosha, Purnima & fasting days' },
-  { key: 'wants_tithi_reminders', label: 'Tithi alerts', subtitle: 'Daily lunar phase transitions' },
-  { key: 'wants_community_notifications', label: 'Community', subtitle: 'Mandali posts, reactions & connections' },
-  { key: 'wants_family_notifications', label: 'Family', subtitle: 'Kul & lineage activity', requiresAccount: true },
-  { key: 'wants_family_remembrance_reminders', label: 'Family remembrance', subtitle: 'A yearly, private reminder for family dates you link to a deceased relative', requiresAccount: true },
-  { key: 'wants_evening_reminder', label: 'Evening Sandhya', subtitle: 'A second daily nudge for evening twilight practice' },
-  { key: 'wants_madhyahn_reminder', label: 'Midday Nitya', subtitle: 'A midday nudge for your Nitya Karma practice' },
-  { key: 'wants_sattvic_reminders', label: 'Sattvic Mode evening', subtitle: 'An evening nudge into prāṇāyāma, kīrtana, or quiet reflection' },
-  { key: 'dharm_veer_reminder_enabled', label: 'Dharm Veer stories', subtitle: 'A nudge toward unread Dharm Veer stories', requiresAccount: true },
-  { key: 'wants_mood_reminders', label: 'Mood check-ins', subtitle: 'Midday and evening prompts to note how you are feeling' },
+// labelHi/subtitleHi mirror OnboardingWelcomeScreen.tsx's label/labelHi
+// pattern. Punjabi has no written copy yet (same convention as
+// lib/user-facing-error.ts's COPY table) so it falls back to English rather
+// than showing a wrong translation.
+const NOTIFICATION_TOGGLES: { key: keyof SettingsState; label: string; labelHi: string; subtitle: string; subtitleHi: string; disabled?: boolean; requiresAccount?: boolean; badge?: string }[] = [
+  { key: 'japa_reminder_enabled', label: 'Japa practice reminder', labelHi: 'जाप अभ्यास रिमाइंडर', subtitle: 'A gentle daily reminder at your chosen time', subtitleHi: 'आपके चुने समय पर एक सरल दैनिक रिमाइंडर', requiresAccount: true },
+  { key: 'quiz_reminder_enabled', label: 'Daily quiz reminders', labelHi: 'दैनिक क्विज़ रिमाइंडर', subtitle: 'Daily quiz challenge at 10:00 AM, plus a 6:00 PM nudge if still unfinished', subtitleHi: 'सुबह 10:00 बजे दैनिक क्विज़ चुनौती, और अधूरा रहने पर शाम 6:00 बजे एक याद दिलाने वाला संदेश', requiresAccount: true },
+  { key: 'wants_shloka_reminders', label: 'Daily wisdom', labelHi: 'दैनिक ज्ञान', subtitle: 'Your daily shloka & reflection', subtitleHi: 'आपका दैनिक श्लोक व चिंतन' },
+  { key: 'wants_nitya_reminders', label: 'Nitya reminders', labelHi: 'नित्य रिमाइंडर', subtitle: 'Morning sadhana nudges', subtitleHi: 'सुबह की साधना के लिए याद दिलाने वाले संदेश' },
+  { key: 'wants_brahma_muhurta_reminders', label: 'Brahma Muhurta', labelHi: 'ब्रह्म मुहूर्त', subtitle: 'A pre-dawn reminder about 1½ hours before sunrise at your saved location. It arrives at night.', subtitleHi: 'आपके सहेजे गए स्थान पर सूर्योदय से लगभग 1½ घंटे पहले, तड़के का एक रिमाइंडर। यह रात में आता है।', requiresAccount: true },
+  { key: 'wants_sankalpa_midpoint_reminders', label: 'Sankalpa midpoint', labelHi: 'संकल्प का मध्यबिंदु', subtitle: 'One gentle reminder halfway through an active vow', subtitleHi: 'सक्रिय संकल्प के आधे समय पर एक सरल रिमाइंडर', requiresAccount: true },
+  { key: 'wants_festival_reminders', label: 'Sacred festivals', labelHi: 'पावन पर्व', subtitle: 'Major and regional sacred festivals', subtitleHi: 'प्रमुख व क्षेत्रीय पावन पर्व' },
+  { key: 'wants_vrat_reminders', label: 'Vrats & fasting', labelHi: 'व्रत व उपवास', subtitle: 'Ekadashi, Pradosha, Purnima & fasting days', subtitleHi: 'एकादशी, प्रदोष, पूर्णिमा व उपवास के दिन' },
+  { key: 'wants_tithi_reminders', label: 'Tithi alerts', labelHi: 'तिथि सूचनाएं', subtitle: 'Daily lunar phase transitions', subtitleHi: 'दैनिक चंद्र तिथि परिवर्तन' },
+  { key: 'wants_community_notifications', label: 'Community', labelHi: 'समुदाय', subtitle: 'Mandali posts, reactions & connections', subtitleHi: 'मंडली की पोस्ट, प्रतिक्रियाएं व जुड़ाव' },
+  { key: 'wants_family_notifications', label: 'Family', labelHi: 'परिवार', subtitle: 'Kul & lineage activity', subtitleHi: 'कुल व वंश की गतिविधि', requiresAccount: true },
+  { key: 'wants_family_remembrance_reminders', label: 'Family remembrance', labelHi: 'पारिवारिक स्मृति', subtitle: 'A yearly, private reminder for family dates you link to a deceased relative', subtitleHi: 'किसी दिवंगत परिजन से जोड़ी गई पारिवारिक तिथि के लिए एक वार्षिक, निजी रिमाइंडर', requiresAccount: true },
+  { key: 'wants_evening_reminder', label: 'Evening Sandhya', labelHi: 'सायं संध्या', subtitle: 'A second daily nudge for evening twilight practice', subtitleHi: 'सायंकालीन साधना के लिए दिन का दूसरा रिमाइंडर' },
+  { key: 'wants_madhyahn_reminder', label: 'Midday Nitya', labelHi: 'मध्याह्न नित्य', subtitle: 'A midday nudge for your Nitya Karma practice', subtitleHi: 'आपकी नित्य कर्म साधना के लिए मध्याह्न का रिमाइंडर' },
+  { key: 'wants_sattvic_reminders', label: 'Sattvic Mode evening', labelHi: 'सात्विक मोड शाम', subtitle: 'An evening nudge into prāṇāyāma, kīrtana, or quiet reflection', subtitleHi: 'प्राणायाम, कीर्तन या शांत चिंतन के लिए शाम का रिमाइंडर' },
+  { key: 'dharm_veer_reminder_enabled', label: 'Dharm Veer stories', labelHi: 'धर्म वीर कथाएं', subtitle: 'A nudge toward unread Dharm Veer stories', subtitleHi: 'अपठित धर्म वीर कथाओं की ओर एक रिमाइंडर', requiresAccount: true },
+  { key: 'wants_mood_reminders', label: 'Mood check-ins', labelHi: 'मनोभाव जाँच', subtitle: 'Midday and evening prompts to note how you are feeling', subtitleHi: 'आपकी भावनाएं दर्ज करने के लिए दोपहर व शाम के संकेत' },
 ];
 
 // Shipped together in one migration (AGENTS.md rule 6, 2026-10-27), so they
@@ -469,7 +487,8 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
         const backoff = nextBackoffMs(write.attempts) ?? outcome.afterMs;
         if (backoff === null) {
           // Backoff table exhausted -- stop auto-retrying, surface failure.
-          const failed: PendingSettingsWrite = { ...write, attempts, status: 'failed' };
+          const { message, retryable } = classifyPendingWriteFailure(await requestErrorFromResponse(response), language);
+          const failed: PendingSettingsWrite = { ...write, attempts, status: 'failed', failureMessage: message, failureRetryable: retryable };
           setPendingWrite(failed);
           await persistPendingWrite(identity, failed);
           recordMutationRetryOutcome(identity, 'settings', 'permanent_failure', attempts);
@@ -485,16 +504,18 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       }
 
       // Permanent failure (most 4xx) -- do not retry automatically.
-      const failed: PendingSettingsWrite = { ...write, attempts: write.attempts + 1, status: 'failed' };
+      const { message, retryable } = classifyPendingWriteFailure(await requestErrorFromResponse(response), language);
+      const failed: PendingSettingsWrite = { ...write, attempts: write.attempts + 1, status: 'failed', failureMessage: message, failureRetryable: retryable };
       setPendingWrite(failed);
       await persistPendingWrite(identity, failed);
       recordMutationRetryOutcome(identity, 'settings', 'permanent_failure', failed.attempts);
-    } catch {
+    } catch (error) {
       // Network error -- same retry treatment as 5xx.
       const attempts = write.attempts + 1;
       const backoff = nextBackoffMs(write.attempts);
       if (backoff === null) {
-        const failed: PendingSettingsWrite = { ...write, attempts, status: 'failed' };
+        const { message, retryable } = classifyPendingWriteFailure(error, language);
+        const failed: PendingSettingsWrite = { ...write, attempts, status: 'failed', failureMessage: message, failureRetryable: retryable };
         setPendingWrite(failed);
         await persistPendingWrite(identity, failed);
         recordMutationRetryOutcome(identity, 'settings', 'permanent_failure', attempts);
@@ -509,7 +530,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     } finally {
       setSaving(false);
     }
-  }, [clearRetryTimer]);
+  }, [clearRetryTimer, language]);
 
   async function persistPendingWrite(identity: SettingsCacheIdentity, write: PendingSettingsWrite | null) {
     const cached = await readSettingsCache(identity);
@@ -1077,10 +1098,14 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
             }}
           >
             <Feather name="alert-circle" size={15} color={COLORS.danger} />
-            <Text style={{ ...TYPE.caption, color: COLORS.danger, flex: 1 }}>Could not send</Text>
-            <PressableSurface haptic="selection" onPress={retryFailedWrite} style={{ minHeight: 0 }}>
-              <Text style={{ ...TYPE.label, fontSize: 12.5, color: COLORS.danger, textDecorationLine: 'underline' }}>Retry</Text>
-            </PressableSurface>
+            <Text style={{ ...TYPE.caption, color: COLORS.danger, flex: 1 }}>
+              {pendingWrite.failureMessage ?? (language === 'hi' ? 'भेजा नहीं जा सका' : 'Could not send')}
+            </Text>
+            {pendingWrite.failureRetryable !== false ? (
+              <PressableSurface haptic="selection" onPress={retryFailedWrite} style={{ minHeight: 0 }}>
+                <Text style={{ ...TYPE.label, fontSize: 12.5, color: COLORS.danger, textDecorationLine: 'underline' }}>Retry</Text>
+              </PressableSurface>
+            ) : null}
             <PressableSurface haptic="selection" onPress={() => { void discardFailedWrite(); }} style={{ minHeight: 0 }}>
               <Text style={{ ...TYPE.label, fontSize: 12.5, color: theme.dim, textDecorationLine: 'underline' }}>Discard</Text>
             </PressableSurface>
@@ -1170,12 +1195,12 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                     <View style={{ height: 1, backgroundColor: theme.borderSoft, marginBottom: 16 }} />
                   ) : null}
                   <ToggleRow
-                    label={item.label}
+                    label={language === 'hi' ? item.labelHi : item.label}
                     subtitle={item.requiresAccount && isGuest
-                      ? `${item.subtitle} (sign in to enable)`
+                      ? `${language === 'hi' ? item.subtitleHi : item.subtitle} ${language === 'hi' ? '(सक्रिय करने के लिए साइन इन करें)' : '(sign in to enable)'}`
                       : awaitingServerUpdate
-                        ? 'Available after the matching server update is installed'
-                        : item.subtitle}
+                        ? (language === 'hi' ? 'यह सुविधा सर्वर अपडेट इंस्टॉल होने के बाद उपलब्ध होगी' : 'Available after the matching server update is installed')
+                        : (language === 'hi' ? item.subtitleHi : item.subtitle)}
                     value={(settings[item.key] as boolean | undefined) ?? false}
                     disabled={item.disabled || (item.requiresAccount === true && isGuest) || awaitingServerUpdate}
                     badge={item.badge}

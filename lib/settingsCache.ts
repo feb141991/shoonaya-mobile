@@ -82,6 +82,19 @@ export type PendingSettingsWrite = {
   nextAttemptAt: number;
   createdAt: number;
   status: 'pending' | 'failed';
+  // Set only when status is 'failed'. A field-specific, already-localized
+  // message (via describeFailure) so the banner never shows a generic
+  // "Could not send" for a cause the person could actually act on.
+  // Optional: envelopes cached before this existed do not carry it.
+  failureMessage?: string | null;
+  // Whether resending these exact fields unchanged could plausibly succeed
+  // (network/server/rate-limit) vs. a cause retrying can't fix (a refused
+  // value, an expired session, a forbidden account) -- see
+  // AGENTS.md rule 12/13: resending an already-rejected value forever,
+  // with no explanation, is the same defect shape as a database error
+  // reaching the screen as `error.message`. Missing/undefined defaults to
+  // retryable, matching the pre-existing always-show-Retry behavior.
+  failureRetryable?: boolean;
 };
 
 export type SettingsCacheEnvelope = {
