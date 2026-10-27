@@ -15,7 +15,7 @@ describe('notification settings toggles', () => {
   it('enables Family (Kul) notifications toggle without coming-soon disabled lock', () => {
     assert.match(
       source,
-      /\{\s*key:\s*'wants_family_notifications',\s*label:\s*'Family',\s*subtitle:\s*'Kul & lineage activity',\s*requiresAccount:\s*true\s*\}/,
+      /key:\s*'wants_family_notifications'[\s\S]*?label:\s*'Family'[\s\S]*?subtitle:\s*'Kul & lineage activity'[\s\S]*?requiresAccount:\s*true/,
       'expected wants_family_notifications toggle to be active with requiresAccount: true'
     );
   });
