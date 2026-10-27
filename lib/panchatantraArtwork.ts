@@ -63,6 +63,8 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-hunter-and-pigeons': require('@/assets/panchatantra/hunter-pigeons-1.webp'),
   'panchatantra-four-treasure-seekers': require('@/assets/panchatantra/four-treasure-seekers-1.webp'),
   'panchatantra-raven-and-swan': require('@/assets/panchatantra/raven-swan-1.webp'),
+  'panchatantra-golds-gloom': require('@/assets/panchatantra/golds-gloom-1.webp'),
+  'panchatantra-mother-shandilees-bargain': require('@/assets/panchatantra/mother-shandilee-1.webp'),
 };
 
 /**
@@ -423,6 +425,22 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/raven-swan-4.webp'),
     require('@/assets/panchatantra/raven-swan-5.webp'),
     require('@/assets/panchatantra/raven-swan-6.webp'),
+  ],
+  'panchatantra-golds-gloom': [
+    require('@/assets/panchatantra/golds-gloom-1.webp'),
+    require('@/assets/panchatantra/golds-gloom-2.webp'),
+    require('@/assets/panchatantra/golds-gloom-3.webp'),
+    require('@/assets/panchatantra/golds-gloom-4.webp'),
+    require('@/assets/panchatantra/golds-gloom-5.webp'),
+    require('@/assets/panchatantra/golds-gloom-6.webp'),
+  ],
+  'panchatantra-mother-shandilees-bargain': [
+    require('@/assets/panchatantra/mother-shandilee-1.webp'),
+    require('@/assets/panchatantra/mother-shandilee-2.webp'),
+    require('@/assets/panchatantra/mother-shandilee-3.webp'),
+    require('@/assets/panchatantra/mother-shandilee-4.webp'),
+    require('@/assets/panchatantra/mother-shandilee-5.webp'),
+    require('@/assets/panchatantra/mother-shandilee-6.webp'),
   ],
 };
 
