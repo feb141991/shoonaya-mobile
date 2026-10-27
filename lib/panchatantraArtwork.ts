@@ -59,6 +59,7 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-dharmabuddhi-papabuddhi': require('@/assets/panchatantra/dharmabuddhi-1.webp'),
   'panchatantra-musical-donkey': require('@/assets/panchatantra/musical-donkey-1.webp'),
   'panchatantra-monk-and-jackal': require('@/assets/panchatantra/monk-jackal-1.webp'),
+  'panchatantra-lion-and-bull': require('@/assets/panchatantra/lion-bull-1.webp'),
 };
 
 /**
@@ -385,6 +386,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/monk-jackal-4.webp'),
     require('@/assets/panchatantra/monk-jackal-5.webp'),
     require('@/assets/panchatantra/monk-jackal-6.webp'),
+  ],
+  'panchatantra-lion-and-bull': [
+    require('@/assets/panchatantra/lion-bull-1.webp'),
+    require('@/assets/panchatantra/lion-bull-2.webp'),
+    require('@/assets/panchatantra/lion-bull-3.webp'),
+    require('@/assets/panchatantra/lion-bull-4.webp'),
+    require('@/assets/panchatantra/lion-bull-5.webp'),
+    require('@/assets/panchatantra/lion-bull-6.webp'),
   ],
 };
 
