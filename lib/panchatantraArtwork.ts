@@ -60,6 +60,8 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-musical-donkey': require('@/assets/panchatantra/musical-donkey-1.webp'),
   'panchatantra-monk-and-jackal': require('@/assets/panchatantra/monk-jackal-1.webp'),
   'panchatantra-lion-and-bull': require('@/assets/panchatantra/lion-bull-1.webp'),
+  'panchatantra-hunter-and-pigeons': require('@/assets/panchatantra/hunter-pigeons-1.webp'),
+  'panchatantra-four-treasure-seekers': require('@/assets/panchatantra/four-treasure-seekers-1.webp'),
 };
 
 /**
@@ -394,6 +396,23 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/lion-bull-4.webp'),
     require('@/assets/panchatantra/lion-bull-5.webp'),
     require('@/assets/panchatantra/lion-bull-6.webp'),
+  ],
+
+  'panchatantra-hunter-and-pigeons': [
+    require('@/assets/panchatantra/hunter-pigeons-1.webp'),
+    require('@/assets/panchatantra/hunter-pigeons-2.webp'),
+    require('@/assets/panchatantra/hunter-pigeons-3.webp'),
+    require('@/assets/panchatantra/hunter-pigeons-4.webp'),
+    require('@/assets/panchatantra/hunter-pigeons-5.webp'),
+    require('@/assets/panchatantra/hunter-pigeons-6.webp'),
+  ],
+  'panchatantra-four-treasure-seekers': [
+    require('@/assets/panchatantra/four-treasure-seekers-1.webp'),
+    require('@/assets/panchatantra/four-treasure-seekers-2.webp'),
+    require('@/assets/panchatantra/four-treasure-seekers-3.webp'),
+    require('@/assets/panchatantra/four-treasure-seekers-4.webp'),
+    require('@/assets/panchatantra/four-treasure-seekers-5.webp'),
+    require('@/assets/panchatantra/four-treasure-seekers-6.webp'),
   ],
 };
 
