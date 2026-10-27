@@ -153,6 +153,7 @@ test('Panchatantra Artwork Resolution', async (t) => {
       'panchatantra-lion-and-bull',
       'panchatantra-hunter-and-pigeons',
       'panchatantra-four-treasure-seekers',
+      'panchatantra-raven-and-swan',
     ];
 
     for (const storyId of storiesWithScenes) {
@@ -299,6 +300,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-lion-and-bull'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-hunter-and-pigeons'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-four-treasure-seekers'), 2);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-raven-and-swan'), 2);
 
     // Tier 0: Manuscript folios without local art
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-wedge-pulling-monkey'), 0);
@@ -310,7 +312,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
       { id: 'panchatantra-wedge-pulling-monkey', title: 'Wedge Pulling Monkey' },
       { id: 'panchatantra-monk-and-jackal', title: 'The Monk and the Jackal' },
       { id: 'panchatantra-dove-king-and-net', title: 'The Dove King and the Net' },
-      { id: 'panchatantra-raven-and-swan', title: 'The Raven and the Swan' },
+      { id: 'panchatantra-golds-gloom', title: "Gold's Gloom" },
       { id: 'panchatantra-musical-donkey', title: 'The Musical Donkey' },
       { id: 'panchatantra-lion-and-rabbit', title: 'The Lion and the Rabbit' },
     ];
@@ -325,7 +327,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
 
     // Tier 0 items must follow at indices 4 and 5
     assert.equal(sorted[4].id, 'panchatantra-wedge-pulling-monkey');
-    assert.equal(sorted[5].id, 'panchatantra-raven-and-swan');
+    assert.equal(sorted[5].id, 'panchatantra-golds-gloom');
   });
 
   await t.test('katha.tsx integrates visual tier sorting and thumbnail priority for Story of the Day', () => {
@@ -515,5 +517,17 @@ test('The Four Treasure-Seekers story uses six paragraph-aligned offline scenes'
   assert.equal(hasDedicatedSceneArtwork('panchatantra-four-treasure-seekers'), true);
   for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
     assert.ok(getPanchatantraSceneArtwork('panchatantra-four-treasure-seekers', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+
+test('The Raven and the Swan story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-raven-and-swan');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-raven-and-swan'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-raven-and-swan'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-raven-and-swan', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });
