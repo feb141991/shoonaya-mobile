@@ -36,6 +36,9 @@ export type JapaMantra = {
   key: string;
   label: string;
   devanagari: string;
+  /** Romanization of exactly the `devanagari` text above -- never a
+   * different verse's transliteration, even for the same mantra. */
+  transliteration: string;
   meaning: string;
   tradition: TraditionKey | 'all';
 };
@@ -126,15 +129,23 @@ export const ISHTA_DEVATAS_BY_TRADITION: Record<TraditionKey, IshtaOption[]> = {
 };
 
 export const JAPA_MANTRAS: JapaMantra[] = [
-  { key: 'om_pranava', label: 'Om (Pranava)', devanagari: 'ॐ', meaning: 'The primordial sound of the universe and the essence of consciousness.', tradition: 'all' },
-  { key: 'gayatri', label: 'Gayatri Mantra', devanagari: 'गायत्री मंत्र', meaning: 'A universal mantra of light and wisdom.', tradition: 'hindu' },
-  { key: 'om_namah_shivaya', label: 'Om Namah Shivaya', devanagari: 'ॐ नमः शिवाय', meaning: 'I bow to Shiva, the supreme reality and the inner self.', tradition: 'hindu' },
-  { key: 'hare_krishna', label: 'Hare Krishna', devanagari: 'हरे कृष्ण महामंत्र', meaning: 'O Lord, O Energy of the Lord, please engage me in Your loving service.', tradition: 'hindu' },
-  { key: 'om_namo_narayanaya', label: 'Om Namo Narayanaya', devanagari: 'ॐ नमो नारायणाय', meaning: 'Salutation to Lord Narayana.', tradition: 'hindu' },
-  { key: 'mahamrityunjaya', label: 'Mahamrityunjaya', devanagari: 'ॐ त्र्यम्बकं यजामहे', meaning: 'The great death-conquering mantra of Shiva.', tradition: 'hindu' },
-  { key: 'waheguru', label: 'Waheguru', devanagari: 'ਵਾਹਿਗੁਰੂ', meaning: 'Wondrous Enlightener.', tradition: 'sikh' },
-  { key: 'om_mani_padme_hum', label: 'Om Mani Padme Hum', devanagari: 'ॐ मणि पद्मे हूँ', meaning: 'The jewel is in the lotus, a mantra of compassion.', tradition: 'buddhist' },
-  { key: 'namokar', label: 'Namokar Mantra', devanagari: 'णमोकार मंत्र', meaning: 'I bow to the Arihants, Siddhas, Acharyas, Upadhyayas, and all Sadhus.', tradition: 'jain' },
+  // Transliteration sourced verbatim from the Supabase `mantras` table
+  // (ids: om_pranava, om_namah_shivaya, om_namo_narayanaya, om_trayambakam)
+  // wherever this entry's `devanagari` matches that table's `sanskrit`
+  // exactly. Where `devanagari` here is a short title rather than the full
+  // verse (gayatri, hare_krishna, namokar) and for the two non-Sanskrit
+  // entries (waheguru, om_mani_padme_hum), the transliteration romanizes
+  // only that title/word -- never a different, fuller verse's text, so it
+  // always corresponds to what's actually shown next to it.
+  { key: 'om_pranava', label: 'Om (Pranava)', devanagari: 'ॐ', transliteration: 'Om (Oṁ)', meaning: 'The primordial sound of the universe and the essence of consciousness.', tradition: 'all' },
+  { key: 'gayatri', label: 'Gayatri Mantra', devanagari: 'गायत्री मंत्र', transliteration: 'Gāyatrī Mantra', meaning: 'A universal mantra of light and wisdom.', tradition: 'hindu' },
+  { key: 'om_namah_shivaya', label: 'Om Namah Shivaya', devanagari: 'ॐ नमः शिवाय', transliteration: 'Om Namaḥ Śivāya', meaning: 'I bow to Shiva, the supreme reality and the inner self.', tradition: 'hindu' },
+  { key: 'hare_krishna', label: 'Hare Krishna', devanagari: 'हरे कृष्ण महामंत्र', transliteration: 'Hare Kṛṣṇa Mahāmantra', meaning: 'O Lord, O Energy of the Lord, please engage me in Your loving service.', tradition: 'hindu' },
+  { key: 'om_namo_narayanaya', label: 'Om Namo Narayanaya', devanagari: 'ॐ नमो नारायणाय', transliteration: 'Om Namo Nārāyaṇāya', meaning: 'Salutation to Lord Narayana.', tradition: 'hindu' },
+  { key: 'mahamrityunjaya', label: 'Mahamrityunjaya', devanagari: 'ॐ त्र्यम्बकं यजामहे', transliteration: 'Om Tryambakaṁ Yajāmahe', meaning: 'The great death-conquering mantra of Shiva.', tradition: 'hindu' },
+  { key: 'waheguru', label: 'Waheguru', devanagari: 'ਵਾਹਿਗੁਰੂ', transliteration: 'Waheguru', meaning: 'Wondrous Enlightener.', tradition: 'sikh' },
+  { key: 'om_mani_padme_hum', label: 'Om Mani Padme Hum', devanagari: 'ॐ मणि पद्मे हूँ', transliteration: 'Om Mani Padme Hum', meaning: 'The jewel is in the lotus, a mantra of compassion.', tradition: 'buddhist' },
+  { key: 'namokar', label: 'Namokar Mantra', devanagari: 'णमोकार मंत्र', transliteration: 'Namokar Mantra', meaning: 'I bow to the Arihants, Siddhas, Acharyas, Upadhyayas, and all Sadhus.', tradition: 'jain' },
 ];
 
 const RECOMMENDED_JAPA: Record<TraditionKey, string[]> = {

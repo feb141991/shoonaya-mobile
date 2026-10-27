@@ -881,6 +881,10 @@ export default function JapaScreen() {
       key: 'custom',
       label: trimmed.length > 42 ? `${trimmed.slice(0, 39)}...` : trimmed,
       devanagari: trimmed,
+      // Nothing to romanize -- this is the person's own typed text, not a
+      // sourced mantra. Render code must treat an empty string as "no
+      // transliteration row", not show a blank line.
+      transliteration: '',
       meaning: 'Your personal mantra for this practice.',
       tradition: 'all',
     };
@@ -2153,6 +2157,11 @@ export default function JapaScreen() {
                   >
                     {mantra.devanagari}
                   </Text>
+                  {mantra.transliteration ? (
+                    <Text style={{ ...TYPE.body, color: dim, fontStyle: 'italic', marginTop: 2 }}>
+                      {mantra.transliteration}
+                    </Text>
+                  ) : null}
                   <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 15, color: text, marginTop: 4 }}>
                     {mantra.label}
                   </Text>

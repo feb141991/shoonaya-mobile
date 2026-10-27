@@ -19,34 +19,14 @@ import {
   readBhaktiContentCache,
   writeBhaktiContentCache,
 } from '@/lib/bhaktiContentCache';
+import { isMantraList, displayableTransliteration, type Mantra } from '@/lib/mantras-list-guard';
 
 // ── Bhakti Phase 7 — native equivalent of the PWA's
 // src/app/(main)/mantras/MantrasClient.tsx. Route is a top-level /mantras
 // (not nested under /bhakti) to match the PWA's own route shape.
 // The full mantra catalog is available to every user.
 
-type Mantra = {
-  id: string;
-  tradition: string;
-  deity?: string;
-  nameEn: string;
-  nameLocal: string;
-  tags: string[];
-};
-
 type TabType = 'all' | 'tradition' | 'others';
-
-function isMantraList(value: unknown): value is Mantra[] {
-  return Array.isArray(value) && value.every((item) => {
-    if (!item || typeof item !== 'object') return false;
-    const candidate = item as Record<string, unknown>;
-    return typeof candidate.id === 'string' &&
-      typeof candidate.tradition === 'string' &&
-      typeof candidate.nameEn === 'string' &&
-      typeof candidate.nameLocal === 'string' &&
-      Array.isArray(candidate.tags) && candidate.tags.every((tag) => typeof tag === 'string');
-  });
-}
 
 const AMBER = COLORS.brandGold;
 
@@ -264,6 +244,9 @@ export default function MantrasScreen() {
                   <Card tone="auto" style={{ gap: 10, borderColor: theme.premiumBorder }}>
                     <Text style={{ ...TYPE.cardHeading, fontSize: 15, color: theme.text }}>{mantra.nameEn}</Text>
                     <Text style={{ ...TYPE.caption, color: AMBER }}>{mantra.nameLocal}</Text>
+                    {displayableTransliteration(mantra.textTransliteration) ? (
+                      <Text style={{ ...TYPE.micro, color: theme.dim, fontStyle: 'italic' }}>{displayableTransliteration(mantra.textTransliteration)}</Text>
+                    ) : null}
                     {mantra.deity ? (
                       <Text style={{ ...TYPE.micro, letterSpacing: 1, textTransform: 'uppercase', color: theme.dim }}>{mantra.deity}</Text>
                     ) : null}
