@@ -335,6 +335,11 @@ export class HomeSummaryCoordinator {
           if (!response.ok) {
             throw new Error(`Request failed with status ${response.status}`);
           }
+          // Older deployments return 200 with fabricated profile defaults on
+          // read failure. Do not replace a known identity/calendar with them.
+          if (response.headers.get('X-Shoonaya-Degraded-Sections')?.split(',').some((section) => section.trim() === 'profile')) {
+            throw new Error('Home profile context is unavailable');
+          }
           const payload = await response.json();
           return { payload };
         } finally {

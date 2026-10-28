@@ -254,6 +254,52 @@ describe('Home SWR, Identity & Sankalpa Test Suite (Production Orchestration)', 
       assert.equal(coordinator.state.hasValidState, true);
     });
 
+    for (const failure of ['legacy-profile-degraded', '503'] as const) {
+      it(`preserves cached tradition and location on ${failure}`, async () => {
+        const identity: HomeAuthIdentity = { kind: 'authenticated', userId: `profile-recovery-${failure}` };
+        await writeHomeCache(identity, sanitizeForHomeCache(sampleHomeSummary));
+        const applied: CachedHomeRenderModel[] = [];
+        const errors: boolean[] = [];
+        const coordinator = new HomeSummaryCoordinator({
+          fetchApi: async () => new Response(JSON.stringify({
+            ...sampleHomeSummary,
+            profile: { ...sampleHomeSummary.profile, tradition: 'all' },
+            date: { ...sampleHomeSummary.date, timezone: 'UTC', latitude: 23.1765 },
+          }), {
+            status: failure === '503' ? 503 : 200,
+            headers: { 'X-Shoonaya-Degraded-Sections': 'calendar_stories, profile' },
+          }),
+          onApplyPayload: payload => { applied.push(payload); },
+          onSetLoading: () => {}, onSetError: error => { errors.push(error); },
+          onRedirectToLogin: () => assert.fail('must not log out on provider failure'),
+          buildGuestPayload: () => guestPayloadTemplate,
+          getTimezone: () => 'Europe/London',
+        });
+        await coordinator.loadHome(identity);
+        assert.ok(applied.length > 0);
+        assert.ok(applied.every(payload => payload.profile.tradition === 'hindu'));
+        const cached = await readHomeCache(identity, 'Europe/London');
+        assert.equal(cached?.payload.profile.tradition, 'hindu');
+        assert.equal(cached?.payload.date.timezone, 'Europe/London');
+        assert.equal(cached?.payload.date.latitude, 51.5074);
+        assert.ok(!errors.some(Boolean), 'cached Home must not become an error screen');
+      });
+    }
+
+    it('accepts a legitimate all-traditions profile with unrelated degraded enrichment', async () => {
+      let appliedTradition: string | undefined;
+      const coordinator = new HomeSummaryCoordinator({
+        fetchApi: async () => new Response(JSON.stringify({ ...sampleHomeSummary, profile: { ...sampleHomeSummary.profile, tradition: 'all' } }), {
+          headers: { 'X-Shoonaya-Degraded-Sections': 'calendar_stories' },
+        }),
+        onApplyPayload: payload => { appliedTradition = payload.profile.tradition; },
+        onSetLoading: () => {}, onSetError: () => {}, onRedirectToLogin: () => {},
+        buildGuestPayload: () => guestPayloadTemplate,
+      });
+      await coordinator.loadHome({ kind: 'authenticated', userId: 'legitimate-all-profile' });
+      assert.equal(appliedTradition, 'all');
+    });
+
     it('hero changes during hydration: still issues exactly one request and triggers prefetch', async () => {
       let homeSummaryNetworkRequests = 0;
       let prefetchedUrls: string[] = [];
