@@ -107,30 +107,65 @@ export function NakshatraPicker({
           </View>
         </Card>
       ) : (
-        <PressableSurface
-          accessibilityLabel="Select Nakshatra from catalog"
-          onPress={() => setModalVisible(true)}
-          haptic="selection"
-          style={{
-            minHeight: 56,
-            borderRadius: 16,
-            borderWidth: 1,
-            borderColor: theme.border,
-            backgroundColor: theme.cardSoft,
-            paddingHorizontal: 16,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            <Feather name="search" size={18} color={theme.dim} />
-            <Text style={{ ...TYPE.body, color: theme.dim }}>
-              {isHindi ? 'अपना नक्षत्र खोजें या चुनें…' : 'Search or choose your Nakshatra…'}
-            </Text>
+        <View style={{ gap: 10 }}>
+          {/* A blank search box gives no sense of what a Nakshatra even is.
+              Showing a handful of real ones up front -- tappable, picked
+              straight away, no modal needed -- lets someone see the shape
+              of the choice before deciding whether to search the full 27. */}
+          <Text style={{ ...TYPE.caption, color: theme.dim }}>
+            {isHindi ? 'कुछ उदाहरण, या नीचे पूरी सूची देखें' : 'A few to start, or see the full list below'}
+          </Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+            {options.slice(0, 6).map((item) => (
+              <PressableSurface
+                key={item.key}
+                accessibilityLabel={isHindi ? `${item.sanskrit} चुनें` : `Select ${item.label}`}
+                onPress={() => onSelect(item.key)}
+                haptic="selection"
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 6,
+                  paddingHorizontal: 12,
+                  paddingVertical: 10,
+                  borderRadius: RADII.pill,
+                  borderWidth: 1,
+                  borderColor: theme.border,
+                  backgroundColor: theme.cardSoft,
+                }}
+              >
+                <Text style={{ fontSize: 16 }}>{item.symbol}</Text>
+                <Text style={{ ...TYPE.caption, color: theme.text, fontFamily: FONTS.sansMedium }}>
+                  {isHindi ? item.sanskrit : item.label}
+                </Text>
+              </PressableSurface>
+            ))}
           </View>
-          <Feather name="chevron-right" size={18} color={theme.dim} />
-        </PressableSurface>
+          <PressableSurface
+            accessibilityLabel="Search or see the full Nakshatra catalog"
+            onPress={() => setModalVisible(true)}
+            haptic="selection"
+            style={{
+              minHeight: 56,
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: theme.border,
+              backgroundColor: theme.cardSoft,
+              paddingHorizontal: 16,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Feather name="search" size={18} color={theme.dim} />
+              <Text style={{ ...TYPE.body, color: theme.dim }}>
+                {isHindi ? 'सभी 27 नक्षत्र देखें या खोजें…' : 'See all 27, or search…'}
+              </Text>
+            </View>
+            <Feather name="chevron-right" size={18} color={theme.dim} />
+          </PressableSurface>
+        </View>
       )}
 
       {/* SEARCHABLE FULL-SCREEN MODAL */}
