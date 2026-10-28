@@ -4,6 +4,7 @@ import {
   Linking,
   ActivityIndicator,
   Pressable,
+  ScrollView,
   Share,
   Switch,
   Text,
@@ -303,6 +304,28 @@ export default function OnboardingScreen() {
   const goToStepRef = useRef<((nextStep: Step, overrides?: Partial<OnboardingDraftData>) => void) | undefined>(undefined);
   const handleAllowLocationRef = useRef<(() => Promise<void>) | undefined>(undefined);
 
+  // Progressive reveal: on a step with several fields, scroll to the next
+  // one once the current one is answered, so a field sitting below the fold
+  // doesn't just get missed and left at its default. Scrolls only forward
+  // and only once per field per step visit (the "already advanced" refs
+  // below) -- it must never yank the screen while someone is still reading
+  // or editing something they already answered.
+  type Scrollable = ScrollView;
+  const stepScrollRef = useRef<Scrollable>(null);
+  const genderSectionYRef = useRef(0);
+  const rashiSectionYRef = useRef(0);
+  const hasAdvancedToGenderRef = useRef(false);
+  const hasAdvancedToRashiRef = useRef(false);
+  const scrollToSection = (y: number) => {
+    setTimeout(() => {
+      stepScrollRef.current?.scrollTo({ y: Math.max(0, y - 24), animated: true });
+    }, 380);
+  };
+  useEffect(() => {
+    hasAdvancedToGenderRef.current = false;
+    hasAdvancedToRashiRef.current = false;
+  }, [step]);
+
   const getCachedUserId = async (): Promise<string | null> => {
     if (userIdRef.current) return userIdRef.current;
     try {
@@ -428,6 +451,10 @@ export default function OnboardingScreen() {
     const nextStage = suggestedLifeStage(value);
     if (!isManualLifeStage) {
       setLifeStage(nextStage);
+    }
+    if (nextStage && !hasAdvancedToGenderRef.current) {
+      hasAdvancedToGenderRef.current = true;
+      scrollToSection(genderSectionYRef.current);
     }
   };
 
@@ -981,6 +1008,7 @@ export default function OnboardingScreen() {
         transitionKey={step}
         title={stepTitle}
         isHindi={isHindi}
+        scrollRef={stepScrollRef}
         eyebrow={step === 'preferences'
           ? translated('BEGIN YOUR JOURNEY', 'अपनी यात्रा शुरू करें')
           : undefined}
@@ -1281,11 +1309,15 @@ export default function OnboardingScreen() {
                 onPress: () => {
                   setLifeStage((prev) => (prev === stage.key ? null : stage.key));
                   setIsManualLifeStage(true);
+                  if (lifeStage !== stage.key && !hasAdvancedToGenderRef.current) {
+                    hasAdvancedToGenderRef.current = true;
+                    scrollToSection(genderSectionYRef.current);
+                  }
                 },
               }))}
             </View>
 
-            <View style={{ gap: 12 }}>
+            <View style={{ gap: 12 }} onLayout={(e) => { genderSectionYRef.current = e.nativeEvent.layout.y; }}>
               <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 12, lineHeight: isHindi ? 18 : undefined, color: dim, textTransform: isHindi ? 'none' : 'uppercase', letterSpacing: isHindi ? 0 : 1 }}>
                 {translated('Gender', 'लिंग')}
               </Text>
@@ -1296,7 +1328,13 @@ export default function OnboardingScreen() {
                     <PressableSurface
                       key={g.key}
                       haptic="none"
-                      onPress={() => { void selectWithHaptic(() => setGender(g.key)); }}
+                      onPress={() => {
+                        void selectWithHaptic(() => setGender(g.key));
+                        if (tradition === 'hindu' && !hasAdvancedToRashiRef.current) {
+                          hasAdvancedToRashiRef.current = true;
+                          scrollToSection(rashiSectionYRef.current);
+                        }
+                      }}
                       accessibilityState={{ selected }}
                       style={{
                         flex: 1,
@@ -1320,7 +1358,7 @@ export default function OnboardingScreen() {
             </View>
 
             {tradition === 'hindu' ? (
-              <View style={{ gap: 12 }}>
+              <View style={{ gap: 12 }} onLayout={(e) => { rashiSectionYRef.current = e.nativeEvent.layout.y; }}>
                 <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.serifBold, fontSize: 20, lineHeight: isHindi ? 30 : 24, color: text }}>
                   {translated('Your Rashi', 'आपकी राशि')}
                 </Text>

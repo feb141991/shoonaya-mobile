@@ -117,7 +117,7 @@ function NoteBody({
               key={index}
               style={[
                 styles.sectionTitle,
-                { color: theme.text, fontFamily: headingFont, lineHeight: language === 'hi' ? 34 : styles.sectionTitle.lineHeight },
+                { color: theme.text, fontFamily: headingFont, lineHeight: language === 'hi' ? 36 : styles.sectionTitle.lineHeight },
               ]}
             >
               {block.text}
@@ -258,7 +258,7 @@ export function FounderNoteInterlude({
                   <Feather name="chevron-left" size={21} color={theme.text} />
                 </PressableSurface>
                 <View style={styles.greetingBlock}>
-                  <Text style={[styles.greeting, { color: theme.text, fontFamily: language === 'hi' ? FONTS.devanagariBold : FONTS.serifBold, lineHeight: language === 'hi' ? 25 : styles.greeting.lineHeight }]}>
+                  <Text style={[styles.greeting, { color: theme.text, fontFamily: language === 'hi' ? FONTS.devanagariBold : FONTS.serifBold, lineHeight: language === 'hi' ? 27 : styles.greeting.lineHeight }]}>
                     {copy.greeting[tradition]}
                   </Text>
                   <Text style={[styles.welcome, { color: theme.dim, fontFamily: language === 'hi' ? FONTS.devanagari : FONTS.sans, lineHeight: language === 'hi' ? 19 : styles.welcome.lineHeight }]}>
@@ -336,7 +336,7 @@ export function FounderNoteInterlude({
                 >
                   {copy.teaser}
                 </Text>
-                <Text style={[styles.rootLine, { color: theme.earth, fontFamily: language === 'hi' ? FONTS.devanagariBold : FONTS.serifBold, lineHeight: language === 'hi' ? 26 : styles.rootLine.lineHeight }]}>
+                <Text style={[styles.rootLine, { color: theme.earth, fontFamily: language === 'hi' ? FONTS.devanagariBold : FONTS.serifBold, lineHeight: language === 'hi' ? 27 : styles.rootLine.lineHeight }]}>
                   {language === 'hi'
                     ? 'दूरी हमारे रहने का स्थान बदल सकती है। उसे हमारी जड़ें नहीं मिटानी चाहिए।'
                     : 'Distance may change where we live. It should not erase our roots.'}
@@ -366,7 +366,7 @@ export function FounderNoteInterlude({
                   {
                     color: theme.text,
                     fontFamily: language === 'hi' ? FONTS.devanagariBold : FONTS.serifBold,
-                    lineHeight: language === 'hi' ? 26 : undefined,
+                    lineHeight: language === 'hi' ? 27 : undefined,
                   },
                 ]}
               >
@@ -433,7 +433,7 @@ export function FounderNoteInterlude({
                   <Text style={[styles.founderRole, { color: theme.dim, fontFamily: language === 'hi' ? FONTS.devanagari : FONTS.sans, lineHeight: language === 'hi' ? 19 : undefined }]}>
                     {copy.founderRole}
                   </Text>
-                  <Text style={[styles.closing, { color: theme.brand, fontFamily: language === 'hi' ? FONTS.devanagariBold : FONTS.serifBold, lineHeight: language === 'hi' ? 30 : undefined }]}>
+                  <Text style={[styles.closing, { color: theme.brand, fontFamily: language === 'hi' ? FONTS.devanagariBold : FONTS.serifBold, lineHeight: language === 'hi' ? 31 : undefined }]}>
                     {copy.closing}
                   </Text>
                 </View>

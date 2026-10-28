@@ -172,6 +172,11 @@ async function uploadAuthDiagnostics(): Promise<void> {
       clearTimeout(timeout);
     }
 
+    if (response.status === 400) {
+      await removeUploadedAuthDiagnostics(events.map((event) => event.requestId));
+      await AsyncStorage.setItem(AUTH_DIAGNOSTIC_LAST_UPLOAD_KEY, String(Date.now()));
+      return;
+    }
     if (response.status !== 202) return;
     await removeUploadedAuthDiagnostics(events.map((event) => event.requestId));
     await AsyncStorage.setItem(AUTH_DIAGNOSTIC_LAST_UPLOAD_KEY, String(Date.now()));
@@ -210,6 +215,11 @@ async function uploadApiRequestDiagnostics(): Promise<void> {
       clearTimeout(timeout);
     }
 
+    if (response.status === 400) {
+      await removeUploadedApiRequestDiagnostics(events.map((event) => event.clientEventId));
+      await AsyncStorage.setItem(API_DIAGNOSTIC_LAST_UPLOAD_KEY, String(Date.now()));
+      return;
+    }
     if (response.status !== 202) return;
     await removeUploadedApiRequestDiagnostics(events.map((event) => event.clientEventId));
     await AsyncStorage.setItem(API_DIAGNOSTIC_LAST_UPLOAD_KEY, String(Date.now()));

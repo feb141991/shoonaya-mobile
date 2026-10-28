@@ -67,6 +67,8 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-mother-shandilees-bargain': require('@/assets/panchatantra/mother-shandilee-1.webp'),
   'panchatantra-self-defeating-forethought': require('@/assets/panchatantra/self-defeating-forethought-1.webp'),
   'panchatantra-mister-duly': require('@/assets/panchatantra/mister-duly-1.webp'),
+  'panchatantra-soft-the-weaver': require('@/assets/panchatantra/soft-the-weaver-1.webp'),
+  'panchatantra-hang-ball-and-greedy': require('@/assets/panchatantra/hang-ball-and-greedy-1.webp'),
 };
 
 /**
@@ -459,6 +461,22 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/mister-duly-4.webp'),
     require('@/assets/panchatantra/mister-duly-5.webp'),
     require('@/assets/panchatantra/mister-duly-6.webp'),
+  ],
+  'panchatantra-soft-the-weaver': [
+    require('@/assets/panchatantra/soft-the-weaver-1.webp'),
+    require('@/assets/panchatantra/soft-the-weaver-2.webp'),
+    require('@/assets/panchatantra/soft-the-weaver-3.webp'),
+    require('@/assets/panchatantra/soft-the-weaver-4.webp'),
+    require('@/assets/panchatantra/soft-the-weaver-5.webp'),
+    require('@/assets/panchatantra/soft-the-weaver-6.webp'),
+  ],
+  'panchatantra-hang-ball-and-greedy': [
+    require('@/assets/panchatantra/hang-ball-and-greedy-1.webp'),
+    require('@/assets/panchatantra/hang-ball-and-greedy-2.webp'),
+    require('@/assets/panchatantra/hang-ball-and-greedy-3.webp'),
+    require('@/assets/panchatantra/hang-ball-and-greedy-4.webp'),
+    require('@/assets/panchatantra/hang-ball-and-greedy-5.webp'),
+    require('@/assets/panchatantra/hang-ball-and-greedy-6.webp'),
   ],
 };
 

@@ -70,11 +70,14 @@ function recordAuthOutcome(input: {
 }) {
   const route = authDiagnosticRoute(input.path);
   if (route === 'other') return;
+  const baseRequestId = input.response?.headers.get('x-request-id') ?? input.requestId;
+  const rawRetry = input.response && input.finalResponse && input.response !== input.finalResponse
+    ? input.finalResponse.headers.get('x-request-id')
+    : null;
+  const retryRequestId = rawRetry && rawRetry !== baseRequestId ? rawRetry : null;
   const base = {
-    requestId: input.response?.headers.get('x-request-id') ?? input.requestId,
-    retryRequestId: input.response && input.finalResponse && input.response !== input.finalResponse
-      ? input.finalResponse.headers.get('x-request-id')
-      : null,
+    requestId: baseRequestId,
+    retryRequestId,
     route,
     initialStatus: input.initialStatus,
     finalStatus: input.finalStatus,

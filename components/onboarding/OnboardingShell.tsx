@@ -26,6 +26,12 @@ type OnboardingShellProps = {
   // ascenders/matras on every single onboarding step (this prop renders on
   // all of them). See the matching fix in app/(auth)/onboarding.tsx itself.
   isHindi?: boolean;
+  // Lets a step scroll to a field it just auto-advanced past/to (e.g. after
+  // the person fills one field in a multi-field step, scroll to reveal the
+  // next one so they know there's more, rather than letting it sit below
+  // the fold where it's easy to miss and skip). Optional: steps with a
+  // single field or nothing worth sequencing don't need to pass this.
+  scrollRef?: React.RefObject<import('react-native').ScrollView | null>;
   eyebrow?: string;
   stepLabel: string;
   stepPosition: number;
@@ -51,6 +57,7 @@ export function OnboardingShell({
   transitionKey,
   title,
   isHindi = false,
+  scrollRef,
   eyebrow,
   stepLabel,
   stepPosition,
@@ -74,7 +81,8 @@ export function OnboardingShell({
   const isDark = useColorScheme() === 'dark';
   const theme = themeColor(isDark);
   const insets = useSafeAreaInsets();
-  const scrollViewRef = useRef<ScrollView>(null);
+  const internalScrollRef = useRef<ScrollView>(null);
+  const scrollViewRef = scrollRef ?? internalScrollRef;
   const headingRef = useRef<View>(null);
   const boundedStepCount = Math.max(1, stepCount);
   const boundedPosition = Math.max(1, Math.min(stepPosition, boundedStepCount));
