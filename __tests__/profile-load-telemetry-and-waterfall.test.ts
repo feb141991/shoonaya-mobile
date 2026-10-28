@@ -34,7 +34,7 @@ describe('Profile loadProfile: route-open telemetry and kul waterfall (docs/PERF
   it('paints the main profile before the secondary kul lookup, not after', () => {
     const summaryIndex = profile.indexOf("setSummary(payload);");
     const earlyPaintIndex = profile.indexOf('F10 (docs/PERFORMANCE_RESEARCH_AND_EXECUTION_PLAN.md)');
-    const kulLookupIndex = profile.indexOf("from('profiles')\n      .select('kul_id, kuls(name)')");
+    const kulLookupIndex = profile.indexOf("from('profiles')\n      .select('kul_id, kuls!profiles_kul_id_fkey(name)')");
     const loaderReleaseIndex = profile.indexOf('setLoading(false);', earlyPaintIndex);
 
     assert.ok(summaryIndex > -1 && earlyPaintIndex > -1 && kulLookupIndex > -1, 'expected markers not found in source');

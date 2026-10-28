@@ -93,7 +93,7 @@ test('Profile retry after sign-in failure does not run the full sign-out cascade
 });
 
 test('KUL enrichment preserves the previously-shown link on a failed lookup instead of flipping to none', () => {
-  assert.match(profileTab, /error: kulError \} = await supabase[\s\S]*?\.select\('kul_id, kuls\(name\)'\)/);
+  assert.match(profileTab, /error: kulError \} = await supabase[\s\S]*?\.select\('kul_id, kuls!profiles_kul_id_fkey\(name\)'\)/);
   assert.match(profileTab, /const preserved = kulError && cur && cur\.id === nextProfile\.id;/);
 });
 

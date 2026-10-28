@@ -99,6 +99,7 @@ export async function applyPracticeAnalyticsConsent(userId: string, enabled: boo
 /** Close the practice-only gate immediately while its profile write is pending. */
 export async function revokePracticeAnalyticsConsent(userId: string): Promise<void> {
   configureTransport();
+  ++initializationGeneration;
   if (activeUserId === userId) await setNativePracticeAnalyticsEnabled(false);
   await AsyncStorage.setItem(practiceConsentKey(userId), 'false').catch(() => {});
 }

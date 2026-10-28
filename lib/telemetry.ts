@@ -455,12 +455,20 @@ export function recordAuthDiagnostic(data: AuthDiagnosticRecord): void {
 function isAuthDiagnosticRecord(value: unknown): value is AuthDiagnosticRecord {
   if (!value || typeof value !== 'object') return false;
   const event = value as Partial<AuthDiagnosticRecord>;
-  return typeof event.requestId === 'string' && (event.retryRequestId === null || typeof event.retryRequestId === 'string') && typeof event.route === 'string' &&
-    typeof event.authCode === 'string' && typeof event.initialStatus === 'number' &&
-    typeof event.finalStatus === 'number' && typeof event.authReadyWaitMs === 'number' &&
+  const isUuid = (v: unknown): v is string => typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+  const boundedInteger = (v: unknown, max: number): v is number => typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= max;
+  // Match the canonical backend contract: one invalid persisted event must
+  // not poison every future upload of its valid siblings.
+  return isUuid(event.requestId) && (event.retryRequestId === null || (isUuid(event.retryRequestId) && event.retryRequestId !== event.requestId)) &&
+    event.route !== undefined && event.route !== 'other' && AUTH_DIAGNOSTIC_ROUTES.includes(event.route) &&
+    (event.authCode === 'AUTH_REQUIRED' || event.authCode === 'AUTH_UNAVAILABLE' || event.authCode === 'unknown') &&
+    (event.initialStatus === 0 || event.initialStatus === 401 || event.initialStatus === 503) &&
+    boundedInteger(event.finalStatus, 599) && (event.finalStatus === 0 || event.finalStatus >= 100) &&
+    boundedInteger(event.authReadyWaitMs, 180_000) &&
     typeof event.hadAccessToken === 'boolean' && typeof event.refreshAttempted === 'boolean' &&
-    typeof event.refreshSucceeded === 'boolean' && typeof event.durationMs === 'number' &&
-    typeof event.timestamp === 'number';
+    typeof event.refreshSucceeded === 'boolean' && (!event.refreshSucceeded || event.refreshAttempted) &&
+    boundedInteger(event.durationMs, 180_000) && boundedInteger(event.timestamp, Number.MAX_SAFE_INTEGER) &&
+    event.timestamp <= Date.now() + 24 * 60 * 60 * 1000;
 }
 
 export async function readPendingAuthDiagnostics(): Promise<AuthDiagnosticRecord[]> {
@@ -470,7 +478,8 @@ export async function readPendingAuthDiagnostics(): Promise<AuthDiagnosticRecord
     const parsed: unknown = raw ? JSON.parse(raw) : [];
     if (!Array.isArray(parsed)) return [];
     const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
-    return parsed.filter(isAuthDiagnosticRecord).filter((event) => event.timestamp >= cutoff).slice(-AUTH_DIAGNOSTICS_MAX);
+    const valid = parsed.filter(isAuthDiagnosticRecord).filter((event) => event.timestamp >= cutoff);
+    return [...new Map(valid.map((event) => [event.requestId, event])).values()].slice(-AUTH_DIAGNOSTICS_MAX);
   } catch { return []; }
 }
 

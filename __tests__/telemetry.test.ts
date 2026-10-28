@@ -535,6 +535,28 @@ describe('Telemetry -- anonymous auth diagnostic outbox', () => {
     await AsyncStorage.removeItem('shoonaya_auth_diag_v1_pending');
   });
 
+  it('filters invalid persisted auth events without blocking valid siblings', async () => {
+    const valid = {
+      requestId: 'a1b2c3d4-e5f6-4789-8123-456789abcdef', retryRequestId: null,
+      route: 'register_token', authCode: 'unknown', initialStatus: 0, finalStatus: 0,
+      authReadyWaitMs: 100, hadAccessToken: false, refreshAttempted: false,
+      refreshSucceeded: false, durationMs: 5000, timestamp: Date.now(),
+    };
+    const invalid = [
+      { durationMs: 180001 }, { authReadyWaitMs: 180001 }, { durationMs: -1 },
+      { route: 'other' }, { authCode: 'invented' }, { initialStatus: 400 },
+      { finalStatus: 99 }, { requestId: 'not-a-uuid' },
+      { retryRequestId: valid.requestId }, { refreshSucceeded: true },
+      { timestamp: Date.now() + 2 * 24 * 60 * 60 * 1000 },
+    ];
+    await AsyncStorage.setItem('shoonaya_auth_diag_v1_pending', JSON.stringify([
+      ...invalid.map((overrides) => ({ ...valid, ...overrides })), valid, valid,
+    ]));
+    assert.deepEqual(await readPendingAuthDiagnostics(), [valid]);
+    await removeUploadedAuthDiagnostics([valid.requestId]);
+    assert.deepEqual(await readPendingAuthDiagnostics(), []);
+  });
+
   it('keeps bounded auth outcomes device-scoped and acknowledges by request ID', async () => {
     const event = {
       requestId: 'a1b2c3d4-e5f6-4789-8123-456789abcdef',

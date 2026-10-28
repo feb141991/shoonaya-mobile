@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -55,11 +55,11 @@ import {
   clearAllSettingsCaches,
   mergeServerWithPending,
   classifyWriteFailure,
-  nextBackoffMs,
   type SettingsCacheIdentity,
   type SettingsFields,
   type PendingSettingsWrite,
 } from '@/lib/settingsCache';
+import { SettingsWriteCoordinator, settingsRetryDelay, confirmedSettingsConsent } from '@/lib/settingsWriteCoordinator';
 import { recordRouteOpen, recordRefreshFailure, recordMutationRetryOutcome } from '@/lib/telemetry';
 import { AppTourModal } from '@/components/tour/AppTourModal';
 import { HeroBackdropPicker } from '@/components/home/HeroBackdropPicker';
@@ -416,7 +416,14 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   const [reminderCoverageGapSchemaReady, setReminderCoverageGapSchemaReady] = useState(false);
   const [themePref, setThemePref] = useState<ThemePref>('system');
   const [isGuest, setIsGuest] = useState(false);
-  const [pendingWrite, setPendingWrite] = useState<PendingSettingsWrite | null>(null);
+  const [pendingWrite, setPendingWriteState] = useState<PendingSettingsWrite | null>(null);
+  const writeCoordinator = useRef(new SettingsWriteCoordinator()).current;
+  const settingsRef = useRef(settings);
+  settingsRef.current = settings;
+  const setPendingWrite = useCallback((write: PendingSettingsWrite | null) => {
+    writeCoordinator.setPending(write);
+    setPendingWriteState(write);
+  }, [writeCoordinator]);
   const [profileTradition, setProfileTradition] = useState<string>('hindu');
   const [heroPickerVisible, setHeroPickerVisible] = useState(false);
   const [greetingPickerVisible, setGreetingPickerVisible] = useState(false);
@@ -437,7 +444,17 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     }
   }, []);
 
-  useEffect(() => () => clearRetryTimer(), [clearRetryTimer]);
+  useLayoutEffect(() => {
+    const lease = captureAppIdentity();
+    identityRef.current = appIdentity.kind === 'authenticated'
+      ? { kind: 'authenticated', userId: appIdentity.userId }
+      : appIdentity.kind === 'guest' ? { kind: 'guest' } : null;
+    if (appIdentity.kind === 'authenticated') writeCoordinator.bind(appIdentity.userId, lease.isCurrent);
+    setPendingWrite(null);
+    setSaving(false);
+    setIsGuest(appIdentity.kind === 'guest');
+    return () => { clearRetryTimer(); writeCoordinator.cancel(); };
+  }, [appIdentity, clearRetryTimer, setPendingWrite, writeCoordinator]);
 
   // Sends the pending write's desired fields to the server. On success,
   // clears the pending entry and adopts the server's persisted values
@@ -448,46 +465,86 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   const attemptPendingWrite = useCallback(async (write: PendingSettingsWrite) => {
     const identity = identityRef.current;
     if (!identity || identity.kind === 'guest') return; // guest writes are local-only, never queued
-
-    setSaving(true);
-    try {
-      const response = await apiFetch('/api/native/profile', {
-        method: 'PATCH',
-        body: JSON.stringify(write.fields),
-      });
-
-      if (response.ok) {
-        const json = await response.json().catch(() => null) as { persisted?: Partial<SettingsState>; updatedAt?: string } | null;
-        clearRetryTimer();
-        setPendingWrite(null);
-        setSettings((current) => ({ ...current, ...(json?.persisted ?? write.fields) }));
-        const cached = await readSettingsCache(identity);
-        await writeSettingsCache({
-          schemaVersion: 2,
-          identity,
-          savedAt: Date.now(),
-          settings: { ...(cached?.settings ?? INITIAL_SETTINGS), ...(json?.persisted ?? write.fields) },
-          serverUpdatedAt: json?.updatedAt ?? cached?.serverUpdatedAt ?? null,
-          pendingOperations: [],
+    const ownerLease = captureAppIdentity();
+    if (!isSameAppIdentity(ownerLease.identity, identity)) return;
+    await writeCoordinator.send(write, async (isCurrent) => {
+      setSaving(true);
+      try {
+        const response = await apiFetch('/api/native/profile', {
+          method: 'PATCH',
+          body: JSON.stringify(write.fields),
+          expectedUserId: identity.userId,
         });
-        recordMutationRetryOutcome(identity, 'settings', 'success', write.attempts);
-        const persistedSettings = json?.persisted ?? write.fields;
-        if ('consent_product_analytics' in persistedSettings) {
-          await applyProductAnalyticsConsent(identity.userId, persistedSettings.consent_product_analytics === true);
-        }
-        if ('consent_religious_data' in persistedSettings) {
-          await applyPracticeAnalyticsConsent(identity.userId, persistedSettings.consent_religious_data === true);
-        }
-        return;
-      }
+        if (!isCurrent()) return;
 
-      const outcome = classifyWriteFailure(response.status, response.headers.get('Retry-After'));
-      if (outcome.kind === 'retry') {
+        if (response.ok) {
+          const json = await response.json().catch(() => null) as { persisted?: Partial<SettingsState>; updatedAt?: string } | null;
+          if (!isCurrent()) return;
+          clearRetryTimer();
+          await writeCoordinator.store(write, async (stillCurrent) => {
+            const cached = await readSettingsCache(identity);
+            if (!stillCurrent()) return;
+            await writeSettingsCache({
+              schemaVersion: 2, identity, savedAt: Date.now(),
+              settings: { ...(cached?.settings ?? INITIAL_SETTINGS), ...(json?.persisted ?? write.fields) },
+              serverUpdatedAt: json?.updatedAt ?? cached?.serverUpdatedAt ?? null,
+              pendingOperations: [],
+            });
+          });
+          if (!isCurrent()) return;
+          settingsRef.current = { ...settingsRef.current, ...(json?.persisted ?? write.fields) };
+          setSettings(settingsRef.current);
+          recordMutationRetryOutcome(identity, 'settings', 'success', write.attempts);
+          const persistedSettings = json?.persisted ?? write.fields;
+          if ('consent_product_analytics' in persistedSettings) {
+            await applyProductAnalyticsConsent(identity.userId, persistedSettings.consent_product_analytics === true);
+          }
+          if (!isCurrent()) return;
+          if ('consent_religious_data' in persistedSettings) {
+            await applyPracticeAnalyticsConsent(identity.userId, persistedSettings.consent_religious_data === true);
+          }
+          if (isCurrent()) setPendingWrite(null);
+          return;
+        }
+
+        const outcome = classifyWriteFailure(response.status, response.headers.get('Retry-After'));
+        if (outcome.kind === 'retry') {
+          const attempts = write.attempts + 1;
+          const backoff = settingsRetryDelay(write.attempts, response.status, outcome.afterMs);
+          if (backoff === null) {
+            // Backoff table exhausted -- stop auto-retrying, surface failure.
+            const { message, retryable } = classifyPendingWriteFailure(await requestErrorFromResponse(response), language);
+            if (!isCurrent()) return;
+            const failed: PendingSettingsWrite = { ...write, attempts, status: 'failed', failureMessage: message, failureRetryable: retryable };
+            setPendingWrite(failed);
+            await persistPendingWrite(identity, failed);
+            recordMutationRetryOutcome(identity, 'settings', 'permanent_failure', attempts);
+            return;
+          }
+          const next: PendingSettingsWrite = { ...write, attempts, nextAttemptAt: Date.now() + backoff, status: 'pending' };
+          setPendingWrite(next);
+          await persistPendingWrite(identity, next);
+          if (!isCurrent()) return;
+          clearRetryTimer();
+          retryTimerRef.current = setTimeout(() => { void attemptPendingWrite(next); }, backoff);
+          recordMutationRetryOutcome(identity, 'settings', 'retry', attempts);
+          return;
+        }
+
+        // Permanent failure (most 4xx) -- do not retry automatically.
+        const { message, retryable } = classifyPendingWriteFailure(await requestErrorFromResponse(response), language);
+        if (!isCurrent()) return;
+        const failed: PendingSettingsWrite = { ...write, attempts: write.attempts + 1, status: 'failed', failureMessage: message, failureRetryable: retryable };
+        setPendingWrite(failed);
+        await persistPendingWrite(identity, failed);
+        recordMutationRetryOutcome(identity, 'settings', 'permanent_failure', failed.attempts);
+      } catch (error) {
+        if (!isCurrent()) return;
+        // Network error -- same retry treatment as 5xx.
         const attempts = write.attempts + 1;
-        const backoff = nextBackoffMs(write.attempts) ?? outcome.afterMs;
+        const backoff = settingsRetryDelay(write.attempts);
         if (backoff === null) {
-          // Backoff table exhausted -- stop auto-retrying, surface failure.
-          const { message, retryable } = classifyPendingWriteFailure(await requestErrorFromResponse(response), language);
+          const { message, retryable } = classifyPendingWriteFailure(error, language);
           const failed: PendingSettingsWrite = { ...write, attempts, status: 'failed', failureMessage: message, failureRetryable: retryable };
           setPendingWrite(failed);
           await persistPendingWrite(identity, failed);
@@ -497,50 +554,27 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
         const next: PendingSettingsWrite = { ...write, attempts, nextAttemptAt: Date.now() + backoff, status: 'pending' };
         setPendingWrite(next);
         await persistPendingWrite(identity, next);
+        if (!isCurrent()) return;
         clearRetryTimer();
         retryTimerRef.current = setTimeout(() => { void attemptPendingWrite(next); }, backoff);
         recordMutationRetryOutcome(identity, 'settings', 'retry', attempts);
-        return;
+      } finally {
+        // A superseding intent must not inherit the old request's busy state.
+        if (ownerLease.isCurrent()) setSaving(false);
       }
-
-      // Permanent failure (most 4xx) -- do not retry automatically.
-      const { message, retryable } = classifyPendingWriteFailure(await requestErrorFromResponse(response), language);
-      const failed: PendingSettingsWrite = { ...write, attempts: write.attempts + 1, status: 'failed', failureMessage: message, failureRetryable: retryable };
-      setPendingWrite(failed);
-      await persistPendingWrite(identity, failed);
-      recordMutationRetryOutcome(identity, 'settings', 'permanent_failure', failed.attempts);
-    } catch (error) {
-      // Network error -- same retry treatment as 5xx.
-      const attempts = write.attempts + 1;
-      const backoff = nextBackoffMs(write.attempts);
-      if (backoff === null) {
-        const { message, retryable } = classifyPendingWriteFailure(error, language);
-        const failed: PendingSettingsWrite = { ...write, attempts, status: 'failed', failureMessage: message, failureRetryable: retryable };
-        setPendingWrite(failed);
-        await persistPendingWrite(identity, failed);
-        recordMutationRetryOutcome(identity, 'settings', 'permanent_failure', attempts);
-        return;
-      }
-      const next: PendingSettingsWrite = { ...write, attempts, nextAttemptAt: Date.now() + backoff, status: 'pending' };
-      setPendingWrite(next);
-      await persistPendingWrite(identity, next);
-      clearRetryTimer();
-      retryTimerRef.current = setTimeout(() => { void attemptPendingWrite(next); }, backoff);
-      recordMutationRetryOutcome(identity, 'settings', 'retry', attempts);
-    } finally {
-      setSaving(false);
-    }
-  }, [clearRetryTimer, language]);
+    });
+  }, [clearRetryTimer, language, setPendingWrite, writeCoordinator]);
 
   async function persistPendingWrite(identity: SettingsCacheIdentity, write: PendingSettingsWrite | null) {
-    const cached = await readSettingsCache(identity);
-    await writeSettingsCache({
-      schemaVersion: 2,
-      identity,
-      savedAt: Date.now(),
-      settings: cached?.settings ?? INITIAL_SETTINGS,
-      serverUpdatedAt: cached?.serverUpdatedAt ?? null,
-      pendingOperations: write ? [write] : [],
+    await writeCoordinator.store(write, async (isCurrent) => {
+      const cached = await readSettingsCache(identity);
+      if (!isCurrent()) return;
+      await writeSettingsCache({
+        schemaVersion: 2, identity, savedAt: Date.now(),
+        settings: cached?.settings ?? INITIAL_SETTINGS,
+        serverUpdatedAt: cached?.serverUpdatedAt ?? null,
+        pendingOperations: write ? [write] : [],
+      });
     });
   }
 
@@ -549,6 +583,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     // already-centrally-resolved identity instead of independently
     // re-verifying the session/guest flag on every mount.
     const lease = captureAppIdentity();
+    const writeRevision = writeCoordinator.getRevision();
     if (appIdentity.kind === 'loading') return;
     if (!isSameAppIdentity(lease.identity, appIdentity)) return;
     const guest = appIdentity.kind === 'guest';
@@ -638,6 +673,9 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     if (!lease.isCurrent()) return;
 
     if (profileRes.error) throw profileRes.error;
+    // A GET started before a save/acknowledgment cannot restore the old outbox
+    // or overwrite the newer desired state when it eventually arrives.
+    if (writeRevision !== writeCoordinator.getRevision()) return;
 
     setFamilyRemembranceSchemaReady(profileRes.familyRemembranceSchemaReady);
     setBrahmaMuhurtaSchemaReady(profileRes.brahmaMuhurtaSchemaReady);
@@ -646,26 +684,28 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     const profileRow = (profileRes.data ?? null) as (Partial<SettingsState> & { tradition?: string | null }) | null;
     setProfileTradition(profileRow?.tradition || 'hindu');
     const remote = toSettingsState(profileRow ?? INITIAL_SETTINGS);
-    const pending = (cached?.pendingOperations ?? []).filter((op) => op.status === 'pending' || op.status === 'failed');
+    const activePending = writeCoordinator.getPending();
+    const pending = activePending ? [activePending] : (cached?.pendingOperations ?? []).filter((op) => op.status === 'pending' || op.status === 'failed');
     const merged = mergeServerWithPending(remote, pending);
 
+    settingsRef.current = merged;
     setSettings(merged);
-      if (appIdentity.kind === 'authenticated') {
-        // Consent is authoritative only when returned by the server. Pending
-        // optimistic settings must never enable analytics collection.
-        await applyProductAnalyticsConsent(appIdentity.userId, remote.consent_product_analytics === true);
-        await applyPracticeAnalyticsConsent(appIdentity.userId, remote.consent_religious_data === true);
-      }
     setPendingWrite(pending[0] ?? null);
-    await writeSettingsCache({
-      schemaVersion: 2,
-      identity,
-      savedAt: Date.now(),
-      settings: remote,
-      serverUpdatedAt: cached?.serverUpdatedAt ?? null,
-      pendingOperations: pending,
+    const restoredRevision = writeCoordinator.getRevision();
+    const isCurrentRefresh = () => lease.isCurrent() && restoredRevision === writeCoordinator.getRevision();
+    const consent = confirmedSettingsConsent(remote, writeCoordinator.getPending());
+    await applyProductAnalyticsConsent(appIdentity.userId, consent.product);
+    if (!isCurrentRefresh()) return;
+    await applyPracticeAnalyticsConsent(appIdentity.userId, consent.practice);
+    if (!isCurrentRefresh()) return;
+    await writeCoordinator.store(pending[0] ?? null, async () => {
+      if (!isCurrentRefresh()) return;
+      await writeSettingsCache({
+        schemaVersion: 2, identity, savedAt: Date.now(), settings: remote,
+        serverUpdatedAt: cached?.serverUpdatedAt ?? null, pendingOperations: pending,
+      });
     });
-    if (!lease.isCurrent()) return;
+    if (!isCurrentRefresh()) return;
 
     if (localTheme === 'light' || localTheme === 'dark' || localTheme === 'system') {
       setThemePref(localTheme);
@@ -678,7 +718,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     // an explicit user Retry tap.
     const resumable = pending.find((op) => op.status === 'pending');
     if (resumable) void attemptPendingWrite(resumable);
-  }, [router, attemptPendingWrite, clearRetryTimer, appIdentity]);
+  }, [router, attemptPendingWrite, clearRetryTimer, appIdentity, setPendingWrite, writeCoordinator]);
 
   // Resume a pending write whenever the app returns to the foreground --
   // per the agreed retry policy, retries happen when foregrounded with
@@ -689,15 +729,11 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       if (state !== 'active') return;
       const identity = identityRef.current;
       if (!identity || identity.kind === 'guest') return;
-      setPendingWrite((current) => {
-        if (current && current.status === 'pending') {
-          void attemptPendingWrite(current);
-        }
-        return current;
-      });
+      const current = writeCoordinator.getPending();
+      if (current?.status === 'pending') void attemptPendingWrite(current);
     });
     return () => subscription.remove();
-  }, [attemptPendingWrite]);
+  }, [attemptPendingWrite, writeCoordinator]);
 
   const runLoad = useCallback(() => {
     const lease = captureAppIdentity();
@@ -774,12 +810,15 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   // same coalesced pending entry rather than queueing a second one, since
   // Settings tracks "the current desired state," not a log of every toggle.
   const persistSettings = async (nextState: SettingsState) => {
+    const lease = captureAppIdentity();
+    if (!isSameAppIdentity(lease.identity, appIdentity)) return;
     if (isGuest) {
       await persistGuestSettings(nextState);
       return;
     }
     const identity = identityRef.current;
     if (!identity || identity.kind === 'guest') return;
+    if (!isSameAppIdentity(lease.identity, identity)) return;
 
     const changedFields: Partial<SettingsState> = {};
     (Object.keys(nextState) as Array<keyof SettingsState>).forEach((key) => {
@@ -796,14 +835,16 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       void revokePracticeAnalyticsConsent(identity.userId);
     }
 
-    setSettings(nextState);
+    settingsRef.current = { ...settingsRef.current, ...changedFields };
+    setSettings(settingsRef.current);
     clearRetryTimer();
+    const previousWrite = writeCoordinator.getPending();
     const write: PendingSettingsWrite = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      fields: { ...(pendingWrite?.status === 'pending' ? pendingWrite.fields : null), ...changedFields },
+      fields: { ...previousWrite?.fields, ...changedFields },
       attempts: 0,
       nextAttemptAt: Date.now(),
-      createdAt: pendingWrite?.status === 'pending' ? pendingWrite.createdAt : Date.now(),
+      createdAt: previousWrite?.createdAt ?? Date.now(),
       status: 'pending',
     };
     setPendingWrite(write);
@@ -813,9 +854,12 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
 
   const retryFailedWrite = () => {
     if (pendingWrite && pendingWrite.status === 'failed') {
-      const retried: PendingSettingsWrite = { ...pendingWrite, status: 'pending' };
+      const retried: PendingSettingsWrite = { ...pendingWrite, attempts: 0, status: 'pending', failureMessage: undefined, failureRetryable: undefined };
       setPendingWrite(retried);
-      void attemptPendingWrite(retried);
+      const identity = identityRef.current;
+      if (identity?.kind === 'authenticated') {
+        void persistPendingWrite(identity, retried).then(() => attemptPendingWrite(retried));
+      }
     }
   };
 
@@ -832,7 +876,9 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   };
 
   const enableNotificationReminder = async (nextState: SettingsState) => {
+    const lease = captureAppIdentity();
     const allowed = await requestNotificationPermission();
+    if (!lease.isCurrent()) return;
     if (!allowed) {
       Alert.alert(
         'Notifications are off',
@@ -846,6 +892,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     }
 
     await persistSettings(nextState);
+    if (!lease.isCurrent()) return;
 
     if (isGuest) return;
 
@@ -858,8 +905,11 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     // The central dispatcher always creates the in-app bell record before it
     // attempts OS push. Keep the explicit family opt-in useful even when OS
     // permission is off; push permission controls only the device delivery.
+    const lease = captureAppIdentity();
     const allowed = await requestNotificationPermission();
+    if (!lease.isCurrent()) return;
     await persistSettings(nextState);
+    if (!lease.isCurrent()) return;
     if (appIdentity.kind === 'authenticated' && allowed) {
       void registerPushToken(appIdentity.userId, { force: true, reason: 'permission' });
     } else if (!allowed) {

@@ -196,17 +196,18 @@ export default function VratScreen() {
     }
 
     try {
-      const { data: profile } = await supabase
+      const { data: profile, error } = await supabase
         .from('profiles')
-        .select('lat, lon, timezone, tradition, app_language, meaning_language, calendar_profile, calendar_scope')
+        .select('latitude, longitude, timezone, tradition, app_language, meaning_language, calendar_profile, calendar_scope')
         .eq('id', userId)
         .maybeSingle();
       if (!isCurrent()) return;
+      if (error) throw error;
 
       if (profile) {
         const nextGeo: VratGeoState = {
-          lat: profile.lat ?? DEFAULT_GEO.lat,
-          lon: profile.lon ?? DEFAULT_GEO.lon,
+          lat: profile.latitude ?? DEFAULT_GEO.lat,
+          lon: profile.longitude ?? DEFAULT_GEO.lon,
           timezone: profile.timezone ?? DEFAULT_GEO.timezone,
           tradition: profile.tradition ?? DEFAULT_GEO.tradition,
           appLanguage: profile.app_language ?? DEFAULT_GEO.appLanguage,

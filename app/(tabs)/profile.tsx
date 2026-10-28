@@ -575,7 +575,7 @@ export default function ProfileScreen() {
 
     const { data: profileRow, error: kulError } = await supabase
       .from('profiles')
-      .select('kul_id, kuls(name)')
+      .select('kul_id, kuls!profiles_kul_id_fkey(name)')
       .eq('id', payload.profile.id)
       .single();
     if (!isCurrentLoad()) return;

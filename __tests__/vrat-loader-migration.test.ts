@@ -3,6 +3,15 @@ import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
 
+test('Vrat reads the real profile coordinate columns and checks query failures', () => {
+  const vrat = fs.readFileSync(path.join(process.cwd(), 'app/vrat.tsx'), 'utf8');
+  assert.match(vrat, /\.select\('latitude, longitude, timezone,/);
+  assert.match(vrat, /lat: profile\.latitude \?\? DEFAULT_GEO\.lat/);
+  assert.match(vrat, /lon: profile\.longitude \?\? DEFAULT_GEO\.lon/);
+  assert.match(vrat, /data: profile, error[\s\S]*?if \(error\) throw error/);
+  assert.doesNotMatch(vrat, /profile\.(lat|lon)\b/);
+});
+
 // Reliability plan item 6 (Vrat's list screen), done together with item 5's
 // auth-waterfall fix for the same load function -- app/vrat.tsx imports
 // react-native, so this is a structural check (same convention as
