@@ -980,6 +980,7 @@ export default function OnboardingScreen() {
       <OnboardingShell
         transitionKey={step}
         title={stepTitle}
+        isHindi={isHindi}
         eyebrow={step === 'preferences'
           ? translated('BEGIN YOUR JOURNEY', 'अपनी यात्रा शुरू करें')
           : undefined}
@@ -1258,7 +1259,7 @@ export default function OnboardingScreen() {
                 language={language ?? 'en'}
               />
               {age !== null ? (
-                <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 12, color: dim }}>
+                <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 12, lineHeight: isHindi ? 18 : undefined, color: dim }}>
                   {isHindi
                     ? `आयु ${age} · सुझाया गया चरण ${suggestedStage ? LIFE_STAGE_HI[suggestedStage].label : ''}`
                     : `Age ${age} · suggested stage ${LIFE_STAGES.find((s) => s.key === suggestedStage)?.label}`}
@@ -1268,7 +1269,7 @@ export default function OnboardingScreen() {
             </View>
 
             <View style={{ gap: 12 }}>
-              <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.serifBold, fontSize: 20, lineHeight: isHindi ? 28 : 24, color: text }}>
+              <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.serifBold, fontSize: 20, lineHeight: isHindi ? 30 : 24, color: text }}>
                 {translated('Your stage of life', 'आपका जीवन चरण')}
               </Text>
               {LIFE_STAGES.map((stage) => renderSelectRow({
@@ -1285,7 +1286,7 @@ export default function OnboardingScreen() {
             </View>
 
             <View style={{ gap: 12 }}>
-              <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 12, color: dim, textTransform: isHindi ? 'none' : 'uppercase', letterSpacing: isHindi ? 0 : 1 }}>
+              <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 12, lineHeight: isHindi ? 18 : undefined, color: dim, textTransform: isHindi ? 'none' : 'uppercase', letterSpacing: isHindi ? 0 : 1 }}>
                 {translated('Gender', 'लिंग')}
               </Text>
               <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -1309,7 +1310,7 @@ export default function OnboardingScreen() {
                         paddingHorizontal: 8,
                       }}
                     >
-                      <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 13, color: selected ? accent : text, textAlign: 'center' }}>
+                      <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 13, lineHeight: isHindi ? 19 : undefined, color: selected ? accent : text, textAlign: 'center' }}>
                         {g.emoji} {isHindi ? GENDER_HI[g.key] : g.label}
                       </Text>
                     </PressableSurface>
@@ -1320,7 +1321,7 @@ export default function OnboardingScreen() {
 
             {tradition === 'hindu' ? (
               <View style={{ gap: 12 }}>
-                <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.serifBold, fontSize: 20, lineHeight: isHindi ? 28 : 24, color: text }}>
+                <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.serifBold, fontSize: 20, lineHeight: isHindi ? 30 : 24, color: text }}>
                   {translated('Your Rashi', 'आपकी राशि')}
                 </Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
@@ -1345,13 +1346,13 @@ export default function OnboardingScreen() {
                         }}
                       >
                         <Text style={{ fontSize: 24 }}>{item.symbol}</Text>
-                        <Text style={{ marginTop: 4, fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 12, color: selected ? accent : text, textAlign: 'center' }}>
+                        <Text style={{ marginTop: 4, fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 12, lineHeight: isHindi ? 18 : undefined, color: selected ? accent : text, textAlign: 'center' }}>
                           {isHindi ? item.sanskrit : item.label}
                         </Text>
                         <Text style={{ fontFamily: FONTS.serifBold, fontSize: 11, color: dim, textAlign: 'center' }}>
                           {isHindi ? item.label : item.sanskrit}
                         </Text>
-                        <Text style={{ marginTop: 2, fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 9, color: dim, textAlign: 'center' }}>
+                        <Text style={{ marginTop: 2, fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 9, lineHeight: isHindi ? 14 : undefined, color: dim, textAlign: 'center' }}>
                           {isHindi ? item.datesHi : item.dates}
                         </Text>
                       </PressableSurface>
@@ -1363,7 +1364,7 @@ export default function OnboardingScreen() {
 
             {tradition === 'hindu' ? (
               <View style={{ gap: 8 }}>
-                <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 12, color: dim, textTransform: isHindi ? 'none' : 'uppercase', letterSpacing: isHindi ? 0 : 1 }}>
+                <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 12, lineHeight: isHindi ? 18 : undefined, color: dim, textTransform: isHindi ? 'none' : 'uppercase', letterSpacing: isHindi ? 0 : 1 }}>
                   {translated('Gotra (optional)', 'गोत्र (वैकल्पिक)')}
                 </Text>
                 <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 13, lineHeight: isHindi ? 19 : 18, color: dim }}>
@@ -1509,7 +1510,7 @@ export default function OnboardingScreen() {
             {name.trim() ? (
               <View style={{ borderRadius: RADII.xl, borderWidth: 1, borderColor: border, backgroundColor: cardBg, padding: 18, gap: 12 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 11, color: accent, textTransform: isHindi ? 'none' : 'uppercase', letterSpacing: isHindi ? 0 : 1.2 }}>
+                  <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 11, lineHeight: isHindi ? 17 : undefined, color: accent, textTransform: isHindi ? 'none' : 'uppercase', letterSpacing: isHindi ? 0 : 1.2 }}>
                     {translated('Optional Name Story', 'वैकल्पिक नाम कथा')}
                   </Text>
                   {!nameStory && !nameStoryLoading ? (
@@ -1525,7 +1526,7 @@ export default function OnboardingScreen() {
                         borderColor: accent,
                       }}
                     >
-                      <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 12, color: accent }}>
+                      <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 12, lineHeight: isHindi ? 18 : undefined, color: accent }}>
                         {translated('Discover meaning', 'अर्थ जानें')}
                       </Text>
                     </PressableSurface>
@@ -1535,7 +1536,7 @@ export default function OnboardingScreen() {
                 {nameStoryLoading ? (
                   <View style={{ paddingVertical: 14, alignItems: 'center', justifyContent: 'center', gap: 10 }}>
                     <ActivityIndicator color={accent} />
-                    <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 13, color: dim, textAlign: 'center' }}>
+                    <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 13, lineHeight: isHindi ? 19 : undefined, color: dim, textAlign: 'center' }}>
                       {translated(
                         'Dharma Mitra is exploring the sound and sacred meaning of your name…',
                         'धर्म मित्र आपके नाम की ध्वनि और पावन अर्थ को समझ रहा है…'
@@ -1550,7 +1551,7 @@ export default function OnboardingScreen() {
                       {nameStoryError}
                     </Text>
                     <PressableSurface onPress={() => { void generateNameStory(); }} style={{ alignSelf: 'flex-start' }}>
-                      <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 12, color: COLORS.danger, textDecorationLine: 'underline' }}>
+                      <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 12, lineHeight: isHindi ? 18 : undefined, color: COLORS.danger, textDecorationLine: 'underline' }}>
                         {translated('Retry', 'पुनः प्रयास करें')}
                       </Text>
                     </PressableSurface>
@@ -1560,7 +1561,7 @@ export default function OnboardingScreen() {
                 {nameStory ? (
                   <View style={{ gap: 12, marginTop: 4 }}>
                     {nameStory.sacred_meaning ? (
-                      <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.serifBold, fontSize: 20, lineHeight: 26, color: text }}>
+                      <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.serifBold, fontSize: 20, lineHeight: isHindi ? 30 : 24, color: text }}>
                         {nameStory.sacred_meaning}
                       </Text>
                     ) : null}
@@ -1571,10 +1572,10 @@ export default function OnboardingScreen() {
                     ) : null}
                     {nameStory.name_mantra ? (
                       <View style={{ borderRadius: RADII.lg, borderWidth: 1, borderColor: COLORS.homeBorderSoftLight, backgroundColor: wellBg, padding: 12, gap: 4 }}>
-                        <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 11, color: accent, textTransform: isHindi ? 'none' : 'uppercase', letterSpacing: isHindi ? 0 : 1 }}>
+                        <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 11, lineHeight: isHindi ? 17 : undefined, color: accent, textTransform: isHindi ? 'none' : 'uppercase', letterSpacing: isHindi ? 0 : 1 }}>
                           {translated('Name mantra', 'नाम मंत्र')}
                         </Text>
-                        <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.serifBold, fontSize: 18, color: text }}>
+                        <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.serifBold, fontSize: 18, lineHeight: isHindi ? 27 : undefined, color: text }}>
                           {nameStory.name_mantra}
                         </Text>
                       </View>
@@ -1602,7 +1603,7 @@ export default function OnboardingScreen() {
                       }}
                     >
                       <Feather name="share-2" size={15} color={isDark ? COLORS.darkBg : COLORS.ink} />
-                      <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 13, color: isDark ? COLORS.darkBg : COLORS.ink }}>
+                      <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 13, lineHeight: isHindi ? 19 : undefined, color: isDark ? COLORS.darkBg : COLORS.ink }}>
                         {translated('Share Story Card', 'कथा कार्ड शेयर करें')}
                       </Text>
                     </PressableSurface>
@@ -1732,7 +1733,7 @@ export default function OnboardingScreen() {
               }}
             >
               <View style={{ flex: 1, gap: 2 }}>
-                <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 14, color: text }}>
+                <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 14, lineHeight: isHindi ? 21 : undefined, color: text }}>
                   {translated('Occasional email from Shoonaya', 'Shoonaya से कभी-कभार ईमेल')}
                 </Text>
                 <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 12, lineHeight: 18, color: dim }}>
@@ -1780,7 +1781,7 @@ export default function OnboardingScreen() {
             </View>
             {locationDenied ? (
               <View style={{ borderRadius: RADII.lg, borderWidth: 1, borderColor: COLORS.dangerBorder, backgroundColor: COLORS.dangerBg, padding: 14, gap: 4 }}>
-                <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 13, color: COLORS.danger }}>
+                <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 13, lineHeight: isHindi ? 19 : undefined, color: COLORS.danger }}>
                   {translated('Location not enabled', 'स्थान अनुमति नहीं मिली')}
                 </Text>
                 <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 12, lineHeight: 18, color: COLORS.danger }}>

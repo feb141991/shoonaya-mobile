@@ -113,7 +113,13 @@ function NoteBody({
       {blocks.map((block, index) => {
         if (block.kind === 'heading') {
           return (
-            <Text key={index} style={[styles.sectionTitle, { color: theme.text, fontFamily: headingFont }]}>
+            <Text
+              key={index}
+              style={[
+                styles.sectionTitle,
+                { color: theme.text, fontFamily: headingFont, lineHeight: language === 'hi' ? 34 : styles.sectionTitle.lineHeight },
+              ]}
+            >
               {block.text}
             </Text>
           );
@@ -252,10 +258,10 @@ export function FounderNoteInterlude({
                   <Feather name="chevron-left" size={21} color={theme.text} />
                 </PressableSurface>
                 <View style={styles.greetingBlock}>
-                  <Text style={[styles.greeting, { color: theme.text, fontFamily: language === 'hi' ? FONTS.devanagariBold : FONTS.serifBold }]}>
+                  <Text style={[styles.greeting, { color: theme.text, fontFamily: language === 'hi' ? FONTS.devanagariBold : FONTS.serifBold, lineHeight: language === 'hi' ? 25 : styles.greeting.lineHeight }]}>
                     {copy.greeting[tradition]}
                   </Text>
-                  <Text style={[styles.welcome, { color: theme.dim, fontFamily: language === 'hi' ? FONTS.devanagari : FONTS.sans }]}>
+                  <Text style={[styles.welcome, { color: theme.dim, fontFamily: language === 'hi' ? FONTS.devanagari : FONTS.sans, lineHeight: language === 'hi' ? 19 : styles.welcome.lineHeight }]}>
                     {copy.welcome}
                   </Text>
                 </View>
@@ -268,7 +274,7 @@ export function FounderNoteInterlude({
                   <View style={[styles.lotusMark, { borderColor: theme.brand }]} />
                   <View style={[styles.rule, { backgroundColor: theme.brand }]} />
                 </View>
-                <Text style={[styles.tagline, { color: theme.dim, fontFamily: language === 'hi' ? FONTS.devanagari : FONTS.serif }]}>
+                <Text style={[styles.tagline, { color: theme.dim, fontFamily: language === 'hi' ? FONTS.devanagari : FONTS.serif, lineHeight: language === 'hi' ? 26 : styles.tagline.lineHeight }]}>
                   {copy.tagline}
                 </Text>
               </View>
@@ -293,6 +299,7 @@ export function FounderNoteInterlude({
                       color: theme.brand,
                       fontFamily: language === 'hi' ? FONTS.devanagariBold : FONTS.sansSemiBold,
                       letterSpacing: language === 'hi' ? 0 : 1.8,
+                      lineHeight: language === 'hi' ? 17 : undefined,
                     },
                   ]}
                 >
@@ -329,7 +336,7 @@ export function FounderNoteInterlude({
                 >
                   {copy.teaser}
                 </Text>
-                <Text style={[styles.rootLine, { color: theme.earth, fontFamily: language === 'hi' ? FONTS.devanagariBold : FONTS.serifBold }]}>
+                <Text style={[styles.rootLine, { color: theme.earth, fontFamily: language === 'hi' ? FONTS.devanagariBold : FONTS.serifBold, lineHeight: language === 'hi' ? 26 : styles.rootLine.lineHeight }]}>
                   {language === 'hi'
                     ? 'दूरी हमारे रहने का स्थान बदल सकती है। उसे हमारी जड़ें नहीं मिटानी चाहिए।'
                     : 'Distance may change where we live. It should not erase our roots.'}
@@ -356,7 +363,11 @@ export function FounderNoteInterlude({
                 numberOfLines={1}
                 style={[
                   styles.readerHeaderTitle,
-                  { color: theme.text, fontFamily: language === 'hi' ? FONTS.devanagariBold : FONTS.serifBold },
+                  {
+                    color: theme.text,
+                    fontFamily: language === 'hi' ? FONTS.devanagariBold : FONTS.serifBold,
+                    lineHeight: language === 'hi' ? 26 : undefined,
+                  },
                 ]}
               >
                 {copy.headerTitle}
@@ -386,6 +397,7 @@ export function FounderNoteInterlude({
                       color: theme.brand,
                       fontFamily: language === 'hi' ? FONTS.devanagariBold : FONTS.sansSemiBold,
                       letterSpacing: language === 'hi' ? 0 : 1.8,
+                      lineHeight: language === 'hi' ? 17 : undefined,
                     },
                   ]}
                 >
@@ -418,10 +430,10 @@ export function FounderNoteInterlude({
                     {copy.signoff}
                   </Text>
                   <Text style={[styles.founderName, { color: theme.text }]}>{copy.founderName}</Text>
-                  <Text style={[styles.founderRole, { color: theme.dim, fontFamily: language === 'hi' ? FONTS.devanagari : FONTS.sans }]}>
+                  <Text style={[styles.founderRole, { color: theme.dim, fontFamily: language === 'hi' ? FONTS.devanagari : FONTS.sans, lineHeight: language === 'hi' ? 19 : undefined }]}>
                     {copy.founderRole}
                   </Text>
-                  <Text style={[styles.closing, { color: theme.brand, fontFamily: language === 'hi' ? FONTS.devanagariBold : FONTS.serifBold }]}>
+                  <Text style={[styles.closing, { color: theme.brand, fontFamily: language === 'hi' ? FONTS.devanagariBold : FONTS.serifBold, lineHeight: language === 'hi' ? 30 : undefined }]}>
                     {copy.closing}
                   </Text>
                 </View>

@@ -12,8 +12,9 @@ import {
 import { useState } from 'react';
 import * as Haptics from 'expo-haptics';
 
-import { COLORS, MIN_TOUCH_TARGET, RADII, SHADOWS, TYPE } from '@/lib/constants';
+import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, TYPE } from '@/lib/constants';
 import { useSchemeOrReaderAppearance } from '@/lib/readerAppearanceContext';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
 // Reusable CTA primitive — extracted from the near-identical Pressable +
 // ActivityIndicator-swap + Text block that was hand-rolled in at least six
@@ -56,6 +57,14 @@ export function Button({
 }: ButtonProps) {
   // Follows the reader's paper theme inside readers, the device elsewhere.
   const { isDark, theme } = useSchemeOrReaderAppearance();
+  // TYPE.label's fontFamily (FONTS.sansSemiBold) is Latin-only. Every call
+  // site passes a plain `label` string, Hindi included, so this component
+  // must pick the right font itself rather than relying on each of its many
+  // call sites (login, onboarding, otp, sankalpa, etc.) to know to branch --
+  // see the matching OnboardingShell/FounderNoteInterlude fixes for why an
+  // unbranched Latin font here clips Devanagari glyphs.
+  const { language } = useLanguage();
+  const isHindi = language === 'hi';
   const isBusy = loading || !!disabled;
   const [pressed, setPressed] = useState(false);
   const reducedMotion = useReducedMotion();
@@ -101,6 +110,8 @@ export function Button({
             style={{
               ...TYPE.label,
               fontSize: size === 'sm' ? TYPE.label.fontSize : 14.5,
+              fontFamily: isHindi ? FONTS.devanagariBold : TYPE.label.fontFamily,
+              lineHeight: isHindi ? (size === 'sm' ? 18 : 21) : TYPE.label.lineHeight,
               color: palette.textColor,
             }}
           >

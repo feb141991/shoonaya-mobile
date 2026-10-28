@@ -20,6 +20,12 @@ import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, TYPE, themeColor } from '@/lib/
 type OnboardingShellProps = {
   transitionKey: string;
   title: string;
+  // TYPE.hero's fontFamily (FONTS.serifBold) is Latin-only -- without this,
+  // a Hindi title silently falls back to a substitute system font whose
+  // metrics don't match TYPE.hero's fixed lineHeight, clipping Devanagari
+  // ascenders/matras on every single onboarding step (this prop renders on
+  // all of them). See the matching fix in app/(auth)/onboarding.tsx itself.
+  isHindi?: boolean;
   eyebrow?: string;
   stepLabel: string;
   stepPosition: number;
@@ -44,6 +50,7 @@ type OnboardingShellProps = {
 export function OnboardingShell({
   transitionKey,
   title,
+  isHindi = false,
   eyebrow,
   stepLabel,
   stepPosition,
@@ -136,7 +143,12 @@ export function OnboardingShell({
           <View style={{ flex: 1, alignItems: 'center', gap: 5 }}>
             <Text
               accessibilityRole="text"
-              style={{ ...TYPE.caption, color: theme.dim, fontFamily: FONTS.sansMedium }}
+              style={{
+                ...TYPE.caption,
+                color: theme.dim,
+                fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansMedium,
+                lineHeight: isHindi ? 18 : TYPE.caption.lineHeight,
+              }}
             >
               {stepLabel}
             </Text>
@@ -175,12 +187,29 @@ export function OnboardingShell({
             style={{ gap: 8 }}
           >
             {eyebrow ? (
-              <Text style={{ ...TYPE.caption, color: theme.brand, fontFamily: FONTS.sansMedium }}>
+              <Text
+                style={{
+                  ...TYPE.caption,
+                  color: theme.brand,
+                  fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansMedium,
+                  lineHeight: isHindi ? 18 : TYPE.caption.lineHeight,
+                }}
+              >
                 {eyebrow}
               </Text>
             ) : null}
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Text style={{ ...TYPE.hero, color: theme.text, flex: 1 }}>{title}</Text>
+              <Text
+                style={{
+                  ...TYPE.hero,
+                  fontFamily: isHindi ? FONTS.devanagariBold : TYPE.hero.fontFamily,
+                  lineHeight: isHindi ? 41 : TYPE.hero.lineHeight,
+                  color: theme.text,
+                  flex: 1,
+                }}
+              >
+                {title}
+              </Text>
               {requiredStatus ? (
                 <View
                   style={{
@@ -197,7 +226,8 @@ export function OnboardingShell({
                     style={{
                       ...TYPE.caption,
                       color: requiredStatus === 'required' ? theme.brand : theme.dim,
-                      fontFamily: FONTS.sansMedium,
+                      fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansMedium,
+                      lineHeight: isHindi ? 18 : TYPE.caption.lineHeight,
                       textTransform: 'uppercase',
                       letterSpacing: 0.6,
                     }}
@@ -227,7 +257,13 @@ export function OnboardingShell({
             <Text
               accessibilityRole="alert"
               accessibilityLiveRegion="polite"
-              style={{ ...TYPE.caption, color: COLORS.danger, textAlign: 'center' }}
+              style={{
+                ...TYPE.caption,
+                color: COLORS.danger,
+                textAlign: 'center',
+                fontFamily: isHindi ? FONTS.devanagari : TYPE.caption.fontFamily,
+                lineHeight: isHindi ? 18 : TYPE.caption.lineHeight,
+              }}
             >
               {errorMessage}
             </Text>
@@ -249,7 +285,16 @@ export function OnboardingShell({
               paddingHorizontal: 12,
             }}
           >
-            <Text style={{ ...TYPE.label, color: COLORS.ink, fontSize: 16, fontFamily: FONTS.sansMedium, textAlign: 'center' }}>
+            <Text
+              style={{
+                ...TYPE.label,
+                color: COLORS.ink,
+                fontSize: 16,
+                fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansMedium,
+                lineHeight: isHindi ? 24 : TYPE.label.lineHeight,
+                textAlign: 'center',
+              }}
+            >
               {primaryLoading ? loadingLabel : primaryActionLabel}
             </Text>
           </PressableSurface>
@@ -268,7 +313,15 @@ export function OnboardingShell({
                 justifyContent: 'center',
               }}
             >
-              <Text style={{ ...TYPE.caption, color: theme.dim, fontSize: 15, fontFamily: FONTS.sans }}>
+              <Text
+                style={{
+                  ...TYPE.caption,
+                  color: theme.dim,
+                  fontSize: 15,
+                  fontFamily: isHindi ? FONTS.devanagari : FONTS.sans,
+                  lineHeight: isHindi ? 23 : TYPE.caption.lineHeight,
+                }}
+              >
                 {secondaryActionLabel}
               </Text>
             </PressableSurface>
