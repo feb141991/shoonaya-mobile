@@ -55,7 +55,7 @@ import { apiFetch } from '@/lib/api';
 import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, SPACING, TRADITION_ACCENT, TYPE } from '@/lib/constants';
 import { recordLoaderShown, type TelemetryIdentity } from '@/lib/telemetry';
 import { getGreetingPick } from '@/lib/greetingPreference';
-import { getTimeGreeting, getTraditionGreeting } from '@/lib/greetings';
+import { resolveHomeGreeting } from '@/lib/greetings';
 import { getMyUnreadNotificationCount, subscribeToMyNotifications } from '@/lib/notificationsData';
 import { readNotificationsCache, deriveUnreadCount } from '@/lib/notificationsCache';
 import { HERO_MIN_HEIGHT, NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
@@ -1111,11 +1111,11 @@ function HomeContent() {
   // that -- three greeting-shaped fragments stacked in one line (e.g.
   // "Shubh Sandhya, Waheguru Ji Ka Khalsa, Prince"), which read as
   // accumulating rather than a single greeting.
-  const greeting = useMemo(() => {
-    if (greetingOverride) return greetingOverride;
-    const timeGreeting = getTimeGreeting(new Date().getHours());
-    return timeGreeting ?? getTraditionGreeting(state.profile.tradition, new Date(`${state.date.iso}T12:00:00`).getDate());
-  }, [state.profile.tradition, state.date.iso, greetingOverride]);
+  const greeting = useMemo(() => resolveHomeGreeting({
+    override: greetingOverride,
+    tradition: state.profile.tradition,
+    spiritualDate: state.date.iso,
+  }), [state.profile.tradition, state.date.iso, greetingOverride]);
 
   const nextPracticeRow = state.practices.find((row) => row.id === state.nextPractice.id);
   const nextPracticeIcon = nextPracticeRow?.icon ?? 'compass';

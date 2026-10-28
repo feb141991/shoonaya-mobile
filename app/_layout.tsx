@@ -185,6 +185,7 @@ function RootLayout() {
     startupRouteReady &&
     rootSegment !== '(auth)' &&
     rootSegment !== 'auth' &&
+    rootSegment !== 'sanctuary-preparing' &&
     rootSegment !== undefined &&
     !isReaderScreen &&
     !isAiChatScreen &&

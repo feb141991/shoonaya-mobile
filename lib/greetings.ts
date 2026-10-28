@@ -25,3 +25,25 @@ export function getTimeGreeting(hour: number): string | null {
   if (hour >= 20 || hour < 5) return 'Shubh Ratri';
   return null;
 }
+
+/** Shared by daily Home and its onboarding handoff. A chosen greeting is a
+ * complete phrase, never prefixed with a second time-of-day greeting. */
+export function resolveHomeGreeting({
+  override,
+  tradition,
+  spiritualDate,
+  now = new Date(),
+}: {
+  override?: string | null;
+  tradition: string | null;
+  spiritualDate?: string | null;
+  now?: Date;
+}): string {
+  const chosen = override?.trim();
+  if (chosen) return chosen;
+  const timeGreeting = getTimeGreeting(now.getHours());
+  if (timeGreeting) return timeGreeting;
+  const day = spiritualDate ? new Date(`${spiritualDate}T12:00:00`) : now;
+  const seed = Number.isFinite(day.getTime()) ? day.getDate() : now.getDate();
+  return getTraditionGreeting(tradition, seed);
+}

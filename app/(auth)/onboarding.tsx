@@ -34,7 +34,8 @@ import { apiFetch } from '@/lib/api';
 import { AI_CHAT_TIMEOUT_MS } from '@/lib/api-policy';
 import { isFetchCancelled } from '@/lib/fetch-error';
 import { supabase } from '@/lib/supabase';
-import { getAppIdentity } from '@/lib/appIdentity';
+import { captureAppIdentity, getAppIdentity } from '@/lib/appIdentity';
+import { beginSanctuaryPreparation } from '@/lib/sanctuaryPreparation';
 import { identityChanged } from '@/lib/routeOpenAttribution';
 import {
   requestNotificationPermission,
@@ -841,6 +842,15 @@ export default function OnboardingScreen() {
         null,
         user.id
       );
+      const lease = captureAppIdentity();
+      if (lease.identity.kind !== 'authenticated' || lease.identity.userId !== user.id) {
+        setSaving(false);
+        return;
+      }
+      beginSanctuaryPreparation({
+        userId: user.id, displayName, tradition, language,
+        destination: destination ?? '/(tabs)', isCurrent: lease.isCurrent,
+      });
     } catch (error) {
       console.error('[Onboarding] profile save failed', error);
       // A database error is a plain object, not an Error, so the old `error instanceof Error ? error.message : generic`
@@ -852,7 +862,7 @@ export default function OnboardingScreen() {
 
     setSaving(false);
     try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
-    router.replace(destination ?? '/(tabs)');
+    router.replace('/sanctuary-preparing' as Href);
   };
 
   const renderSelectRow = ({
