@@ -156,6 +156,8 @@ test('Panchatantra Artwork Resolution', async (t) => {
       'panchatantra-raven-and-swan',
       'panchatantra-golds-gloom',
       'panchatantra-mother-shandilees-bargain',
+      'panchatantra-self-defeating-forethought',
+      'panchatantra-mister-duly',
     ];
 
     for (const storyId of storiesWithScenes) {
@@ -305,6 +307,8 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-raven-and-swan'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-golds-gloom'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-mother-shandilees-bargain'), 2);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-self-defeating-forethought'), 2);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-mister-duly'), 2);
 
     // Tier 0: Manuscript folios without local art
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-wedge-pulling-monkey'), 0);
@@ -316,7 +320,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
       { id: 'panchatantra-wedge-pulling-monkey', title: 'Wedge Pulling Monkey' },
       { id: 'panchatantra-monk-and-jackal', title: 'The Monk and the Jackal' },
       { id: 'panchatantra-dove-king-and-net', title: 'The Dove King and the Net' },
-      { id: 'panchatantra-mister-duly', title: "Mister Duly" },
+      { id: 'panchatantra-soft-the-weaver', title: "Soft the Weaver" },
       { id: 'panchatantra-musical-donkey', title: 'The Musical Donkey' },
       { id: 'panchatantra-lion-and-rabbit', title: 'The Lion and the Rabbit' },
     ];
@@ -331,7 +335,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
 
     // Tier 0 items must follow at indices 4 and 5
     assert.equal(sorted[4].id, 'panchatantra-wedge-pulling-monkey');
-    assert.equal(sorted[5].id, 'panchatantra-mister-duly');
+    assert.equal(sorted[5].id, 'panchatantra-soft-the-weaver');
   });
 
   await t.test('katha.tsx integrates visual tier sorting and thumbnail priority for Story of the Day', () => {
@@ -555,5 +559,27 @@ test("Mother Shandilee's Bargain story uses six paragraph-aligned offline scenes
   assert.equal(hasDedicatedSceneArtwork('panchatantra-mother-shandilees-bargain'), true);
   for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
     assert.ok(getPanchatantraSceneArtwork('panchatantra-mother-shandilees-bargain', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('Self-Defeating Forethought story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-self-defeating-forethought');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-self-defeating-forethought'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-self-defeating-forethought'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-self-defeating-forethought', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('Mister Duly story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-mister-duly');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-mister-duly'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-mister-duly'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-mister-duly', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });

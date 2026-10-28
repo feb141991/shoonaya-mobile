@@ -65,6 +65,8 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-raven-and-swan': require('@/assets/panchatantra/raven-swan-1.webp'),
   'panchatantra-golds-gloom': require('@/assets/panchatantra/golds-gloom-1.webp'),
   'panchatantra-mother-shandilees-bargain': require('@/assets/panchatantra/mother-shandilee-1.webp'),
+  'panchatantra-self-defeating-forethought': require('@/assets/panchatantra/self-defeating-forethought-1.webp'),
+  'panchatantra-mister-duly': require('@/assets/panchatantra/mister-duly-1.webp'),
 };
 
 /**
@@ -441,6 +443,22 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/mother-shandilee-4.webp'),
     require('@/assets/panchatantra/mother-shandilee-5.webp'),
     require('@/assets/panchatantra/mother-shandilee-6.webp'),
+  ],
+  'panchatantra-self-defeating-forethought': [
+    require('@/assets/panchatantra/self-defeating-forethought-1.webp'),
+    require('@/assets/panchatantra/self-defeating-forethought-2.webp'),
+    require('@/assets/panchatantra/self-defeating-forethought-3.webp'),
+    require('@/assets/panchatantra/self-defeating-forethought-4.webp'),
+    require('@/assets/panchatantra/self-defeating-forethought-5.webp'),
+    require('@/assets/panchatantra/self-defeating-forethought-6.webp'),
+  ],
+  'panchatantra-mister-duly': [
+    require('@/assets/panchatantra/mister-duly-1.webp'),
+    require('@/assets/panchatantra/mister-duly-2.webp'),
+    require('@/assets/panchatantra/mister-duly-3.webp'),
+    require('@/assets/panchatantra/mister-duly-4.webp'),
+    require('@/assets/panchatantra/mister-duly-5.webp'),
+    require('@/assets/panchatantra/mister-duly-6.webp'),
   ],
 };
 

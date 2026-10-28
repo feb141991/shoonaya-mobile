@@ -68,3 +68,5 @@ scripts/relic-cutout/final/
 scripts/relic-cutout/venv/
 scripts/relic-cutout/cutout
 assets/videos/
+*.apk
+*.aab
