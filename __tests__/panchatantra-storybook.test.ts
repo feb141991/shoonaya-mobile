@@ -160,6 +160,8 @@ test('Panchatantra Artwork Resolution', async (t) => {
       'panchatantra-mister-duly',
       'panchatantra-soft-the-weaver',
       'panchatantra-hang-ball-and-greedy',
+      'panchatantra-spots-captivity',
+      'panchatantra-hundred-wit-thousand-wit-single-wit',
     ];
 
     for (const storyId of storiesWithScenes) {
@@ -313,6 +315,8 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-mister-duly'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-soft-the-weaver'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-hang-ball-and-greedy'), 2);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-spots-captivity'), 2);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-hundred-wit-thousand-wit-single-wit'), 2);
 
     // Tier 0: Manuscript folios without local art
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-wedge-pulling-monkey'), 0);
@@ -324,7 +328,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
       { id: 'panchatantra-wedge-pulling-monkey', title: 'Wedge Pulling Monkey' },
       { id: 'panchatantra-monk-and-jackal', title: 'The Monk and the Jackal' },
       { id: 'panchatantra-dove-king-and-net', title: 'The Dove King and the Net' },
-      { id: 'panchatantra-spots-captivity', title: "Spot's Captivity" },
+      { id: 'panchatantra-slow-the-weaver', title: "Slow the Weaver" },
       { id: 'panchatantra-musical-donkey', title: 'The Musical Donkey' },
       { id: 'panchatantra-lion-and-rabbit', title: 'The Lion and the Rabbit' },
     ];
@@ -339,7 +343,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
 
     // Tier 0 items must follow at indices 4 and 5
     assert.equal(sorted[4].id, 'panchatantra-wedge-pulling-monkey');
-    assert.equal(sorted[5].id, 'panchatantra-spots-captivity');
+    assert.equal(sorted[5].id, 'panchatantra-slow-the-weaver');
   });
 
   await t.test('katha.tsx integrates visual tier sorting and thumbnail priority for Story of the Day', () => {
@@ -607,5 +611,27 @@ test('Hang-Ball and Greedy story uses six paragraph-aligned offline scenes', () 
   assert.equal(hasDedicatedSceneArtwork('panchatantra-hang-ball-and-greedy'), true);
   for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
     assert.ok(getPanchatantraSceneArtwork('panchatantra-hang-ball-and-greedy', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test("Spot's Captivity story uses six paragraph-aligned offline scenes", () => {
+  const story = getExpandedPanchatantraStory('panchatantra-spots-captivity');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-spots-captivity'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-spots-captivity'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-spots-captivity', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('Hundred-Wit, Thousand-Wit, and Single-Wit story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-hundred-wit-thousand-wit-single-wit');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-hundred-wit-thousand-wit-single-wit'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-hundred-wit-thousand-wit-single-wit'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-hundred-wit-thousand-wit-single-wit', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });

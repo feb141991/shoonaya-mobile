@@ -69,6 +69,8 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-mister-duly': require('@/assets/panchatantra/mister-duly-1.webp'),
   'panchatantra-soft-the-weaver': require('@/assets/panchatantra/soft-the-weaver-1.webp'),
   'panchatantra-hang-ball-and-greedy': require('@/assets/panchatantra/hang-ball-and-greedy-1.webp'),
+  'panchatantra-spots-captivity': require('@/assets/panchatantra/spots-captivity-1.webp'),
+  'panchatantra-hundred-wit-thousand-wit-single-wit': require('@/assets/panchatantra/hundred-wit-thousand-wit-single-wit-1.webp'),
 };
 
 /**
@@ -477,6 +479,22 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/hang-ball-and-greedy-4.webp'),
     require('@/assets/panchatantra/hang-ball-and-greedy-5.webp'),
     require('@/assets/panchatantra/hang-ball-and-greedy-6.webp'),
+  ],
+  'panchatantra-spots-captivity': [
+    require('@/assets/panchatantra/spots-captivity-1.webp'),
+    require('@/assets/panchatantra/spots-captivity-2.webp'),
+    require('@/assets/panchatantra/spots-captivity-3.webp'),
+    require('@/assets/panchatantra/spots-captivity-4.webp'),
+    require('@/assets/panchatantra/spots-captivity-5.webp'),
+    require('@/assets/panchatantra/spots-captivity-6.webp'),
+  ],
+  'panchatantra-hundred-wit-thousand-wit-single-wit': [
+    require('@/assets/panchatantra/hundred-wit-thousand-wit-single-wit-1.webp'),
+    require('@/assets/panchatantra/hundred-wit-thousand-wit-single-wit-2.webp'),
+    require('@/assets/panchatantra/hundred-wit-thousand-wit-single-wit-3.webp'),
+    require('@/assets/panchatantra/hundred-wit-thousand-wit-single-wit-4.webp'),
+    require('@/assets/panchatantra/hundred-wit-thousand-wit-single-wit-5.webp'),
+    require('@/assets/panchatantra/hundred-wit-thousand-wit-single-wit-6.webp'),
   ],
 };
 
