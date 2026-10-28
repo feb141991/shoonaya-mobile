@@ -46,6 +46,29 @@ export function suggestedLifeStage(value: string): LifeStageKey | null {
 }
 
 /**
+ * Age is a fact once a date of birth is given, so onboarding's life-stage
+ * picker must not offer a choice that contradicts it -- locked means "not
+ * tappable", not just "pre-filled".
+ */
+export function isLifeStageLocked(dateOfBirth: string): boolean {
+  return Boolean(dateOfBirth.trim());
+}
+
+/**
+ * What the life-stage field should hold right after the date of birth
+ * changes. Locked (date present): always follows the date, overwriting
+ * whatever was selected before -- there is no "manual override" state to
+ * preserve. Unlocked (date cleared): leaves the previous value in place so
+ * clearing a date to fix a typo doesn't also discard a choice made earlier.
+ */
+export function nextLifeStageAfterDobChange(
+  previousLifeStage: LifeStageKey | null,
+  dateOfBirth: string
+): LifeStageKey | null {
+  return isLifeStageLocked(dateOfBirth) ? suggestedLifeStage(dateOfBirth) : previousLifeStage;
+}
+
+/**
  * Regional calendar-convention profiles, mirrored from the web app's
  * onboarding (OnboardingClient.tsx step 11 "Which regional calendar?") so
  * both clients offer the identical reviewed copy. Matches

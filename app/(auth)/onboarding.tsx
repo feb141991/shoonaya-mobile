@@ -76,6 +76,8 @@ import {
   genderContext,
   ageFromDob,
   suggestedLifeStage,
+  isLifeStageLocked,
+  nextLifeStageAfterDobChange,
   type LifeStageKey,
   type GenderKey,
   type CalendarProfileSlug,
@@ -260,7 +262,6 @@ export default function OnboardingScreen() {
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [gender, setGender] = useState<GenderKey>('prefer_not');
   const [lifeStage, setLifeStage] = useState<LifeStageKey | null>(null);
-  const [isManualLifeStage, setIsManualLifeStage] = useState(false);
   const [rashi, setRashi] = useState('');
   const [nakshatra, setNakshatra] = useState('');
   const [gotra, setGotra] = useState('');
@@ -345,6 +346,9 @@ export default function OnboardingScreen() {
   const stepIndex = STEPS.indexOf(step);
   const age = ageFromDob(dateOfBirth);
   const suggestedStage = suggestedLifeStage(dateOfBirth);
+  // Age is a fact once a date of birth is given, so the stage it implies is
+  // not a free choice alongside it -- see handleDobChange.
+  const lifeStageLocked = isLifeStageLocked(dateOfBirth);
   const accent = tradition ? TRADITION_ACCENT[tradition] : COLORS.brandGold;
   const traditionLabel = TRADITIONS.find((t) => t.key === tradition)?.label ?? 'spiritual';
   const stepTitle = language === 'hi' ? STEP_TITLES_HI[step] : STEP_TITLES[step];
@@ -369,7 +373,6 @@ export default function OnboardingScreen() {
           if (draft.dateOfBirth) setDateOfBirth(draft.dateOfBirth);
           if (draft.gender) setGender(draft.gender);
           if (draft.lifeStage !== undefined) setLifeStage(draft.lifeStage);
-          if (draft.isManualLifeStage !== undefined) setIsManualLifeStage(draft.isManualLifeStage);
           if (draft.rashi) setRashi(draft.rashi);
           if (draft.nakshatra) setNakshatra(draft.nakshatra);
           if (draft.gotra) setGotra(draft.gotra);
@@ -424,7 +427,6 @@ export default function OnboardingScreen() {
         dateOfBirth,
         gender,
         lifeStage,
-        isManualLifeStage,
         rashi,
         nakshatra,
         gotra,
@@ -442,17 +444,16 @@ export default function OnboardingScreen() {
     } catch {}
   };
 
+  // Life stage is locked to this calculation whenever a date of birth is
+  // present -- age is a fact, so it must never be hand-picked out of step
+  // with it. Clearing the date is what unlocks manual selection; it leaves
+  // whatever stage was last showing in place rather than resetting it, so
+  // fixing a DOB typo doesn't also wipe a choice made before the date was
+  // entered.
   const handleDobChange = (value: string) => {
     setDateOfBirth(value);
-    if (!value) {
-      if (!isManualLifeStage) setLifeStage(null);
-      return;
-    }
-    const nextStage = suggestedLifeStage(value);
-    if (!isManualLifeStage) {
-      setLifeStage(nextStage);
-    }
-    if (nextStage && !hasAdvancedToGenderRef.current) {
+    setLifeStage((prev) => nextLifeStageAfterDobChange(prev, value));
+    if (isLifeStageLocked(value) && !hasAdvancedToGenderRef.current) {
       hasAdvancedToGenderRef.current = true;
       scrollToSection(genderSectionYRef.current);
     }
@@ -862,6 +863,7 @@ export default function OnboardingScreen() {
     icon,
     emoji,
     onPress,
+    disabled = false,
   }: {
     key: string;
     selected: boolean;
@@ -870,11 +872,13 @@ export default function OnboardingScreen() {
     icon?: React.ComponentProps<typeof Feather>['name'];
     emoji?: string;
     onPress: () => void;
+    disabled?: boolean;
   }) => (
     <Pressable
       key={key}
-      onPress={() => { void selectWithHaptic(onPress); }}
-      accessibilityState={{ selected }}
+      onPress={disabled ? undefined : () => { void selectWithHaptic(onPress); }}
+      disabled={disabled}
+      accessibilityState={{ selected, disabled }}
       accessibilityLabel={description ? `${label}, ${description}` : label}
       accessibilityRole="button"
       style={{
@@ -887,6 +891,7 @@ export default function OnboardingScreen() {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 14,
+        opacity: disabled ? 0.6 : 1,
       }}
     >
       <View
@@ -1300,15 +1305,20 @@ export default function OnboardingScreen() {
               <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.serifBold, fontSize: 20, lineHeight: isHindi ? 30 : 24, color: text }}>
                 {translated('Your stage of life', 'आपका जीवन चरण')}
               </Text>
+              <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 12, lineHeight: isHindi ? 18 : undefined, color: dim }}>
+                {lifeStageLocked
+                  ? translated('Calculated from your date of birth.', 'आपकी जन्मतिथि से स्वतः तय किया गया।')
+                  : translated('Add your date of birth above, or choose your stage yourself.', 'ऊपर अपनी जन्मतिथि जोड़ें, या स्वयं अपना चरण चुनें।')}
+              </Text>
               {LIFE_STAGES.map((stage) => renderSelectRow({
                 key: stage.key,
                 selected: lifeStage === stage.key,
                 label: `${isHindi ? LIFE_STAGE_HI[stage.key].label : stage.label} · ${isHindi ? `आयु ${stage.age}` : stage.age}`,
                 description: isHindi ? LIFE_STAGE_HI[stage.key].description : stage.description,
                 emoji: stage.emoji,
+                disabled: lifeStageLocked,
                 onPress: () => {
                   setLifeStage((prev) => (prev === stage.key ? null : stage.key));
-                  setIsManualLifeStage(true);
                   if (lifeStage !== stage.key && !hasAdvancedToGenderRef.current) {
                     hasAdvancedToGenderRef.current = true;
                     scrollToSection(genderSectionYRef.current);

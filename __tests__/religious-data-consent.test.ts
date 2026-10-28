@@ -157,7 +157,7 @@ describe('a resumed draft', () => {
   }
   const draft = (extra: Partial<OnboardingDraftData> = {}): OnboardingDraftData => ({
     step: 'personal', tradition: 'hindu', language: 'en', dateOfBirth: '', gender: 'prefer_not', lifeStage: null,
-    isManualLifeStage: false, rashi: '', nakshatra: '', gotra: '', calendarProfile: '', calendarScope: '', goals: [], name: '', ...extra,
+    rashi: '', nakshatra: '', gotra: '', calendarProfile: '', calendarScope: '', goals: [], name: '', ...extra,
   });
 
   it('remembers an agreement that was given', async () => {

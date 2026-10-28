@@ -56,7 +56,6 @@ export type OnboardingDraftData = {
   dateOfBirth: string;
   gender: GenderKey;
   lifeStage: LifeStageKey | null;
-  isManualLifeStage: boolean;
   rashi: string;
   nakshatra: string;
   gotra: string;
