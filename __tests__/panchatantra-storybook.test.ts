@@ -328,7 +328,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
       { id: 'panchatantra-wedge-pulling-monkey', title: 'Wedge Pulling Monkey' },
       { id: 'panchatantra-monk-and-jackal', title: 'The Monk and the Jackal' },
       { id: 'panchatantra-dove-king-and-net', title: 'The Dove King and the Net' },
-      { id: 'panchatantra-credulous-fiend', title: "The Credulous Fiend" },
+      { id: 'panchatantra-fiend-who-washed-his-feet', title: "The Fiend Who Washed His Feet" },
       { id: 'panchatantra-musical-donkey', title: 'The Musical Donkey' },
       { id: 'panchatantra-lion-and-rabbit', title: 'The Lion and the Rabbit' },
     ];
@@ -343,7 +343,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
 
     // Tier 0 items must follow at indices 4 and 5
     assert.equal(sorted[4].id, 'panchatantra-wedge-pulling-monkey');
-    assert.equal(sorted[5].id, 'panchatantra-credulous-fiend');
+    assert.equal(sorted[5].id, 'panchatantra-fiend-who-washed-his-feet');
   });
 
   await t.test('katha.tsx integrates visual tier sorting and thumbnail priority for Story of the Day', () => {
@@ -655,5 +655,27 @@ test('The Unforgiving Monkey story uses six paragraph-aligned offline scenes', (
   assert.equal(hasDedicatedSceneArtwork('panchatantra-unforgiving-monkey'), true);
   for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
     assert.ok(getPanchatantraSceneArtwork('panchatantra-unforgiving-monkey', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('The Credulous Fiend story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-credulous-fiend');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-credulous-fiend'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-credulous-fiend'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-credulous-fiend', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('The Three-Breasted Princess story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-three-breasted-princess');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-three-breasted-princess'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-three-breasted-princess'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-three-breasted-princess', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });

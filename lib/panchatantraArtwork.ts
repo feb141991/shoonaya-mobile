@@ -73,6 +73,8 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-hundred-wit-thousand-wit-single-wit': require('@/assets/panchatantra/hundred-wit-thousand-wit-single-wit-1.webp'),
   'panchatantra-slow-the-weaver': require('@/assets/panchatantra/slow-the-weaver-1.webp'),
   'panchatantra-unforgiving-monkey': require('@/assets/panchatantra/unforgiving-monkey-1.webp'),
+  'panchatantra-credulous-fiend': require('@/assets/panchatantra/credulous-fiend-1.webp'),
+  'panchatantra-three-breasted-princess': require('@/assets/panchatantra/three-breasted-princess-1.webp'),
 };
 
 /**
@@ -513,6 +515,22 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/unforgiving-monkey-4.webp'),
     require('@/assets/panchatantra/unforgiving-monkey-5.webp'),
     require('@/assets/panchatantra/unforgiving-monkey-6.webp'),
+  ],
+  'panchatantra-credulous-fiend': [
+    require('@/assets/panchatantra/credulous-fiend-1.webp'),
+    require('@/assets/panchatantra/credulous-fiend-2.webp'),
+    require('@/assets/panchatantra/credulous-fiend-3.webp'),
+    require('@/assets/panchatantra/credulous-fiend-4.webp'),
+    require('@/assets/panchatantra/credulous-fiend-5.webp'),
+    require('@/assets/panchatantra/credulous-fiend-6.webp'),
+  ],
+  'panchatantra-three-breasted-princess': [
+    require('@/assets/panchatantra/three-breasted-princess-1.webp'),
+    require('@/assets/panchatantra/three-breasted-princess-2.webp'),
+    require('@/assets/panchatantra/three-breasted-princess-3.webp'),
+    require('@/assets/panchatantra/three-breasted-princess-4.webp'),
+    require('@/assets/panchatantra/three-breasted-princess-5.webp'),
+    require('@/assets/panchatantra/three-breasted-princess-6.webp'),
   ],
 };
 
