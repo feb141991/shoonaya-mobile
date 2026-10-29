@@ -122,7 +122,13 @@
             { "scheme": "https", "host": "www.shoonaya.com", "pathPrefix": "/live-darshan" },
             { "scheme": "https", "host": "www.shoonaya.com", "pathPrefix": "/seva" },
             { "scheme": "https", "host": "www.shoonaya.com", "pathPrefix": "/mantras" },
-            { "scheme": "https", "host": "www.shoonaya.com", "pathPrefix": "/kul" }
+            { "scheme": "https", "host": "www.shoonaya.com", "pathPrefix": "/kul" },
+            { "scheme": "https", "host": "www.shoonaya.com", "pathPrefix": "/home" },
+            { "scheme": "https", "host": "www.shoonaya.com", "pathPrefix": "/mandali" },
+            { "scheme": "https", "host": "www.shoonaya.com", "pathPrefix": "/my-progress" },
+            { "scheme": "https", "host": "www.shoonaya.com", "pathPrefix": "/nitya-karma" },
+            { "scheme": "https", "host": "www.shoonaya.com", "pathPrefix": "/notifications" },
+            { "scheme": "https", "host": "www.shoonaya.com", "pathPrefix": "/shloka" }
           ],
           "category": ["BROWSABLE", "DEFAULT"]
         }
