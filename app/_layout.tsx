@@ -3,7 +3,7 @@ import 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import '../global.css';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useSyncExternalStore } from 'react';
 import { Alert, AppState, LogBox, View } from 'react-native';
 
 LogBox.ignoreLogs([
@@ -91,6 +91,12 @@ import {
   signOutWithPushCleanup,
   startPushRegistrationRecovery,
 } from '@/lib/notifications';
+import {
+  canDeliverNotificationTap,
+  getPendingNotificationTap,
+  subscribePendingNotificationTap,
+  takePendingNotificationTap,
+} from '@/lib/notificationTap';
 import {
   claimNotificationPermissionPrompt,
   dismissNotificationPermissionPrompt,
@@ -1068,14 +1074,33 @@ function RootLayout() {
 
     try {
       initPushNotifications();
-      const cleanup = handleNotificationTap(router);
-      return cleanup;
+      // Collects the tap that launched the app (when it was closed) and any later tap; it is held in
+      // lib/notificationTap.ts and delivered below once navigating will stick.
+      return handleNotificationTap();
     } catch (e) {
       if (__DEV__) {
         console.warn('Push notification initialization skipped:', e);
       }
     }
-  }, [fontsLoaded, fontError, router]);
+  }, [fontsLoaded, fontError]);
+
+  // Deliver a held notification tap. Doing it at once would lose it on a cold start: the index route redirects to
+  // the tabs and the sign-in / onboarding redirects run after the session resolves, so the destination is pushed only
+  // when the app is interactive, the person is signed in with a resolved profile, and they are outside sign-in and
+  // onboarding. A tap made while signed out is therefore delivered after they sign in (it expires after
+  // NOTIFICATION_TAP_HOLD_MS).
+  const heldTap = useSyncExternalStore(subscribePendingNotificationTap, getPendingNotificationTap, getPendingNotificationTap);
+  const tapDeliverable = canDeliverNotificationTap({
+    appInteractive: isAppInteractive,
+    identityKind: pushIdentity.kind,
+    profileResolutionFailed: profileResolutionFailure !== null,
+    rootSegment,
+  });
+  useEffect(() => {
+    if (!heldTap || !tapDeliverable) return;
+    const href = takePendingNotificationTap();
+    if (href) router.push(href);
+  }, [heldTap, tapDeliverable, router]);
 
   // ── Privacy-safe app analytics ────────────────────────────────────────
   useEffect(() => {

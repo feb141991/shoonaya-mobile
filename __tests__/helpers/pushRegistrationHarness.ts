@@ -95,7 +95,7 @@ export function loadPushRegistration(options: {
       },
     },
     '@/lib/api': { apiFetch }, '@/lib/constants': { API_BASE: 'https://example.test' },
-    '@/lib/supabase': { supabase: { auth } }, '@/lib/routes': {},
+    '@/lib/supabase': { supabase: { auth } }, '@/lib/notificationTap': { observeNotificationResponses: () => () => {} },
     '@/lib/appIdentity': { captureAppIdentity, getAppIdentity },
     '@/lib/pushRegistrationCoordinator': { PushRegistrationCoordinator, PUSH_REGISTRATION_HEARTBEAT_MS, PUSH_REGISTRATION_LEASE_MS: 900_000, PUSH_RECOVERY_DELAYS_MS: [2_000, 10_000, 60_000] },
     '@/lib/notificationPermissionState': { normalizeNotificationPermissionState },

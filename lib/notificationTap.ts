@@ -1,0 +1,154 @@
+import type { Href } from 'expo-router';
+
+import { pathFromUrlLike, resolveNativeRoute } from '@/lib/routes';
+
+/**
+ * What happens when someone taps a push notification.
+ *
+ * Kept free of expo-notifications imports so it can be unit-tested. Three jobs:
+ *  1. routeForNotificationTap: payload -> screen.
+ *  2. A held-tap store: a tap that arrives before the app can navigate (cold start, still signing in) is kept, then
+ *     delivered once, instead of being lost or fought over by the startup redirects.
+ *  3. observeNotificationResponses: reads the tap that LAUNCHED the app (expo-notifications only hands that one to
+ *     getLastNotificationResponse, never to a listener registered after launch) as well as taps while running.
+ */
+
+/** expo-notifications' DEFAULT_ACTION_IDENTIFIER: the person tapped the notification itself. */
+export const DEFAULT_TAP_ACTION = 'expo.modules.notifications.actions.DEFAULT';
+
+/** A tap that has not been delivered after this long is stale; the person has moved on. */
+export const NOTIFICATION_TAP_HOLD_MS = 10 * 60 * 1000;
+
+type TapData = Record<string, unknown>;
+
+export function routeForNotificationTap(data: TapData | null | undefined): Href {
+  const payload = data ?? {};
+  // Prefer the real destination the backend intended (src/lib/push-server.ts puts it in `data.url`) over the coarser
+  // `type` bucket. `url` is untrusted JSON: only a string is a destination.
+  const fromUrl = typeof payload.url === 'string' ? pathFromUrlLike(payload.url) : null;
+  if (fromUrl) return resolveNativeRoute(fromUrl, '/notifications');
+
+  switch (payload.type) {
+    case 'tithi': return '/panchang';
+    case 'festival': return '/vrat';
+    case 'nitya':
+    case 'brahma_muhurta': return '/nitya-karma';
+    case 'japa': return '/japa';
+    case 'streak': return '/(tabs)';
+    case 'mood':
+    case 'mood_checkin': return '/mood';
+    case 'mandali_mention':
+    case 'connection_request':
+    case 'connection_accepted':
+    case 'connection_rejected':
+    case 'connection_cancelled':
+    case 'user_blocked':
+    case 'content_reported':
+    case 'post_reaction': return '/mandali';
+    // general/test/milestone/sanskar_milestone/guided-plan/broadcast and anything unrecognised land in the inbox
+    // itself rather than guessing: the notification that was tapped is right there, in context.
+    default: return '/notifications';
+  }
+}
+
+// ── Held tap ────────────────────────────────────────────────────────────────
+
+export type PendingNotificationTap = { href: Href; key: string; receivedAt: number };
+
+const HANDLED_KEYS_LIMIT = 30;
+let pending: PendingNotificationTap | null = null;
+let handledKeys: string[] = [];
+const listeners = new Set<() => void>();
+
+function notify() {
+  for (const listener of listeners) listener();
+}
+
+/** Holds a tap for delivery. The same response (same key) is accepted once per session. */
+export function enqueueNotificationTap(key: string, data: TapData | null | undefined, now: number = Date.now()): boolean {
+  if (handledKeys.includes(key)) return false;
+  handledKeys = [...handledKeys, key].slice(-HANDLED_KEYS_LIMIT);
+  pending = { href: routeForNotificationTap(data), key, receivedAt: now };
+  notify();
+  return true;
+}
+
+export function getPendingNotificationTap(): PendingNotificationTap | null {
+  return pending;
+}
+
+/** Returns the held destination once and forgets it; null when nothing is held or it has gone stale. */
+export function takePendingNotificationTap(now: number = Date.now()): Href | null {
+  const current = pending;
+  if (!current) return null;
+  pending = null;
+  notify();
+  return now - current.receivedAt <= NOTIFICATION_TAP_HOLD_MS ? current.href : null;
+}
+
+export function subscribePendingNotificationTap(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => { listeners.delete(listener); };
+}
+
+/** Test and sign-out seam. */
+export function resetNotificationTapState() {
+  pending = null;
+  handledKeys = [];
+  notify();
+}
+
+/**
+ * True once navigating is safe and will stick: the startup surface is gone, the person is signed in with a resolved
+ * profile, and the screen showing is not the sign-in/onboarding flow (a tap must not cut across those).
+ */
+export function canDeliverNotificationTap(state: {
+  appInteractive: boolean;
+  identityKind: 'loading' | 'unauthenticated' | 'guest' | 'authenticated';
+  profileResolutionFailed: boolean;
+  rootSegment: string | undefined;
+}): boolean {
+  if (!state.appInteractive || state.identityKind !== 'authenticated' || state.profileResolutionFailed) return false;
+  const root = state.rootSegment;
+  return root !== undefined && root !== '(auth)' && root !== 'auth' && root !== 'sanctuary-preparing';
+}
+
+// ── Reading taps from expo-notifications ────────────────────────────────────
+
+export type TapResponse = {
+  actionIdentifier: string;
+  notification: {
+    date: number;
+    request: { identifier: string; content: { data?: TapData | null } };
+  };
+};
+
+export type ResponseSource = {
+  getLastNotificationResponse(): TapResponse | null;
+  clearLastNotificationResponse(): void;
+  addNotificationResponseReceivedListener(listener: (response: TapResponse) => void): { remove(): void };
+};
+
+function accept(response: TapResponse | null | undefined) {
+  if (!response || response.actionIdentifier !== DEFAULT_TAP_ACTION) return;
+  const { identifier, content } = response.notification.request;
+  enqueueNotificationTap(`${identifier}:${response.notification.date}`, content.data);
+}
+
+/**
+ * Starts listening, and first collects the tap that launched the app, if any. A response that reaches both paths is
+ * accepted once.
+ */
+export function observeNotificationResponses(source: ResponseSource): () => void {
+  try {
+    const launching = source.getLastNotificationResponse();
+    if (launching) {
+      accept(launching);
+      source.clearLastNotificationResponse();
+    }
+  } catch {
+    // A platform read failure must not stop live taps from working.
+  }
+  const subscription = source.addNotificationResponseReceivedListener(accept);
+  return () => subscription.remove();
+}

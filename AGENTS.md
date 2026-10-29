@@ -348,3 +348,35 @@ Rules:
   equivalent: every reminder flag set `true` on "Not now" or "unset," making
   the OS prompt's answer carry no information about any individual category.
   This applies equally to human and AI-agent contributors.
+
+### 20. A Notification or Link Must Open the Screen It Promises
+- Every URL a backend producer writes into `notifications.action_url` or the push `data.url` has a row in
+  `__tests__/notification-routes-contract.test.ts` that names the screen it opens. A new or changed producer URL changes
+  that row in the same change, in both repositories (section 1). A destination the app has no screen for is listed
+  `noNativeScreen` and opens the inbox with the notification in it; it never silently opens Home.
+- Every screen under `app/` is reachable through `resolveNativeRoute` (lib/routes.ts) or is listed in that test with the
+  reason it is not a link target. Adding a screen means adding its route, or its reason.
+- A tap is read from both `getLastNotificationResponse()` (the tap that launched the app: no listener exists yet when it
+  happens, and expo-notifications never replays it to one registered later) and the live listener, held in
+  `lib/notificationTap.ts`, and delivered by the root layout only when `canDeliverNotificationTap` allows it. Never call
+  `router.push` from the listener itself and never navigate during startup: the index route and the sign-in and
+  onboarding redirects run afterwards and take the screen back. A tap made while signed out is held for
+  `NOTIFICATION_TAP_HOLD_MS` and delivered after sign-in; it does not carry private data, only a route.
+- Links the operating system opens (`https://www.shoonaya.com/...`, `shoonaya://...`) are matched by Expo Router against
+  the files in `app/`, not by `resolveNativeRoute`. `app/+native-intent.tsx` renames only exact aliases
+  (`lib/systemLinkRoute.ts`) and returns everything else untouched. It must never turn a link into a different target:
+  `/panchang/2026-10-29` shown as today's Panchang would present the wrong date as the right one (section 2).
+- A query parameter is a destination only if the target screen reads it. `/home?focus=...` was never read by Home, so
+  those notifications opened Home and nothing more.
+- Why this rule exists: on 2026-10-29 several notification taps were found to open only Home. Causes found in the code:
+  the tap was read only by a live listener, so a tap on a closed app was never routed (the app opened at Home);
+  `/home?focus=shloka` for the daily shloka reached a Home that ignores `focus`; `/my-progress` (the milestone
+  notification) missed a route test that required a trailing slash and opened the inbox; `/nitya-karma/plans` opened
+  Nitya Karma instead of the plans screen; and `/festivals/<slug>`, which the backend writes, has no screen of that
+  name. The sweep (every backend producer URL against the real router, and every screen against the router) found
+  these and `/tirtha`; the two guard tests now fail if any of them returns.
+- Open and not fixed here: Pitru Paksha, broadcast, digest and weekly-summary notifications still open Home (Pitru
+  Paksha should open the Panchang, which needs the backend URL changed); Mandali notifications open the tab, not the
+  request or post; the iOS association file and Android intent filters claim path families with no screen (for example
+  `/panchang/<date>`); and none of this has been observed on a device. Real-device evidence is required before calling
+  tap routing release-ready (sections 6 and 7). This applies equally to human and AI-agent contributors.

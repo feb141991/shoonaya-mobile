@@ -1,6 +1,20 @@
 import type { Href } from 'expo-router';
 import { getSeriesChildContent, getSeriesGroupContent } from './observance-series-content';
 
+// One query value from a web-shaped path ("/home?focus=shloka" -> "shloka"). Matches by hand so it does not depend on
+// the URLSearchParams implementation.
+function queryParam(path: string, name: string): string | null {
+  const search = path.split('#')[0].split('?')[1];
+  if (!search) return null;
+  for (const pair of search.split('&')) {
+    const [key, value = ''] = pair.split('=');
+    if (key === name) {
+      try { return decodeURIComponent(value); } catch { return value; }
+    }
+  }
+  return null;
+}
+
 // Maps a web-shaped path — from home-summary's practice/dharmVeer/panchang
 // hrefs, or from a push notification's action_url / url data field —
 // to the closest native route. This consolidates what used to be a
@@ -11,17 +25,20 @@ import { getSeriesChildContent, getSeriesGroupContent } from './observance-serie
 // guided-plan,brahma-muhurta,pitru-paksha,journal-anniversary}-reminder*/
 // route.ts and src/app/api/notifications/{milestone,test}/route.ts.
 //
-// Paths with no native screen at all (mood/discover journaling, kul
-// sanskara ceremonies, sadhana journal, guided-plan sub-list, "my-progress"
-// web dashboard) fall back to the caller-supplied default rather than a
-// broken deep link — callers pass '/notifications' when resolving a push
-// tap (landing in the inbox is a safe, honest fallback) and
-// '/(tabs)/pathshala' when resolving a Home tap target (matching the
-// original mapHrefToRoute's own default).
+// Paths with no native screen at all (the sadhana journal, for one) fall
+// back to the caller-supplied default rather than a broken deep link —
+// callers pass '/notifications' when resolving a push tap (landing in the
+// inbox is a safe, honest fallback) and '/(tabs)/pathshala' when resolving
+// a Home tap target (matching the original mapHrefToRoute's own default).
 export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/pathshala'): Href {
   const [pathname] = path.split('?');
 
-  if (pathname === '/home' || pathname === '') return '/(tabs)';
+  if (pathname === '/home' || pathname === '') {
+    // The daily-shloka reminder links to /home?focus=shloka. Home has never read `focus`, so that opened Home and
+    // nothing else; the shloka has its own screen.
+    if (queryParam(path, 'focus') === 'shloka') return '/shloka' as Href;
+    return '/(tabs)';
+  }
   // Japa (mala counter) and Bhakti (hub) are now two distinct native
   // screens — app/(tabs)/japa.tsx and app/(tabs)/bhakti.tsx respectively —
   // matching PWA's own split (BottomNav.tsx: /bhakti/mala is Japa's own
@@ -51,6 +68,8 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   if (pathname.startsWith('/lineage')) return '/(tabs)/pathshala';
   if (pathname.startsWith('/yatra/')) return path as Href;
   if (pathname.startsWith('/yatra')) return '/(tabs)/tirtha';
+  // The tab is app/(tabs)/tirtha; /yatra is the name the web gave it, and the app's own name has to open it too.
+  if (pathname.startsWith('/tirtha')) return '/(tabs)/tirtha';
   if (pathname.startsWith('/panchang')) return '/panchang';
   if (pathname.startsWith('/rashiphala') || pathname.startsWith('/rashiphal')) return '/rashiphala' as Href;
   if (pathname.startsWith('/vrat/')) {
@@ -80,6 +99,8 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   // means the daily swipe deck at app/dharm-veer.tsx, unchanged.
   if (pathname.startsWith('/dharm-veer/')) return path as Href;
   if (pathname.startsWith('/dharm-veer')) return '/dharm-veer';
+  // The guided-plan reminder links to /nitya-karma/plans; the plans list is its own screen (app/nitya-plans.tsx).
+  if (pathname === '/nitya-karma/plans' || pathname.startsWith('/nitya-karma/plans/')) return '/nitya-plans' as Href;
   if (pathname.startsWith('/nitya-karma')) return '/nitya-karma';
   if (pathname.startsWith('/nitya-ashrama')) return '/nitya-ashrama' as Href;
   if (pathname.startsWith('/nitya-dincharya')) return '/nitya-dincharya' as Href;
@@ -90,6 +111,10 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   // `?section=family`; preserve its query so the hub opens the family dates
   // section instead of falling back to the notification inbox.
   if (pathname === '/kul') return path as Href;
+  // The family-invitation screen exists (app/kul/join.tsx). /kul/sanskara has no screen of its own; the sanskara
+  // reminders belong to the Kul hub, so it lands there rather than in the inbox.
+  if (pathname === '/kul/join' || pathname.startsWith('/kul/join/')) return path as Href;
+  if (pathname === '/kul/sanskara') return '/kul' as Href;
   if (pathname.startsWith('/discover/mood') || pathname.startsWith('/mood')) return '/mood' as Href;
   // Mood's recommendation stack (lib/mood/engine.ts on web) always includes
   // a fixed "Live Darshan" card with href '/live-darshan' — a real native
@@ -106,7 +131,9 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   // line at all, so daily shloka cron reminders, my-progress links, and festival
   // quiz notifications silently fell through to the caller's fallback.
   if (pathname.startsWith('/shloka')) return '/shloka' as Href;
-  if (pathname.startsWith('/my-progress/')) return path as Href;
+  // The milestone notification links to the bare /my-progress, which the trailing-slash test below missed (it opened
+  // the inbox); the screen exists.
+  if (pathname === '/my-progress' || pathname.startsWith('/my-progress/')) return path as Href;
   if (pathname.startsWith('/mantras')) return '/mantras' as Href;
   if (pathname.startsWith('/name-story')) return '/name-story' as Href;
   if (pathname.startsWith('/festival-quiz/')) return path as Href;

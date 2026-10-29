@@ -3,7 +3,6 @@ import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
 import type { NotificationPermissionsStatus } from 'expo-notifications';
-import type { Href, useRouter } from 'expo-router';
 
 import { apiFetch } from '@/lib/api';
 import { API_BASE } from '@/lib/constants';
@@ -15,7 +14,7 @@ import {
   PushRegistrationCoordinator, PUSH_REGISTRATION_HEARTBEAT_MS, PUSH_REGISTRATION_LEASE_MS, PUSH_RECOVERY_DELAYS_MS,
   type NativePushToken, type PushBinding, type PushRegistrationOptions,
 } from '@/lib/pushRegistrationCoordinator';
-import { pathFromUrlLike, resolveNativeRoute } from '@/lib/routes';
+import { observeNotificationResponses } from '@/lib/notificationTap';
 import {
   normalizeNotificationPermissionState,
   type NotificationPermissionState,
@@ -46,43 +45,6 @@ if (!isExpoGo) {
     Notifications = null;
   }
 }
-
-// Real `data.type` values the web repo's push senders actually use —
-// confirmed by a full-repo grep of src/lib/push-server.ts call sites
-// (crons + /api/notifications/{test,milestone,admin/broadcast}). Kept in
-// sync with the union that used to live here for OneSignal; the set of
-// values sent server-side didn't change, only the transport did.
-type NotificationType =
-  | 'tithi'
-  | 'festival'
-  | 'streak'
-  | 'nitya'
-  | 'japa'
-  | 'general'
-  | 'test'
-  | 'milestone'
-  | 'brahma_muhurta'
-  | 'sanskar_milestone'
-  | 'guided-plan'
-  | 'mandali_mention'
-  | 'broadcast'
-  | 'connection_request'
-  | 'connection_accepted'
-  | 'connection_rejected'
-  | 'connection_cancelled'
-  | 'user_blocked'
-  | 'content_reported'
-  | 'post_reaction'
-  | 'mood'
-  | 'mood_checkin';
-
-type NotificationAdditionalData = {
-  type?: NotificationType;
-  url?: string;
-  [key: string]: unknown;
-};
-
-type Router = ReturnType<typeof useRouter>;
 
 // Single source of truth for how notifications present while the app is
 // foregrounded. Deliberately the same shape as app/vrat.tsx's own local
@@ -608,45 +570,11 @@ export async function signOutWithPushCleanup() {
   }
 }
 
-function routeForNotificationTap(data: NotificationAdditionalData): Href {
-  // Prefer the real destination the backend intended (the `url` field
-  // src/lib/push-server.ts embeds directly into the push `data` payload)
-  // over the coarser `type` bucket.
-  const fromUrl = pathFromUrlLike(data.url);
-  if (fromUrl) return resolveNativeRoute(fromUrl, '/notifications');
-
-  switch (data.type) {
-    case 'tithi': return '/panchang';
-    case 'festival': return '/vrat';
-    case 'nitya':
-    case 'brahma_muhurta': return '/nitya-karma';
-    case 'japa': return '/japa';
-    case 'streak': return '/(tabs)';
-    case 'mood':
-    case 'mood_checkin': return '/mood';
-    case 'mandali_mention':
-    case 'connection_request':
-    case 'connection_accepted':
-    case 'connection_rejected':
-    case 'connection_cancelled':
-    case 'user_blocked':
-    case 'content_reported':
-    case 'post_reaction': return '/mandali';
-    // general/test/milestone/sanskar_milestone/guided-plan/broadcast and
-    // anything unrecognized: land in the inbox itself rather than
-    // guessing — the notification that was tapped is right there, in
-    // context.
-    default: return '/notifications';
-  }
-}
-
-export function handleNotificationTap(router: Router): () => void {
+/**
+ * Starts reading notification taps: the one that launched the app, and any while it runs. Where the tap goes, and
+ * when it is safe to go there, lives in lib/notificationTap.ts; app/_layout.tsx delivers it.
+ */
+export function handleNotificationTap(): () => void {
   if (!Notifications) return () => {};
-
-  const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
-    const data = (response.notification.request.content.data ?? {}) as NotificationAdditionalData;
-    router.push(routeForNotificationTap(data));
-  });
-
-  return () => subscription.remove();
+  return observeNotificationResponses(Notifications);
 }
