@@ -328,7 +328,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
       { id: 'panchatantra-wedge-pulling-monkey', title: 'Wedge Pulling Monkey' },
       { id: 'panchatantra-monk-and-jackal', title: 'The Monk and the Jackal' },
       { id: 'panchatantra-dove-king-and-net', title: 'The Dove King and the Net' },
-      { id: 'panchatantra-slow-the-weaver', title: "Slow the Weaver" },
+      { id: 'panchatantra-credulous-fiend', title: "The Credulous Fiend" },
       { id: 'panchatantra-musical-donkey', title: 'The Musical Donkey' },
       { id: 'panchatantra-lion-and-rabbit', title: 'The Lion and the Rabbit' },
     ];
@@ -343,7 +343,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
 
     // Tier 0 items must follow at indices 4 and 5
     assert.equal(sorted[4].id, 'panchatantra-wedge-pulling-monkey');
-    assert.equal(sorted[5].id, 'panchatantra-slow-the-weaver');
+    assert.equal(sorted[5].id, 'panchatantra-credulous-fiend');
   });
 
   await t.test('katha.tsx integrates visual tier sorting and thumbnail priority for Story of the Day', () => {
@@ -633,5 +633,27 @@ test('Hundred-Wit, Thousand-Wit, and Single-Wit story uses six paragraph-aligned
   assert.equal(hasDedicatedSceneArtwork('panchatantra-hundred-wit-thousand-wit-single-wit'), true);
   for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
     assert.ok(getPanchatantraSceneArtwork('panchatantra-hundred-wit-thousand-wit-single-wit', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('Slow the Weaver story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-slow-the-weaver');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-slow-the-weaver'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-slow-the-weaver'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-slow-the-weaver', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('The Unforgiving Monkey story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-unforgiving-monkey');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-unforgiving-monkey'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-unforgiving-monkey'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-unforgiving-monkey', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });

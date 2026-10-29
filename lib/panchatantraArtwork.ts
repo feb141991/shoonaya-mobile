@@ -71,6 +71,8 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-hang-ball-and-greedy': require('@/assets/panchatantra/hang-ball-and-greedy-1.webp'),
   'panchatantra-spots-captivity': require('@/assets/panchatantra/spots-captivity-1.webp'),
   'panchatantra-hundred-wit-thousand-wit-single-wit': require('@/assets/panchatantra/hundred-wit-thousand-wit-single-wit-1.webp'),
+  'panchatantra-slow-the-weaver': require('@/assets/panchatantra/slow-the-weaver-1.webp'),
+  'panchatantra-unforgiving-monkey': require('@/assets/panchatantra/unforgiving-monkey-1.webp'),
 };
 
 /**
@@ -495,6 +497,22 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/hundred-wit-thousand-wit-single-wit-4.webp'),
     require('@/assets/panchatantra/hundred-wit-thousand-wit-single-wit-5.webp'),
     require('@/assets/panchatantra/hundred-wit-thousand-wit-single-wit-6.webp'),
+  ],
+  'panchatantra-slow-the-weaver': [
+    require('@/assets/panchatantra/slow-the-weaver-1.webp'),
+    require('@/assets/panchatantra/slow-the-weaver-2.webp'),
+    require('@/assets/panchatantra/slow-the-weaver-3.webp'),
+    require('@/assets/panchatantra/slow-the-weaver-4.webp'),
+    require('@/assets/panchatantra/slow-the-weaver-5.webp'),
+    require('@/assets/panchatantra/slow-the-weaver-6.webp'),
+  ],
+  'panchatantra-unforgiving-monkey': [
+    require('@/assets/panchatantra/unforgiving-monkey-1.webp'),
+    require('@/assets/panchatantra/unforgiving-monkey-2.webp'),
+    require('@/assets/panchatantra/unforgiving-monkey-3.webp'),
+    require('@/assets/panchatantra/unforgiving-monkey-4.webp'),
+    require('@/assets/panchatantra/unforgiving-monkey-5.webp'),
+    require('@/assets/panchatantra/unforgiving-monkey-6.webp'),
   ],
 };
 
