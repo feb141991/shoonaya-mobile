@@ -318,12 +318,15 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-spots-captivity'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-hundred-wit-thousand-wit-single-wit'), 2);
 
+    // Tier 1: Cover masterwork artwork
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-fiend-who-washed-his-feet'), 1);
+
     // Tier 0: Manuscript folios without local art
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-wedge-pulling-monkey'), 0);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-nonexistent'), 0);
   });
 
-  await t.test('sorts stories so full scene storybooks appear first, then manuscript', () => {
+  await t.test('sorts stories so full scene storybooks appear first, then cover art, then manuscript', () => {
     const mixed = [
       { id: 'panchatantra-wedge-pulling-monkey', title: 'Wedge Pulling Monkey' },
       { id: 'panchatantra-monk-and-jackal', title: 'The Monk and the Jackal' },
@@ -341,9 +344,11 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(sorted[2].id, 'panchatantra-musical-donkey');
     assert.equal(sorted[3].id, 'panchatantra-lion-and-rabbit');
 
-    // Tier 0 items must follow at indices 4 and 5
-    assert.equal(sorted[4].id, 'panchatantra-wedge-pulling-monkey');
-    assert.equal(sorted[5].id, 'panchatantra-fiend-who-washed-his-feet');
+    // Tier 1 item must follow at index 4
+    assert.equal(sorted[4].id, 'panchatantra-fiend-who-washed-his-feet');
+
+    // Tier 0 item must follow at index 5
+    assert.equal(sorted[5].id, 'panchatantra-wedge-pulling-monkey');
   });
 
   await t.test('katha.tsx integrates visual tier sorting and thumbnail priority for Story of the Day', () => {

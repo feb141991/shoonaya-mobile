@@ -75,6 +75,7 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-unforgiving-monkey': require('@/assets/panchatantra/unforgiving-monkey-1.webp'),
   'panchatantra-credulous-fiend': require('@/assets/panchatantra/credulous-fiend-1.webp'),
   'panchatantra-three-breasted-princess': require('@/assets/panchatantra/three-breasted-princess-1.webp'),
+  'panchatantra-fiend-who-washed-his-feet': require('@/assets/panchatantra/fiend-who-washed-his-feet-1.webp'),
 };
 
 /**
