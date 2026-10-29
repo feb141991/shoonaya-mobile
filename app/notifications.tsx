@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, AppState, FlatList, RefreshControl, Text, useColorScheme, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
-import { useRouter, type Href } from 'expo-router';
+import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -14,6 +14,7 @@ import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, TYPE } from '@/lib/constants';
 import {
   clearNotifications,
   fetchNotifications,
+  fetchNotificationReceipt,
   markAllNotificationsRead,
   markNotificationRead,
   subscribeToNotifications,
@@ -29,7 +30,7 @@ import {
 } from '@/lib/notificationsCache';
 import { classifyFailure, nextBackoffMs, HttpError } from '@/lib/retryPolicy';
 import { recordRouteOpen, recordRefreshFailure, recordMutationRetryOutcome } from '@/lib/telemetry';
-import { resolveNativeRoute } from '@/lib/routes';
+import { routeForNotificationTap } from '@/lib/notificationTap';
 import { supabase } from '@/lib/supabase';
 import { setGuestMode } from '@/lib/guestSession';
 import { captureAppIdentity, isSameAppIdentity, useAppIdentity } from '@/lib/appIdentity';
@@ -160,6 +161,7 @@ const NotificationListRow = memo(function NotificationListRow({ row, theme, onPr
 
 export default function NotificationsScreen() {
   const router = useRouter();
+  const { notificationId } = useLocalSearchParams<{ notificationId?: string | string[] }>();
   const appIdentity = useAppIdentity();
   const insets = useSafeAreaInsets();
   const isDark = useColorScheme() === 'dark';
@@ -463,21 +465,40 @@ export default function NotificationsScreen() {
         queueOperation({ kind: 'mark_read', notificationId: row.id });
       }
 
-      const targetUrl =
-        row.action_url ||
-        (row.type === 'mood_checkin' || row.notification_key?.startsWith('mood')
-          ? '/mood'
-          : null);
-
-      if (targetUrl) {
-        const route = resolveNativeRoute(targetUrl, '/notifications');
-        if (route !== '/notifications') {
-          router.push(route as Href);
-        }
+      const route = routeForNotificationTap({
+        type: row.type, url: row.action_url,
+      });
+      if (route === '/notifications' || (typeof route === 'string' && route.startsWith('/notifications?'))) {
+        Alert.alert(row.title, row.body || 'There is no additional screen for this notification.');
+      } else {
+        router.push(route as Href);
       }
     },
     [router, userId, queueOperation]
   );
+
+  // Block/report receipts and unsupported destinations can refer to rows older than the first inbox page.
+  useEffect(() => {
+    if (appIdentity.kind !== 'authenticated' || notificationId === undefined) return;
+    const lease = captureAppIdentity();
+    let cancelled = false;
+    const showReceipt = async () => {
+      try {
+        const row = typeof notificationId === 'string'
+          ? await fetchNotificationReceipt(appIdentity.userId, notificationId) : null;
+        if (cancelled || !lease.isCurrent()) return;
+        Alert.alert(row?.title ?? 'Notification unavailable', row?.body ?? 'This notification is no longer available in your inbox.');
+        if (row && !row.read) queueOperation({ kind: 'mark_read', notificationId: row.id });
+      } catch {
+        if (cancelled || !lease.isCurrent()) return;
+        Alert.alert('Could not open notification', 'Please try again.', [
+          { text: 'Cancel', style: 'cancel' }, { text: 'Retry', onPress: () => { void showReceipt(); } },
+        ]);
+      }
+    };
+    void showReceipt();
+    return () => { cancelled = true; };
+  }, [appIdentity, notificationId, queueOperation]);
 
   const handleMarkAllRead = useCallback(async () => {
     const unreadIds = notifications.filter((row) => !row.read).map((row) => row.id);

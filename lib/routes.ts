@@ -31,12 +31,14 @@ function queryParam(path: string, name: string): string | null {
 // inbox is a safe, honest fallback) and '/(tabs)/pathshala' when resolving
 // a Home tap target (matching the original mapHrefToRoute's own default).
 export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/pathshala'): Href {
+  path = path.split('#')[0];
   const [pathname] = path.split('?');
 
-  if (pathname === '/home' || pathname === '') {
+  if (pathname === '/home' || pathname === '/' || pathname === '') {
     // The daily-shloka reminder links to /home?focus=shloka. Home has never read `focus`, so that opened Home and
     // nothing else; the shloka has its own screen.
     if (queryParam(path, 'focus') === 'shloka') return '/shloka' as Href;
+    if (queryParam(path, 'focus') === 'weekly-summary') return '/my-progress' as Href;
     return '/(tabs)';
   }
   // Japa (mala counter) and Bhakti (hub) are now two distinct native
@@ -70,7 +72,9 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   if (pathname.startsWith('/yatra')) return '/(tabs)/tirtha';
   // The tab is app/(tabs)/tirtha; /yatra is the name the web gave it, and the app's own name has to open it too.
   if (pathname.startsWith('/tirtha')) return '/(tabs)/tirtha';
-  if (pathname.startsWith('/panchang')) return '/panchang';
+  if (pathname === '/panchang') return path as Href;
+  const datedPanchang = /^\/panchang\/([^/]+)$/.exec(pathname);
+  if (datedPanchang) return `/panchang?date=${encodeURIComponent(datedPanchang[1])}` as Href;
   if (pathname.startsWith('/rashiphala') || pathname.startsWith('/rashiphal')) return '/rashiphala' as Href;
   if (pathname.startsWith('/vrat/')) {
     const slug = pathname.slice('/vrat/'.length);
@@ -106,7 +110,7 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   if (pathname.startsWith('/nitya-dincharya')) return '/nitya-dincharya' as Href;
   if (pathname.startsWith('/nitya-plans')) return '/nitya-plans' as Href;
   if (pathname.startsWith('/sankalpa')) return '/sankalpa';
-  if (pathname.startsWith('/mandali')) return '/mandali';
+  if (pathname === '/mandali') return path as Href;
   // Annual KUL family-remembrance notifications target this exact route with
   // `?section=family`; preserve its query so the hub opens the family dates
   // section instead of falling back to the notification inbox.
@@ -147,7 +151,7 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   if (pathname.startsWith('/profile')) return '/(tabs)/profile';
   if (pathname.startsWith('/settings/')) return path as Href;
   if (pathname.startsWith('/settings')) return '/settings' as Href;
-  if (pathname.startsWith('/notifications')) return '/notifications';
+  if (pathname === '/notifications') return path as Href;
 
   return fallback;
 }
@@ -157,10 +161,13 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
 // extract just the pathname+search for resolveNativeRoute. Returns null if
 // the string isn't a parseable URL/path at all.
 export function pathFromUrlLike(value: string | null | undefined): string | null {
-  if (!value) return null;
+  if (!value || typeof value !== 'string') return null;
+  value = value.trim();
+  if (!value || /[\\\u0000-\u001f]/.test(value) || value.startsWith('//')) return null;
   try {
     if (/^https?:\/\//i.test(value)) {
       const url = new URL(value);
+      if (!['shoonaya.com', 'www.shoonaya.com'].includes(url.hostname.toLowerCase()) || url.username || url.password || url.port) return null;
       return `${url.pathname}${url.search}`;
     }
 
@@ -178,7 +185,8 @@ export function pathFromUrlLike(value: string | null | undefined): string | null
       return `${path || '/'}${url.search}`;
     }
 
-    return value.startsWith('/') ? value : `/${value}`;
+    if (/^[a-z][a-z0-9+.-]*:/i.test(value)) return null;
+    return (value.startsWith('/') ? value : `/${value}`).split('#')[0];
   } catch {
     return null;
   }

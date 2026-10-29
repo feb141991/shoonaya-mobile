@@ -95,7 +95,8 @@ import {
   canDeliverNotificationTap,
   getPendingNotificationTap,
   subscribePendingNotificationTap,
-  takePendingNotificationTap,
+  deliverPendingNotificationTap,
+  resetNotificationTapState,
 } from '@/lib/notificationTap';
 import {
   claimNotificationPermissionPrompt,
@@ -171,6 +172,7 @@ function RootLayout() {
   const [authReady, setAuthReady] = useState(false);
   const [appIsReady, setAppIsReady] = useState(false);
   const [startupRoutePending, setStartupRoutePending] = useState(false);
+  const [tapProfileValidationPending, setTapProfileValidationPending] = useState(false);
   const [pendingStartupDestination, setPendingStartupDestination] = useState<StartupAuthDestination | null>(null);
   const startupStartedAtRef = useRef(Date.now());
   // Set true only if the 6-second emergency fail-safe below actually fires.
@@ -485,6 +487,7 @@ function RootLayout() {
       }
       lastAuthRouteKeyRef.current = routeKey;
       const routeGeneration = ++authRouteGenerationRef.current;
+      setTapProfileValidationPending(false);
       const isCurrentRoute = () => authRouteGenerationRef.current === routeGeneration;
 
       const { rootSegment, childSegment } = segmentsRef.current;
@@ -637,6 +640,8 @@ function RootLayout() {
       if (!isCurrentRoute()) return;
 
       if (cached === 'true') {
+        // Keep fast cached paint, but hold deep links until this check can no longer redirect them.
+        setTapProfileValidationPending(true);
         if (inAuthGroup) {
           redirectForAuth('/(tabs)');
         }
@@ -648,6 +653,7 @@ function RootLayout() {
           .maybeSingle()
           .then(({ data: p, error }) => {
             if (!isCurrentRoute()) return;
+            setTapProfileValidationPending(false);
             if (error) {
               console.warn('[auth-profile] onboarding revalidation unavailable', error);
               return;
@@ -661,6 +667,8 @@ function RootLayout() {
             } else if (p?.onboarding_completed === true) {
               void AsyncStorage.setItem(cacheKey, 'true').catch(() => {});
             }
+          }, () => {
+            if (isCurrentRoute()) setTapProfileValidationPending(false);
           });
         setProfileResolutionFailure(null);
         void offerNotificationPermission(session.user.id);
@@ -1070,8 +1078,6 @@ function RootLayout() {
   }, [pushIdentity]);
 
   useEffect(() => {
-    if (!fontsLoaded && !fontError) return;
-
     try {
       initPushNotifications();
       // Collects the tap that launched the app (when it was closed) and any later tap; it is held in
@@ -1082,7 +1088,7 @@ function RootLayout() {
         console.warn('Push notification initialization skipped:', e);
       }
     }
-  }, [fontsLoaded, fontError]);
+  }, []);
 
   // Deliver a held notification tap. Doing it at once would lose it on a cold start: the index route redirects to
   // the tabs and the sign-in / onboarding redirects run after the session resolves, so the destination is pushed only
@@ -1094,12 +1100,12 @@ function RootLayout() {
     appInteractive: isAppInteractive,
     identityKind: pushIdentity.kind,
     profileResolutionFailed: profileResolutionFailure !== null,
+    profileValidationPending: tapProfileValidationPending,
     rootSegment,
   });
   useEffect(() => {
     if (!heldTap || !tapDeliverable) return;
-    const href = takePendingNotificationTap();
-    if (href) router.push(href);
+    deliverPendingNotificationTap((href) => router.push(href));
   }, [heldTap, tapDeliverable, router]);
 
   // ── Privacy-safe app analytics ────────────────────────────────────────
@@ -1208,6 +1214,7 @@ function RootLayout() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
+      if (event === 'SIGNED_OUT') resetNotificationTapState();
       // Keep the auth callback synchronous. routeForSession can perform API
       // work (including a token refresh during profile repair); running that
       // work inside an auth event callback can make refresh completion wait

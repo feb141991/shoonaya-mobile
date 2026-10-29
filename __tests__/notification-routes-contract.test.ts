@@ -26,8 +26,8 @@ const BACKEND_URLS: Array<{ source: string; url: string; opens: string; noNative
   { source: 'cron/mood-reminder, -evening; mood-candidate-producer', url: '/discover/mood', opens: '/mood' },
   { source: 'cron/sattvic-reminder; sattvic-candidate-producer', url: '/bhakti/zen', opens: '/bhakti/zen' },
   { source: 'cron/shloka-reminder; shloka-candidate-producer; notification-delivery-policy', url: '/home?focus=shloka', opens: '/shloka' },
-  { source: 'cron/weekly-summary (Home has no section to focus)', url: '/home?focus=weekly-summary', opens: '/(tabs)' },
-  { source: 'cron/pitru-paksha-reminder (absolute)', url: 'https://www.shoonaya.com/home', opens: '/(tabs)' },
+  { source: 'legacy weekly-summary', url: '/home?focus=weekly-summary', opens: '/my-progress' },
+  { source: 'cron/pitru-paksha-reminder (event date)', url: 'https://www.shoonaya.com/panchang?date=2026-10-10', opens: '/panchang?date=2026-10-10' },
   { source: 'admin/broadcast (absolute), digest/generate, notifications/diagnostics', url: '/home', opens: '/(tabs)' },
   { source: 'quiz-candidate-producer; notification-delivery-policy', url: '/quiz', opens: '/quiz' },
   { source: 'sankalpa-midpoint-candidate', url: '/sankalpa', opens: '/sankalpa' },
@@ -48,6 +48,10 @@ const BACKEND_URLS: Array<{ source: string; url: string; opens: string; noNative
   { source: 'buildObservanceActionPath (vrat, no slug)', url: '/vrat', opens: '/vrat' },
   { source: 'a vrat slug that is a series member', url: '/vrat/durga-ashtami', opens: '/festival/durga-ashtami' },
   { source: 'Mandali triggers (8: connection_*, post_reaction, comment_reaction, user_blocked, content_reported)', url: '/mandali', opens: '/mandali' },
+  { source: 'Mandali post target', url: '/mandali?postId=11111111-1111-4111-8111-111111111111', opens: '/mandali?postId=11111111-1111-4111-8111-111111111111' },
+  { source: 'Mandali comment target (comment_reaction, mandali_comment)', url: '/mandali?postId=11111111-1111-4111-8111-111111111111&commentId=22222222-2222-4222-8222-222222222222', opens: '/mandali?postId=11111111-1111-4111-8111-111111111111&commentId=22222222-2222-4222-8222-222222222222' },
+  { source: 'Mandali request target', url: '/mandali?requestId=11111111-1111-4111-8111-111111111111', opens: '/mandali?requestId=11111111-1111-4111-8111-111111111111' },
+  { source: 'Mandali report/block receipt', url: '/notifications?notificationId=11111111-1111-4111-8111-111111111111', opens: '/notifications?notificationId=11111111-1111-4111-8111-111111111111' },
   { source: 'digest/generate action', url: '/pathshala', opens: '/(tabs)/pathshala' },
   { source: 'notification-delivery-policy default for an unknown type', url: '/discover/mood', opens: '/mood' },
 ];
@@ -117,9 +121,8 @@ for (const row of BACKEND_URLS) {
 
 test('the only notification destinations that open Home are the ones that mean Home', () => {
   const opensHome = BACKEND_URLS.filter((row) => row.opens === '/(tabs)').map((row) => row.url);
-  // Decision recorded 2026-10-29: Pitru Paksha should open the Panchang, which needs a backend change to its url;
-  // until that ships it is listed here so no other notification starts opening Home by accident.
-  assert.deepEqual(opensHome.sort(), ['/home', '/home?focus=weekly-summary', 'https://www.shoonaya.com/home'].sort());
+  // Broadcast/digest intentionally stay on Home; summary and dated events have explicit destinations.
+  assert.deepEqual(opensHome.sort(), ['/home']);
 });
 
 // ── Screen -> reachable ─────────────────────────────────────────────────────

@@ -13,7 +13,9 @@ const mandali = readFileSync(new URL('../app/(tabs)/mandali.tsx', import.meta.ur
 // the user was not looking at.
 describe('Mandali realtime subscription and connection-request polling pause when unfocused', () => {
   it('imports useFocusEffect/useIsFocused and derives an isFocused flag', () => {
-    assert.match(mandali, /import \{ useRouter, useFocusEffect, useIsFocused \} from 'expo-router';/);
+    for (const hook of ['useRouter', 'useFocusEffect', 'useIsFocused']) {
+      assert.match(mandali, new RegExp(`import \\{[^}]*\\b${hook}\\b[^}]*\\} from 'expo-router';`));
+    }
     assert.match(mandali, /const isFocused = useIsFocused\(\);/);
   });
 

@@ -3,6 +3,7 @@ import test, { beforeEach } from 'node:test';
 
 import {
   canDeliverNotificationTap,
+  deliverPendingNotificationTap,
   DEFAULT_TAP_ACTION,
   enqueueNotificationTap,
   getPendingNotificationTap,
@@ -182,4 +183,74 @@ test('a tap with no data still opens the inbox', () => {
   const { source } = fakeSource({ actionIdentifier: DEFAULT_TAP_ACTION, notification: { date: 1, request: { identifier: 'n7', content: {} } } });
   observeNotificationResponses(source);
   assert.equal(takePendingNotificationTap(), '/notifications');
+});
+
+test('live responses are acknowledged only after navigation and are not replayed on observer restart', () => {
+  const fake = fakeSource();
+  const stop = observeNotificationResponses(fake.source);
+  fake.tap(response('live', { url: '/my-progress' }));
+  assert.equal(fake.clears(), 0);
+  let delivered = '';
+  deliverPendingNotificationTap((href) => {
+    assert.equal(fake.clears(), 0);
+    delivered = String(href);
+  });
+  assert.equal(delivered, '/my-progress');
+  assert.equal(fake.clears(), 1);
+  stop();
+  resetNotificationTapState();
+  observeNotificationResponses(fake.source);
+  assert.equal(getPendingNotificationTap(), null);
+});
+
+test('failed navigation preserves the response and intent for a successful retry', () => {
+  const fake = fakeSource(response('retry', { url: '/quiz' }));
+  observeNotificationResponses(fake.source);
+  assert.equal(fake.clears(), 0);
+  assert.throws(() => deliverPendingNotificationTap(() => { throw new Error('not mounted'); }));
+  assert.equal(fake.clears(), 0);
+  assert.equal(getPendingNotificationTap()?.href, '/quiz');
+  deliverPendingNotificationTap(() => {});
+  assert.equal(fake.clears(), 1);
+});
+
+test('profile revalidation holds taps until its possible onboarding redirect is resolved', () => {
+  assert.equal(canDeliverNotificationTap({ ...ready, profileValidationPending: true }), false);
+  assert.equal(canDeliverNotificationTap({ ...ready, profileValidationPending: false }), true);
+});
+
+test('untrusted URL hosts and schemes cannot be interpreted as internal screens', () => {
+  for (const url of ['https://evil.example/japa', 'javascript:/japa', '//evil.example/japa']) {
+    assert.equal(routeForNotificationTap({ type: 'japa', url }), '/notifications');
+  }
+});
+
+test('both launch and live responses wait through login, then route exactly once', () => {
+  const fake = fakeSource(response('held-login', { url: '/home?focus=weekly-summary' }));
+  observeNotificationResponses(fake.source);
+  assert.equal(fake.clears(), 0);
+  assert.equal(canDeliverNotificationTap({ ...ready, identityKind: 'unauthenticated' }), false);
+  assert.equal(canDeliverNotificationTap({ ...ready, rootSegment: '(auth)' }), false);
+  assert.equal(getPendingNotificationTap()?.href, '/my-progress');
+  assert.equal(canDeliverNotificationTap(ready), true);
+  let count = 0;
+  deliverPendingNotificationTap(() => { count++; });
+  fake.tap(response('held-login', { url: '/home?focus=weekly-summary' }));
+  deliverPendingNotificationTap(() => { count++; });
+  assert.equal(count, 1);
+});
+
+test('every Mandali notification type the backend writes opens the Mandali tab when its url is missing (types read from production 2026-10-30)', () => {
+  // trg_notify_mandali_comment writes mandali_comment; there is no mandali_mention type.
+  for (const type of ['connection_request', 'connection_accepted', 'connection_rejected', 'connection_cancelled',
+    'post_reaction', 'comment_reaction', 'mandali_comment', 'user_blocked', 'content_reported']) {
+    assert.equal(routeForNotificationTap({ type }), '/mandali', type);
+  }
+  assert.equal(routeForNotificationTap({ type: 'mandali_mention' }), '/notifications', 'an invented type must not look supported');
+});
+
+test('a comment notification opens its comment inside its post, from the push url as from the inbox', () => {
+  const url = '/mandali?postId=11111111-1111-4111-8111-111111111111&commentId=22222222-2222-4222-8222-222222222222';
+  assert.equal(String(routeForNotificationTap({ type: 'mandali_comment', url })), url);
+  assert.equal(String(routeForNotificationTap({ type: 'mandali_comment', url: `https://www.shoonaya.com${url}` })), url);
 });

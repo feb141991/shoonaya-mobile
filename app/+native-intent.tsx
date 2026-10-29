@@ -1,7 +1,7 @@
-import { mapSystemPath } from '@/lib/systemLinkRoute';
+import { holdSystemLinkIntent } from '@/lib/systemLinkIntent';
 
 // Expo Router calls this for every link the OS opens the app with (cold start: initial=true) and for links that arrive
-// while it is running. See lib/systemLinkRoute.ts for what is rewritten and what is left alone.
-export function redirectSystemPath({ path }: { path: string; initial: boolean }): string {
-  return mapSystemPath(path);
+// while it is running. Product links wait for the root's auth/onboarding gate; callbacks remain untouched.
+export function redirectSystemPath(intent: { path: string; initial: boolean }): string {
+  return holdSystemLinkIntent(intent);
 }

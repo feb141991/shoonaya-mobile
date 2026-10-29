@@ -375,8 +375,27 @@ Rules:
   Nitya Karma instead of the plans screen; and `/festivals/<slug>`, which the backend writes, has no screen of that
   name. The sweep (every backend producer URL against the real router, and every screen against the router) found
   these and `/tirtha`; the two guard tests now fail if any of them returns.
-- Open and not fixed here: Pitru Paksha, broadcast, digest and weekly-summary notifications still open Home (Pitru
-  Paksha should open the Panchang, which needs the backend URL changed); Mandali notifications open the tab, not the
-  request or post; the iOS association file and Android intent filters claim path families with no screen (for example
-  `/panchang/<date>`); and none of this has been observed on a device. Real-device evidence is required before calling
-  tap routing release-ready (sections 6 and 7). This applies equally to human and AI-agent contributors.
+- Closed 2026-10-30 (the follow-up to the above): the weekly summary opens `/my-progress`; Pitru Paksha carries the
+  occurrence's civil date to `/panchang?date=YYYY-MM-DD` and the Panchang opens on that date, never on the day of the tap
+  (an OS link to `/panchang/<date>` is rewritten to the same form, so a wrong date is still never shown as the right one);
+  Mandali notifications carry an exact locator (`/mandali?postId=&commentId=` or `?requestId=`) that the app resolves
+  through `/api/mandali/notification-target` on every open, because a locator is never an access grant (membership,
+  blocks, mutes, hidden content and deleted comments are re-checked, and a failed safety read fails closed). Block and
+  report receipts, and any key format that is not understood, open the sender's own `/notifications?notificationId=`.
+  OS links are held in the same queue as taps (`lib/systemLinkIntent.ts`), so sign-in and onboarding cannot erase them;
+  that design depends on the installed Expo Router skipping navigation for an empty warm href, which
+  `__tests__/system-link-intent.test.ts` pins to its source: re-check it on every Expo Router upgrade.
+- A notification's type and key format are read from the trigger or producer that writes them, never assumed. The first
+  Mandali routing guessed a `mandali_mention` type that does not exist; the comment notification is `mandali_comment` with
+  key `mandali_comment:<comment_id>` (14 of the 31 Mandali notifications in production on 2026-10-30), and its trigger is
+  `AFTER INSERT` on `post_comments`, so the comment exists when the row is written. `notify_mandali_comment` exists only
+  in production, not in the repository's migrations: a drift to close separately. A request sheet names the OTHER person
+  (`counterparty`), never the requester, because for an accepted or declined request the requester is the viewer.
+- Still open: broadcast and digest notifications open Home, deliberately; the Android intent filters in `app.json` now claim
+  six more website paths (`/home`, `/mandali`, `/my-progress`, `/nitya-karma`, `/notifications`, `/shloka`), which only a new
+  native build can deliver (an OTA update cannot), while the iOS file is served by the backend and takes effect on its
+  deploy; and none of this has been observed on a device. The simulator build present on 2026-10-30 (`com.shoonaya.app`
+  1.0.0, build 7, embedded bundle of 2026-10-29 01:48) predates all of it and proves nothing about it. Real-device
+  evidence of cold and warm taps is required before calling tap routing release-ready (sections 6 and 7). The backend and
+  the app can ship in either order: an app without these changes opens the same section for every new URL. This applies
+  equally to human and AI-agent contributors.

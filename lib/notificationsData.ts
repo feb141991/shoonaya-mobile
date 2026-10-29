@@ -46,6 +46,15 @@ export async function fetchNotifications(userId: string): Promise<NotificationRo
   return (data ?? []) as NotificationRow[];
 }
 
+/** Fetch a notification receipt beyond the paginated inbox, still scoped by owner and RLS. */
+export async function fetchNotificationReceipt(userId: string, id: string): Promise<NotificationRow | null> {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) return null;
+  const { data, error } = await supabase.from('notifications').select(SELECT_COLUMNS)
+    .eq('user_id', userId).eq('id', id).maybeSingle();
+  if (error) throw error;
+  return data as NotificationRow | null;
+}
+
 // Matches web's own limitation: unread count is derived from the same
 // capped 20-row fetch, not a true unbounded server aggregate
 // (src/app/(main)/home/HomeDashboard.tsx:312) — kept consistent rather than

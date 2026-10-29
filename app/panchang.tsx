@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
+  Alert,
   ActivityIndicator,
   Animated,
   Easing,
@@ -14,13 +15,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Feather from '@expo/vector-icons/Feather';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { WhyTodayModal } from '@/components/calendar/WhyTodayModal';
 import { CalendarDatePicker } from '@/components/ui/CalendarDatePicker';
-import { formatLocalDateOnly } from '@/lib/dateOnly';
+import { formatLocalDateOnly, parseDateOnly } from '@/lib/dateOnly';
+import { notificationDate } from '@/lib/notificationDestination';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
 import { describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
@@ -374,6 +376,7 @@ const iconBtnStyle = {
 
 export default function PanchangScreen() {
   const router = useRouter();
+  const { date: linkedDate } = useLocalSearchParams<{ date?: string | string[] }>();
   const appIdentity = useAppIdentity();
   const handleBack = useFallbackBackHandler('/(tabs)', true);
   const cacheIdentity = appIdentity.kind === 'authenticated'
@@ -387,7 +390,7 @@ export default function PanchangScreen() {
     ? getPanchangScreenSnapshot<UpcomingFestival, Tradition>(cacheIdentity)
     : null;
   const [profileState, setProfileState] = useState<PanchangState>(initialSnapshot?.profile ?? INITIAL_STATE);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(() => notificationDate(linkedDate) ?? new Date());
   const [festivals, setFestivals] = useState<UpcomingFestival[]>(initialSnapshot?.festivals ?? []);
   const [panchangOwner, setPanchangOwner] = useState<string | null>(cacheIdentity);
   const [whyTodayFestival, setWhyTodayFestival] = useState<UpcomingFestival | null>(null);
@@ -404,12 +407,22 @@ export default function PanchangScreen() {
   const [displayTz, setDisplayTz] = useState<'local' | 'ist'>('local');
   const [showCalendarModal, setShowCalendarModal] = useState(false);
 
-  const handleSelectCalendarDate = useCallback((dateStr: string) => {
-    const [y, m, d] = dateStr.split('-').map(Number);
-    const date = new Date(y, m - 1, d);
-    if (!isNaN(date.getTime())) {
-      setSelectedDate(date);
+  const previousLinkedDate = useRef(linkedDate);
+  useEffect(() => {
+    const previous = previousLinkedDate.current;
+    previousLinkedDate.current = linkedDate;
+    if (linkedDate === undefined) {
+      if (previous !== undefined) setSelectedDate(new Date());
+      return;
     }
+    const date = notificationDate(linkedDate);
+    if (date) setSelectedDate(date);
+    else Alert.alert('Date unavailable', 'This link does not contain a valid calendar date. Choose a day in Panchang.');
+  }, [linkedDate]);
+
+  const handleSelectCalendarDate = useCallback((dateStr: string) => {
+    const date = parseDateOnly(dateStr);
+    if (date) setSelectedDate(date);
   }, []);
 
   useEffect(() => {

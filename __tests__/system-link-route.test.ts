@@ -32,7 +32,7 @@ test('links that already match a screen are returned exactly as received', () =>
 
 test('a dated Panchang link is not collapsed to today: a wrong date must not be shown as the right one', () => {
   const link = 'https://www.shoonaya.com/panchang/2026-10-29';
-  assert.equal(mapSystemPath(link), link);
+  assert.equal(mapSystemPath(link), '/panchang?date=2026-10-29');
 });
 
 test('the sign-in return and development-client links reach Expo Router untouched', () => {
@@ -56,4 +56,11 @@ test('the root, empty and unparseable links are returned as received', () => {
 test('a path that is not one of ours is left for Expo Router to handle', () => {
   const link = 'https://www.shoonaya.com/some/page/we/never/made';
   assert.equal(mapSystemPath(link), link);
+});
+
+test('system aliases retain the same destinations as push taps', () => {
+  assert.equal(mapSystemPath('/home?focus=weekly-summary'), '/my-progress');
+  assert.equal(mapSystemPath('/home?focus=shloka'), '/shloka');
+  assert.equal(mapSystemPath('/nitya-karma/plans'), '/nitya-plans');
+  assert.equal(mapSystemPath('/kul/sanskara'), '/kul');
 });

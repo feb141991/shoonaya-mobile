@@ -27,9 +27,12 @@ export function routeForNotificationTap(data: TapData | null | undefined): Href 
   // `type` bucket. `url` is untrusted JSON: only a string is a destination.
   const fromUrl = typeof payload.url === 'string' ? pathFromUrlLike(payload.url) : null;
   if (fromUrl) return resolveNativeRoute(fromUrl, '/notifications');
+  if (typeof payload.url === 'string' && payload.url.trim()) return '/notifications';
 
   switch (payload.type) {
+    case 'pitru_paksha':
     case 'tithi': return '/panchang';
+    case 'weekly_summary': return '/my-progress';
     case 'festival': return '/vrat';
     case 'nitya':
     case 'brahma_muhurta': return '/nitya-karma';
@@ -37,13 +40,14 @@ export function routeForNotificationTap(data: TapData | null | undefined): Href 
     case 'streak': return '/(tabs)';
     case 'mood':
     case 'mood_checkin': return '/mood';
-    case 'mandali_mention':
     case 'connection_request':
     case 'connection_accepted':
     case 'connection_rejected':
     case 'connection_cancelled':
     case 'user_blocked':
     case 'content_reported':
+    case 'comment_reaction':
+    case 'mandali_comment':
     case 'post_reaction': return '/mandali';
     // general/test/milestone/sanskar_milestone/guided-plan/broadcast and anything unrecognised land in the inbox
     // itself rather than guessing: the notification that was tapped is right there, in context.
@@ -58,6 +62,7 @@ export type PendingNotificationTap = { href: Href; key: string; receivedAt: numb
 const HANDLED_KEYS_LIMIT = 30;
 let pending: PendingNotificationTap | null = null;
 let handledKeys: string[] = [];
+const acknowledgements = new Map<string, () => void>();
 const listeners = new Set<() => void>();
 
 function notify() {
@@ -77,13 +82,28 @@ export function getPendingNotificationTap(): PendingNotificationTap | null {
   return pending;
 }
 
-/** Returns the held destination once and forgets it; null when nothing is held or it has gone stale. */
-export function takePendingNotificationTap(now: number = Date.now()): Href | null {
+function acknowledge(key: string) {
+  acknowledgements.get(key)?.();
+  acknowledgements.delete(key);
+}
+
+/** Navigate before consuming. A thrown router call leaves the intent available for retry. */
+export function deliverPendingNotificationTap(navigate: (href: Href) => void, now = Date.now()): boolean {
   const current = pending;
-  if (!current) return null;
-  pending = null;
+  if (!current) return false;
+  if (now - current.receivedAt <= NOTIFICATION_TAP_HOLD_MS) navigate(current.href);
+  // A synchronous navigation subscriber may enqueue a newer intent; never discard it.
+  if (pending?.key === current.key) pending = null;
+  acknowledge(current.key);
   notify();
-  return now - current.receivedAt <= NOTIFICATION_TAP_HOLD_MS ? current.href : null;
+  return true;
+}
+
+/** Test compatibility seam; production uses deliverPendingNotificationTap to acknowledge after navigation. */
+export function takePendingNotificationTap(now: number = Date.now()): Href | null {
+  let href: Href | null = null;
+  deliverPendingNotificationTap((destination) => { href = destination; }, now);
+  return href;
 }
 
 export function subscribePendingNotificationTap(listener: () => void): () => void {
@@ -93,8 +113,10 @@ export function subscribePendingNotificationTap(listener: () => void): () => voi
 
 /** Test and sign-out seam. */
 export function resetNotificationTapState() {
+  if (pending) acknowledge(pending.key);
   pending = null;
   handledKeys = [];
+  acknowledgements.clear();
   notify();
 }
 
@@ -106,9 +128,10 @@ export function canDeliverNotificationTap(state: {
   appInteractive: boolean;
   identityKind: 'loading' | 'unauthenticated' | 'guest' | 'authenticated';
   profileResolutionFailed: boolean;
+  profileValidationPending?: boolean;
   rootSegment: string | undefined;
 }): boolean {
-  if (!state.appInteractive || state.identityKind !== 'authenticated' || state.profileResolutionFailed) return false;
+  if (!state.appInteractive || state.identityKind !== 'authenticated' || state.profileResolutionFailed || state.profileValidationPending) return false;
   const root = state.rootSegment;
   return root !== undefined && root !== '(auth)' && root !== 'auth' && root !== 'sanctuary-preparing';
 }
@@ -129,26 +152,37 @@ export type ResponseSource = {
   addNotificationResponseReceivedListener(listener: (response: TapResponse) => void): { remove(): void };
 };
 
-function accept(response: TapResponse | null | undefined) {
-  if (!response || response.actionIdentifier !== DEFAULT_TAP_ACTION) return;
-  const { identifier, content } = response.notification.request;
-  enqueueNotificationTap(`${identifier}:${response.notification.date}`, content.data);
+function responseKey(response: TapResponse): string {
+  return `${response.notification.request.identifier}:${response.notification.date}`;
 }
 
-/**
- * Starts listening, and first collects the tap that launched the app, if any. A response that reaches both paths is
- * accepted once.
- */
+/** Listen first, then inspect the launch response; both paths share deduplication and acknowledgement. */
 export function observeNotificationResponses(source: ResponseSource): () => void {
-  try {
-    const launching = source.getLastNotificationResponse();
-    if (launching) {
-      accept(launching);
-      source.clearLastNotificationResponse();
+  const accept = (response: TapResponse | null | undefined) => {
+    if (!response || response.actionIdentifier !== DEFAULT_TAP_ACTION) return;
+    const key = responseKey(response);
+    const clearMatchingResponse = () => {
+      try {
+        const latest = source.getLastNotificationResponse();
+        if (latest && responseKey(latest) === key) source.clearLastNotificationResponse();
+      } catch {
+        // Native cleanup failure must not crash navigation; in-session deduplication still applies.
+      }
+    };
+    if (handledKeys.includes(key)) {
+      if (pending?.key !== key) clearMatchingResponse();
+      return;
     }
-  } catch {
+    if (pending) {
+      // Latest user intent wins. Do not clear a newer native response while superseding the previous one.
+      acknowledge(pending.key);
+    }
+    acknowledgements.set(key, clearMatchingResponse);
+    enqueueNotificationTap(key, response.notification.request.content.data);
+  };
+  const subscription = source.addNotificationResponseReceivedListener(accept);
+  try { accept(source.getLastNotificationResponse()); } catch {
     // A platform read failure must not stop live taps from working.
   }
-  const subscription = source.addNotificationResponseReceivedListener(accept);
   return () => subscription.remove();
 }

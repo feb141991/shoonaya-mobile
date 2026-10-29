@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import { FlashList, type FlashListRef, type ListRenderItemInfo } from '@shopify/flash-list';
 import Feather from '@expo/vector-icons/Feather';
-import { useRouter, useFocusEffect, useIsFocused } from 'expo-router';
+import { useRouter, useFocusEffect, useIsFocused, useLocalSearchParams } from 'expo-router';
 import { Image } from 'expo-image';
 import * as Crypto from 'expo-crypto';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -37,6 +37,8 @@ import { PostComments } from '@/components/mandali/PostComments';
 import { SeekersNearYou } from '@/components/mandali/SeekersNearYou';
 import { MemberInfoSheet, type MemberInfoSubject } from '@/components/mandali/MemberInfoSheet';
 import { PostOptionsSheet } from '@/components/mandali/PostOptionsSheet';
+import { NotificationTargetSheet } from '@/components/mandali/NotificationTargetSheet';
+import { mandaliNotificationTarget } from '@/lib/notificationDestination';
 import { ConnectionRequestsSheet } from '@/components/mandali/ConnectionRequestsSheet';
 import { PostReactionButton } from '@/components/mandali/PostReactionButton';
 import { PostReactorsSheet } from '@/components/mandali/PostReactorsSheet';
@@ -563,8 +565,24 @@ const MandaliPostCard = memo(function MandaliPostCard({
 // updates live without the user pulling to refresh.
 export default function MandaliRoute() {
   const identity = useAppIdentity();
+  const isFocused = useIsFocused();
+  const router = useRouter();
+  const targetParams = useLocalSearchParams<{ postId?: string | string[]; commentId?: string | string[]; requestId?: string | string[] }>();
+  const notificationTarget = mandaliNotificationTarget(targetParams);
+  const closeNotificationTarget = useCallback(() => {
+    router.setParams({ postId: undefined, commentId: undefined, requestId: undefined });
+  }, [router]);
   const key = identity.kind === 'authenticated' ? identity.userId : identity.kind;
-  return <ErrorBoundary key={key} fallbackTitle="Could not display Mandali"><MandaliScreen /></ErrorBoundary>;
+  return <ErrorBoundary key={key} fallbackTitle="Could not display Mandali">
+    <MandaliScreen />
+    {isFocused && identity.kind === 'authenticated' && notificationTarget ? <NotificationTargetSheet
+      target={notificationTarget}
+      userId={identity.userId}
+      onClose={closeNotificationTarget}
+      onAccept={(request) => respondToConnectionRequest(request.id, 'accepted')}
+      onReject={(request) => respondToConnectionRequest(request.id, 'rejected')}
+    /> : null}
+  </ErrorBoundary>;
 }
 
 function MandaliScreen() {
