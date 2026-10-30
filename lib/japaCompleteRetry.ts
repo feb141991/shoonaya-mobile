@@ -73,7 +73,8 @@ export async function attemptJapaCompleteWithRetry(
         onOutcome('retry', attempt);
         return { kind: 'uncertain', response: res };
       }
-      await delay(nextBackoffMs(attempt) ?? classification.afterMs);
+      const delayMs = classification.serverSpecifiedDelay ? classification.afterMs : (nextBackoffMs(attempt) ?? classification.afterMs);
+      await delay(delayMs);
     } catch (err) {
       if (isFetchCancelled(err)) return { kind: 'uncertain', response: null };
       if (attempt === JAPA_COMPLETE_RETRY_STAGES) {

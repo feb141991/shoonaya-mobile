@@ -4,6 +4,7 @@ import { isFetchCancelled } from './fetch-error';
 import { syncStartupPreferencesFromProfile } from './startup-scenes/preferences';
 import { recordRouteOpen, recordRefreshFailure, recordServerTiming, recordDuplicateRequestAvoided, parseServerTimingHeader, type TelemetryIdentity } from './telemetry';
 import { fetchHomeCalendarFallback, type HomeCalendarFallback } from './homeCalendarFallback';
+import { addJitter, parseRetryAfterMs } from './retryPolicy';
 
 export type HomeAuthIdentity =
   | { kind: 'guest' }
@@ -232,11 +233,13 @@ export class HomeSummaryCoordinator {
 
     if (isManualRefresh) {
       this.inFlightRequests.delete(currentIdentityKey);
-      await clearHomeCache(cacheIdentity);
       this.state.lastLoadedAt = 0;
-      // Cache is gone and lastCalendarLoadedAt resets too -- a manual
-      // pull-to-refresh is an explicit "give me the latest" gesture, so it
-      // must never be narrowed by the 12h calendar-freshness window below.
+      // A manual pull-to-refresh is an explicit "give me the latest" gesture,
+      // so lastCalendarLoadedAt resets too: it must never be narrowed by the 12h
+      // calendar-freshness window. Note: we deliberately DO NOT clear the on-disk
+      // cache here (Native AGENTS §5). If the network fetch fails (e.g. backend
+      // stall or offline), the last known-good cached content remains preserved.
+      // A successful response will overwrite the cache at writeHomeCache.
       this.state.lastCalendarLoadedAt = 0;
     }
 
@@ -518,7 +521,7 @@ export class HomeSummaryCoordinator {
         // guarded calendar-only attempt before showing the Home error state.
         // With no cached profile contract, omit tradition/profile overrides;
         // the backend then resolves the authenticated user's own settings.
-        if (identity.kind === 'authenticated' && this.deps.onApplyCalendarFallback) {
+        if (identity.kind === 'authenticated') {
           const cached = await getOrReadHomeCache(cacheIdentity, timezone).catch(() => null);
           if (requestGen !== this.state.requestGen || this.state.lastIdentityKey !== currentIdentityKey) return;
           const cachedPayload = cached
@@ -526,36 +529,54 @@ export class HomeSummaryCoordinator {
               ? withDateSensitiveFieldsPending(cached.payload, cached.expectedSpiritualDate)
               : cached.payload
             : null;
-          const fallback = await fetchHomeCalendarFallback({
-            fetchApi: this.deps.fetchApi,
-            expectedUserId: identity.userId,
-            tradition: cachedPayload?.profile?.tradition,
-            calendarProfile: cachedPayload?.panchang?.calendarProfile,
-            timezone: safeTimezone(cachedPayload?.date?.timezone || timezone),
-            spiritualDate: cachedPayload?.date?.iso || spiritualDate(timezone),
-            language: cachedPayload?.profile?.appLanguage === 'hi' || cachedPayload?.profile?.appLanguage === 'pa'
-              ? cachedPayload.profile.appLanguage
-              : 'en',
-          });
-          if (requestGen !== this.state.requestGen || this.state.lastIdentityKey !== currentIdentityKey) return;
-          if (fallback) {
-            this.deps.onApplyCalendarFallback(fallback);
-            this.deps.onSetSectionsPending?.(false);
-            // A cached Home model is complete enough to recover in place. On
-            // a true first-install failure, keep the normal error shell for
-            // profile/practice data; the caller can still render this
-            // calendar-only result inside that shell without pretending the
-            // rest of Home loaded.
-            if (this.state.hasValidState) {
-              recordRefreshFailure(telemetryIdentity, 'home', {
-                reason,
-                hadCachedData: Boolean(cachedPayload),
-              });
-              this.state.lastLoadedAt = Date.now();
-              this.state.lastCalendarLoadedAt = 0;
-              this.deps.onSetLoading(false);
-              this.deps.onSetError(false);
-              return;
+          // If in-memory state was missing or invalid, recover immediately with the valid cached payload (§5)
+          if (!this.state.hasValidState && cachedPayload) {
+            this.deps.onApplyPayload(cachedPayload);
+            this.deps.onSetSectionsPending?.(cached?.dateSensitiveStale ?? false);
+            this.state.hasValidState = true;
+            this.state.lastLoadedAt = cached?.savedAt ?? Date.now();
+            this.state.lastCalendarLoadedAt = cached?.calendarSavedAt ?? 0;
+            this.deps.onSetLoading(false);
+            this.deps.onSetError(false);
+            recordRefreshFailure(telemetryIdentity, 'home', {
+              reason,
+              hadCachedData: true,
+            });
+            return;
+          }
+
+          if (this.deps.onApplyCalendarFallback) {
+            const fallback = await fetchHomeCalendarFallback({
+              fetchApi: this.deps.fetchApi,
+              expectedUserId: identity.userId,
+              tradition: cachedPayload?.profile?.tradition,
+              calendarProfile: cachedPayload?.panchang?.calendarProfile,
+              timezone: safeTimezone(cachedPayload?.date?.timezone || timezone),
+              spiritualDate: cachedPayload?.date?.iso || spiritualDate(timezone),
+              language: cachedPayload?.profile?.appLanguage === 'hi' || cachedPayload?.profile?.appLanguage === 'pa'
+                ? cachedPayload.profile.appLanguage
+                : 'en',
+            });
+            if (requestGen !== this.state.requestGen || this.state.lastIdentityKey !== currentIdentityKey) return;
+            if (fallback) {
+              this.deps.onApplyCalendarFallback(fallback);
+              this.deps.onSetSectionsPending?.(false);
+              // A cached Home model is complete enough to recover in place. On
+              // a true first-install failure, keep the normal error shell for
+              // profile/practice data; the caller can still render this
+              // calendar-only result inside that shell without pretending the
+              // rest of Home loaded.
+              if (this.state.hasValidState) {
+                recordRefreshFailure(telemetryIdentity, 'home', {
+                  reason,
+                  hadCachedData: Boolean(cachedPayload),
+                });
+                this.state.lastLoadedAt = Date.now();
+                this.state.lastCalendarLoadedAt = 0;
+                this.deps.onSetLoading(false);
+                this.deps.onSetError(false);
+                return;
+              }
             }
           }
         }
@@ -599,6 +620,7 @@ export type PanchangRetryDependencies = {
   // skeleton first appears). Overridable so tests don't have to wait out
   // real timers.
   delaysMs?: number[];
+  randomFn?: () => number;
 };
 
 /**
@@ -650,9 +672,12 @@ export class PanchangRetryController {
       return true;
     };
 
-    const runAttempt = (index: number) => {
+    const runAttempt = (index: number, serverDelayMs?: number | null) => {
       if (!isCurrentEpisode() || index >= delays.length) return;
       const isLastAttempt = index === delays.length - 1;
+
+      const baseDelay = serverDelayMs != null ? Math.max(delays[index], serverDelayMs) : delays[index];
+      const waitMs = addJitter(baseDelay, 0.25, this.deps.randomFn ?? Math.random);
 
       const timer = setTimeout(() => {
         void (async () => {
@@ -664,7 +689,11 @@ export class PanchangRetryController {
               if (isLastAttempt) {
                 if (!(await tryCalendarFallback())) this.deps.onExhausted();
               }
-              else runAttempt(index + 1);
+              else {
+                const retryAfterHeader = response.headers?.get ? response.headers.get('Retry-After') : null;
+                const nextDelayMs = parseRetryAfterMs(retryAfterHeader);
+                runAttempt(index + 1, nextDelayMs);
+              }
               return;
             }
             const payload = await response.json();
@@ -689,7 +718,7 @@ export class PanchangRetryController {
             else runAttempt(index + 1);
           }
         })();
-      }, delays[index]);
+      }, waitMs);
 
       this.timers = [timer];
     };

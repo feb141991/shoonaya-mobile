@@ -38,7 +38,8 @@ export async function attemptSankalpaCheckinWithRetry(
         onOutcome(outcome.kind === 'permanent_failure' ? 'permanent_failure' : 'retry', attempt);
         return false;
       }
-      await delay(nextBackoffMs(attempt) ?? outcome.afterMs);
+      const delayMs = outcome.serverSpecifiedDelay ? outcome.afterMs : (nextBackoffMs(attempt) ?? outcome.afterMs);
+      await delay(delayMs);
     } catch (err) {
       if (isFetchCancelled(err)) return false;
       if (attempt === SANKALPA_CHECKIN_RETRY_STAGES) {

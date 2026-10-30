@@ -49,7 +49,8 @@ export async function attemptMoodCheckinWithRetry(
         onOutcome(outcome.kind === 'permanent_failure' ? 'permanent_failure' : 'retry', attempt);
         return null;
       }
-      await delay(nextBackoffMs(attempt) ?? outcome.afterMs);
+      const delayMs = outcome.serverSpecifiedDelay ? outcome.afterMs : (nextBackoffMs(attempt) ?? outcome.afterMs);
+      await delay(delayMs);
     } catch (err) {
       if (isFetchCancelled(err)) return null;
       if (attempt === MOOD_RETRY_STAGES) {

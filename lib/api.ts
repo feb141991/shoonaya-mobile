@@ -270,7 +270,7 @@ async function performApiFetch(path: string, options: ApiFetchOptions = {}, chec
       () => requestWithToken(accessToken),
       fetchOptions.method,
       fetchOptions.body,
-      () => abortable(new Promise<void>((resolve) => setTimeout(resolve, 500))),
+      (waitMs) => abortable(new Promise<void>((resolve) => setTimeout(resolve, waitMs))),
     );
     finalResponse = response;
 

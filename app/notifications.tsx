@@ -233,17 +233,18 @@ export default function NotificationsScreen() {
     } catch (error) {
       const outcome = error instanceof HttpError
         ? classifyFailure(error.status, error.retryAfterHeader)
-        : ({ kind: 'retry', afterMs: nextBackoffMs(op.attempts) ?? 0 } as const);
+        : ({ kind: 'retry', afterMs: nextBackoffMs(op.attempts) ?? 0, serverSpecifiedDelay: false } as const);
 
       if (outcome.kind === 'retry') {
         const attempts = op.attempts + 1;
-        const backoff = nextBackoffMs(op.attempts);
-        if (backoff === null) {
+        const defaultBackoff = nextBackoffMs(op.attempts);
+        if (defaultBackoff === null && !outcome.serverSpecifiedDelay) {
           const failed = { ...op, attempts, status: 'failed' as const };
           await settle(pendingOperationsRef.current.map((item) => (item.id === op.id ? failed : item)));
           recordMutationRetryOutcome({ kind: 'authenticated', userId: uid }, 'notifications', 'permanent_failure', attempts);
           return;
         }
+        const backoff = outcome.serverSpecifiedDelay ? outcome.afterMs : defaultBackoff!;
         const next = { ...op, attempts, nextAttemptAt: Date.now() + backoff, status: 'pending' as const };
         await settle(pendingOperationsRef.current.map((item) => (item.id === op.id ? next : item)));
         clearRetryTimer(op.id);

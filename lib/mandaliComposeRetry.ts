@@ -51,7 +51,8 @@ export async function attemptMandaliComposeWithRetry(
         onOutcome(outcome.kind === 'permanent_failure' ? 'permanent_failure' : 'retry', attempt);
         return res;
       }
-      await delay(nextBackoffMs(attempt) ?? outcome.afterMs);
+      const delayMs = outcome.serverSpecifiedDelay ? outcome.afterMs : (nextBackoffMs(attempt) ?? outcome.afterMs);
+      await delay(delayMs);
     } catch (err) {
       if (isFetchCancelled(err)) return null;
       if (attempt === MANDALI_COMPOSE_RETRY_STAGES) {
