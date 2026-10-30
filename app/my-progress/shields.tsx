@@ -14,26 +14,10 @@ import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, themeColor } from '@/lib/constants';
-import { supabase } from '@/lib/supabase';
 import { apiFetch } from '@/lib/api';
 import { useAppIdentity } from '@/lib/appIdentity';
-import { isGuestMode, setGuestMode } from '@/lib/guestSession';
-
-// Reuses GET /api/native/progress (also used by ../my-progress.tsx) rather
-// than a dedicated route — this screen only needs 2 of the fields it
-// already returns (latest streak_count, all-time session count), so a
-// third endpoint isn't justified. Note: previously this screen's own
-// direct query had no date window (`order('date',{ascending:false}).limit(1)`
-// over all history); the shared route windows daily_sadhana to the last
-// 182 days like my-progress.tsx does. A real "current streak" always has
-// a row inside a 182-day window, so this only changes behavior for an
-// account with a stale, effectively-dead streak value older than 6
-// months — an edge case, and it now matches my-progress.tsx's own
-// windowing instead of silently disagreeing with it.
-type ProgressApiResponse = {
-  sadhana182d: { date: string; streak_count: number | null }[];
-  totalJapaSessions: number;
-};
+import { setGuestMode } from '@/lib/guestSession';
+import { fetchShieldCounters } from '@/lib/shieldCounters';
 
 const STREAK_SHIELDS = [
   { threshold: 7,   name: 'Saptāha',     emoji: '🔥', desc: '7-day streak',    detail: 'Seven days of unbroken sādhana — a full week of niyama.' },
@@ -81,24 +65,13 @@ export default function ShieldsScreen() {
 
     setIsGuest(false);
 
-    let res: Response;
     try {
-      res = await apiFetch('/api/native/progress');
+      const counters = await fetchShieldCounters(appIdentity.userId, apiFetch);
+      setStreak(counters.latestStreakCount);
+      setTotalSessions(counters.totalJapaSessions);
     } catch {
       setLoadError(true);
-      return;
     }
-    if (!res.ok) {
-      setLoadError(true);
-      return;
-    }
-
-    const payload = (await res.json()) as ProgressApiResponse;
-    const sadhanaRows = payload.sadhana182d || [];
-    const latestStreakCount = sadhanaRows.sort((a, b) => b.date.localeCompare(a.date))[0]?.streak_count ?? 0;
-
-    setStreak(latestStreakCount);
-    setTotalSessions(payload.totalJapaSessions || 0);
   }, [router, appIdentity]);
 
   useEffect(() => {
