@@ -23,6 +23,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
+import { fetchTodaySacredText } from '@/lib/shlokaToday';
 import { describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
@@ -199,7 +200,7 @@ export default function ShlokaScreen() {
     const userId = appIdentity.userId;
 
     const [summaryResponse, profileResult] = await Promise.all([
-      apiFetch('/api/native/home-summary', { expectedUserId: userId }),
+      fetchTodaySacredText(userId, apiFetch),
       supabase
         .from('profiles')
         .select('timezone, shloka_streak, last_shloka_date, tradition, full_name, username')
