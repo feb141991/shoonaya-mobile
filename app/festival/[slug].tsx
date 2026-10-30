@@ -7,6 +7,7 @@ import * as Haptics from 'expo-haptics';
 
 import { Card } from '@/components/ui/Card';
 import { apiFetch } from '@/lib/api';
+import { fetchFestivalOccurrence } from '@/lib/festivalOccurrence';
 import { supabase } from '@/lib/supabase';
 import { COLORS, FONTS, TYPE, RADII } from '@/lib/constants';
 import { lookupFestivalContent } from '@/lib/festival-content.generated';
@@ -69,7 +70,7 @@ type LiveObservanceStory = {
 };
 
 export default function FestivalDetailScreen() {
-  const params = useLocalSearchParams<{ slug: string; day?: string; seq?: string; date?: string; child?: string }>();
+  const params = useLocalSearchParams<{ slug: string; day?: string; seq?: string; date?: string; child?: string; occurrence_id?: string; variant_key?: string }>();
   const slug = params.slug ?? '';
   const router = useRouter();
 
@@ -78,6 +79,8 @@ export default function FestivalDetailScreen() {
 
   const scrollViewRef = useRef<ScrollView | null>(null);
   const [occurrence, setOccurrence] = useState<ClientObservanceResult | null>(null);
+  const [candidates, setCandidates] = useState<ClientObservanceResult[]>([]);
+  const [selection, setSelection] = useState<'selected' | 'multiple' | 'unavailable'>('unavailable');
   const [occurrenceLoading, setOccurrenceLoading] = useState(true);
   const [liveStory, setLiveStory] = useState<LiveObservanceStory | null>(null);
   const [storyLoading, setStoryLoading] = useState(true);
@@ -204,53 +207,19 @@ export default function FestivalDetailScreen() {
     setOccurrence(null);
 
     const deviceTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata';
-    apiFetch(`/api/calendar/upcoming?days=60&tz=${encodeURIComponent(deviceTimezone)}`, {
-      signal: controller.signal,
-    })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
+    fetchFestivalOccurrence(
+      {
+        slug,
+        occurrenceId: params.occurrence_id,
+        date: params.date,
+        variantKey: params.variant_key,
+        tz: deviceTimezone,
+      },
+      { signal: controller.signal },
+    )
+      .then((payload) => {
         if (cancelled || controller.signal.aborted) return;
-        const observances: ClientObservanceResult[] = Array.isArray(data?.observances) ? data.observances : [];
-        const matching = observances.filter((o) => o.route_slug === slug || o.slug === slug);
-        let found: ClientObservanceResult | null = matching.find((o) => o.isPrimary) ?? matching[0] ?? null;
-
-        // If not in observances, search data.series children
-        if (!found && Array.isArray(data?.series)) {
-          for (const s of data.series) {
-            if (Array.isArray(s.children)) {
-              const matchedChild = s.children.find((c: any) => c.slug === slug || c.routeSlug === slug);
-              if (matchedChild && matchedChild.civilDate) {
-                found = {
-                  date: matchedChild.civilDate,
-                  civilDate: matchedChild.civilDate,
-                  slug: matchedChild.slug,
-                  display_name: matchedChild.title,
-                  emoji: '🕊️',
-                  kind: 'vrat',
-                  tradition: (s.tradition as any) || 'hindu',
-                  route_kind: matchedChild.routeKind || 'festival',
-                  route_slug: matchedChild.routeSlug || matchedChild.slug,
-                  description: '',
-                  festivalId: matchedChild.occurrenceId || matchedChild.slug,
-                  status: matchedChild.status === 'missing' ? 'unresolved' : (matchedChild.status || 'resolved'),
-                  candidateDates: [matchedChild.civilDate],
-                  reviewPlacementDate: null,
-                  location: s.location || { label: 'Ujjain', lat: 23.1765, lon: 75.7885, tz: deviceTimezone },
-                  profile: s.profile || { calendar: 'legacy-ujjain', tradition: 'hindu' },
-                  versions: s.versions || { panchangaCore: '1.0.0', calendarProfile: '1.0.0', ruleEngine: '1.0.0', rule: '1.0.0' },
-                  reasons: [],
-                  alternatives: [],
-                  confidence: 'high',
-                  diagnostics: matchedChild.diagnostics || [],
-                  sourceRefs: (matchedChild.sourceRefs as any) || [],
-                  reviewStatus: 'verified',
-                  isPrimary: true,
-                };
-                break;
-              }
-            }
-          }
-        }
+        let found = payload.occurrence;
 
         // Canonical ratified fallback for Pitru Paksha 2026 series days if offline or older backend response
         if (!found && (slug === 'pitru-paksha' || slug.startsWith('pitru-paksha-') || slug === 'mahalaya-amavasya')) {
@@ -287,11 +256,13 @@ export default function FestivalDetailScreen() {
         }
 
         setOccurrence(found);
+        setCandidates(payload.candidates);
+        setSelection(payload.selection);
 
         if (seriesGroup && slug === seriesGroup.definitionKey && !params.day && !params.seq && !params.child) {
           const today = spiritualDate(deviceTimezone);
           const targetDate = params.date || today;
-          const todayOccurrence = matching.find((o) => o.date === targetDate && seriesGroup.children.some((c) => c.slug === o.slug));
+          const todayOccurrence = payload.candidates.find((o) => o.date === targetDate && seriesGroup.children.some((c) => c.slug === o.slug));
           if (todayOccurrence?.slug) {
             router.replace(`/festival/${todayOccurrence.slug}`);
           }
@@ -330,8 +301,12 @@ export default function FestivalDetailScreen() {
               reviewStatus: 'verified',
               isPrimary: true,
             });
+            setCandidates([]);
+            setSelection('selected');
           } else {
             setOccurrence(null);
+            setCandidates([]);
+            setSelection('unavailable');
           }
         }
       })
@@ -343,7 +318,7 @@ export default function FestivalDetailScreen() {
       cancelled = true;
       controller.abort();
     };
-  }, [slug, seriesChild]);
+  }, [slug, seriesChild, params.occurrence_id, params.date, params.variant_key]);
 
   const handleSectionLayout = useCallback((key: string, y: number) => {
     setSectionPositions((prev) => ({ ...prev, [key]: y }));
@@ -719,41 +694,85 @@ export default function FestivalDetailScreen() {
           ) : occurrence ? (
             <View
               style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
                 marginTop: 14,
                 paddingTop: 12,
                 borderTopWidth: 1,
                 borderTopColor: theme.borderSoft,
               }}
             >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
-                <Feather name="calendar" size={13} color={theme.brand} />
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12.5, color: theme.text }}>
-                  {occurrence.civilDate ?? occurrence.date}
-                </Text>
-              </View>
               <View
                 style={{
-                  backgroundColor: occurrence.status === 'resolved' ? COLORS.successBg : (isDark ? COLORS.warningBgDark : COLORS.warningBgLight),
-                  paddingHorizontal: 7,
-                  paddingVertical: 2.5,
-                  borderRadius: 4,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
                 }}
               >
-                <Text
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+                  <Feather name="calendar" size={13} color={theme.brand} />
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12.5, color: theme.text }}>
+                    {occurrence.civilDate ?? occurrence.date}
+                  </Text>
+                </View>
+                <View
                   style={{
-                    fontSize: 10.5,
-                    color: occurrence.status === 'resolved' ? COLORS.success : (isDark ? COLORS.warningDark : COLORS.warningLight),
-                    fontFamily: FONTS.sansSemiBold,
-                    textTransform: 'uppercase',
-                    letterSpacing: 0.4,
+                    backgroundColor: occurrence.status === 'resolved' ? COLORS.successBg : (isDark ? COLORS.warningBgDark : COLORS.warningBgLight),
+                    paddingHorizontal: 7,
+                    paddingVertical: 2.5,
+                    borderRadius: 4,
                   }}
                 >
-                  {occurrence.status === 'resolved' ? 'Canonical' : 'Upcoming'}
-                </Text>
+                  <Text
+                    style={{
+                      fontSize: 10.5,
+                      color: occurrence.status === 'resolved' ? COLORS.success : (isDark ? COLORS.warningDark : COLORS.warningLight),
+                      fontFamily: FONTS.sansSemiBold,
+                      textTransform: 'uppercase',
+                      letterSpacing: 0.4,
+                    }}
+                  >
+                    {occurrence.status === 'resolved' ? 'Canonical' : 'Upcoming'}
+                  </Text>
+                </View>
               </View>
+
+              {/* If multiple recognised traditions exist, expose all variants so user is never silently locked into one */}
+              {candidates.length > 1 && (
+                <View style={{ marginTop: 10, paddingTop: 8, borderTopWidth: 1, borderTopColor: theme.borderSoft }}>
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10.5, color: theme.dim, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    {resolvedLang === 'hi' ? 'परंपरा अनुसार तिथियाँ' : 'Tradition Variants'}
+                  </Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+                    {candidates.map((cand, idx) => {
+                      const isSelected = cand.id === occurrence?.id || cand.variantKey === occurrence?.variantKey || cand.civilDate === occurrence?.civilDate;
+                      const label = cand.variantKey || cand.profile?.tradition || (cand.isPrimary ? 'Primary' : `Variant ${idx + 1}`);
+                      return (
+                        <TouchableOpacity
+                          key={cand.id ?? `${cand.slug}-${cand.civilDate}-${idx}`}
+                          onPress={() => setOccurrence(cand)}
+                          style={{
+                            paddingVertical: 3,
+                            paddingHorizontal: 8,
+                            borderRadius: RADII.sm,
+                            backgroundColor: isSelected ? theme.brand : theme.cardSoft,
+                            borderWidth: 1,
+                            borderColor: isSelected ? theme.brand : theme.border,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontFamily: isSelected ? FONTS.sansSemiBold : FONTS.sansMedium,
+                              fontSize: 11,
+                              color: isSelected ? (isDark ? '#000' : '#FFF') : theme.text,
+                            }}
+                          >
+                            {label}: {cand.civilDate} {cand.isPrimary ? '★' : ''}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+              )}
             </View>
           ) : (
             <View style={{ marginTop: 12, padding: 8, borderRadius: RADII.sm, backgroundColor: theme.cardSoft }}>
