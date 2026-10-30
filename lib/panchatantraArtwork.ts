@@ -533,6 +533,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/three-breasted-princess-5.webp'),
     require('@/assets/panchatantra/three-breasted-princess-6.webp'),
   ],
+  'panchatantra-fiend-who-washed-his-feet': [
+    require('@/assets/panchatantra/fiend-who-washed-his-feet-1.webp'),
+    require('@/assets/panchatantra/fiend-who-washed-his-feet-2.webp'),
+    require('@/assets/panchatantra/fiend-who-washed-his-feet-3.webp'),
+    require('@/assets/panchatantra/fiend-who-washed-his-feet-4.webp'),
+    require('@/assets/panchatantra/fiend-who-washed-his-feet-5.webp'),
+    require('@/assets/panchatantra/fiend-who-washed-his-feet-6.webp'),
+  ],
 };
 
 /**

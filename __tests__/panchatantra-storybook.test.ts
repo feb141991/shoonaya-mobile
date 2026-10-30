@@ -162,6 +162,11 @@ test('Panchatantra Artwork Resolution', async (t) => {
       'panchatantra-hang-ball-and-greedy',
       'panchatantra-spots-captivity',
       'panchatantra-hundred-wit-thousand-wit-single-wit',
+      'panchatantra-slow-the-weaver',
+      'panchatantra-unforgiving-monkey',
+      'panchatantra-credulous-fiend',
+      'panchatantra-three-breasted-princess',
+      'panchatantra-fiend-who-washed-his-feet',
     ];
 
     for (const storyId of storiesWithScenes) {
@@ -317,16 +322,18 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-hang-ball-and-greedy'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-spots-captivity'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-hundred-wit-thousand-wit-single-wit'), 2);
-
-    // Tier 1: Cover masterwork artwork
-    assert.equal(getPanchatantraStoryVisualTier('panchatantra-fiend-who-washed-his-feet'), 1);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-slow-the-weaver'), 2);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-unforgiving-monkey'), 2);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-credulous-fiend'), 2);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-three-breasted-princess'), 2);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-fiend-who-washed-his-feet'), 2);
 
     // Tier 0: Manuscript folios without local art
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-wedge-pulling-monkey'), 0);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-nonexistent'), 0);
   });
 
-  await t.test('sorts stories so full scene storybooks appear first, then cover art, then manuscript', () => {
+  await t.test('sorts stories so full scene storybooks appear first, then manuscript', () => {
     const mixed = [
       { id: 'panchatantra-wedge-pulling-monkey', title: 'Wedge Pulling Monkey' },
       { id: 'panchatantra-monk-and-jackal', title: 'The Monk and the Jackal' },
@@ -338,14 +345,12 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
 
     const sorted = sortPanchatantraStoriesByVisualTier(mixed);
 
-    // Tier 2 items must appear at indices 0, 1, 2, and 3
+    // Tier 2 items must appear at indices 0, 1, 2, 3, and 4
     assert.equal(sorted[0].id, 'panchatantra-monk-and-jackal');
     assert.equal(sorted[1].id, 'panchatantra-dove-king-and-net');
-    assert.equal(sorted[2].id, 'panchatantra-musical-donkey');
-    assert.equal(sorted[3].id, 'panchatantra-lion-and-rabbit');
-
-    // Tier 1 item must follow at index 4
-    assert.equal(sorted[4].id, 'panchatantra-fiend-who-washed-his-feet');
+    assert.equal(sorted[2].id, 'panchatantra-fiend-who-washed-his-feet');
+    assert.equal(sorted[3].id, 'panchatantra-musical-donkey');
+    assert.equal(sorted[4].id, 'panchatantra-lion-and-rabbit');
 
     // Tier 0 item must follow at index 5
     assert.equal(sorted[5].id, 'panchatantra-wedge-pulling-monkey');
@@ -682,5 +687,16 @@ test('The Three-Breasted Princess story uses six paragraph-aligned offline scene
   assert.equal(hasDedicatedSceneArtwork('panchatantra-three-breasted-princess'), true);
   for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
     assert.ok(getPanchatantraSceneArtwork('panchatantra-three-breasted-princess', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('The Fiend Who Washed His Feet story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-fiend-who-washed-his-feet');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-fiend-who-washed-his-feet'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-fiend-who-washed-his-feet'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-fiend-who-washed-his-feet', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });
