@@ -240,7 +240,7 @@ export default function NityaKarmaHubScreen() {
       }
       const userId = appIdentity.userId;
 
-      const [nityaResp, greetingPick, { data: profile }] = await Promise.all([
+      const [nityaResp, greetingPick, profileResult] = await Promise.all([
         apiFetch('/api/native/nitya-karma', { expectedUserId: userId }),
         getGreetingPick(),
         supabase
@@ -250,6 +250,8 @@ export default function NityaKarmaHubScreen() {
           .maybeSingle(),
       ]);
       if (!lease.isCurrent()) return;
+      if (profileResult.error) throw profileResult.error;
+      const profile = profileResult.data;
 
       const tradition = profile?.tradition ?? 'hindu';
       const greetingText = greetingPick || getTraditionGreeting(tradition, new Date().getDate());

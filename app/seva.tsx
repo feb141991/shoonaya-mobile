@@ -137,7 +137,7 @@ export default function SevaScreen() {
     }
 
     const { startIso, endIso } = monthRange();
-    const [{ data: profileRow }, { count }] = await Promise.all([
+    const [{ data: profileRow, error: profileError }, { count, error: countError }] = await Promise.all([
       supabase.from('profiles').select('tradition').eq('id', userId).single(),
       supabase
         .from('seva_log')
@@ -147,6 +147,7 @@ export default function SevaScreen() {
         .lt('logged_at', endIso),
     ]);
     if (!isCurrent()) return;
+    if (profileError || countError) throw profileError ?? countError;
 
     const nextTradition = isTraditionKey(profileRow?.tradition) ? profileRow.tradition : 'hindu';
     const nextCount = count ?? 0;

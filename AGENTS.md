@@ -321,8 +321,20 @@ Rules:
   call sites (Panchang, Nitya Dincharya, the quiz, the profile-recovery Retry
   button, KUL enrichment, Mandali reactions and nearby search, another
   profile's viewer check, Live Darshan, Kundali, Zen, and post-Apple-signin
-  login) and one false positive (Vrat, already guarded). This applies equally
-  to human and AI-agent contributors.
+  login) and one false positive (Vrat, already guarded).
+  Follow-up 2026-10-30: an audit of `app/shloka.tsx` found `profileResult.error`
+  was ignored in `load()`, rendering a false "0 streak / not read today" state
+  and enabling the action button on a broken read. The fix keeps today's verse
+  visible, hides streak and completion status, disables "Mark as read", and
+  presents a retry affordance with `describeFailure(profileError, ...)` with a
+  44px touch target. The accompanying repo-wide sweep fixed 5 additional unchecked
+  reads: `app/bhakti/insights.tsx` (overwriting streak and seva score to 0),
+  `app/(tabs)/tirtha.tsx` (wiping saved places and visits to empty arrays on failure),
+  `app/mantras.tsx` (silently overwriting non-Hindu tradition to 'hindu'),
+  `app/nitya-karma.tsx` (zeroing life stage to show the 'Set up' badge), and
+  `app/seva.tsx` (zeroing monthly count on count query error and writing 0 to cache).
+  Guarded by `__tests__/shloka-profile-error.test.ts` with mutation checks. This applies
+  equally to human and AI-agent contributors.
 
 ### 19. "Not Now" on the Push Prompt Is Not Consent to Every Reminder Category
 - `getNotificationPersistencePayload` must not set every reminder flag
@@ -405,5 +417,5 @@ Rules:
 - The Shloka screen reads today's text from `GET /api/native/shloka/today`. It deliberately has no persisted cache: the text is chosen on the server by `getDayOfYear()` (server-local day) for non-Hindu traditions but by the profile's timezone for Hindu, so a cache keyed by the device's date can show yesterday's or tomorrow's verse as today's. A correct cache needs the server to return the day it computed for (a `dayKey`) and the client to key by user, tradition, language, that `dayKey` and a content version, and to label itself stale (sections 5 and 9). Do not add one without that.
 - Why this rule exists: on 2026-10-30 the Shloka screen hung while the Supabase database stalled (23:30-23:34 UTC) because it fetched the whole Home aggregate to read one field, `sacredText`. In the same window a session for a deleted account was answered with the aggregate's retryable 503 (backend `AGENTS.md`, "A Deleted Account Is Not an Outage"). Guard: `__tests__/shloka-today.test.ts` fails if the screen calls `home-summary` again or the fallback widens beyond 404.
 - Audited in the same review and not changed (single-slice callers or duplicated fetches, each needs its own measurement and review): `app/my-progress/shields.tsx` could read `/api/native/progress-summary` after checking `highlights.totalSessions` and streak semantics match; the Dharm Veer detail screen refetches a roster it could reuse; the festival-quiz banner and screen could share one cache; `QuizSparkCard` could use `lib/quizCache.ts`; `festival/[slug].tsx` wants a by-slug route after calendar-governance review (section 2).
-- Open and found while editing the Shloka load: `app/shloka.tsx` ignores the `error` of its own `profiles` read (section 18). A failed read renders the streak as 0 and "not read today" (`last_shloka_date` null) for a seeker who may have read today. The server-side `mark_shloka_read` is idempotent, so no progress is lost, but the display is wrong. Not fixed here; fixing it needs a decision on what the screen shows when the streak is unknown.
-- Not verified on a device: that the Shloka screen renders from the new route, and that a deleted account reaches the sign-in screen. Both are covered by unit tests and by reading `@supabase/auth-js` 2.110.0 (a non-retryable refresh failure removes the session and emits `SIGNED_OUT`), not by running the app. This applies equally to human and AI-agent contributors.
+- Closed 2026-10-30: `app/shloka.tsx` now isolates profile load errors (section 18). Today's verse remains visible while the streak card and "read today" state are hidden; "Mark as read" is disabled until a successful read; an accessible retry affordance displays `describeFailure(profileError, 'Could not load your reading streak. Please try again.')` with a 44px min touch target. A repo-wide sweep fixed 5 additional unchecked Supabase reads (`app/bhakti/insights.tsx`, `app/(tabs)/tirtha.tsx`, `app/mantras.tsx`, `app/nitya-karma.tsx`, `app/seva.tsx`), guarded by `__tests__/shloka-profile-error.test.ts`.
+- Not verified on a device: that the Shloka screen renders from the new route, and that a deleted account reaches the sign-in screen. Both are covered by unit tests and by reading `@supabase/auth-js` 2.110.0 (a non-retryable refresh failure removes the session and emits `SIGNED_OUT`), not by running the app. Similarly, rendering of the Shloka profile retry card under error conditions on a physical device/simulator was not verified directly; styling, touch targets, and accessibility bounds were verified via code contracts and test suites. This applies equally to human and AI-agent contributors.

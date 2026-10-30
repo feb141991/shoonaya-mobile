@@ -72,7 +72,7 @@ export default function BhaktiInsightsScreen() {
       const ninetyAgo = new Date();
       ninetyAgo.setDate(ninetyAgo.getDate() - 89);
 
-      const [{ data: rows, error }, { data: profile }] = await Promise.all([
+      const [{ data: rows, error }, { data: profile, error: profileError }] = await Promise.all([
         supabase
           .from('mala_sessions')
           .select('id, user_id, mantra, chant_source, count, target_count, duration_seconds, notes, share_scope, completed_at, created_at, date, rounds, bead_count, mantra_id, duration_secs, mala_id, background_scene, tradition, practice_type, intention, completion_type, target_rounds, completed_rounds, completed_beads, mood_before, mood_after, ambient_id, spiritual_time_window, spiritual_date, timezone, haptics_enabled, source_route, panchang_context')
@@ -82,7 +82,7 @@ export default function BhaktiInsightsScreen() {
         supabase.from('profiles').select('shloka_streak, seva_score').eq('id', user.id).single(),
       ]);
 
-      if (error) { setLoadError(true); return; }
+      if (error || profileError) { setLoadError(true); return; }
       setSessions((rows as MalaSessionRow[] | null) ?? []);
       setShlokaStreak(profile?.shloka_streak ?? 0);
       setSevaScore(profile?.seva_score ?? 0);

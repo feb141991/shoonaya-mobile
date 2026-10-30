@@ -326,6 +326,10 @@ export default function TirthaScreen() {
         currentIdentity.kind !== 'authenticated' ||
         currentIdentity.userId !== userId
       ) return;
+
+      // Query failures must not wipe existing saved places or visits (AGENTS §18).
+      if (savesResult.error || visitsResult.error) return;
+
       setPassportOwnerId(userId);
       setSavedPlaces((savesResult.data as unknown as TirthaSaveRow[] | null) ?? []);
       setVisits((visitsResult.data as unknown as TirthaVisitRow[] | null) ?? []);

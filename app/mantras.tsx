@@ -92,10 +92,10 @@ export default function MantrasScreen() {
         profilePromise,
       ]);
       if (!lease.isCurrent()) return;
-      if (appIdentity.kind === 'authenticated') {
+      if (appIdentity.kind === 'authenticated' && !profileResult.error && profileResult.data) {
         setProfileContext({
           userId: appIdentity.userId,
-          tradition: profileResult.data?.tradition ?? 'hindu',
+          tradition: profileResult.data.tradition ?? 'hindu',
         });
       }
       if (!mantrasRes.ok) {

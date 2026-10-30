@@ -135,6 +135,8 @@ export default function ShlokaScreen() {
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [profileError, setProfileError] = useState<unknown | null>(null);
+  const [retryingProfile, setRetryingProfile] = useState(false);
   const [sacredText, setSacredText] = useState<SacredText | null>(null);
   const [profile, setProfile] = useState<ProfileState | null>(null);
   const [marking, setMarking] = useState(false);
@@ -172,6 +174,7 @@ export default function ShlokaScreen() {
     if (appIdentity.kind === 'loading') return;
     if (!isSameAppIdentity(lease.identity, appIdentity)) return;
     setLoadError(false);
+    setProfileError(null);
     const guest = appIdentity.kind === 'guest';
     setIsGuest(guest);
 
@@ -221,7 +224,6 @@ export default function ShlokaScreen() {
       return;
     }
 
-    const row = profileResult.data;
     setSacredText({
       label: json.sacredText.label ?? "Today's Verse",
       icon: json.sacredText.icon ?? '📖',
@@ -230,15 +232,62 @@ export default function ShlokaScreen() {
       meaning: json.sacredText.meaning ?? '',
       source: json.sacredText.source ?? '',
     });
-    setProfile({
-      userId,
-      timezone: row?.timezone ?? 'UTC',
-      shlokaStreak: row?.shloka_streak ?? 0,
-      lastShlokaDate: row?.last_shloka_date ?? null,
-      tradition: row?.tradition ?? null,
-      userName: row?.full_name || row?.username || 'Seeker',
-    });
+
+    if (profileResult.error) {
+      // A failed profiles read is not "streak 0 / not read today".
+      // Today's verse stays visible; the streak and read state remain
+      // hidden until a successful read confirms them (AGENTS §18, §21).
+      setProfile(null);
+      setProfileError(profileResult.error);
+    } else {
+      const row = profileResult.data;
+      setProfileError(null);
+      setProfile({
+        userId,
+        timezone: row?.timezone ?? 'UTC',
+        shlokaStreak: row?.shloka_streak ?? 0,
+        lastShlokaDate: row?.last_shloka_date ?? null,
+        tradition: row?.tradition ?? null,
+        userName: row?.full_name || row?.username || 'Seeker',
+      });
+    }
   }, [router, appIdentity]);
+
+  const retryProfile = useCallback(async () => {
+    if (appIdentity.kind !== 'authenticated') return;
+    const lease = captureAppIdentity();
+    if (!isSameAppIdentity(lease.identity, appIdentity)) return;
+    setRetryingProfile(true);
+    try {
+      const { data: row, error } = await supabase
+        .from('profiles')
+        .select('timezone, shloka_streak, last_shloka_date, tradition, full_name, username')
+        .eq('id', appIdentity.userId)
+        .single();
+      if (!lease.isCurrent()) return;
+      if (error) {
+        setProfileError(error);
+        return;
+      }
+      setProfileError(null);
+      setProfile({
+        userId: appIdentity.userId,
+        timezone: row?.timezone ?? 'UTC',
+        shlokaStreak: row?.shloka_streak ?? 0,
+        lastShlokaDate: row?.last_shloka_date ?? null,
+        tradition: row?.tradition ?? null,
+        userName: row?.full_name || row?.username || 'Seeker',
+      });
+    } catch (err) {
+      if (lease.isCurrent()) {
+        setProfileError(err);
+      }
+    } finally {
+      if (lease.isCurrent()) {
+        setRetryingProfile(false);
+      }
+    }
+  }, [appIdentity]);
 
   useEffect(() => {
     // Guards against a brief false-empty flash: without this, the effect
@@ -518,11 +567,53 @@ export default function ShlokaScreen() {
             </View>
             {readToday ? <Feather name="check-circle" size={20} color={brand} /> : null}
           </View>
+        ) : profileError ? (
+          <View style={{ borderRadius: 22, padding: 16, backgroundColor: glass, borderWidth: 1, borderColor: border, gap: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Feather name="alert-circle" size={18} color={dim} />
+              <Text style={{ flex: 1, ...TYPE.caption, color: dim, lineHeight: 20 }}>
+                {describeFailure(profileError, 'Could not load your reading streak. Please try again.')}
+              </Text>
+            </View>
+            <PressableSurface
+              haptic="selection"
+              accessibilityLabel="Retry loading reading streak"
+              disabled={retryingProfile}
+              onPress={() => { void retryProfile(); }}
+              style={{
+                alignSelf: 'flex-start',
+                minHeight: MIN_TOUCH_TARGET,
+                minWidth: 44,
+                borderRadius: 999,
+                paddingHorizontal: 16,
+                paddingVertical: 10,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: theme.brandSoft,
+                borderWidth: 1,
+                borderColor: border,
+              }}
+            >
+              {retryingProfile ? (
+                <ActivityIndicator size="small" color={brand} />
+              ) : (
+                <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>
+                  Retry
+                </Text>
+              )}
+            </PressableSurface>
+          </View>
         ) : null}
 
         <PressableSurface
-          accessibilityLabel={readToday ? 'Verse already read today' : 'Mark verse as read, earn 5 seva points'}
-          disabled={readToday || marking}
+          accessibilityLabel={
+            readToday
+              ? 'Verse already read today'
+              : profileError || !profile
+                ? 'Streak status unavailable'
+                : 'Mark verse as read, earn 5 seva points'
+          }
+          disabled={readToday || marking || Boolean(profileError) || !profile}
           onPress={() => { void markRead(); }}
         >
           {readToday ? (
@@ -541,6 +632,26 @@ export default function ShlokaScreen() {
             >
               <Feather name="check-circle" size={18} color={brand} />
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: brand }}>Read today</Text>
+            </View>
+          ) : profileError || !profile ? (
+            <View
+              style={{
+                minHeight: MIN_TOUCH_TARGET + 8,
+                borderRadius: 24,
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexDirection: 'row',
+                gap: 8,
+                backgroundColor: glass,
+                borderWidth: 1,
+                borderColor: border,
+                opacity: 0.6,
+              }}
+            >
+              <Feather name="book-open" size={18} color={dim} />
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: dim }}>
+                Streak unavailable
+              </Text>
             </View>
           ) : (
             // Warm gold gradient + tuned glow shadow — was a flat solid
@@ -625,7 +736,7 @@ export default function ShlokaScreen() {
               caption: sacredText.meaning,
               userName: profile?.userName,
               date: today ?? undefined,
-              footer: `${profile?.shlokaStreak ?? 1}-day sacred text streak`,
+              footer: profile ? `${profile.shlokaStreak}-day sacred text streak` : undefined,
             }}
           />
         </View>
