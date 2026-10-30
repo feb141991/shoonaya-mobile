@@ -167,6 +167,7 @@ test('Panchatantra Artwork Resolution', async (t) => {
       'panchatantra-credulous-fiend',
       'panchatantra-three-breasted-princess',
       'panchatantra-fiend-who-washed-his-feet',
+      'panchatantra-handsome-and-theodore',
     ];
 
     for (const storyId of storiesWithScenes) {
@@ -327,6 +328,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-credulous-fiend'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-three-breasted-princess'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-fiend-who-washed-his-feet'), 2);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-handsome-and-theodore'), 2);
 
     // Tier 0: Manuscript folios without local art
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-wedge-pulling-monkey'), 0);
@@ -698,5 +700,16 @@ test('The Fiend Who Washed His Feet story uses six paragraph-aligned offline sce
   assert.equal(hasDedicatedSceneArtwork('panchatantra-fiend-who-washed-his-feet'), true);
   for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
     assert.ok(getPanchatantraSceneArtwork('panchatantra-fiend-who-washed-his-feet', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('Handsome and Theodore story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-handsome-and-theodore');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-handsome-and-theodore'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-handsome-and-theodore'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-handsome-and-theodore', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });

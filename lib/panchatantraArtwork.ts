@@ -76,6 +76,7 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-credulous-fiend': require('@/assets/panchatantra/credulous-fiend-1.webp'),
   'panchatantra-three-breasted-princess': require('@/assets/panchatantra/three-breasted-princess-1.webp'),
   'panchatantra-fiend-who-washed-his-feet': require('@/assets/panchatantra/fiend-who-washed-his-feet-1.webp'),
+  'panchatantra-handsome-and-theodore': require('@/assets/panchatantra/handsome-and-theodore-1.webp'),
 };
 
 /**
@@ -540,6 +541,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/fiend-who-washed-his-feet-4.webp'),
     require('@/assets/panchatantra/fiend-who-washed-his-feet-5.webp'),
     require('@/assets/panchatantra/fiend-who-washed-his-feet-6.webp'),
+  ],
+  'panchatantra-handsome-and-theodore': [
+    require('@/assets/panchatantra/handsome-and-theodore-1.webp'),
+    require('@/assets/panchatantra/handsome-and-theodore-2.webp'),
+    require('@/assets/panchatantra/handsome-and-theodore-3.webp'),
+    require('@/assets/panchatantra/handsome-and-theodore-4.webp'),
+    require('@/assets/panchatantra/handsome-and-theodore-5.webp'),
+    require('@/assets/panchatantra/handsome-and-theodore-6.webp'),
   ],
 };
 
