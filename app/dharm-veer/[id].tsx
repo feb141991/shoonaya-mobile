@@ -20,6 +20,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
+import { fetchDharmVeerDetail, preferExpandedDharmVeer } from '@/lib/dharmVeerDetail';
 import { COLORS, FONTS, RADII } from '@/lib/constants';
 import { DHARM_VEERS, TRADITION_META, pickDharmVeerLocalizedText, pickDharmVeerQuote, type DharmVeer } from '@/lib/dharm-veer';
 import { supabase } from '@/lib/supabase';
@@ -220,31 +221,16 @@ export default function DharmVeerDetailScreen() {
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
       setProfile({ userId: uid, timezone: tz, appLanguage: language, meaningLanguage: language });
 
-      let roster: DharmVeer[] = [];
+      let remote: DharmVeer | null = null;
       if (!guest) {
         try {
-          const response = await apiFetch('/api/dharm-veer/roster');
-          if (response.ok) {
-            const json = await response.json();
-            if (Array.isArray(json?.roster) && json.roster.length > 0) {
-              roster = json.roster;
-            }
-          }
+          remote = await fetchDharmVeerDetail(id, uid, apiFetch);
         } catch {
-          // Offline or network error: proceed with offline cornerstone roster
+          // Preserve offline cornerstone reading on transport/server failure.
         }
       }
-
-      // Check local offline cornerstone roster and remote roster
       const offlineMatch = DHARM_VEERS.find((candidate) => candidate.id === id) ?? null;
-      let match = roster.find((candidate) => candidate.id === id) ?? null;
-
-      // Prefer the offline cornerstone version if it has the 500+ word canonical expansion
-      if (offlineMatch && (!match || offlineMatch.journey.length > (match.journey?.length || 0))) {
-        match = { ...match, ...offlineMatch };
-      } else if (!match) {
-        match = offlineMatch;
-      }
+      const match = preferExpandedDharmVeer(remote, offlineMatch);
 
       if (!match) {
         setNotFound(true);
