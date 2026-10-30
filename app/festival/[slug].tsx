@@ -124,22 +124,11 @@ export default function FestivalDetailScreen() {
         }
       }
 
-      // Check if today falls in the series window
-      const deviceTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata';
-      const today = spiritualDate(deviceTimezone);
-      if (seriesGroup.definitionKey === 'pitru-paksha') {
-        const startDate = new Date('2026-09-27T00:00:00Z');
-        const currDate = new Date(`${today}T00:00:00Z`);
-        const diffDays = Math.floor((currDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-        if (diffDays >= 0 && diffDays < seriesGroup.children.length) {
-          router.replace(`/festival/${seriesGroup.children[diffDays].slug}`);
-          return;
-        }
-      }
-
-      router.replace(`/festival/${seriesGroup.children[0].slug}`);
+      // A date-specific series link must be resolved by canonical occurrence data below.
+      // Do not infer a child from today's civil date or from a hard-coded campaign year.
+      if (params.date) return;
     }
-  }, [seriesGroup, slug, router, params.day, params.seq, params.child]);
+  }, [seriesGroup, slug, router, params.day, params.seq, params.child, params.date]);
 
   useEffect(() => {
     let cancelled = false;
@@ -221,40 +210,6 @@ export default function FestivalDetailScreen() {
         if (cancelled || controller.signal.aborted) return;
         let found = payload.occurrence;
 
-        // Canonical ratified fallback for Pitru Paksha 2026 series days if offline or older backend response
-        if (!found && (slug === 'pitru-paksha' || slug.startsWith('pitru-paksha-') || slug === 'mahalaya-amavasya')) {
-          const childSeq = seriesChild?.sequence ?? 1;
-          const startDate = new Date('2026-09-27T00:00:00Z');
-          const dayOffset = childSeq - 1;
-          const computedDate = new Date(startDate.getTime() + dayOffset * 86400000).toISOString().split('T')[0];
-          found = {
-            date: computedDate,
-            civilDate: computedDate,
-            slug,
-            display_name: seriesChild?.canonicalTitle?.value?.en || slug,
-            emoji: '🕊️',
-            kind: 'vrat',
-            tradition: 'hindu',
-            route_kind: 'festival',
-            route_slug: slug,
-            description: '',
-            festivalId: slug,
-            status: 'resolved',
-            candidateDates: [computedDate],
-            reviewPlacementDate: null,
-            location: { label: 'Ujjain', lat: 23.1765, lon: 75.7885, tz: deviceTimezone },
-            profile: { calendar: 'legacy-ujjain', tradition: 'hindu' },
-            versions: { panchangaCore: '1.0.0', calendarProfile: '1.0.0', ruleEngine: '1.0.0', rule: '1.0.0' },
-            reasons: [],
-            alternatives: [],
-            confidence: 'high',
-            diagnostics: [],
-            sourceRefs: (seriesChild?.canonicalTitle?.sourceRefs as any) || [],
-            reviewStatus: 'verified',
-            isPrimary: true,
-          };
-        }
-
         setOccurrence(found);
         setCandidates(payload.candidates);
         setSelection(payload.selection);
@@ -270,44 +225,9 @@ export default function FestivalDetailScreen() {
       })
       .catch(() => {
         if (!cancelled && !controller.signal.aborted) {
-          if (slug === 'pitru-paksha' || slug.startsWith('pitru-paksha-') || slug === 'mahalaya-amavasya') {
-            const childSeq = seriesChild?.sequence ?? 1;
-            const startDate = new Date('2026-09-27T00:00:00Z');
-            const dayOffset = childSeq - 1;
-            const computedDate = new Date(startDate.getTime() + dayOffset * 86400000).toISOString().split('T')[0];
-            setOccurrence({
-              date: computedDate,
-              civilDate: computedDate,
-              slug,
-              display_name: seriesChild?.canonicalTitle?.value?.en || slug,
-              emoji: '🕊️',
-              kind: 'vrat',
-              tradition: 'hindu',
-              route_kind: 'festival',
-              route_slug: slug,
-              description: '',
-              festivalId: slug,
-              status: 'resolved',
-              candidateDates: [computedDate],
-              reviewPlacementDate: null,
-              location: { label: 'Ujjain', lat: 23.1765, lon: 75.7885, tz: deviceTimezone },
-              profile: { calendar: 'legacy-ujjain', tradition: 'hindu' },
-              versions: { panchangaCore: '1.0.0', calendarProfile: '1.0.0', ruleEngine: '1.0.0', rule: '1.0.0' },
-              reasons: [],
-              alternatives: [],
-              confidence: 'high',
-              diagnostics: [],
-              sourceRefs: (seriesChild?.canonicalTitle?.sourceRefs as any) || [],
-              reviewStatus: 'verified',
-              isPrimary: true,
-            });
-            setCandidates([]);
-            setSelection('selected');
-          } else {
-            setOccurrence(null);
-            setCandidates([]);
-            setSelection('unavailable');
-          }
+          setOccurrence(null);
+          setCandidates([]);
+          setSelection('unavailable');
         }
       })
       .finally(() => {
