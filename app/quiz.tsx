@@ -21,6 +21,8 @@ import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
+import { loadDailyQuiz } from '@/lib/dailyQuiz';
+import { clearQuizRequests } from '@/lib/quizRequests';
 import { spiritualDate } from '@/lib/spiritualDate';
 import { supabase } from '@/lib/supabase';
 import { captureAppIdentity, useAppIdentity } from '@/lib/appIdentity';
@@ -90,7 +92,7 @@ export default function QuizScreen() {
 
   const loadQuiz = useCallback(async () => {
     if (appIdentity.kind === 'loading') return;
-    const { isCurrent } = captureAppIdentity();
+    const { isCurrent, revision } = captureAppIdentity();
     const guest = appIdentity.kind === 'guest';
     if (!isCurrent()) return;
     setIsGuest(guest);
@@ -107,16 +109,14 @@ export default function QuizScreen() {
       // clears `loading` immediately, so SacredLoader is reserved for a
       // genuine first-ever load with nothing cached yet. The fetch below
       // still runs to reconcile it in the background.
-      const cached = await readQuizCache(identity, language);
+      const cached = await readQuizCache(identity, language, { tradition, timezone });
       if (!isCurrent()) return;
       if (cached) {
         setState(cached);
         setLoading(false);
       }
 
-      const quizResponse = await apiFetch(`/api/quiz/daily?tradition=${tradition}&date=${today}&language=${language}`, { expectedGuest: true });
-      if (!isCurrent()) return;
-      const quizData = quizResponse.ok ? ((await quizResponse.json()) as DailyQuiz) : null;
+      const { quiz: quizData } = await loadDailyQuiz({ identity, identityRevision: revision, tradition, timezone, date: today, language });
       if (!isCurrent()) return;
 
       const nextState: QuizState = {
@@ -139,14 +139,6 @@ export default function QuizScreen() {
     const userId = appIdentity.userId;
     const identity: QuizCacheIdentity = { kind: 'authenticated', userId };
 
-    const cached = await readQuizCache(identity, language);
-    if (!isCurrent()) return;
-    if (cached) {
-      setState(cached);
-      setSelectedAnswer(cached.todayResponse?.chosen_index ?? null);
-      setLoading(false);
-    }
-
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('tradition, timezone, full_name, username')
@@ -162,29 +154,19 @@ export default function QuizScreen() {
     const userName = profile?.full_name || profile?.username || 'Seeker';
     const today = spiritualDate(timezone);
 
-    const [quizResponse, savedResponse] = await Promise.all([
-      apiFetch(`/api/quiz/daily?tradition=${tradition}&date=${today}&language=${language}`, { expectedUserId: userId }),
-      supabase
-        .from('quiz_responses')
-        .select('chosen_index, correct_index, is_correct, explanation, question, date')
-        .eq('user_id', userId)
-        .eq('date', today)
-        .maybeSingle(),
-    ]);
+    const cached = await readQuizCache(identity, language, { tradition, timezone });
     if (!isCurrent()) return;
+    if (cached) {
+      setState(cached);
+      setSelectedAnswer(cached.todayResponse?.chosen_index ?? null);
+      setLoading(false);
+    }
 
-    const quizData = quizResponse.ok ? ((await quizResponse.json()) as DailyQuiz) : null;
+
+    const { quiz: quizData, todayResponse: responseData } = await loadDailyQuiz({
+      identity, identityRevision: revision, tradition, timezone, date: today, language,
+    });
     if (!isCurrent()) return;
-    const responseData = savedResponse.data
-      ? ({
-          chosen_index: savedResponse.data.chosen_index,
-          correct_index: savedResponse.data.correct_index,
-          is_correct: savedResponse.data.is_correct,
-          explanation: savedResponse.data.explanation,
-          question: savedResponse.data.question,
-          date: savedResponse.data.date,
-        } satisfies TodayQuizResponse)
-      : null;
 
     const nextState: QuizState = {
       language,
@@ -239,12 +221,16 @@ export default function QuizScreen() {
       return;
     }
 
+    const lease = captureAppIdentity();
+    if (lease.identity.kind !== 'authenticated') return;
+    const userId = lease.identity.userId;
     setSelectedAnswer(index);
     setSaving(true);
 
     try {
       const response = await apiFetch('/api/quiz/save', {
         method: 'POST',
+        expectedUserId: userId,
         body: JSON.stringify({
           question: activeQuiz.question,
           chosen_index: index,
@@ -261,6 +247,8 @@ export default function QuizScreen() {
       }
 
       const data = (await response.json()) as QuizSaveData;
+      if (!lease.isCurrent()) return;
+      clearQuizRequests();
       setSaveData(data);
       if (index === activeQuiz.answerIndex && data.karma_earned > 0) {
         setShowConfetti(true);
@@ -281,10 +269,11 @@ export default function QuizScreen() {
         return next;
       });
     } catch {
+      if (!lease.isCurrent()) return;
       Alert.alert('Could not save your answer');
       setSelectedAnswer(null);
     } finally {
-      setSaving(false);
+      if (lease.isCurrent()) setSaving(false);
     }
   };
 

@@ -8,8 +8,9 @@ const read = (path: string) => readFileSync(join(process.cwd(), path), 'utf8');
 describe('Native language preference reaches content requests and readers', () => {
   it('requests the selected locale for both guest and signed-in daily quizzes', () => {
     const quiz = read('app/quiz.tsx');
-    assert.equal((quiz.match(/language=\$\{language\}/g) ?? []).length, 2);
-    assert.match(quiz, /readQuizCache\(identity, language\)/);
+    const dailyQuiz = read('lib/dailyQuiz.ts');
+    assert.match(dailyQuiz, /language=\$\{scope\.language\}/);
+    assert.match(quiz, /readQuizCache\(identity, language/);
     assert.match(quiz, /language, router\]/);
   });
 

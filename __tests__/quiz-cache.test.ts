@@ -66,6 +66,15 @@ describe('Quiz cache -- identity isolation', () => {
     assert.equal(await readQuizCache({ kind: 'guest' }, 'pa'), null);
     assert.equal((await readQuizCache({ kind: 'guest' }, 'hi'))?.language, 'hi');
   });
+
+  it('does not paint a cached quiz from another tradition or timezone', async () => {
+    await writeQuizCache({ kind: 'guest' }, state({ tradition: 'hindu', timezone: 'Asia/Kolkata' }));
+    assert.equal(await readQuizCache({ kind: 'guest' }, 'en', { tradition: 'sikh', timezone: 'Asia/Kolkata' }), null);
+    assert.equal(await readQuizCache({ kind: 'guest' }, 'en', { tradition: 'hindu', timezone: 'UTC' }), null);
+    const valid = await readQuizCache({ kind: 'guest' }, 'en', { tradition: 'hindu', timezone: 'Asia/Kolkata' });
+    assert.ok(valid);
+    assert.equal(valid.tradition, 'hindu');
+  });
 });
 
 describe('Quiz cache -- date scoping', () => {

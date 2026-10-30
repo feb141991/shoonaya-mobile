@@ -1,3 +1,4 @@
+import { clearQuizRequests } from './quizRequests';
 import { createCacheStorageBarrier } from './cacheStorageBarrier';
 import { spiritualDate } from '@/lib/spiritualDate';
 import { isAppLanguage, type AppLanguage } from '@/lib/language-runtime';
@@ -62,6 +63,7 @@ function identityMatches(a: QuizCacheIdentity, b: QuizCacheIdentity): boolean {
 export async function readQuizCache(
   identity: QuizCacheIdentity,
   preferredLanguage: AppLanguage = 'en',
+  qualification?: { tradition: string; timezone: string },
 ): Promise<QuizState | null> {
   try {
     const stored = await cacheStorage.read(QUIZ_CACHE_KEY);
@@ -72,6 +74,7 @@ export async function readQuizCache(
     const state = cached.state;
     if (!state || typeof state.timezone !== 'string' || !state.quiz) return null;
     if (!isAppLanguage(state.language) || state.language !== preferredLanguage) return null;
+    if (qualification && (state.tradition !== qualification.tradition || state.timezone !== qualification.timezone)) return null;
 
     // Quiz content is scoped to one spiritual day -- a cache entry from a
     // prior day (or an answer recorded for a prior day) must never paint
@@ -97,5 +100,6 @@ export async function writeQuizCache(identity: QuizCacheIdentity, state: QuizSta
 }
 
 export async function clearQuizCache(): Promise<void> {
+  clearQuizRequests();
   await cacheStorage.removeItem(QUIZ_CACHE_KEY);
 }
