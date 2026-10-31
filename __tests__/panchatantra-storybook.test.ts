@@ -329,6 +329,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-three-breasted-princess'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-fiend-who-washed-his-feet'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-handsome-and-theodore'), 2);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-flop-ear-and-dusty'), 2);
 
     // Tier 0: Manuscript folios without local art
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-wedge-pulling-monkey'), 0);
@@ -711,5 +712,16 @@ test('Handsome and Theodore story uses six paragraph-aligned offline scenes', ()
   assert.equal(hasDedicatedSceneArtwork('panchatantra-handsome-and-theodore'), true);
   for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
     assert.ok(getPanchatantraSceneArtwork('panchatantra-handsome-and-theodore', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('Flop-Ear and Dusty story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-flop-ear-and-dusty');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-flop-ear-and-dusty'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-flop-ear-and-dusty'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-flop-ear-and-dusty', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });
