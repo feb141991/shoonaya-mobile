@@ -25,7 +25,11 @@ import { DatePickerField } from "@/components/ui/DatePickerField";
 import { formatLocalDateOnly } from "@/lib/dateOnly";
 import { KulInviteModal } from "@/components/kul/KulInviteModal";
 import { VanshGraphCanvas } from "@/components/kul/VanshGraphCanvas";
-import { computeVanshLayout, getEligibleParentIds } from "@/lib/vanshLayout";
+import {
+  computeVanshLayout,
+  formatVanshHeritageLabel,
+  getEligibleParentIds,
+} from "@/lib/vanshLayout";
 import {
   COLORS,
   FONTS,
@@ -533,6 +537,7 @@ export default function KulScreen() {
   const selectedTreeNode = selectedFamilyMember
     ? familyTreeNodeById.get(selectedFamilyMember.id) ?? null
     : null;
+  const selectedHeritageLabel = formatVanshHeritageLabel(kul?.lineage);
   const eligibleFamilyParentIds = useMemo(
     () => new Set(getEligibleParentIds(snapshot?.familyMembers ?? [], editingFamilyMemberId)),
     [snapshot?.familyMembers, editingFamilyMemberId],
@@ -2183,16 +2188,59 @@ export default function KulScreen() {
                   <View
                     style={{
                       borderRadius: RADII.lg,
-                      borderWidth: 1,
-                      borderColor: theme.borderSoft,
-                      backgroundColor: theme.cardSoft,
-                      padding: 12,
-                      gap: 8,
+                      borderWidth: 1.5,
+                      borderColor: theme.brand,
+                      backgroundColor: theme.card,
+                      padding: 14,
+                      gap: 10,
+                      shadowColor: theme.brand,
+                      shadowOpacity: isDark ? 0.22 : 0.08,
+                      shadowRadius: 10,
+                      elevation: 3,
                     }}
                   >
                     <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 10 }}>
-                      <View style={{ flex: 1, gap: 2 }}>
-                        <Text style={{ ...TYPE.label, color: theme.text }}>
+                      <View style={{ flex: 1, gap: 3 }}>
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                          <View
+                            style={{
+                              backgroundColor: theme.brandSoft,
+                              paddingHorizontal: 7,
+                              paddingVertical: 2,
+                              borderRadius: 6,
+                            }}
+                          >
+                            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: theme.brand }}>
+                              Gen {selectedTreeNode?.generation ?? selectedFamilyMember.generation ?? 1}
+                            </Text>
+                          </View>
+                          {!selectedFamilyMember.is_alive ? (
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 3,
+                                paddingHorizontal: 6,
+                                paddingVertical: 1.5,
+                                borderRadius: 6,
+                                borderWidth: 1,
+                                borderColor: theme.borderSoft,
+                                backgroundColor: theme.brandSoft,
+                              }}
+                            >
+                              <Text style={{ fontSize: 10 }}>🪔</Text>
+                              <Text style={{ fontFamily: FONTS.serifBold, fontSize: 10, color: theme.brandStrong }}>
+                                स्मृति (Pitru)
+                              </Text>
+                            </View>
+                          ) : (
+                            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: COLORS.success }} />
+                              <Text style={{ ...TYPE.caption, color: theme.dim }}>Living</Text>
+                            </View>
+                          )}
+                        </View>
+                        <Text style={{ fontFamily: FONTS.serifBold, fontSize: 16, color: theme.text, marginTop: 2 }}>
                           {selectedFamilyMember.name}
                         </Text>
                         <Text style={{ ...TYPE.caption, color: theme.dim }}>
@@ -2202,8 +2250,14 @@ export default function KulScreen() {
                           {selectedFamilyMember.is_alive ? " · Living" : " · Remembered"}
                           {selectedFamilyMember.linked_user_id ? " · On Shoonaya" : ""}
                         </Text>
+                        {selectedHeritageLabel ? (
+                          <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 11, color: theme.brand, marginTop: 2 }}>
+                            {selectedHeritageLabel}
+                          </Text>
+                        ) : null}
                       </View>
                       <PressableSurface
+                        accessibilityRole="button"
                         accessibilityLabel={`Clear selection for ${selectedFamilyMember.name}`}
                         onPress={() => setSelectedFamilyMemberId(null)}
                         style={{ minHeight: MIN_TOUCH_TARGET, minWidth: MIN_TOUCH_TARGET, alignItems: "center", justifyContent: "center" }}
@@ -2211,16 +2265,31 @@ export default function KulScreen() {
                         <Feather name="x" size={17} color={theme.dim} />
                       </PressableSurface>
                     </View>
+                    {!selectedFamilyMember.is_alive ? (
+                      <View
+                        style={{
+                          backgroundColor: theme.brandSoft,
+                          borderRadius: RADII.sm,
+                          padding: 8,
+                          borderLeftWidth: 3,
+                          borderLeftColor: theme.brand,
+                        }}
+                      >
+                        <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 11, color: theme.brandStrong }}>
+                          आदरणीय पूर्वज · Sacred Pitru Smriti preserved in Kul Vansh.
+                        </Text>
+                      </View>
+                    ) : null}
                     {snapshot.role === "guardian" ? (
-                      <View style={{ flexDirection: "row", gap: 8 }}>
+                      <View style={{ flexDirection: "row", gap: 8, marginTop: 2 }}>
                         <PressableSurface
                           accessibilityRole="button"
                           accessibilityLabel={`Edit ${selectedFamilyMember.name}`}
                           onPress={() => beginEditFamilyMember(selectedFamilyMember)}
-                          style={{ minHeight: MIN_TOUCH_TARGET, flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, borderRadius: RADII.md, borderWidth: 1, borderColor: theme.border, paddingHorizontal: 10 }}
+                          style={{ minHeight: MIN_TOUCH_TARGET, flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, borderRadius: RADII.md, borderWidth: 1, borderColor: theme.brand, backgroundColor: theme.brandSoft, paddingHorizontal: 10 }}
                         >
                           <Feather name="edit-2" size={15} color={theme.brand} />
-                          <Text style={{ ...TYPE.caption, color: theme.brand }}>Edit person</Text>
+                          <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.brand }}>Edit person</Text>
                         </PressableSurface>
                         <PressableSurface
                           accessibilityRole="button"

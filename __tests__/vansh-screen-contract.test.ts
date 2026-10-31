@@ -22,6 +22,22 @@ describe('KUL family tree interaction contract', () => {
     assert.match(screen, /accessibilityLabel=\{`Edit \$\{selectedFamilyMember\.name\}`\}/);
     assert.match(screen, /accessibilityLabel=\{`Remove \$\{selectedFamilyMember\.name\} from family tree`\}/);
     assert.match(screen, /minHeight: MIN_TOUCH_TARGET/);
+    assert.match(screen, /accessibilityLabel=\{`Clear selection for \$\{selectedFamilyMember\.name\}`\}/);
+    assert.match(screen, /const selectedHeritageLabel = formatVanshHeritageLabel\(kul\?\.lineage\)/);
+  });
+
+  it('wires canvas selection to the inspection card with a non-blocking themed ring', () => {
+    assert.match(screen, /selectedMemberId=\{selectedFamilyMemberId\}/);
+    assert.match(screen, /onSelectMember=\{\(member\) =>\s*setSelectedFamilyMemberId/);
+    assert.match(canvas, /accessibilityState=\{\{ selected: isSelected \}\}/);
+    assert.match(canvas, /pointerEvents="none"\s*style=\{\[styles\.selectionRing, \{ borderColor: theme\.brand \}\]\}/);
+  });
+
+  it('keeps the Suvarna treatment theme-token driven', () => {
+    assert.doesNotMatch(canvas, /rgba\(|COLORS\.brandGold/);
+    assert.doesNotMatch(screen, /rgba\(|COLORS\.brandGold/);
+    assert.match(canvas, /backgroundColor: theme\.brandSoft/);
+    assert.match(screen, /shadowColor: theme\.brand/);
   });
 
   it('fits the canvas from measured dimensions and keeps it centered around the controls dock', () => {

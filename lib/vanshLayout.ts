@@ -55,6 +55,20 @@ export interface VanshLayoutOptions {
   paddingY?: number;
 }
 
+/** Builds the compact lineage label used by member inspection surfaces. */
+export function formatVanshHeritageLabel(
+  lineage: Pick<KulLineage, 'gotra' | 'pravara'> | null | undefined
+): string | null {
+  if (!lineage) return null;
+
+  const parts = [
+    lineage.gotra?.trim() ? `${lineage.gotra.trim()} Gotra` : null,
+    lineage.pravara?.trim() || null,
+  ].filter((part): part is string => part !== null);
+
+  return parts.length > 0 ? parts.join(' · ') : null;
+}
+
 /** Fits the complete tree into the measured viewport while reserving the
  * bottom control dock. Large trees can start below 0.12 scale; the user can
  * still zoom in, while small screens never clip the initial overview. */

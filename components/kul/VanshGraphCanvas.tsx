@@ -226,6 +226,9 @@ export function VanshGraphCanvas({
                     height: layout.crest.height,
                     backgroundColor: theme.card,
                     borderColor: theme.brand,
+                    shadowColor: theme.brand,
+                    shadowOpacity: isDark ? 0.22 : 0.1,
+                    shadowRadius: 8,
                   },
                 ]}
               >
@@ -234,11 +237,11 @@ export function VanshGraphCanvas({
                     <Feather name="shield" size={16} color={theme.brand} />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={[styles.crestGotraText, { color: theme.brandStrong }]}>
+                    <Text style={[styles.crestGotraText, { color: theme.brandStrong, fontFamily: FONTS.serifBold }]}>
                       {layout.crest.gotra ? `${layout.crest.gotra} Gotra` : 'Kul Parampara'}
                       {layout.crest.pravara ? ` · ${layout.crest.pravara}` : ''}
                     </Text>
-                    <Text style={[styles.crestDeityText, { color: theme.text }]} numberOfLines={1}>
+                    <Text style={[styles.crestDeityText, { color: theme.text, fontFamily: FONTS.sans }]} numberOfLines={1}>
                       {layout.crest.kuldeviName ? `Kuldevi: ${layout.crest.kuldeviName}` : ''}
                       {layout.crest.kuldeviName && layout.crest.kuldevtaName ? ' · ' : ''}
                       {layout.crest.kuldevtaName ? `Kuldevta: ${layout.crest.kuldevtaName}` : ''}
@@ -248,7 +251,7 @@ export function VanshGraphCanvas({
                 {layout.crest.ancestralOrigin ? (
                   <View style={styles.originRow}>
                     <Feather name="map-pin" size={11} color={theme.dim} />
-                    <Text style={[styles.originText, { color: theme.dim }]} numberOfLines={1}>
+                    <Text style={[styles.originText, { color: theme.dim, fontFamily: FONTS.sans }]} numberOfLines={1}>
                       Ancestral Origin: {layout.crest.ancestralOrigin}
                     </Text>
                   </View>
@@ -280,8 +283,8 @@ export function VanshGraphCanvas({
                         : theme.border,
                       borderWidth: isSelected ? 2 : 1,
                       shadowColor: isSelected ? theme.brand : COLORS.darkBg,
-                      shadowOpacity: isSelected ? 0.35 : 0.08,
-                      shadowRadius: isSelected ? 10 : 4,
+                      shadowOpacity: isSelected ? 0.42 : 0.08,
+                      shadowRadius: isSelected ? 12 : 4,
                     },
                   ]}
                   accessibilityRole="button"
@@ -291,25 +294,41 @@ export function VanshGraphCanvas({
                     : 'Select to view family details.'}
                   accessibilityState={{ selected: isSelected }}
                 >
+                  {/* Selection Highlight Ring */}
+                  {isSelected ? (
+                    <View
+                      pointerEvents="none"
+                      style={[styles.selectionRing, { borderColor: theme.brand }]}
+                    />
+                  ) : null}
+
                   {/* Top Badge: Gen pill & Smriti/Living status */}
                   <View style={styles.cardHeaderRow}>
                     <View
                       style={[
                         styles.genPill,
                         {
-                            backgroundColor: theme.brandSoft,
+                          backgroundColor: theme.brandSoft,
                         },
                       ]}
                     >
-                      <Text style={[styles.genPillText, { color: theme.brand }]}>
+                      <Text style={[styles.genPillText, { color: theme.brand, fontFamily: FONTS.sansSemiBold }]}>
                         Gen {node.generation}
                       </Text>
                     </View>
 
                     {node.isRemembered ? (
-                      <View style={styles.smritiPill}>
+                      <View
+                        style={[
+                          styles.smritiPill,
+                          {
+                            borderColor: theme.borderSoft,
+                            backgroundColor: theme.brandSoft,
+                          },
+                        ]}
+                      >
                         <Text style={styles.diyaIcon}>🪔</Text>
-                        <Text style={[styles.smritiText, { color: theme.brandStrong }]}>
+                        <Text style={[styles.smritiText, { color: theme.brandStrong, fontFamily: FONTS.serifBold }]}>
                           स्मृति
                         </Text>
                       </View>
@@ -323,19 +342,19 @@ export function VanshGraphCanvas({
                     <Text
                       style={[
                         styles.memberName,
-                        { color: theme.text, fontFamily: FONTS.serif },
+                        { color: theme.text, fontFamily: FONTS.serifBold },
                       ]}
                       numberOfLines={1}
                     >
                       {member.name}
                     </Text>
-                    <Text style={[styles.memberRole, { color: theme.dim }]} numberOfLines={1}>
+                    <Text style={[styles.memberRole, { color: theme.dim, fontFamily: FONTS.sans }]} numberOfLines={1}>
                       {member.role || 'Family member'}
                     </Text>
                     {member.linked_user_id ? (
                       <View style={styles.linkedBadgeRow}>
                         <Feather name="check-circle" size={9} color={theme.brand} />
-                        <Text numberOfLines={1} style={[styles.linkedBadgeText, { color: theme.brand, flex: 1 }]}>
+                        <Text numberOfLines={1} style={[styles.linkedBadgeText, { color: theme.brand, fontFamily: FONTS.sansSemiBold, flex: 1 }]}>
                           On Shoonaya
                         </Text>
                       </View>
@@ -451,6 +470,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 4,
   },
+  selectionRing: {
+    position: 'absolute',
+    top: -3,
+    left: -3,
+    right: -3,
+    bottom: -3,
+    borderRadius: 19,
+    borderWidth: 2,
+  },
   cardHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -458,8 +486,8 @@ const styles = StyleSheet.create({
   },
   genPill: {
     paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 8,
+    paddingVertical: 1.5,
+    borderRadius: 7,
   },
   genPillText: {
     fontSize: 10,
@@ -470,13 +498,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: 7,
+    borderWidth: 1,
   },
   diyaIcon: {
-    fontSize: 11,
+    fontSize: 10,
   },
   smritiText: {
     fontSize: 10,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   statusDot: {
     width: 6,

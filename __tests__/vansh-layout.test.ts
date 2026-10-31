@@ -1,9 +1,33 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { computeVanshFitScale, computeVanshLayout, getEligibleParentIds } from '../lib/vanshLayout';
+import {
+  computeVanshFitScale,
+  computeVanshLayout,
+  formatVanshHeritageLabel,
+  getEligibleParentIds,
+} from '../lib/vanshLayout';
 import type { KulFamilyMember, KulLineage } from '../lib/kul';
 
 describe('KUL Vansh (Family Lineage) Layout Engine', () => {
+  it('formats complete, Gotra-only, and Pravara-only inspection labels', () => {
+    assert.strictEqual(
+      formatVanshHeritageLabel({ gotra: 'Kashyapa', pravara: 'Tryarisheya' }),
+      'Kashyapa Gotra · Tryarisheya'
+    );
+    assert.strictEqual(
+      formatVanshHeritageLabel({ gotra: 'Kashyapa', pravara: null }),
+      'Kashyapa Gotra'
+    );
+    assert.strictEqual(
+      formatVanshHeritageLabel({ gotra: null, pravara: 'Tryarisheya' }),
+      'Tryarisheya'
+    );
+    assert.strictEqual(
+      formatVanshHeritageLabel({ gotra: '  ', pravara: '  ' }),
+      null
+    );
+  });
+
   it('handles empty member list with lineage crest gracefully', () => {
     const lineage: KulLineage = {
       gotra: 'Kashyap',
