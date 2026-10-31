@@ -736,3 +736,14 @@ test('The Jackal Who Killed No Elephants story uses six paragraph-aligned offlin
     assert.ok(getPanchatantraSceneArtwork('panchatantra-jackal-who-killed-no-elephants', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });
+
+test('The Ungrateful Wife story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-ungrateful-wife');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-ungrateful-wife'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-ungrateful-wife'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-ungrateful-wife', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
