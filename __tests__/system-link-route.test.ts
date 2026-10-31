@@ -62,5 +62,5 @@ test('system aliases retain the same destinations as push taps', () => {
   assert.equal(mapSystemPath('/home?focus=weekly-summary'), '/my-progress');
   assert.equal(mapSystemPath('/home?focus=shloka'), '/shloka');
   assert.equal(mapSystemPath('/nitya-karma/plans'), '/nitya-plans');
-  assert.equal(mapSystemPath('/kul/sanskara'), '/kul');
+  assert.equal(mapSystemPath('/kul/sanskara'), '/kul/sanskara');
 });

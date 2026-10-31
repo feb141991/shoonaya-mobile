@@ -1659,6 +1659,63 @@ export default function KulScreen() {
                   </Text>
                 </Card>
 
+                <PressableSurface
+                  onPress={() => router.push("/kul/sanskara" as any)}
+                  haptic="selection"
+                  accessibilityLabel="Open Sacred Milestones Sanskāra Tree"
+                  style={{
+                    backgroundColor: theme.card,
+                    borderColor: theme.border,
+                    borderWidth: 1,
+                    borderRadius: 24,
+                    padding: 16,
+                    gap: 10,
+                  }}
+                >
+                  <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1 }}>
+                      <View
+                        style={{
+                          width: 38,
+                          height: 38,
+                          borderRadius: 19,
+                          backgroundColor: theme.brandSoft,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Feather name="git-branch" size={17} color={theme.brand} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ ...TYPE.label, color: theme.text }}>
+                          Sacred Milestones · Sanskāra
+                        </Text>
+                        <Text style={{ ...TYPE.caption, color: theme.dim }} numberOfLines={1}>
+                          Life timeline, child rites & family sharing
+                        </Text>
+                      </View>
+                    </View>
+                    <View
+                      style={{
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
+                        borderRadius: RADII.pill,
+                        backgroundColor: theme.brandSoft,
+                        minHeight: MIN_TOUCH_TARGET,
+                        justifyContent: "center",
+                        alignItems: "center",
+                        flexDirection: "row",
+                        gap: 4,
+                      }}
+                    >
+                      <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.brand }}>
+                        Open Tree
+                      </Text>
+                      <Feather name="arrow-right" size={12} color={theme.brand} />
+                    </View>
+                  </View>
+                </PressableSurface>
+
                 <Card
                   tone="auto"
                   style={{

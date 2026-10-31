@@ -33,7 +33,7 @@ const BACKEND_URLS: Array<{ source: string; url: string; opens: string; noNative
   { source: 'sankalpa-midpoint-candidate', url: '/sankalpa', opens: '/sankalpa' },
   { source: 'kul-family-remembrance-candidate', url: '/kul?section=family', opens: '/kul?section=family' },
   { source: 'api/sanskar/schedule', url: '/kul', opens: '/kul' },
-  { source: 'notification-delivery-policy fallback for sanskar_milestone', url: '/kul/sanskara', opens: '/kul' },
+  { source: 'notification-delivery-policy fallback for sanskar_milestone', url: '/kul/sanskara', opens: '/kul/sanskara' },
   { source: 'cron/guided-plan-reminder', url: '/nitya-karma/plans', opens: '/nitya-plans' },
   { source: 'cron/journal-anniversary (the app has no journal screen)', url: '/sadhana/journal?focus=anniversary', opens: '/notifications', noNativeScreen: true },
   { source: 'api/notifications/milestone', url: '/my-progress', opens: '/my-progress' },
@@ -97,7 +97,7 @@ test('the screen scan sees the screens it should (guards against a scan that sil
   assert.equal(screenExists('/festival/diwali'), true);
   assert.equal(screenExists('/(tabs)/pathshala'), true);
   assert.equal(screenExists('/sadhana/journal'), false);
-  assert.equal(screenExists('/kul/sanskara'), false);
+  assert.equal(screenExists('/kul/sanskara'), true);
 });
 
 // ── Backend URL -> screen ───────────────────────────────────────────────────

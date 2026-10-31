@@ -56,6 +56,61 @@ export function LineageCarousel() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContainer}
       >
+        <PressableSurface
+          key="sanskara-tree"
+          onPress={() => {
+            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            router.push('/kul/sanskara' as any);
+          }}
+          style={[
+            styles.card,
+            {
+              backgroundColor: theme.card,
+              borderColor: theme.brand,
+            },
+          ]}
+          accessibilityLabel="Explore Sanskāra Life Tree"
+        >
+          <View style={styles.cardTopRow}>
+            <View
+              style={[
+                styles.traditionTag,
+                {
+                  backgroundColor: theme.brandSoft,
+                  borderColor: theme.brandSoft,
+                },
+              ]}
+            >
+              <Text style={[styles.traditionText, { color: theme.brand }]}>
+                SACRED LIFE RITES
+              </Text>
+            </View>
+            <View style={styles.nodeCountBadge}>
+              <Feather name="shield" size={12} color={theme.brand} />
+              <Text style={[styles.nodeCountText, { color: theme.brand }]}>
+                Living Tree
+              </Text>
+            </View>
+          </View>
+
+          <Text style={[styles.cardTitle, { color: theme.text }]} numberOfLines={2}>
+            Sanskāra · Life Tree
+          </Text>
+          <Text style={[styles.cardSanskrit, { color: theme.brand }]} numberOfLines={1}>
+            संस्कार जीवन चक्र
+          </Text>
+          <Text style={[styles.cardDesc, { color: theme.dim }]} numberOfLines={2}>
+            Track personal spiritual milestones and child rites in an interactive tree
+          </Text>
+
+          <View style={[styles.cardFooter, { borderTopColor: theme.borderSoft }]}>
+            <Text style={[styles.exploreText, { color: theme.brand }]}>
+              Open Sanskāra
+            </Text>
+            <Feather name="arrow-right" size={14} color={theme.brand} />
+          </View>
+        </PressableSurface>
+
         {lineages.map((lineage: Lineage) => {
           return (
             <PressableSurface

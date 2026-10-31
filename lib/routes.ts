@@ -118,7 +118,7 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   // The family-invitation screen exists (app/kul/join.tsx). /kul/sanskara has no screen of its own; the sanskara
   // reminders belong to the Kul hub, so it lands there rather than in the inbox.
   if (pathname === '/kul/join' || pathname.startsWith('/kul/join/')) return path as Href;
-  if (pathname === '/kul/sanskara') return '/kul' as Href;
+  if (pathname === '/kul/sanskara' || pathname.startsWith('/kul/sanskara/')) return path as Href;
   if (pathname.startsWith('/discover/mood') || pathname.startsWith('/mood')) return '/mood' as Href;
   // Mood's recommendation stack (lib/mood/engine.ts on web) always includes
   // a fixed "Live Darshan" card with href '/live-darshan' — a real native
