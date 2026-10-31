@@ -79,6 +79,7 @@
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test __tests__/*.test.ts tests/*.test.ts",
+    "test:visual": "tsx scripts/visual-app-testing.ts",
     "android:clean": "bash scripts/android-clean.sh",
     "check:assets": "tsx scripts/check-asset-formats.ts",
     "check:build-metadata": "tsx scripts/check-build-metadata.ts",
