@@ -36,6 +36,7 @@ import { buildVratChapters, clampChapterIndex, usesChapterLayout, type VratChapt
 import { useLinkedKatha } from '@/hooks/useLinkedKatha';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
+import { VratFastingCard } from '@/components/vrat/VratFastingCard';
 
 // Labels match app/dharm-veer/[id].tsx's FONT_PRESETS exactly -- both
 // screens share the same ReaderShell toolbar component, this is just the
@@ -603,63 +604,40 @@ export default function VratDetailScreen() {
       ) : null}
     </Card>
   );
+  const handleToggleReminders = async (enabled: boolean) => {
+    try {
+      if (isGuest) {
+        Alert.alert('Sign in required', 'Sign in to customize notification reminders.');
+        return;
+      }
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
+      await supabase.from('profiles').update({ wants_vrat_reminders: enabled }).eq('id', userData.user.id);
+      setToast({
+        visible: true,
+        message: enabled ? '🙏 Fasting reminders enabled' : 'Fasting reminders muted',
+      });
+    } catch {
+      // non-fatal
+    }
+  };
+
   const observeCard = (
-    <>
-    {occurrenceIdParam && isEligibleToday ? (
-      <Card style={{ padding: 16, marginBottom: 16, alignItems: 'center' }}>
-        {observedToday ? (
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 8,
-              width: '100%',
-              paddingVertical: 12,
-              borderRadius: RADII.pill,
-              backgroundColor: COLORS.successBg,
-              borderWidth: 1.5,
-              borderColor: COLORS.successBorder,
-            }}
-          >
-            <Feather name="check-circle" size={18} color={COLORS.success} />
-            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: COLORS.success }}>
-              {copy.observedToday} {observeCount > 1 ? `(${observeCount}× total)` : ''}
-            </Text>
-          </View>
-        ) : (
-          <PressableSurface
-            onPress={handleObserve}
-            disabled={observeLoading || !observeStatusLoaded}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 8,
-              width: '100%',
-              paddingVertical: 14,
-              borderRadius: RADII.pill,
-              backgroundColor: theme.brand,
-            }}
-          >
-            {observeLoading ? (
-              <ActivityIndicator size="small" color={theme.textOnBrand} />
-            ) : (
-              <>
-                <Text style={{ fontSize: 16 }}>🙏</Text>
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.textOnBrand }}>
-                  {copy.markAsObserved} {observeCount > 0 ? `(${observeCount}× before)` : ''}
-                </Text>
-              </>
-            )}
-          </PressableSurface>
-        )}
-        <Text style={{ fontFamily: FONTS.sans, fontSize: 11, color: theme.dim, marginTop: 8 }}>
-          {observedToday ? copy.practiceRecorded : copy.earnKarma}
-        </Text>
-      </Card>
-    ) : null}
-    </>
+    <VratFastingCard
+      vratName={selectedName}
+      vratSlug={slug}
+      occurrenceDate={occurrence?.civilDate ?? occurrence?.date ?? globalStats?.next_date}
+      paranaTime={selectedBreakFastTime}
+      isEligibleToday={isEligibleToday}
+      isObserved={observedToday}
+      observeCount={observeCount}
+      observeLoading={observeLoading}
+      onObserve={handleObserve}
+      wantsReminders={true}
+      onToggleReminders={handleToggleReminders}
+      language={readerLanguage === 'hi' ? 'hi' : readerLanguage === 'pa' ? 'pa' : 'en'}
+      isDark={isDark}
+    />
   );
   const statsCard = (
     <>

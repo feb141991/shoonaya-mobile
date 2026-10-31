@@ -1,4 +1,8 @@
-export type ShieldCounters = { latestStreakCount: number; totalJapaSessions: number };
+export type ShieldCounters = {
+  latestStreakCount: number;
+  totalJapaSessions: number;
+  totalVratsObserved?: number;
+};
 type Fetcher = (path: string, options: { expectedUserId: string }) => Promise<Response>;
 
 /** Older backends lack this route. Only a 404 permits the heavier compatibility read. */
@@ -18,5 +22,9 @@ export async function fetchShieldCounters(userId: string, fetcher: Fetcher): Pro
   if (!Number.isInteger(streak) || streak < 0 || !Number.isInteger(count) || count < 0) {
     throw new Error('Invalid shield counters');
   }
-  return { latestStreakCount: streak, totalJapaSessions: count };
+  const result: ShieldCounters = { latestStreakCount: streak, totalJapaSessions: count };
+  if (typeof payload.totalVratsObserved === 'number' && Number.isInteger(payload.totalVratsObserved) && payload.totalVratsObserved >= 0) {
+    result.totalVratsObserved = payload.totalVratsObserved;
+  }
+  return result;
 }

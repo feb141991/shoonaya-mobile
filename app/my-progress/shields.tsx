@@ -34,6 +34,14 @@ const SESSION_SHIELDS = [
   { threshold: 108, name: 'Pūrṇatva',  emoji: '🌅', desc: '108 sessions',     detail: 'A sacred cycle complete. 108 separate moments of divine connection.' },
   { threshold: 500, name: 'Tapasvī',   emoji: '🏔️', desc: '500 sessions',     detail: 'Deep ascetic practice. A milestone of immense spiritual gravity.' },
 ];
+const VRAT_SHIELDS = [
+  { threshold: 1,   name: 'Prārambha Vrata', emoji: '🌱', desc: '1st sacred fast',   detail: 'The awakening vow — igniting the inner fire of sacred tapas.' },
+  { threshold: 3,   name: 'Trigunātīta',     emoji: '🌿', desc: '3 sacred fasts',   detail: 'Three sacred vows — purifying the trigunas (Sattva, Rajas, Tamas).' },
+  { threshold: 11,  name: 'Ekādaśa Tejas',   emoji: '📿', desc: '11 sacred fasts',  detail: 'The sacred eleven — bringing mastery over the ten senses and the mind.' },
+  { threshold: 24,  name: 'Samvatsara Vrata',emoji: '☀️', desc: '24 sacred fasts',  detail: 'A complete annual cycle — twenty-four Ekadashis of steadfast devotion.' },
+  { threshold: 54,  name: 'Ardha Shataka',   emoji: '🌕', desc: '54 sacred fasts',  detail: 'Fifty-four observances — halfway through the sacred mahāmālā.' },
+  { threshold: 108, name: 'Pūrṇa Mahāvrata', emoji: '👑', desc: '108 sacred fasts', detail: 'A full mālā of devotional fasts. The supreme armor of the seeker.' },
+];
 
 export default function ShieldsScreen() {
   const scheme = useColorScheme();
@@ -47,10 +55,11 @@ export default function ShieldsScreen() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [isGuest, setIsGuest] = useState(false);
-  const [activeTab, setActiveTab] = useState<'streak' | 'sessions'>('streak');
+  const [activeTab, setActiveTab] = useState<'streak' | 'sessions' | 'vrata'>('streak');
   const [loadedUserId, setLoadedUserId] = useState<string | null>(null);
   const [streak, setStreak] = useState(0);
   const [totalSessions, setTotalSessions] = useState(0);
+  const [totalVrats, setTotalVrats] = useState(0);
 
   const loadData = useCallback(async () => {
     const lease = captureAppIdentity();
@@ -73,6 +82,7 @@ export default function ShieldsScreen() {
       setLoadedUserId(appIdentity.userId);
       setStreak(counters.latestStreakCount);
       setTotalSessions(counters.totalJapaSessions);
+      setTotalVrats(counters.totalVratsObserved ?? 0);
     } catch {
       if (lease.isCurrent()) setLoadError(true);
     }
@@ -134,12 +144,18 @@ export default function ShieldsScreen() {
     );
   }
 
-  const shields = activeTab === 'streak' ? STREAK_SHIELDS : SESSION_SHIELDS;
-  const value = activeTab === 'streak' ? streak : totalSessions;
+  const shields = activeTab === 'streak' ? STREAK_SHIELDS : activeTab === 'sessions' ? SESSION_SHIELDS : VRAT_SHIELDS;
+  const value = activeTab === 'streak' ? streak : activeTab === 'sessions' ? totalSessions : totalVrats;
 
   const earnedCount = shields.filter(s => value >= s.threshold).length;
   const nextShield = shields.find(s => s.threshold > value);
   const progress = nextShield ? Math.round((value / nextShield.threshold) * 100) : 100;
+
+  const tabs = [
+    { id: 'streak' as const, label: 'Streak', count: streak },
+    { id: 'sessions' as const, label: 'Sessions', count: totalSessions },
+    { id: 'vrata' as const, label: 'Vrata', count: totalVrats },
+  ];
 
   return (
     <Screen 
@@ -150,21 +166,21 @@ export default function ShieldsScreen() {
         
         {/* Tabs */}
         <View style={{ flexDirection: 'row', backgroundColor: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight, borderRadius: 24, padding: 4, marginBottom: 24 }}>
-          {(['streak', 'sessions'] as const).map(tf => (
+          {tabs.map(tab => (
             <PressableSurface
-              key={tf}
+              key={tab.id}
               haptic="selection"
-              onPress={() => setActiveTab(tf)}
+              onPress={() => setActiveTab(tab.id)}
               style={{
                 flex: 1,
                 paddingVertical: 10,
                 borderRadius: 20,
-                backgroundColor: activeTab === tf ? theme.brandSoft : 'transparent',
+                backgroundColor: activeTab === tab.id ? theme.brandSoft : 'transparent',
                 alignItems: 'center',
               }}
             >
-              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: activeTab === tf ? theme.text : theme.dim, textTransform: 'capitalize' }}>
-                {tf} ({tf === 'streak' ? streak : totalSessions})
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: activeTab === tab.id ? theme.text : theme.dim }}>
+                {tab.label} ({tab.count})
               </Text>
             </PressableSurface>
           ))}

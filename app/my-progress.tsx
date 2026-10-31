@@ -31,6 +31,7 @@ import { HairlineMetricsRow } from '@/components/progress/HairlineMetricsRow';
 import { SlenderNeedlesChart } from '@/components/progress/SlenderNeedlesChart';
 import { PrecisionAstrolabeDial } from '@/components/progress/PrecisionAstrolabeDial';
 import { FeatherweightSheet } from '@/components/progress/FeatherweightSheet';
+import { VrataTrackCard } from '@/components/progress/VrataTrackCard';
 
 const PROGRESS_CACHE_KEY = 'shoonaya_progress_cache_v2';
 
@@ -42,6 +43,8 @@ type ProgressApiResponse = {
   totalJapaSessions: number;
   karmaLedger30d: KarmaLedgerRow[];
   quizResponses30d: QuizResponseRow[];
+  vratObservations?: Array<{ id: string; occurrence_date: string; vrat_id: string; vrat_name: string | null }>;
+  totalVratsObserved?: number;
 };
 
 type SadhanaRow = {
@@ -73,6 +76,8 @@ type ProgressData = {
   streak: number;
   dowCounts: number[];
   harmonyScore: number;
+  totalVratsObserved: number;
+  vratObservations: Array<{ id: string; occurrence_date: string; vrat_id: string; vrat_name: string | null }>;
 };
 
 function daysAgoISO(n: number) {
@@ -162,6 +167,8 @@ function processProgressPayload(payload: ProgressApiResponse): ProgressData {
     streak,
     dowCounts,
     harmonyScore,
+    totalVratsObserved: payload.totalVratsObserved ?? (payload.vratObservations?.length ?? 0),
+    vratObservations: payload.vratObservations ?? [],
   };
 }
 
@@ -301,9 +308,13 @@ export default function MyProgressScreen() {
   const harmonyScore = data?.harmonyScore ?? 108;
   const userName = data?.profile?.full_name || data?.profile?.username || null;
 
+  const totalVrats = data?.totalVratsObserved ?? 0;
+  const recentVrats = data?.vratObservations ?? [];
+
   const totalShieldsEarned =
     [7, 9, 21, 40, 54, 108, 365].filter((t) => streak >= t).length +
-    [7, 21, 40, 108, 365, 1000].filter((t) => totalJapaSessions >= t).length;
+    [7, 21, 40, 108, 365, 1000].filter((t) => totalJapaSessions >= t).length +
+    [1, 3, 11, 24, 54, 108].filter((t) => totalVrats >= t).length;
 
   return (
     <Screen
@@ -346,14 +357,22 @@ export default function MyProgressScreen() {
           theme={theme}
         />
 
-        {/* 5. Precision Astrolabe Dial (Atma-Vichara Harmony) */}
+        {/* 5. Vrata Sādhana Track (Sacred Fasting Track) */}
+        <VrataTrackCard
+          totalVrats={totalVrats}
+          recentVrats={recentVrats}
+          isDark={isDark}
+          theme={theme}
+        />
+
+        {/* 6. Precision Astrolabe Dial (Atma-Vichara Harmony) */}
         <PrecisionAstrolabeDial
           harmonyScore={harmonyScore}
           isDark={isDark}
           theme={theme}
         />
 
-        {/* 6. Featherweight Translucent Bottom Sheet & Sub-Routes */}
+        {/* 7. Featherweight Translucent Bottom Sheet & Sub-Routes */}
         <FeatherweightSheet
           onEnterJapa={() => router.push('/japa' as Href)}
           onOpenShields={() => router.push('/my-progress/shields' as Href)}
