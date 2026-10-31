@@ -56,17 +56,26 @@ describe('Ekadashi Cross-Catalog Contract & Editorial Gating', () => {
     }
   });
 
-  it('2. editorial guard: unapproved (pending_source) narrative fields remain strictly withheld', () => {
-    // Rama Ekadashi has pending_source in the catalog: narrative prose must remain empty
+  it('2. editorial guard: council-reviewed Ekadashis unwithhold narrative prose, while pending records remain withheld', () => {
+    // Rama Ekadashi is ratified and unwithheld under founder:pt-prince-20261031
     const rama = lookupVratData('rama-ekadashi');
     assert.ok(rama);
     assert.equal(rama.id, 'rama-ekadashi');
-    assert.equal(rama.name, 'Rama Ekadashi');
-    assert.equal(rama.underReview, true, 'Expected underReview: true when fields are pending_source');
-    assert.equal(rama.significance, '', 'Unapproved significance must be withheld (empty)');
-    assert.equal(rama.significanceLocal, '', 'Unapproved significanceLocal must be withheld (empty)');
-    assert.equal(rama.practice, '', 'Unapproved practice must be withheld (empty)');
-    assert.equal(rama.mantra, '', 'Unapproved mantra must be withheld (empty)');
+    assert.ok(rama.name.includes('Rama Ekadashi'));
+    assert.equal(rama.underReview, false, 'Expected underReview: false when fields are council reviewed');
+    assert.ok(rama.significance.length > 50, 'Approved significance must be unwithheld');
+    assert.ok(rama.significanceLocal && rama.significanceLocal.length > 50, 'Approved Hindi significance must be unwithheld');
+    assert.ok(rama.practice.length > 20, 'Approved practice must be unwithheld');
+    assert.ok(rama.mantra.length > 5, 'Approved mantra must be unwithheld');
+
+    // Pending source festival in catalog remains withheld
+    const pendingFestival = lookupVratData('dhanteras');
+    assert.ok(pendingFestival);
+    assert.equal(pendingFestival.underReview, true, 'Expected underReview: true when fields are pending_source');
+    assert.equal(pendingFestival.significance, '', 'Unapproved significance must be withheld (empty)');
+    assert.equal(pendingFestival.significanceLocal, '', 'Unapproved significanceLocal must be withheld (empty)');
+    assert.equal(pendingFestival.practice, '', 'Unapproved practice must be withheld (empty)');
+    assert.equal(pendingFestival.mantra, '', 'Unapproved mantra must be withheld (empty)');
   });
 
   it('3. generic Ekadashi continues to resolve to the full recurring guide', () => {

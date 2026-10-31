@@ -204,13 +204,15 @@ describe('Batch 1, 2, 3, 4 & 5 Festival Content & Hero Integration Suite', () =>
     }
   });
 
-  it('retains bilingual drafts but withholds every field until provenance review is durable', () => {
+  it('retains bilingual drafts, verifying council-reviewed Ekadashis for app display while withholding pending drafts', () => {
     for (const slug of ALL_AUTHORED_SLUGS) {
       const festival = lookupFestivalContent(slug)!;
       assert.ok(festival.name.value.en.length > 0, `Missing EN draft name for ${slug}`);
       assert.ok(festival.name.value.hi && festival.name.value.hi.length > 0, `Missing HI draft name for ${slug}`);
       assert.ok(festival.significance.value.en.length > 20, `Significance EN draft too short for ${slug}`);
       assert.ok(festival.rituals.value.en.length >= 3, `Expected at least 3 EN draft rituals for ${slug}`);
+
+      const isEkadashi = slug.includes('ekadashi');
 
       for (const [fieldName, field] of Object.entries({
         name: festival.name,
@@ -222,25 +224,38 @@ describe('Batch 1, 2, 3, 4 & 5 Festival Content & Hero Integration Suite', () =>
         pujaItems: festival.pujaItems,
       })) {
         assert.ok(field, `Missing ${fieldName} draft for ${slug}`);
-        assert.equal(field.status, 'pending_source', `${slug}.${fieldName} must remain withheld`);
-        assert.deepEqual(field.sourceRefs, [], `${slug}.${fieldName} carries unverified source metadata`);
-        assert.equal(field.reviewRef, undefined, `${slug}.${fieldName} carries an unsupported review claim`);
+        if (isEkadashi) {
+          assert.equal(field.status, 'council_reviewed_editorial', `${slug}.${fieldName} should be council reviewed`);
+          assert.ok(field.sourceRefs.length > 0, `${slug}.${fieldName} missing source metadata`);
+          assert.equal(field.reviewRef, 'docs/content-reviews/ekadashi-series-2026-v1.md', `${slug}.${fieldName} missing reviewRef`);
+        } else {
+          assert.equal(field.status, 'pending_source', `${slug}.${fieldName} must remain withheld`);
+          assert.deepEqual(field.sourceRefs, [], `${slug}.${fieldName} carries unverified source metadata`);
+          assert.equal(field.reviewRef, undefined, `${slug}.${fieldName} carries an unsupported review claim`);
+        }
       }
 
-      assert.equal(resolveFestivalText(festival.name, 'en'), '', `${slug} leaked an unreviewed name`);
-      assert.equal(resolveFestivalText(festival.significance, 'hi'), '', `${slug} leaked unreviewed significance`);
-      assert.deepEqual(resolveFestivalList(festival.rituals, 'en'), [], `${slug} leaked unreviewed rituals`);
-      assert.equal(isFestivalPublishable(festival), false, `Festival ${slug} must fail closed`);
-      assert.equal(resolveFestivalShareHeadline({
-        publishable: isFestivalPublishable(festival),
-        mantraText: festival.mantra?.sanskrit,
-        mantraTranslation: festival.mantra ? resolveFestivalText(festival.mantra.translation, 'en') : '',
-        tagline: resolveFestivalText(festival.tagline, 'en'),
-      }), '', `${slug} leaked pending content into a share card`);
+      if (isEkadashi) {
+        assert.ok(resolveFestivalText(festival.name, 'en').length > 0, `${slug} failed to resolve name`);
+        assert.ok(resolveFestivalText(festival.significance, 'hi').length > 0, `${slug} failed to resolve hi significance`);
+        assert.ok(resolveFestivalList(festival.rituals, 'en').length >= 3, `${slug} failed to resolve rituals`);
+        assert.equal(isFestivalPublishable(festival), true, `Festival ${slug} must be publishable`);
+      } else {
+        assert.equal(resolveFestivalText(festival.name, 'en'), '', `${slug} leaked an unreviewed name`);
+        assert.equal(resolveFestivalText(festival.significance, 'hi'), '', `${slug} leaked unreviewed significance`);
+        assert.deepEqual(resolveFestivalList(festival.rituals, 'en'), [], `${slug} leaked unreviewed rituals`);
+        assert.equal(isFestivalPublishable(festival), false, `Festival ${slug} must fail closed`);
+        assert.equal(resolveFestivalShareHeadline({
+          publishable: isFestivalPublishable(festival),
+          mantraText: festival.mantra?.sanskrit,
+          mantraTranslation: festival.mantra ? resolveFestivalText(festival.mantra.translation, 'en') : '',
+          tagline: resolveFestivalText(festival.tagline, 'en'),
+        }), '', `${slug} leaked pending content into a share card`);
+      }
     }
   });
 
-  it('retains structurally complete mantra drafts while withholding all 114 from display', () => {
+  it('retains structurally complete mantra drafts, verified for Ekadashis and gated for others', () => {
     for (const slug of ALL_AUTHORED_SLUGS) {
       const festival = lookupFestivalContent(slug)!;
       assert.ok(festival.mantra, `Expected mantra for ${slug}`);
@@ -249,11 +264,21 @@ describe('Batch 1, 2, 3, 4 & 5 Festival Content & Hero Integration Suite', () =>
 
       const transEn = resolveFestivalText(festival.mantra.translation, 'en');
       const transHi = resolveFestivalText(festival.mantra.translation, 'hi');
-      assert.equal(festival.mantra.translation.status, 'pending_source', `${slug} mantra must remain withheld`);
-      assert.deepEqual(festival.mantra.translation.sourceRefs, [], `${slug} mantra carries unverified source metadata`);
-      assert.equal(festival.mantra.translation.reviewRef, undefined, `${slug} mantra carries an unsupported review claim`);
-      assert.equal(transEn, '', `Unreviewed EN mantra leaked for ${slug}`);
-      assert.equal(transHi, '', `Unreviewed HI mantra leaked for ${slug}`);
+      const isEkadashi = slug.includes('ekadashi');
+
+      if (isEkadashi) {
+        assert.equal(festival.mantra.translation.status, 'council_reviewed_editorial', `${slug} mantra should be council reviewed`);
+        assert.ok(festival.mantra.translation.sourceRefs.length > 0, `${slug} mantra missing source refs`);
+        assert.equal(festival.mantra.translation.reviewRef, 'docs/content-reviews/ekadashi-series-2026-v1.md', `${slug} mantra missing reviewRef`);
+        assert.ok(transEn.length > 0, `Ekadashi ${slug} missing EN mantra translation`);
+        assert.ok(transHi.length > 0, `Ekadashi ${slug} missing HI mantra translation`);
+      } else {
+        assert.equal(festival.mantra.translation.status, 'pending_source', `${slug} mantra must remain withheld`);
+        assert.deepEqual(festival.mantra.translation.sourceRefs, [], `${slug} mantra carries unverified source metadata`);
+        assert.equal(festival.mantra.translation.reviewRef, undefined, `${slug} mantra carries an unsupported review claim`);
+        assert.equal(transEn, '', `Unreviewed EN mantra leaked for ${slug}`);
+        assert.equal(transHi, '', `Unreviewed HI mantra leaked for ${slug}`);
+      }
     }
   });
 
