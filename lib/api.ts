@@ -14,6 +14,7 @@ import { retryTransientReadOnce } from './api-503-retry';
 import { classifyApiDiagnostic, normalizeApiDiagnosticMethod, normalizeApiEndpoint } from './apiDiagnosticPolicy';
 import { recordApiRequestDiagnostic, recordAuthDiagnostic, type AuthDiagnosticCode, type AuthDiagnosticRoute } from './telemetry';
 import { appBackgroundTransitionTracker } from './appLifecycleDiagnostics';
+import { endRejectedSession } from './rejectedSession';
 
 export { isFetchCancelled };
 
@@ -40,6 +41,25 @@ export type ApiFetchOptions = RequestInit & {
 let cachedAccessToken: string | null | undefined;
 let cachedSession: Session | null = null;
 const refreshSingleFlight = createSingleFlight<Session | null>();
+const rejectedSessions = new Map<string, Promise<void>>();
+
+function handleRejectedSession(response: Response, token: string | null) {
+  if (!token || response.status !== 401) return Promise.resolve();
+  const pending = rejectedSessions.get(token);
+  if (pending) return pending;
+  const operation = endRejectedSession(response, token, {
+    currentToken: async () => {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) throw error;
+      return data.session?.access_token ?? null;
+    },
+    // SIGNED_OUT goes through the root auth coordinator: mask identity,
+    // clear private caches/preferences, unbind push, then route to login.
+    signOutLocal: () => supabase.auth.signOut({ scope: 'local' }),
+  }).finally(() => { rejectedSessions.delete(token); });
+  rejectedSessions.set(token, operation);
+  return operation;
+}
 
 function authDiagnosticRoute(path: string): AuthDiagnosticRoute {
   const pathname = path.split(/[?#]/, 1)[0].replace(/\/$/, '');
@@ -278,6 +298,15 @@ async function performApiFetch(path: string, options: ApiFetchOptions = {}, chec
     // request can therefore carry an expired cached JWT even though the user
     // is still signed in. A 401 is safe to retry because the route did not
     // execute its protected handler. Restrict retries to replayable bodies.
+    if (response.status === 401 && accessToken && !canReplayBody(fetchOptions.body)) {
+      // Uploads/streams cannot be replayed. Ask Auth about the exact rejected
+      // token instead; only explicit account/session invalidation ends it.
+      // A network error or expired JWT alone is not account deletion.
+      const { error } = await abortable(supabase.auth.getUser(accessToken));
+      if (error && ['user_not_found', 'session_not_found', 'session_expired'].includes(error.code ?? '')) {
+        await abortable(handleRejectedSession(response, accessToken));
+      }
+    }
     if (response.status !== 401 || !accessToken || !canReplayBody(fetchOptions.body)) {
       if (initialAuthResponse) {
         recordAuthOutcome({
@@ -302,6 +331,7 @@ async function performApiFetch(path: string, options: ApiFetchOptions = {}, chec
     const refreshedToken = alreadyRotatedToken ?? (await abortable(refreshApiSession()))?.access_token ?? null;
     refreshSucceeded = Boolean(refreshedToken && refreshedToken !== accessToken);
     if (!refreshedToken || refreshedToken === accessToken) {
+      await abortable(handleRejectedSession(response, accessToken));
       recordAuthOutcome({
         path: normalizedPath, requestId, initialStatus: initialAuthResponse?.status ?? response.status,
         finalStatus: response.status, authReadyWaitMs, hadAccessToken,
@@ -314,6 +344,7 @@ async function performApiFetch(path: string, options: ApiFetchOptions = {}, chec
 
     response = await requestWithToken(refreshedToken);
     finalResponse = response;
+    await abortable(handleRejectedSession(response, refreshedToken));
     recordAuthOutcome({
       path: normalizedPath, requestId, initialStatus: initialAuthResponse?.status ?? 401,
       finalStatus: response.status, authReadyWaitMs, hadAccessToken,
