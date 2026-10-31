@@ -15,7 +15,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
-import { useAppIdentity } from '@/lib/appIdentity';
+import { captureAppIdentity, useAppIdentity } from '@/lib/appIdentity';
 import { setGuestMode } from '@/lib/guestSession';
 import { fetchShieldCounters } from '@/lib/shieldCounters';
 
@@ -48,10 +48,12 @@ export default function ShieldsScreen() {
   const [loadError, setLoadError] = useState(false);
   const [isGuest, setIsGuest] = useState(false);
   const [activeTab, setActiveTab] = useState<'streak' | 'sessions'>('streak');
+  const [loadedUserId, setLoadedUserId] = useState<string | null>(null);
   const [streak, setStreak] = useState(0);
   const [totalSessions, setTotalSessions] = useState(0);
 
   const loadData = useCallback(async () => {
+    const lease = captureAppIdentity();
     setLoadError(false);
 
     if (appIdentity.kind === 'loading') {
@@ -67,19 +69,23 @@ export default function ShieldsScreen() {
 
     try {
       const counters = await fetchShieldCounters(appIdentity.userId, apiFetch);
+      if (!lease.isCurrent()) return;
+      setLoadedUserId(appIdentity.userId);
       setStreak(counters.latestStreakCount);
       setTotalSessions(counters.totalJapaSessions);
     } catch {
-      setLoadError(true);
+      if (lease.isCurrent()) setLoadError(true);
     }
   }, [router, appIdentity]);
 
   useEffect(() => {
     if (appIdentity.kind === 'loading') return;
-    loadData().finally(() => setLoading(false));
+    const lease = captureAppIdentity();
+    setLoading(true);
+    loadData().finally(() => { if (lease.isCurrent()) setLoading(false); });
   }, [loadData, appIdentity]);
 
-  if (loading) {
+  if (loading || (appIdentity.kind === 'authenticated' && loadedUserId !== appIdentity.userId && !loadError)) {
     return (
       <Screen style={{ flex: 1, backgroundColor: theme.bg, paddingHorizontal: 0, paddingBottom: 0 }}>
         <SacredLoader

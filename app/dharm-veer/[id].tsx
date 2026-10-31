@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useMemo, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, useMemo, useRef, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -203,7 +203,9 @@ export default function DharmVeerDetailScreen() {
     xl: { fontSize: 22, lineHeight: 32 },
   };
 
+  const loadGeneration = useRef(0);
   const load = useCallback(async () => {
+    const generation = ++loadGeneration.current;
     if (appIdentity.kind === 'loading') return;
 
     setLoadError(false);
@@ -229,6 +231,7 @@ export default function DharmVeerDetailScreen() {
           // Preserve offline cornerstone reading on transport/server failure.
         }
       }
+      if (generation !== loadGeneration.current) return;
       const offlineMatch = DHARM_VEERS.find((candidate) => candidate.id === id) ?? null;
       const match = preferExpandedDharmVeer(remote, offlineMatch);
 
@@ -246,7 +249,10 @@ export default function DharmVeerDetailScreen() {
 
   useEffect(() => {
     setLoading(true);
-    load().finally(() => setLoading(false));
+    const pending = load();
+    const generation = loadGeneration.current;
+    pending.finally(() => { if (generation === loadGeneration.current) setLoading(false); });
+    return () => { loadGeneration.current++; };
   }, [load]);
 
   // Silent 30-second completion, matching the PWA reader rule.
