@@ -1135,9 +1135,11 @@ function HomeContent() {
       ? "Begin Today's Sadhana"
       : "Continue Today's Sadhana";
   const sadhanaSubtitle = sadhanaComplete
-    ? `Your ${traditionLabel} rhythm is steady today · +seva earned`
+    ? (state.nextPractice.suggestion || `Your ${traditionLabel} rhythm is steady today · +seva earned`)
     : completedCount === 0
-      ? `Start with ${state.nextPractice.title} · ${state.practices.length - completedCount} practices today`
+      ? (state.nextPractice.suggestion
+          ? `Start with ${state.nextPractice.title} · ${state.nextPractice.suggestion}`
+          : `Start with ${state.nextPractice.title} · ${state.practices.length - completedCount} practices today`)
       : `Next: ${state.nextPractice.title} · ${state.nextPractice.suggestion}`;
   const sadhanaButtonLabel = sadhanaComplete ? "Today's Recap" : completedCount === 0 ? 'Begin' : 'Continue';
   const sadhanaCtaGradient: readonly [string, string] = isDark
@@ -2407,9 +2409,14 @@ function HomeContent() {
                 <Text style={{ ...TYPE.cardHeading, color: sadhanaCtaText }} numberOfLines={1}>
                   {sadhanaTitle}
                 </Text>
-                <Text style={{ marginTop: 2, ...TYPE.caption, color: sadhanaCtaSubtext }} numberOfLines={1}>
+                <Text style={{ marginTop: 2, ...TYPE.caption, color: sadhanaCtaSubtext }} numberOfLines={2}>
                   {sadhanaSubtitle}
                 </Text>
+                {state.nextPractice.nudge ? (
+                  <Text style={{ marginTop: 2, fontStyle: 'italic', fontSize: 11, lineHeight: 14, color: sadhanaCtaMeta }} numberOfLines={1}>
+                    ✨ {state.nextPractice.nudge}
+                  </Text>
+                ) : null}
               </View>
             </View>
 
