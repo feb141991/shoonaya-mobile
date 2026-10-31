@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BackButton } from '@/components/ui/BackButton';
@@ -34,6 +34,8 @@ import { useReaderAppearance } from '@/lib/useReaderAppearance';
 import { useReaderPrefs } from '@/lib/readerPrefs';
 import { buildVratChapters, clampChapterIndex, usesChapterLayout, type VratChapterKey } from '@/lib/readerChapters';
 import { useLinkedKatha } from '@/hooks/useLinkedKatha';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Haptics from 'expo-haptics';
 
 // Labels match app/dharm-veer/[id].tsx's FONT_PRESETS exactly -- both
 // screens share the same ReaderShell toolbar component, this is just the
@@ -62,6 +64,8 @@ const VRAT_DETAIL_COPY = {
     canonical: 'Canonical',
     upcoming: 'Upcoming',
     backToCalendar: 'Back to Fasting Calendar',
+    contentUnderReview: 'Content Under Review',
+    contentUnderReviewDesc: 'Scriptural narratives and specific observance details for this sacred day are currently undergoing traditional editorial verification. Canonical calendar timings remain active.',
     occurrenceUnavailable: 'Occurrence Details Unavailable',
     occurrenceUnavailableDesc: 'This specific observance occurrence is not active or could not be verified with the canonical calendar service. You can explore the sacred significance and practices below.',
     observedToday: 'Observed today ✓',
@@ -75,6 +79,9 @@ const VRAT_DETAIL_COPY = {
     seekersOnShoonaya: 'seekers on Shoonaya',
     observancesRecorded: 'observances recorded',
     alternativeTraditions: 'Alternative Traditions / Dates:',
+    markAsRead: 'Mark as Read',
+    readingCompleted: 'Reading Completed ✓',
+    readingCompletedToast: '🙏 Reading completed',
     fastTypes: {
       nirjala: 'Nirjala (Waterless)',
       phalahar: 'Phalahar (Fruit-based)',
@@ -100,6 +107,8 @@ const VRAT_DETAIL_COPY = {
     canonical: 'मान्य तिथि',
     upcoming: 'आगामी',
     backToCalendar: 'व्रत कैलेंडर पर वापस जाएं',
+    contentUnderReview: 'सामग्री समीक्षाधीन',
+    contentUnderReviewDesc: 'इस पावन पर्व से जुड़े शास्त्रीय संदर्भ व विशिष्ट विवरण वर्तमान में संपादकीय सत्यापन में हैं। प्रामाणिक पंचांग तिथियां सक्रिय हैं।',
     occurrenceUnavailable: 'तिथि विवरण उपलब्ध नहीं',
     occurrenceUnavailableDesc: 'यह विशिष्ट पर्व तिथि वर्तमान में सक्रिय नहीं है अथवा मान्य कैलेंडर सेवा से सत्यापित नहीं हो सकी। आप नीचे इसका पावन महत्व और विधि देख सकते हैं।',
     observedToday: 'आज पूर्ण हुआ ✓',
@@ -113,6 +122,9 @@ const VRAT_DETAIL_COPY = {
     seekersOnShoonaya: 'शून्या पर साधक',
     observancesRecorded: 'व्रत अनुष्ठान दर्ज',
     alternativeTraditions: 'वैकल्पिक परंपराएं व तिथियां:',
+    markAsRead: 'पठन पूर्ण अंकित करें',
+    readingCompleted: 'पठन पूर्ण हुआ ✓',
+    readingCompletedToast: '🙏 पठन पूर्ण दर्ज हुआ',
     fastTypes: {
       nirjala: 'निर्जला',
       phalahar: 'फलाहार',
@@ -138,6 +150,8 @@ const VRAT_DETAIL_COPY = {
     canonical: 'ਮੰਨਿਆ ਹੋਇਆ',
     upcoming: 'ਆਉਣ ਵਾਲਾ',
     backToCalendar: 'ਵਰਤ ਕੈਲੰਡਰ ਤੇ ਵਾਪਸ ਜਾਓ',
+    contentUnderReview: 'ਸਮੱਗਰੀ ਸਮੀਖਿਆ ਅਧੀਨ',
+    contentUnderReviewDesc: 'ਇਸ ਪਵਿੱਤਰ ਦਿਹਾੜੇ ਨਾਲ ਸੰਬੰਧਿਤ ਪ੍ਰਮਾਣਿਕ ਹਵਾਲੇ ਅਤੇ ਵੇਰਵੇ ਇਸ ਵੇਲੇ ਸੰਪਾਦਕੀ ਜਾਂਚ ਅਧੀਨ ਹਨ। ਕੈਲੰਡਰ ਮਿਤੀਆਂ ਸਰਗਰਮ ਹਨ।',
     occurrenceUnavailable: 'ਤਾਰੀਖ ਵੇਰਵੇ ਉਪਲਬਧ ਨਹੀਂ',
     occurrenceUnavailableDesc: 'ਇਹ ਵਿਸ਼ੇਸ਼ ਤਾਰੀਖ ਵਰਤਮਾਨ ਵਿੱਚ ਸਰਗਰਮ ਨਹੀਂ ਹੈ ਜਾਂ ਕੈਲੰਡਰ ਸੇਵਾ ਨਾਲ ਪ੍ਰਮਾਣਿਤ ਨਹੀਂ ਹੋ ਸਕੀ। ਤੁਸੀਂ ਹੇਠਾਂ ਇਸਦਾ ਮਹੱਤਵ ਅਤੇ ਵਿਧੀ ਪੜ੍ਹ ਸਕਦੇ ਹੋ।',
     observedToday: 'ਅੱਜ ਪੂਰਾ ਹੋਇਆ ✓',
@@ -151,6 +165,9 @@ const VRAT_DETAIL_COPY = {
     seekersOnShoonaya: 'ਸ਼ੂਨਯਾ ਤੇ ਸਾਧਕ',
     observancesRecorded: 'ਵਰਤ ਅਨੁਸ਼ਠਾਨ ਦਰਜ',
     alternativeTraditions: 'ਹੋਰ ਪਰੰਪਰਾਵਾਂ ਅਤੇ ਤਾਰੀਖਾਂ:',
+    markAsRead: 'ਪੜ੍ਹਨਾ ਦਰਜ ਕਰੋ',
+    readingCompleted: 'ਪੜ੍ਹਨਾ ਸੰਪੰਨ ਹੋਇਆ ✓',
+    readingCompletedToast: '🙏 ਪੜ੍ਹਨਾ ਦਰਜ ਹੋਇਆ',
     fastTypes: {
       nirjala: 'ਨਿਰਜਲਾ',
       phalahar: 'ਫਲਾਹਾਰ',
@@ -200,6 +217,39 @@ export default function VratDetailScreen() {
   const insets = useSafeAreaInsets();
   const shareCardRef = useRef<View | null>(null);
   const [sharing, setSharing] = useState(false);
+  const [readCompleted, setReadCompleted] = useState(false);
+
+  // Restore persisted read status for this slug
+  useEffect(() => {
+    let mounted = true;
+    AsyncStorage.getItem(`shoonaya_vrat_read_${slug}`)
+      .then((val) => {
+        if (mounted && val === 'true') {
+          setReadCompleted(true);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, [slug]);
+
+  const handleMarkRead = async () => {
+    if (readCompleted) {
+      if (router.canGoBack()) router.back();
+      else router.push('/vrat' as Href);
+      return;
+    }
+
+    setReadCompleted(true);
+    try {
+      await AsyncStorage.setItem(`shoonaya_vrat_read_${slug}`, 'true');
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch {
+      // non-fatal
+    }
+    setToast({ visible: true, message: copy.readingCompletedToast });
+  };
 
   // "Around the World" global stats -- ported from the PWA's
   // GET /api/vrat/stats (public, no auth).
@@ -670,19 +720,45 @@ export default function VratDetailScreen() {
     ) : null}
     </>
   );
-  const significanceCard = (
+  const underReviewCard = vrat.underReview ? (
+    <View
+      style={{
+        padding: 16,
+        marginBottom: 16,
+        borderRadius: RADII.md,
+        backgroundColor: theme.cardSoft,
+        borderWidth: 1,
+        borderColor: theme.borderSoft,
+      }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+        <Feather name="clock" size={15} color={theme.brand} />
+        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.brand }}>
+          {copy.contentUnderReview}
+        </Text>
+      </View>
+      <Text style={{ ...TYPE.body, color: theme.dim, fontSize: 12.5 * fsScale, lineHeight: 19 * fsScale }}>
+        {copy.contentUnderReviewDesc}
+      </Text>
+    </View>
+  ) : null;
+
+  const significanceCard = selectedSignificance ? (
     <View style={{ paddingVertical: 12, marginBottom: 16 }}>
       <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 8 }}>{copy.significance}</Text>
       <Text style={{ ...TYPE.body, color: theme.text, fontSize: TYPE.body.fontSize * fsScale, lineHeight: 24 * fsScale }}>{selectedSignificance}</Text>
     </View>
-  );
-  const practiceCard = (
+  ) : null;
+
+  const practiceCard = (selectedPractice || selectedFastingType || selectedBreakFastTime) ? (
     <View style={{ paddingVertical: 12, marginBottom: 16 }}>
       <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 10 }}>{copy.practiceRules}</Text>
-      <Text style={{ ...TYPE.body, color: theme.text, fontSize: TYPE.body.fontSize * fsScale, lineHeight: 24 * fsScale }}>{selectedPractice}</Text>
+      {selectedPractice ? (
+        <Text style={{ ...TYPE.body, color: theme.text, fontSize: TYPE.body.fontSize * fsScale, lineHeight: 24 * fsScale }}>{selectedPractice}</Text>
+      ) : null}
 
       {selectedFastingType ? (
-        <View style={{ marginTop: 14, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+        <View style={{ marginTop: selectedPractice ? 14 : 4, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
           <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.dim }}>{copy.fastType}</Text>
           <View style={{ backgroundColor: theme.brandSoft, paddingHorizontal: 10, paddingVertical: 4, borderRadius: RADII.pill, borderWidth: 1, borderColor: theme.borderSoft }}>
             <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: theme.brand, textTransform: 'capitalize' }}>
@@ -699,7 +775,7 @@ export default function VratDetailScreen() {
         </View>
       ) : null}
     </View>
-  );
+  ) : null;
   const dosCard = (
     <>
     {selectedDos && selectedDos.length > 0 ? (
@@ -730,14 +806,14 @@ export default function VratDetailScreen() {
     ) : null}
     </>
   );
-  const mantraCard = (
+  const mantraCard = selectedMantra ? (
     <View style={{ padding: 18, marginBottom: 16, borderRadius: RADII.md, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.borderSoft }}>
       <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 6 }}>{copy.mantra}</Text>
       <Text style={{ fontFamily: FONTS.serif, fontSize: 18 * fsScale, lineHeight: 26 * fsScale, color: theme.text, fontStyle: 'italic', textAlign: 'center', marginVertical: 8 }}>
         {selectedMantra}
       </Text>
     </View>
-  );
+  ) : null;
   const kathaCard = linkedKatha && linkedKathaBody.length > 0 ? (
     <View style={{ paddingVertical: 12, marginBottom: 16 }}>
       <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 6 }}>{copy.katha}</Text>
@@ -772,6 +848,61 @@ export default function VratDetailScreen() {
     katha: kathaCard,
   };
 
+  const isLastChapter = !chaptered || currentChapterIndex === chapters.length - 1;
+  const readCompletionCard = isLastChapter ? (
+    <View style={{ marginTop: 28, marginBottom: 16, alignItems: 'center' }}>
+      <PressableSurface
+        haptic="selection"
+        onPress={handleMarkRead}
+        accessibilityRole="button"
+        accessibilityLabel={readCompleted ? copy.readingCompleted : copy.markAsRead}
+        style={{
+          width: '100%',
+          minHeight: 52,
+          paddingHorizontal: 20,
+          borderRadius: RADII.pill,
+          backgroundColor: readCompleted ? COLORS.successBg : theme.brand,
+          borderWidth: readCompleted ? 1.5 : 0,
+          borderColor: readCompleted ? COLORS.successBorder : 'transparent',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+        }}
+      >
+        {readCompleted ? (
+          <>
+            <Feather name="check-circle" size={18} color={COLORS.success} />
+            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: COLORS.success }}>
+              {copy.readingCompleted}
+            </Text>
+          </>
+        ) : (
+          <>
+            <Feather name="check" size={18} color={theme.textOnBrand} />
+            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.textOnBrand }}>
+              {copy.markAsRead}
+            </Text>
+          </>
+        )}
+      </PressableSurface>
+
+      {readCompleted ? (
+        <PressableSurface
+          onPress={() => {
+            if (router.canGoBack()) router.back();
+            else router.push('/vrat' as Href);
+          }}
+          style={{ marginTop: 10, paddingVertical: 6, paddingHorizontal: 12 }}
+        >
+          <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: theme.dim }}>
+            {copy.backToCalendar} →
+          </Text>
+        </PressableSurface>
+      ) : null}
+    </View>
+  ) : null;
+
   return (
     <ReaderShell
       progressId={`vrat:${slug}`}
@@ -802,15 +933,18 @@ export default function VratDetailScreen() {
           {currentChapterIndex === 0 ? (
             <>
               {headerCard}
+              {underReviewCard}
               {observeCard}
               {statsCard}
             </>
           ) : null}
           {chapterSection[currentChapter.key]}
+          {readCompletionCard}
         </View>
       ) : (
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
           {headerCard}
+          {underReviewCard}
           {observeCard}
           {statsCard}
           {significanceCard}
@@ -819,6 +953,7 @@ export default function VratDetailScreen() {
           {dontsCard}
           {mantraCard}
           {kathaCard}
+          {readCompletionCard}
         </ScrollView>
       )}
 

@@ -75,6 +75,13 @@ const ALL_HINDU_SLUGS = [
   'saphala-ekadashi',
   'vijaya-ekadashi',
   'yogini-ekadashi',
+  'pausha-putrada-ekadashi',
+  'shattila-ekadashi',
+  'jaya-ekadashi',
+  'varuthini-ekadashi',
+  'mohini-ekadashi',
+  'indira-ekadashi',
+  'papankusha-ekadashi',
   'ekadashi',
   // Periodic & Vrats
   'pradosh-vrat',
@@ -157,8 +164,8 @@ const ALL_AUTHORED_SLUGS = [
 ];
 
 describe('Batch 1, 2, 3, 4 & 5 Festival Content & Hero Integration Suite', () => {
-  it('contains all 115 authored festival entries in snapshot', () => {
-    assert.equal(FESTIVAL_CONTENT_SNAPSHOT.festivals.length, 115);
+  it('contains all 122 authored festival entries in snapshot', () => {
+    assert.equal(FESTIVAL_CONTENT_SNAPSHOT.festivals.length, 122);
     for (const slug of ALL_HINDU_SLUGS) {
       const festival = lookupFestivalContent(slug);
       assert.ok(festival, `Expected festival content for "${slug}"`);

@@ -1,4 +1,6 @@
 import type { TithiReminder, SpiritualPulse } from '@sangam/panchang-engine';
+import { FESTIVAL_CONTENT_BY_SLUG, type FestivalContent } from './festival-content.generated';
+import { resolveFestivalText, resolveFestivalList, isFestivalPublishable } from './festival-content-helpers';
 
 export type FastingType = 'nirjala' | 'phalahar' | 'sattvic' | 'ekbhukta' | 'partial' | 'none';
 
@@ -26,6 +28,7 @@ export interface VratData {
   pujaItems?: string[];
   pujaItemsLocal?: string[];
   kathaId?: string;            // links to katha-library.ts katha ID
+  underReview?: boolean;       // true when narrative/editorial fields are withheld pending review
 }
 
 export const VRAT_DATABASE: Record<string, VratData> = {
@@ -953,17 +956,42 @@ const NAMED_VRAT_ALIASES: Array<{ canonical: string; aliases: string[] }> = [
   { canonical: 'vat-savitri', aliases: ['vat savitri vrat', 'vat savitri', 'vat-savitri', 'savitri vrat', 'savitri'] },
   { canonical: 'hartalika-teej', aliases: ['hartalika teej', 'hartalika-teej', 'hartalika'] },
   { canonical: 'karva-chauth', aliases: ['karva chauth', 'karwa chauth', 'karva-chauth', 'karwa-chauth'] },
-  { canonical: 'vaikunta-ekadashi', aliases: ['vaikunta ekadashi', 'vaikuntha ekadashi', 'vaikunta-ekadashi', 'vaikuntha-ekadashi', 'mokshada ekadashi'] },
   { canonical: 'navratri', aliases: ['navratri', 'navaratri'] },
   { canonical: 'diwali', aliases: ['diwali', 'deepavali', 'divali'] },
   { canonical: 'janmashtami', aliases: ['janmashtami', 'krishna jayanti', 'gokulashtami'] },
   { canonical: 'radha-ashtami', aliases: ['radha ashtami', 'radha-ashtami', 'radhashtami', 'radha jayanti'] },
   { canonical: 'holi', aliases: ['holi', 'holika'] },
   { canonical: 'gurpurab', aliases: ['gurpurab', 'guru nanak', 'gurupurab'] },
+
+  // Canonical named Ekadashis
+  { canonical: 'pausha-putrada-ekadashi', aliases: ['pausha putrada ekadashi', 'putrada ekadashi', 'pausha-putrada-ekadashi', 'putrada-ekadashi'] },
+  { canonical: 'shattila-ekadashi', aliases: ['shattila ekadashi', 'shattila-ekadashi'] },
+  { canonical: 'jaya-ekadashi', aliases: ['jaya ekadashi', 'jaya-ekadashi'] },
+  { canonical: 'vijaya-ekadashi', aliases: ['vijaya ekadashi', 'vijaya-ekadashi'] },
+  { canonical: 'amalaki-ekadashi', aliases: ['amalaki ekadashi', 'amalaki-ekadashi'] },
+  { canonical: 'papmochani-ekadashi', aliases: ['papmochani ekadashi', 'papmochani-ekadashi'] },
+  { canonical: 'kamada-ekadashi', aliases: ['kamada ekadashi', 'kamada-ekadashi'] },
+  { canonical: 'varuthini-ekadashi', aliases: ['varuthini ekadashi', 'varuthini-ekadashi'] },
+  { canonical: 'mohini-ekadashi', aliases: ['mohini ekadashi', 'mohini-ekadashi'] },
+  { canonical: 'apara-ekadashi', aliases: ['apara ekadashi', 'apara-ekadashi'] },
+  { canonical: 'yogini-ekadashi', aliases: ['yogini ekadashi', 'yogini-ekadashi'] },
+  { canonical: 'devshayani-ekadashi', aliases: ['devshayani ekadashi', 'devshayani-ekadashi'] },
+  { canonical: 'kamika-ekadashi', aliases: ['kamika ekadashi', 'kamika-ekadashi'] },
+  { canonical: 'shravana-putrada-ekadashi', aliases: ['shravana putrada ekadashi', 'shravana-putrada-ekadashi', 'shravana putrada', 'shravan putrada'] },
+  { canonical: 'aja-ekadashi', aliases: ['aja ekadashi', 'aja-ekadashi'] },
+  { canonical: 'parivartini-ekadashi', aliases: ['parivartini ekadashi', 'parivartini-ekadashi', 'parsva ekadashi', 'parsva-ekadashi'] },
+  { canonical: 'indira-ekadashi', aliases: ['indira ekadashi', 'indira-ekadashi'] },
+  { canonical: 'papankusha-ekadashi', aliases: ['papankusha ekadashi', 'papankusha-ekadashi'] },
+  { canonical: 'rama-ekadashi', aliases: ['rama ekadashi', 'rama-ekadashi'] },
+  { canonical: 'devutthana-ekadashi', aliases: ['devutthana ekadashi', 'devutthana-ekadashi', 'prabodhini ekadashi', 'prabodhini-ekadashi'] },
+  { canonical: 'utpanna-ekadashi', aliases: ['utpanna ekadashi', 'utpanna-ekadashi'] },
+  { canonical: 'saphala-ekadashi', aliases: ['saphala ekadashi', 'saphala-ekadashi'] },
+  { canonical: 'nirjala-ekadashi', aliases: ['nirjala ekadashi', 'nirjala-ekadashi', 'bhimseni ekadashi', 'bhimseni-ekadashi', 'pandava nirjala ekadashi'] },
+  { canonical: 'vaikunta-ekadashi', aliases: ['vaikunta ekadashi', 'vaikuntha ekadashi', 'vaikunta-ekadashi', 'vaikuntha-ekadashi', 'mokshada ekadashi'] },
 ];
 
 const RECURRING_VRAT_ALIASES: Array<{ canonical: string; aliases: string[] }> = [
-  { canonical: 'ekadashi', aliases: ['ekadashi'] },
+  { canonical: 'ekadashi', aliases: ['ekadashi', 'ekadasi', 'ekadashi vrat'] },
   { canonical: 'purnima', aliases: ['purnima', 'poornima'] },
   { canonical: 'amavasya', aliases: ['amavasya', 'amavasai'] },
   { canonical: 'pradosh', aliases: ['pradosh', 'pradosham'] },
@@ -973,22 +1001,105 @@ const RECURRING_VRAT_ALIASES: Array<{ canonical: string; aliases: string[] }> = 
   { canonical: 'uposatha', aliases: ['uposatha'] },
 ];
 
-function includesAlias(value: string, aliases: string[]): boolean {
-  return aliases.some((alias) => value.includes(alias));
+function matchesExactAlias(value: string, aliases: string[]): boolean {
+  const normVal = value.toLowerCase().trim();
+  const spaceVal = normVal.replace(/[-_]/g, ' ');
+  return aliases.some((alias) => {
+    const a = alias.toLowerCase().trim();
+    return normVal === a || spaceVal === a.replace(/[-_]/g, ' ');
+  });
+}
+
+function matchesBoundaryAlias(value: string, alias: string): boolean {
+  const t = ' ' + value.toLowerCase().trim().replace(/[-_]/g, ' ') + ' ';
+  const a = ' ' + alias.toLowerCase().trim().replace(/[-_]/g, ' ') + ' ';
+  return t.includes(a);
 }
 
 function resolveCanonicalVratKey(slug: string): string | null {
   const n = slug.toLowerCase().trim();
 
+  // 1. Exact match against named vrat aliases
   for (const entry of NAMED_VRAT_ALIASES) {
-    if (includesAlias(n, entry.aliases)) return entry.canonical;
+    if (matchesExactAlias(n, entry.aliases)) return entry.canonical;
   }
 
+  // 2. Exact match against recurring vrat aliases
   for (const entry of RECURRING_VRAT_ALIASES) {
-    if (includesAlias(n, entry.aliases)) return entry.canonical;
+    if (matchesExactAlias(n, entry.aliases)) return entry.canonical;
+  }
+
+  // 3. Boundary match against named vrat aliases (longer/more specific aliases evaluated first)
+  const flattenedNamed = NAMED_VRAT_ALIASES.flatMap((entry) =>
+    entry.aliases.map((alias) => ({ canonical: entry.canonical, alias }))
+  ).sort((a, b) => b.alias.length - a.alias.length);
+
+  for (const item of flattenedNamed) {
+    if (matchesBoundaryAlias(n, item.alias)) return item.canonical;
+  }
+
+  // 4. Boundary match against non-ekadashi recurring vrat aliases
+  for (const entry of RECURRING_VRAT_ALIASES) {
+    if (entry.canonical === 'ekadashi') continue;
+    for (const alias of entry.aliases) {
+      if (matchesBoundaryAlias(n, alias)) return entry.canonical;
+    }
   }
 
   return null;
+}
+
+function buildVratDataFromFestival(festival: FestivalContent): VratData {
+  const isEkadashi = festival.definitionKey.includes('ekadashi');
+  const publishable = isFestivalPublishable(festival);
+
+  const nameEn = resolveFestivalText(festival.name, 'en') || festival.name.value.en || festival.definitionKey;
+  const nameHi = resolveFestivalText(festival.name, 'hi') || festival.name.value.hi;
+
+  const taglineEn = resolveFestivalText(festival.tagline, 'en') || (isEkadashi ? 'The Sacred Ekadashi Observance' : 'A Sacred Observance');
+  const taglineHi = resolveFestivalText(festival.tagline, 'hi') || (isEkadashi ? 'पवित्र एकादशी व्रत' : 'पावन पर्व');
+
+  const significanceEn = resolveFestivalText(festival.significance, 'en');
+  const significanceHi = resolveFestivalText(festival.significance, 'hi');
+
+  const ritualsEn = resolveFestivalList(festival.rituals, 'en');
+  const ritualsHi = resolveFestivalList(festival.rituals, 'hi');
+  const practiceEn = ritualsEn.length > 0 ? ritualsEn.join('\n\n') : '';
+  const practiceHi = ritualsHi.length > 0 ? ritualsHi.join('\n\n') : '';
+
+  const dosEn = resolveFestivalList(festival.dos, 'en');
+  const dosHi = resolveFestivalList(festival.dos, 'hi');
+  const dontsEn = resolveFestivalList(festival.donts, 'en');
+  const dontsHi = resolveFestivalList(festival.donts, 'hi');
+  const pujaItemsEn = resolveFestivalList(festival.pujaItems, 'en');
+  const pujaItemsHi = resolveFestivalList(festival.pujaItems, 'hi');
+
+  const mantraText = festival.mantra && isFestivalPublishable(festival) ? festival.mantra.sanskrit : '';
+
+  return {
+    id: festival.definitionKey,
+    emoji: festival.emoji || '🌿',
+    name: nameEn,
+    nameLocal: nameHi,
+    tagline: taglineEn,
+    taglineLocal: taglineHi,
+    significance: significanceEn,
+    significanceLocal: significanceHi,
+    practice: practiceEn,
+    practiceLocal: practiceHi,
+    mantra: mantraText,
+    mantraLocal: mantraText,
+    fastingType: isEkadashi ? 'nirjala' : undefined,
+    breakFastTime: isEkadashi ? 'Next day (Dwadashi) after sunrise within the parana window' : undefined,
+    breakFastTimeLocal: isEkadashi ? 'अगले दिन (द्वादशी) को सूर्योदय के उपरांत पारणा मुहूर्त में' : undefined,
+    dos: dosEn.length > 0 ? dosEn : undefined,
+    dosLocal: dosHi.length > 0 ? dosHi : undefined,
+    donts: dontsEn.length > 0 ? dontsEn : undefined,
+    dontsLocal: dontsHi.length > 0 ? dontsHi : undefined,
+    pujaItems: pujaItemsEn.length > 0 ? pujaItemsEn : undefined,
+    pujaItemsLocal: pujaItemsHi.length > 0 ? pujaItemsHi : undefined,
+    underReview: !publishable,
+  };
 }
 
 export function lookupVratData(slug: string): VratData | null {
@@ -1000,14 +1111,19 @@ export function lookupVratData(slug: string): VratData | null {
   }
 
   const canonical = resolveCanonicalVratKey(slug);
-  if (!canonical) return null;
+  const targetKey = canonical ?? slug.toLowerCase().trim();
 
-  if (canonical in NAMED_VRAT_DATABASE) {
-    return NAMED_VRAT_DATABASE[canonical as keyof typeof NAMED_VRAT_DATABASE];
+  if (targetKey in NAMED_VRAT_DATABASE) {
+    return NAMED_VRAT_DATABASE[targetKey as keyof typeof NAMED_VRAT_DATABASE];
   }
-  if (canonical in VRAT_DATABASE) {
-    return VRAT_DATABASE[canonical as keyof typeof VRAT_DATABASE];
+  if (targetKey in VRAT_DATABASE) {
+    return VRAT_DATABASE[targetKey as keyof typeof VRAT_DATABASE];
   }
+
+  if (targetKey in FESTIVAL_CONTENT_BY_SLUG) {
+    return buildVratDataFromFestival(FESTIVAL_CONTENT_BY_SLUG[targetKey]);
+  }
+
   return null;
 }
 
