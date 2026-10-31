@@ -725,3 +725,14 @@ test('Flop-Ear and Dusty story uses six paragraph-aligned offline scenes', () =>
     assert.ok(getPanchatantraSceneArtwork('panchatantra-flop-ear-and-dusty', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });
+
+test('The Jackal Who Killed No Elephants story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-jackal-who-killed-no-elephants');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-jackal-who-killed-no-elephants'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-jackal-who-killed-no-elephants'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-jackal-who-killed-no-elephants', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});

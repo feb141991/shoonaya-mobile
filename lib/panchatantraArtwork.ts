@@ -78,6 +78,7 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-fiend-who-washed-his-feet': require('@/assets/panchatantra/fiend-who-washed-his-feet-1.webp'),
   'panchatantra-handsome-and-theodore': require('@/assets/panchatantra/handsome-and-theodore-1.webp'),
   'panchatantra-flop-ear-and-dusty': require('@/assets/panchatantra/flop-ear-and-dusty-1.webp'),
+  'panchatantra-jackal-who-killed-no-elephants': require('@/assets/panchatantra/jackal-who-killed-no-elephants-1.webp'),
 };
 
 /**
@@ -558,6 +559,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/flop-ear-and-dusty-4.webp'),
     require('@/assets/panchatantra/flop-ear-and-dusty-5.webp'),
     require('@/assets/panchatantra/flop-ear-and-dusty-6.webp'),
+  ],
+  'panchatantra-jackal-who-killed-no-elephants': [
+    require('@/assets/panchatantra/jackal-who-killed-no-elephants-1.webp'),
+    require('@/assets/panchatantra/jackal-who-killed-no-elephants-2.webp'),
+    require('@/assets/panchatantra/jackal-who-killed-no-elephants-3.webp'),
+    require('@/assets/panchatantra/jackal-who-killed-no-elephants-4.webp'),
+    require('@/assets/panchatantra/jackal-who-killed-no-elephants-5.webp'),
+    require('@/assets/panchatantra/jackal-who-killed-no-elephants-6.webp'),
   ],
 };
 
