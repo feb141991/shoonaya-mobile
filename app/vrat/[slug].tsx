@@ -698,38 +698,15 @@ export default function VratDetailScreen() {
     ) : null}
     </>
   );
-  const underReviewCard = vrat.underReview ? (
-    <View
-      style={{
-        padding: 16,
-        marginBottom: 16,
-        borderRadius: RADII.md,
-        backgroundColor: theme.cardSoft,
-        borderWidth: 1,
-        borderColor: theme.borderSoft,
-      }}
-    >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-        <Feather name="clock" size={15} color={theme.brand} />
-        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.brand }}>
-          {copy.contentUnderReview}
-        </Text>
-      </View>
-      <Text style={{ ...TYPE.body, color: theme.dim, fontSize: 12.5 * fsScale, lineHeight: 19 * fsScale }}>
-        {copy.contentUnderReviewDesc}
-      </Text>
-    </View>
-  ) : null;
-
   const significanceCard = selectedSignificance ? (
-    <View style={{ paddingVertical: 12, marginBottom: 16 }}>
+    <Card style={{ padding: 18, marginBottom: 16 }}>
       <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 8 }}>{copy.significance}</Text>
       <Text style={{ ...TYPE.body, color: theme.text, fontSize: TYPE.body.fontSize * fsScale, lineHeight: 24 * fsScale }}>{selectedSignificance}</Text>
-    </View>
+    </Card>
   ) : null;
 
   const practiceCard = (selectedPractice || selectedFastingType || selectedBreakFastTime) ? (
-    <View style={{ paddingVertical: 12, marginBottom: 16 }}>
+    <Card style={{ padding: 18, marginBottom: 16 }}>
       <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 10 }}>{copy.practiceRules}</Text>
       {selectedPractice ? (
         <Text style={{ ...TYPE.body, color: theme.text, fontSize: TYPE.body.fontSize * fsScale, lineHeight: 24 * fsScale }}>{selectedPractice}</Text>
@@ -752,12 +729,13 @@ export default function VratDetailScreen() {
           <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: theme.text, lineHeight: 20 }}>{selectedBreakFastTime}</Text>
         </View>
       ) : null}
-    </View>
+    </Card>
   ) : null;
+
   const dosCard = (
     <>
     {selectedDos && selectedDos.length > 0 ? (
-      <View style={{ paddingVertical: 12, marginBottom: 16 }}>
+      <Card style={{ padding: 18, marginBottom: 16 }}>
         <Text style={{ ...TYPE.section, color: COLORS.success, marginBottom: 10 }}>{copy.dos}</Text>
         {selectedDos.map((item, idx) => (
           <View key={idx} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
@@ -765,14 +743,15 @@ export default function VratDetailScreen() {
             <Text style={{ ...TYPE.body, color: theme.text, flex: 1, fontSize: 14 * fsScale, lineHeight: 22 * fsScale }}>{item}</Text>
           </View>
         ))}
-      </View>
+      </Card>
     ) : null}
     </>
   );
+
   const dontsCard = (
     <>
     {selectedDonts && selectedDonts.length > 0 ? (
-      <View style={{ paddingVertical: 12, marginBottom: 16 }}>
+      <Card style={{ padding: 18, marginBottom: 16 }}>
         <Text style={{ ...TYPE.section, color: COLORS.danger, marginBottom: 10 }}>{copy.donts}</Text>
         {selectedDonts.map((item, idx) => (
           <View key={idx} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
@@ -780,20 +759,22 @@ export default function VratDetailScreen() {
             <Text style={{ ...TYPE.body, color: theme.text, flex: 1, fontSize: 14 * fsScale, lineHeight: 22 * fsScale }}>{item}</Text>
           </View>
         ))}
-      </View>
+      </Card>
     ) : null}
     </>
   );
+
   const mantraCard = selectedMantra ? (
-    <View style={{ padding: 18, marginBottom: 16, borderRadius: RADII.md, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.borderSoft }}>
+    <Card style={{ padding: 18, marginBottom: 16 }}>
       <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 6 }}>{copy.mantra}</Text>
       <Text style={{ fontFamily: FONTS.serif, fontSize: 18 * fsScale, lineHeight: 26 * fsScale, color: theme.text, fontStyle: 'italic', textAlign: 'center', marginVertical: 8 }}>
         {selectedMantra}
       </Text>
-    </View>
+    </Card>
   ) : null;
+
   const kathaCard = linkedKatha && linkedKathaBody.length > 0 ? (
-    <View style={{ paddingVertical: 12, marginBottom: 16 }}>
+    <Card style={{ padding: 18, marginBottom: 16 }}>
       <Text style={{ ...TYPE.section, color: theme.brand, marginBottom: 6 }}>{copy.katha}</Text>
       <Text style={{ fontFamily: FONTS.serifBold, fontSize: 22 * fsScale, lineHeight: 28 * fsScale, color: theme.text }}>{linkedKathaTitle}</Text>
       {linkedKathaBody.map((paragraph, idx) => (
@@ -816,7 +797,7 @@ export default function VratDetailScreen() {
         <Feather name="book-open" size={14} color={theme.brand} />
         <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: theme.brand }}>{copy.openKatha}</Text>
       </PressableSurface>
-    </View>
+    </Card>
   ) : null;
   const chapterSection: Record<VratChapterKey, ReactNode> = {
     significance: significanceCard,
@@ -911,7 +892,6 @@ export default function VratDetailScreen() {
           {currentChapterIndex === 0 ? (
             <>
               {headerCard}
-              {underReviewCard}
               {observeCard}
               {statsCard}
             </>
@@ -922,7 +902,6 @@ export default function VratDetailScreen() {
       ) : (
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
           {headerCard}
-          {underReviewCard}
           {observeCard}
           {statsCard}
           {significanceCard}

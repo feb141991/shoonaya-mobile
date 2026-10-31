@@ -348,11 +348,21 @@ export const VratFastingCard = memo(function VratFastingCard({
 
       {/* Parana Timing if available */}
       {paranaTime ? (
-        <View style={styles.paranaRow}>
-          <Feather name="sunrise" size={14} color={theme.brand} />
-          <Text style={[styles.paranaLabel, { color: theme.dim }]}>
-            {copy.paranaWindow}:
-          </Text>
+        <View
+          style={[
+            styles.paranaBox,
+            {
+              backgroundColor: isDark ? 'rgba(212, 175, 55, 0.08)' : 'rgba(180, 130, 40, 0.06)',
+              borderColor: isDark ? 'rgba(212, 175, 55, 0.2)' : 'rgba(180, 130, 40, 0.16)',
+            },
+          ]}
+        >
+          <View style={styles.paranaHeader}>
+            <Feather name="sunrise" size={14} color={theme.brand} />
+            <Text style={[styles.paranaLabel, { color: theme.brand }]}>
+              {copy.paranaWindow}
+            </Text>
+          </View>
           <Text style={[styles.paranaTime, { color: theme.text }]}>
             {paranaTime}
           </Text>
@@ -539,20 +549,29 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.sansSemiBold,
     fontSize: 14,
   },
-  paranaRow: {
+  paranaBox: {
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 10,
+    marginBottom: 14,
+  },
+  paranaHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 14,
-    paddingHorizontal: 4,
+    marginBottom: 4,
   },
   paranaLabel: {
-    fontFamily: FONTS.sans,
+    fontFamily: FONTS.sansSemiBold,
     fontSize: 11,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   paranaTime: {
-    fontFamily: FONTS.sansSemiBold,
-    fontSize: 12,
+    fontFamily: FONTS.sans,
+    fontSize: 12.5,
+    lineHeight: 18,
+    flexShrink: 1,
   },
   reminderRow: {
     flexDirection: 'row',
