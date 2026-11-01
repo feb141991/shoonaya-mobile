@@ -2584,16 +2584,16 @@ function HomeContent() {
               opacity: dharmVeerDone ? 0.72 : 1,
             }}
           >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1, minWidth: 0 }}>
               <IconTile name="dharmveer" fallbackGlyph={dharmVeerIcon} size="md" color={dharmVeerColor} accent={dharmVeerColor} />
-              <View style={{ flex: 1 }}>
-                <Text style={{ ...TYPE.chip, letterSpacing: 1.25, textTransform: 'uppercase', color: theme.brand }}>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={{ ...TYPE.chip, letterSpacing: 1.25, textTransform: 'uppercase', color: theme.brand, lineHeight: 16 }}>
                   {language === 'hi' ? 'धर्म वीर' : language === 'pa' ? 'ਧਰਮ ਵੀਰ' : 'Dharm Veer'}
                 </Text>
-                <Text style={{ marginTop: 3, ...TYPE.cardHeading, color: theme.text }} numberOfLines={1}>
+                <Text style={{ marginTop: 3, ...TYPE.cardHeading, color: theme.text, lineHeight: 24 }} numberOfLines={1}>
                   {dharmVeerCardCopy.name}
                 </Text>
-                <Text style={{ marginTop: 2, ...TYPE.caption, color: theme.dim }} numberOfLines={1}>
+                <Text style={{ marginTop: 2, ...TYPE.caption, color: theme.dim, lineHeight: 17 }} numberOfLines={1}>
                   {dharmVeerDone
                     ? (language === 'hi' ? 'आज सेवा पूर्ण' : language === 'pa' ? 'ਅੱਜ ਦੀ ਸੇਵਾ ਪੂਰੀ' : 'Seva given today')
                     : (dharmVeerCardCopy.tagline || state.dharmVeer.tagline)}
@@ -2603,7 +2603,7 @@ function HomeContent() {
             {dharmVeerDone ? (
               <Feather name="check-circle" size={20} color={dharmVeerColor} />
             ) : (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                 <View
                   style={{
                     borderRadius: 999,

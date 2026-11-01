@@ -235,7 +235,7 @@ export function QuizSparkCard({
       {quizDone ? (
         <Feather name="check-circle" size={20} color={brand} />
       ) : (
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexShrink: 0 }}>
           {quizStreak > 1 ? (
             <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
               <Feather name="zap" size={12} color={brand} />
