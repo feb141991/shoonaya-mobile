@@ -74,7 +74,7 @@
     "production": {
       "android": {
         "serviceAccountKeyPath": "./google-service-account.json",
-        "track": "internal"
+        "track": "alpha"
       },
       "ios": {
         "appleId": "pprince.ssharma@live.com",
