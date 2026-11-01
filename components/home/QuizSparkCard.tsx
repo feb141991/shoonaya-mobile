@@ -5,7 +5,7 @@ import { useRouter } from "expo-router";
 
 import { IconTile } from "@/components/ui/IconTile";
 import { apiFetch } from "@/lib/api";
-import { COLORS, SHADOWS, TYPE } from "@/lib/constants";
+import { COLORS, FONTS, SHADOWS, TYPE } from "@/lib/constants";
 import { resolveNativeRoute } from "@/lib/routes";
 import { spiritualDate } from "@/lib/spiritualDate";
 import { supabase } from "@/lib/supabase";
@@ -160,6 +160,10 @@ export function QuizSparkCard({
     return null;
   }
 
+  const isHindi = language === "hi";
+  const isPa = language === "pa";
+  const isIndic = isHindi || isPa;
+
   const traditionLabel = copy[quiz.tradition as keyof typeof copy] ?? copy.daily;
   const title = `${traditionLabel} ${copy.quiz}`;
   const previewTitle = propQuestion ?? quiz.question ?? copy.answer;
@@ -170,11 +174,11 @@ export function QuizSparkCard({
       accessibilityLabel={`${title}: ${quizDone ? copy.accessibilityDone : quiz.question}. Tap to ${quizDone ? copy.accessibilityReview : copy.accessibilityPlay}`}
       onPress={() => router.push(resolveNativeRoute("/quiz", "/(tabs)"))}
       style={{
-        minHeight: 70,
+        minHeight: 74,
         width: "100%",
         borderRadius: 22,
         paddingHorizontal: 16,
-        paddingVertical: 11,
+        paddingVertical: 12,
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
@@ -189,13 +193,41 @@ export function QuizSparkCard({
       <View style={{ flexDirection: "row", alignItems: "center", gap: 14, flex: 1, minWidth: 0 }}>
         <IconTile name="quiz" fallbackGlyph="help-circle" size="md" color={brand} accent={COLORS.tileCoral} />
         <View style={{ flex: 1, minWidth: 0 }}>
-          <Text style={{ ...TYPE.chip, letterSpacing: 1.25, textTransform: "uppercase", color: brand }} numberOfLines={1}>
+          <Text
+            style={{
+              ...TYPE.chip,
+              fontFamily: isHindi ? FONTS.devanagariBold : TYPE.chip.fontFamily,
+              letterSpacing: isIndic ? 0.4 : 1.25,
+              textTransform: isIndic ? "none" : "uppercase",
+              color: brand,
+              lineHeight: isIndic ? 18 : 16,
+            }}
+            numberOfLines={1}
+          >
             {title}
           </Text>
-          <Text style={{ marginTop: 3, ...TYPE.cardHeading, color: text }} numberOfLines={1}>
+          <Text
+            style={{
+              marginTop: 3,
+              ...TYPE.cardHeading,
+              fontFamily: isHindi ? FONTS.devanagariBold : TYPE.cardHeading.fontFamily,
+              lineHeight: isIndic ? 26 : 24,
+              color: text,
+            }}
+            numberOfLines={1}
+          >
             {previewTitle}
           </Text>
-          <Text style={{ marginTop: 2, ...TYPE.caption, color: isDark ? COLORS.textDimDark : COLORS.textDimLight }} numberOfLines={1}>
+          <Text
+            style={{
+              marginTop: 2,
+              ...TYPE.caption,
+              fontFamily: isHindi ? FONTS.devanagari : TYPE.caption.fontFamily,
+              lineHeight: isIndic ? 19 : 17,
+              color: isDark ? COLORS.textDimDark : COLORS.textDimLight,
+            }}
+            numberOfLines={1}
+          >
             {quizDone ? copy.completed : copy.memory}
           </Text>
         </View>
@@ -207,11 +239,18 @@ export function QuizSparkCard({
           {quizStreak > 1 ? (
             <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
               <Feather name="zap" size={12} color={brand} />
-              <Text style={{ ...TYPE.chip, color: brand }}>{quizStreak}</Text>
+              <Text style={{ ...TYPE.chip, lineHeight: 16, color: brand }}>{quizStreak}</Text>
             </View>
           ) : null}
-          <Text style={{ ...TYPE.chip, color: brand }}>
-            Play
+          <Text
+            style={{
+              ...TYPE.chip,
+              fontFamily: isHindi ? FONTS.devanagariBold : TYPE.chip.fontFamily,
+              lineHeight: isIndic ? 18 : 16,
+              color: brand,
+            }}
+          >
+            {isHindi ? 'खेलें' : isPa ? 'ਖੇਡੋ' : 'Play'}
           </Text>
           <Feather name="chevron-right" size={18} color={brand} />
         </View>

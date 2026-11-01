@@ -65,6 +65,9 @@ export default function QuizScreen() {
   const router = useRouter();
   const appIdentity = useAppIdentity();
   const { language } = useLanguage();
+  const isHindi = language === 'hi';
+  const isPa = language === 'pa';
+  const isIndic = isHindi || isPa;
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
   const theme = themeColor(isDark);
@@ -362,11 +365,29 @@ export default function QuizScreen() {
             <Feather name="x" size={19} color={theme.text} />
           </PressableSurface>
 
-          <View style={{ flex: 1, alignItems: 'center', marginHorizontal: 10 }}>
-            <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 18, textAlign: 'center' }}>
-              Daily Spark
+          <View style={{ flex: 1, alignItems: 'center', marginHorizontal: 10, minWidth: 0 }}>
+            <Text
+              style={{
+                color: text,
+                fontFamily: isHindi ? FONTS.devanagariBold : FONTS.serifBold,
+                fontSize: 18,
+                lineHeight: isHindi ? 26 : 24,
+                textAlign: 'center',
+                includeFontPadding: false,
+              }}
+            >
+              {isHindi ? 'दैनिक स्पार्क' : isPa ? 'ਰੋਜ਼ਾਨਾ ਸਪਾਰਕ' : 'Daily Spark'}
             </Text>
-            <Text style={{ color: textDim, fontFamily: FONTS.sans, fontSize: 12, textAlign: 'center' }}>
+            <Text
+              style={{
+                color: textDim,
+                fontFamily: isHindi ? FONTS.devanagari : FONTS.sans,
+                fontSize: 12,
+                lineHeight: isHindi ? 18 : 16,
+                textAlign: 'center',
+                includeFontPadding: false,
+              }}
+            >
               Jñāna Sadhana · ज्ञान साधना
             </Text>
           </View>
@@ -385,8 +406,16 @@ export default function QuizScreen() {
             }}
           >
             <Feather name="zap" size={13} color={quizAccent} />
-            <Text style={{ color: quizAccent, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
-              +10 Seva
+            <Text
+              style={{
+                color: quizAccent,
+                fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold,
+                fontSize: 12,
+                lineHeight: isHindi ? 17 : 16,
+                includeFontPadding: false,
+              }}
+            >
+              {isHindi ? '+10 सेवा' : isPa ? '+10 ਸੇਵਾ' : '+10 Seva'}
             </Text>
           </View>
         </View>
@@ -407,7 +436,7 @@ export default function QuizScreen() {
               }}
             />
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
                 <View
                   style={{
                     width: 46,
@@ -422,20 +451,31 @@ export default function QuizScreen() {
                 >
                   <Feather name="help-circle" size={22} color={quizAccent} />
                 </View>
-                <View style={{ flex: 1 }}>
+                <View style={{ flex: 1, minWidth: 0 }}>
                   <Text
                     style={{
                       color: quizAccent,
-                      fontFamily: FONTS.sansSemiBold,
+                      fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold,
                       fontSize: 11,
-                      letterSpacing: 1.6,
-                      textTransform: 'uppercase',
+                      lineHeight: isIndic ? 17 : 15,
+                      letterSpacing: isIndic ? 0.4 : 1.4,
+                      textTransform: isIndic ? 'none' : 'uppercase',
+                      includeFontPadding: false,
                     }}
                   >
-                    Daily Spark
+                    {isHindi ? 'दैनिक स्पार्क' : isPa ? 'ਰੋਜ਼ਾਨਾ ਸਪਾਰਕ' : 'Daily Spark'}
                   </Text>
-                  <Text style={{ color: textDim, fontFamily: FONTS.sansMedium, fontSize: 13 }} numberOfLines={1}>
-                    {traditionEmoji} {traditionLabel} · Daily Shastra
+                  <Text
+                    style={{
+                      color: textDim,
+                      fontFamily: isHindi ? FONTS.devanagari : FONTS.sansMedium,
+                      fontSize: 13,
+                      lineHeight: isIndic ? 19 : 18,
+                      includeFontPadding: false,
+                    }}
+                    numberOfLines={1}
+                  >
+                    {traditionEmoji} {traditionLabel} · {isHindi ? 'दैनिक शास्त्र' : isPa ? 'ਰੋਜ਼ਾਨਾ ਸ਼ਾਸਤਰ' : 'Daily Shastra'}
                   </Text>
                 </View>
               </View>
@@ -453,18 +493,33 @@ export default function QuizScreen() {
                   <Text
                     style={{
                       color: isCorrect ? COLORS.success : COLORS.danger,
-                      fontFamily: FONTS.sansSemiBold,
+                      fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold,
                       fontSize: 12,
+                      lineHeight: isIndic ? 17 : 16,
+                      includeFontPadding: false,
                     }}
                   >
-                    {isCorrect ? 'Correct · +10' : 'Answered · +2'}
+                    {isCorrect
+                      ? (isHindi ? 'सही · +10' : isPa ? 'ਸਹੀ · +10' : 'Correct · +10')
+                      : (isHindi ? 'उत्तर दिया · +2' : isPa ? 'ਜਵਾਬ ਦਿੱਤਾ · +2' : 'Answered · +2')}
                   </Text>
                 </View>
               ) : null}
             </View>
 
             <View style={{ gap: 10 }}>
-              <Text style={{ color: text, ...TYPE.hero }}>{activeQuiz.question}</Text>
+              <Text
+                style={{
+                  color: text,
+                  fontFamily: isHindi ? FONTS.devanagariBold : TYPE.hero.fontFamily,
+                  fontSize: isHindi ? 24 : TYPE.hero.fontSize,
+                  lineHeight: isHindi ? 34 : TYPE.hero.lineHeight,
+                  letterSpacing: isHindi ? 0 : undefined,
+                  includeFontPadding: false,
+                }}
+              >
+                {activeQuiz.question}
+              </Text>
               <View
                 style={{
                   height: 6,
@@ -482,12 +537,30 @@ export default function QuizScreen() {
                 />
               </View>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1.1, textTransform: 'uppercase' }}>
-                  Question 1 of 1
+                <Text
+                  style={{
+                    color: textDim,
+                    fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold,
+                    fontSize: 11,
+                    lineHeight: isIndic ? 16 : 15,
+                    letterSpacing: isIndic ? 0.4 : 1.1,
+                    textTransform: isIndic ? 'none' : 'uppercase',
+                    includeFontPadding: false,
+                  }}
+                >
+                  {isHindi ? 'प्रश्न 1 / 1' : isPa ? 'ਸਵਾਲ 1 / 1' : 'Question 1 of 1'}
                 </Text>
                 {!answeredToday ? (
-                  <Text style={{ color: quizAccent, fontFamily: FONTS.sansMedium, fontSize: 11 }}>
-                    Earn +10 Karma points
+                  <Text
+                    style={{
+                      color: quizAccent,
+                      fontFamily: isHindi ? FONTS.devanagari : FONTS.sansMedium,
+                      fontSize: 11,
+                      lineHeight: isIndic ? 16 : 15,
+                      includeFontPadding: false,
+                    }}
+                  >
+                    {isHindi ? '+10 कर्म अंक प्राप्त करें' : isPa ? '+10 ਕਰਮ ਅੰਕ ਪ੍ਰਾਪਤ ਕਰੋ' : 'Earn +10 Karma points'}
                   </Text>
                 ) : null}
               </View>
@@ -553,9 +626,18 @@ export default function QuizScreen() {
                         backgroundColor: letterBg,
                       }}
                     >
-                      <Text style={{ color: letterColor, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>{letter}</Text>
+                      <Text style={{ color: letterColor, fontFamily: FONTS.sansSemiBold, fontSize: 13, lineHeight: 18, textAlign: 'center', includeFontPadding: false }}>{letter}</Text>
                     </View>
-                    <Text style={{ flex: 1, color: optionText, fontFamily: FONTS.sansMedium, fontSize: 15, lineHeight: 21 }}>
+                    <Text
+                      style={{
+                        flex: 1,
+                        color: optionText,
+                        fontFamily: isHindi ? FONTS.devanagari : FONTS.sansMedium,
+                        fontSize: 15,
+                        lineHeight: isIndic ? 24 : 22,
+                        includeFontPadding: false,
+                      }}
+                    >
                       {option}
                     </Text>
                     {showFeedback && isAnswerCorrect ? (
@@ -582,24 +664,68 @@ export default function QuizScreen() {
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <Feather name="book-open" size={14} color={isCorrect ? COLORS.success : quizAccent} />
-                  <Text style={{ color: isCorrect ? COLORS.success : quizAccent, fontFamily: FONTS.sansSemiBold, fontSize: 11, letterSpacing: 1.4, textTransform: 'uppercase' }}>
-                    Today&apos;s Wisdom
+                  <Text
+                    style={{
+                      color: isCorrect ? COLORS.success : quizAccent,
+                      fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold,
+                      fontSize: 11,
+                      lineHeight: isIndic ? 16 : 15,
+                      letterSpacing: isIndic ? 0.4 : 1.4,
+                      textTransform: isIndic ? 'none' : 'uppercase',
+                      includeFontPadding: false,
+                    }}
+                  >
+                    {isHindi ? 'आज का ज्ञान' : isPa ? 'ਅੱਜ ਦਾ ਗਿਆਨ' : "Today's Wisdom"}
                   </Text>
                 </View>
                 {activeQuiz.fact ? (
-                  <Text style={{ color: text, ...TYPE.cardHeading, lineHeight: 24 }}>
+                  <Text
+                    style={{
+                      color: text,
+                      fontFamily: isHindi ? FONTS.devanagariBold : TYPE.cardHeading.fontFamily,
+                      fontSize: TYPE.cardHeading.fontSize,
+                      lineHeight: isIndic ? 26 : 24,
+                      includeFontPadding: false,
+                    }}
+                  >
                     {activeQuiz.fact}
                   </Text>
                 ) : null}
-                <Text style={{ color: isCorrect ? COLORS.success : text, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>
-                  {isCorrect ? 'Sadhu! Your reflection holds true.' : 'The question stays with you. That is the teaching.'}
+                <Text
+                  style={{
+                    color: isCorrect ? COLORS.success : text,
+                    fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold,
+                    fontSize: 15,
+                    lineHeight: isIndic ? 22 : 20,
+                    includeFontPadding: false,
+                  }}
+                >
+                  {isCorrect
+                    ? (isHindi ? 'साधु! आपका चिंतन सत्य है।' : isPa ? 'ਸਾਧੂ! ਤੁਹਾਡਾ ਚਿੰਤਨ ਸੱਚਾ ਹੈ।' : 'Sadhu! Your reflection holds true.')
+                    : (isHindi ? 'प्रश्न आपके साथ रहता है। यही शिक्षा है।' : isPa ? 'ਸਵਾਲ ਤੁਹਾਡੇ ਨਾਲ ਰਹਿੰਦਾ ਹੈ। ਇਹੀ ਸਿੱਖਿਆ ਹੈ।' : 'The question stays with you. That is the teaching.')}
                 </Text>
-                <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 22 }}>
-                  {state.todayResponse?.explanation ?? activeQuiz.explanation ?? 'Your answer has been recorded for today.'}
+                <Text
+                  style={{
+                    color: text,
+                    fontFamily: isHindi ? FONTS.devanagari : FONTS.sans,
+                    fontSize: 14,
+                    lineHeight: isIndic ? 23 : 22,
+                    includeFontPadding: false,
+                  }}
+                >
+                  {state.todayResponse?.explanation ?? activeQuiz.explanation ?? (isHindi ? 'आज का आपका उत्तर दर्ज कर लिया गया है।' : isPa ? 'ਅੱਜ ਦਾ ਤੁਹਾਡਾ ਜਵਾਬ ਦਰਜ ਕਰ ਲਿਆ ਗਿਆ ਹੈ।' : 'Your answer has been recorded for today.')}
                 </Text>
                 {activeQuiz.source ? (
-                  <Text style={{ color: textDim, fontFamily: FONTS.sansMedium, fontSize: 12 }}>
-                    Source: {activeQuiz.source}
+                  <Text
+                    style={{
+                      color: textDim,
+                      fontFamily: isHindi ? FONTS.devanagari : FONTS.sansMedium,
+                      fontSize: 12,
+                      lineHeight: isIndic ? 18 : 16,
+                      includeFontPadding: false,
+                    }}
+                  >
+                    {isHindi ? 'स्रोत: ' : isPa ? 'ਸਰੋਤ: ' : 'Source: '}{activeQuiz.source}
                   </Text>
                 ) : null}
               </View>
@@ -655,11 +781,11 @@ export default function QuizScreen() {
                   borderColor: quizBorder,
                 }}
               >
-                <Text style={{ color: quizAccent, fontFamily: FONTS.sansSemiBold, fontSize: 18 }}>
+                <Text style={{ color: quizAccent, fontFamily: FONTS.sansSemiBold, fontSize: 18, lineHeight: 24 }}>
                   {saveData?.streak ?? 1}
                 </Text>
-                <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 10, letterSpacing: 1, textTransform: 'uppercase' }}>
-                  Day streak
+                <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 10, lineHeight: 14, letterSpacing: 1, textTransform: 'uppercase' }}>
+                  {isHindi ? 'दिन की लड़ी' : 'Day streak'}
                 </Text>
               </View>
               <View
@@ -672,11 +798,11 @@ export default function QuizScreen() {
                   borderColor: isCorrect ? COLORS.successBorder : COLORS.dangerBorder,
                 }}
               >
-                <Text style={{ color: isCorrect ? COLORS.success : COLORS.danger, fontFamily: FONTS.sansSemiBold, fontSize: 18 }}>
-                  {isCorrect ? 'Yes' : 'No'}
+                <Text style={{ color: isCorrect ? COLORS.success : COLORS.danger, fontFamily: FONTS.sansSemiBold, fontSize: 18, lineHeight: 24 }}>
+                  {isCorrect ? (isHindi ? 'हाँ' : 'Yes') : (isHindi ? 'नहीं' : 'No')}
                 </Text>
-                <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 10, letterSpacing: 1, textTransform: 'uppercase' }}>
-                  Correct
+                <Text style={{ color: textDim, fontFamily: FONTS.sansSemiBold, fontSize: 10, lineHeight: 14, letterSpacing: 1, textTransform: 'uppercase' }}>
+                  {isHindi ? 'उत्तर' : 'Correct'}
                 </Text>
               </View>
             </View>
@@ -694,7 +820,9 @@ export default function QuizScreen() {
                 alignItems: 'center',
               }}
             >
-              <Text style={{ color: COLORS.ink, fontFamily: FONTS.sansSemiBold, fontSize: 15 }}>Share result</Text>
+              <Text style={{ color: COLORS.ink, fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 15, lineHeight: 20 }}>
+                {isHindi ? 'परिणाम साझा करें' : 'Share result'}
+              </Text>
             </PressableSurface>
           </Card>
         ) : null}
@@ -704,7 +832,7 @@ export default function QuizScreen() {
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Feather name="award" size={17} color={brand} />
-              <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 16 }}>
+              <Text style={{ color: text, fontFamily: FONTS.serifBold, fontSize: 16, lineHeight: 22 }}>
                 Jñāna Sadhana Benefits
               </Text>
             </View>
@@ -716,7 +844,7 @@ export default function QuizScreen() {
                 paddingVertical: 4,
               }}
             >
-              <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 11 }}>Daily Karma</Text>
+              <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 11, lineHeight: 15 }}>Daily Karma</Text>
             </View>
           </View>
 
@@ -732,8 +860,8 @@ export default function QuizScreen() {
                 gap: 4,
               }}
             >
-              <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 17 }}>+10</Text>
-              <Text style={{ color: textDim, fontFamily: FONTS.sansMedium, fontSize: 11 }}>Seva Karma</Text>
+              <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 17, lineHeight: 22 }}>+10</Text>
+              <Text style={{ color: textDim, fontFamily: FONTS.sansMedium, fontSize: 11, lineHeight: 15 }}>Seva Karma</Text>
             </View>
             <View
               style={{
@@ -746,10 +874,10 @@ export default function QuizScreen() {
                 gap: 4,
               }}
             >
-              <Text style={{ color: quizAccent, fontFamily: FONTS.sansSemiBold, fontSize: 17 }}>
+              <Text style={{ color: quizAccent, fontFamily: FONTS.sansSemiBold, fontSize: 17, lineHeight: 22 }}>
                 {saveData?.streak ?? (answeredToday ? 1 : 0)}
               </Text>
-              <Text style={{ color: textDim, fontFamily: FONTS.sansMedium, fontSize: 11 }}>Day Streak</Text>
+              <Text style={{ color: textDim, fontFamily: FONTS.sansMedium, fontSize: 11, lineHeight: 15 }}>Day Streak</Text>
             </View>
             <View
               style={{
@@ -762,10 +890,10 @@ export default function QuizScreen() {
                 gap: 4,
               }}
             >
-              <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 14 }} numberOfLines={1}>
+              <Text style={{ color: text, fontFamily: FONTS.sansSemiBold, fontSize: 14, lineHeight: 18 }} numberOfLines={1}>
                 {traditionLabel}
               </Text>
-              <Text style={{ color: textDim, fontFamily: FONTS.sansMedium, fontSize: 11 }}>Tradition</Text>
+              <Text style={{ color: textDim, fontFamily: FONTS.sansMedium, fontSize: 11, lineHeight: 15 }}>Tradition</Text>
             </View>
           </View>
         </Card>
@@ -795,13 +923,15 @@ export default function QuizScreen() {
             <Text
               style={{
                 color: brand,
-                fontFamily: FONTS.sansSemiBold,
+                fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold,
                 fontSize: 11,
-                letterSpacing: 1.2,
-                textTransform: 'uppercase',
+                lineHeight: isHindi ? 16 : 15,
+                letterSpacing: isHindi ? 0.4 : 1.2,
+                textTransform: isHindi ? 'none' : 'uppercase',
+                includeFontPadding: false,
               }}
             >
-              Sacred Reflection · शास्त्र विचार
+              {isHindi ? 'पवित्र चिंतन · शास्त्र विचार' : 'Sacred Reflection · शास्त्र विचार'}
             </Text>
           </View>
           <Text
