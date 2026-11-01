@@ -80,6 +80,7 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-flop-ear-and-dusty': require('@/assets/panchatantra/flop-ear-and-dusty-1.webp'),
   'panchatantra-jackal-who-killed-no-elephants': require('@/assets/panchatantra/jackal-who-killed-no-elephants-1.webp'),
   'panchatantra-ungrateful-wife': require('@/assets/panchatantra/ungrateful-wife-1.webp'),
+  'panchatantra-king-joy-and-secretary-splendour': require('@/assets/panchatantra/king-joy-and-secretary-splendour-1.webp'),
 };
 
 /**
@@ -576,6 +577,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/ungrateful-wife-4.webp'),
     require('@/assets/panchatantra/ungrateful-wife-5.webp'),
     require('@/assets/panchatantra/ungrateful-wife-6.webp'),
+  ],
+  'panchatantra-king-joy-and-secretary-splendour': [
+    require('@/assets/panchatantra/king-joy-and-secretary-splendour-1.webp'),
+    require('@/assets/panchatantra/king-joy-and-secretary-splendour-2.webp'),
+    require('@/assets/panchatantra/king-joy-and-secretary-splendour-3.webp'),
+    require('@/assets/panchatantra/king-joy-and-secretary-splendour-4.webp'),
+    require('@/assets/panchatantra/king-joy-and-secretary-splendour-5.webp'),
+    require('@/assets/panchatantra/king-joy-and-secretary-splendour-6.webp'),
   ],
 };
 
