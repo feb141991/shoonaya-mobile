@@ -758,3 +758,14 @@ test('King Joy and Secretary Splendour story uses six paragraph-aligned offline 
     assert.ok(getPanchatantraSceneArtwork('panchatantra-king-joy-and-secretary-splendour', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });
+
+test('The Farmer\'s Wife story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-farmers-wife');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-farmers-wife'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-farmers-wife'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-farmers-wife', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
