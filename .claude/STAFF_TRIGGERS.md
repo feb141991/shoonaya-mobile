@@ -25,6 +25,9 @@ Native staff are callable from sessions in `shoonaya-mobile`. Backend staff are 
 
 | Staff | Repo | Type | Owns |
 |---|---|---|---|
+| `shoonaya-cto` | Native (reads both) | Head, read-only | Weekly engineering brief across both repos |
+| `shoonaya-ciso` | Native (reads both) | Head, read-only | Security and privacy brief (not legal advice) |
+| `shoonaya-cfo` | Native (reads both) | Head, read-only | Infrastructure spend brief from activity, never invented amounts |
 | `shoonaya-release-gatekeeper` | Native | Agent, read-only | What can honestly be claimed about a change (sections 7, 10, 11, 13) |
 | `shoonaya-migration-preflight-reviewer` | Native | Agent, read-only | Five-point pre-flight and Native callers of a migration (section 4) |
 | `shoonaya-calendar-governance-reviewer` | Native | Agent, read-only | Dates, Panchang and observances shown in the app (sections 2, 15, 20) |
@@ -60,11 +63,29 @@ Most backend agents were written in June 2026, before the PWA was retired. For N
 | A tester, device or production reports a bug | `defect-closure` skill | `shoonaya-release-gatekeeper` before closing |
 | Public copy, store listing, notification wording or feature-status claim | Backend `shoonaya-brand-manager` | `shoonaya-content-integrity-reviewer` if it mentions scripture or tradition |
 | Scope or rollout of a feature is unclear | Backend `shoonaya-product-manager` | — |
+| Weekly review, or "what should we do next" | `shoonaya-cto`, `shoonaya-ciso`, `shoonaya-cfo` | Founder decides; heads name which reviewer to run |
+| Store submission, new SDK, new table holding user data | `shoonaya-ciso` | Update store privacy disclosures if data flows changed |
+| New cron, AI call, OTP/WhatsApp send or email producer | `shoonaya-cfo` | Founder decides if the cost is worth it |
 | A session made a durable decision | Backend `shoonaya-knowledge-curator` (fires by hook at the end of backend sessions) | Native: record in `AGENTS.md` or `docs/` |
 
 ## 4. Standard operating procedure for each staff member
 
 Every card answers: when, how to ask, what it needs, what it returns, what it can never do.
+
+### Heads (CTO, CISO, CFO)
+
+The founder is the CEO; heads brief, they never decide. Each produces a one-page brief ending in the top 3
+decisions waiting for the founder, each with a recommendation and evidence, plus what it could not check. Heads ask
+reviewers for detail instead of redoing their work.
+
+| Head | Ask | Main sources | Can never |
+|---|---|---|---|
+| `shoonaya-cto` | "CTO brief" | Git state and CI in both repos, migration drift, open "not verified" items in both `AGENTS.md`, contract snapshots, incident follow-ups, graphify report | Push, build, deploy, apply, write files |
+| `shoonaya-ciso` | "CISO brief", before a store submission | Secrets hygiene, `src/lib/api-auth.ts`, `lib/secureAuthStorage.ts`, RLS in migrations, cache keys, account deletion coverage, third-party data flows, backend `PRIVACY_SECURITY_BASELINE.md`, `verify:compliance-engineering` | Open `.env*` files, query production, call anything compliant |
+| `shoonaya-cfo` | "CFO brief", "is this change expensive" | Backend pushes to `main`, `vercel.json` crons, EAS build and update lists, AI call sites and limits, Twilio and Resend producers | Invent a price, bill or tier; change any plan or setting |
+
+Limits: in a scheduled cloud run, heads see only what is pushed to GitHub. The CFO reports activity, not amounts,
+until the founder supplies dashboard figures.
 
 ### Release gatekeeper (`shoonaya-release-gatekeeper`)
 - **When:** before saying a change is done; before any build, OTA update or status report.
@@ -128,6 +149,7 @@ Each needs its own change and testing. Listed in order of value.
 | H4 | Claude `Stop` hook in Native | Reminds the session to run the release gatekeeper if files changed, and to record decisions (mirrors the backend's knowledge-curator hook) | "Done" claims without evidence |
 | S1 | Weekly cloud routine | Runs the release gatekeeper across both repos: commits not pushed, migrations not applied, builds never smoke-tested | Work silently stuck between states |
 | S2 | Weekly cloud routine | Lists open "not verified on a device" items in `AGENTS.md` and project memory | Device-verification debt piling up |
+| S3 | Weekly cloud routine (Monday) | Runs `shoonaya-cto`, `shoonaya-ciso` and `shoonaya-cfo` and sends the three briefs | Decisions waiting unseen; security and spend drifting unwatched |
 | C1 | Native CI | Add `rollback file exists` and `no new KNOWN_BROKEN entries` checks | Same as H2 and section 11, outside Claude |
 
 ## 6. Decisions that stay with the founder
