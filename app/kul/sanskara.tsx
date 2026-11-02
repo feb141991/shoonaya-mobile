@@ -39,6 +39,8 @@ import { SanskaraNodeSheet } from '@/components/sanskara/SanskaraNodeSheet';
 import { AddChildSheet } from '@/components/sanskara/AddChildSheet';
 import { SharingSheet } from '@/components/sanskara/SharingSheet';
 import { SanskaraHandoverModal } from '@/components/sanskara/SanskaraHandoverModal';
+import { SanskaraHandoverBanner } from '@/components/sanskara/SanskaraHandoverBanner';
+import { handoverStage, type HandoverStage } from '@/lib/sanskaraHandover';
 
 type ActiveSubject =
   | { kind: 'me' }
@@ -180,6 +182,13 @@ export default function SanskaraScreen() {
     if (activeSubject.kind === 'dependent') return activeSubject.dependent.can_edit;
     return false;
   }, [activeSubject]);
+
+  // Where the active child is in the hand-over at 18, from the birth date the server sent. The server still decides what is
+  // allowed; this only says so in time and keeps the start button to the days on which start_claim can succeed.
+  const activeHandover = useMemo<HandoverStage>(
+    () => (activeSubject.kind === 'dependent' ? handoverStage(activeSubject.dependent.birth_date) : { stage: 'minor' }),
+    [activeSubject],
+  );
 
   // Fetch access list when sharing is opened
   const handleOpenSharing = useCallback(
@@ -573,6 +582,18 @@ export default function SanskaraScreen() {
       ) : (
         /* Living Tree Canvas View */
         <View style={styles.canvasContainer}>
+          {activeSubject.kind === 'dependent' ? (
+            <SanskaraHandoverBanner
+              key={activeSubject.dependent.id}
+              dependentName={activeSubject.dependent.display_name}
+              stage={activeHandover}
+              onStart={() => {
+                setHandoverDependent(activeSubject.dependent);
+                setHandoverMode('start');
+                setHandoverModalVisible(true);
+              }}
+            />
+          ) : null}
           <SanskaraTree
             subjectKey={activeSubjectId}
             records={activeRecords}
@@ -602,7 +623,7 @@ export default function SanskaraScreen() {
               </PressableSurface>
             ) : null}
 
-            {activeSubject.kind === 'dependent' && activeSubject.dependent.can_manage ? (
+            {activeSubject.kind === 'dependent' && activeHandover.stage === 'open' ? (
               <PressableSurface
                 onPress={() => {
                   setHandoverDependent(activeSubject.dependent);
@@ -612,7 +633,7 @@ export default function SanskaraScreen() {
                 style={[styles.floatingSecondaryCta, { backgroundColor: theme.card, borderColor: theme.border }]}
               >
                 <Feather name="share-2" size={14} color={theme.brand} />
-                <Text style={[styles.floatingSecondaryText, { color: theme.brand }]}>Hand-over at 18</Text>
+                <Text style={[styles.floatingSecondaryText, { color: theme.brand }]}>Hand over</Text>
               </PressableSurface>
             ) : null}
           </View>
