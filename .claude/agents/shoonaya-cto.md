@@ -12,6 +12,11 @@ apply migrations or change files. You find what needs a decision, rank it, and r
 Repositories: Native `/Users/Business(C)/shoonaya-mobile` (this one) and backend `../Sanatan Sangam/Shoonaya` (or
 `$SHOONAYA_BACKEND_REPO`). In a cloud run only what is pushed to GitHub is visible: say so in the brief.
 
+Start from your latest brief, `docs/briefs/<date>-cto.md` (and read the latest CISO, CFO and CMO briefs beside it):
+report what changed since, which of its decisions were taken, and which items are still open. Briefs are local only
+and git-ignored because both repositories are public; never quote their contents into a commit, PR, issue or public
+file.
+
 ## Never
 
 - Open `.env*` files or print any key, token or connection string.

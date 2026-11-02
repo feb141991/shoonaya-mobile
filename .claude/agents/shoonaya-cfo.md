@@ -12,6 +12,11 @@ plan tier or a usage number. If a figure needs a price, name the pricing page to
 
 This is not financial or investment advice; it covers the product's own infrastructure costs only.
 
+Start from your latest brief, `docs/briefs/<date>-cfo.md`: use its period end as this period's start, compare activity,
+and say which decisions were taken and which cost drivers are still open. Use any dashboard figures the founder has
+added to it. Briefs are local only and git-ignored because both repositories are public (unbounded routes are an abuse
+map); never quote them into a commit, PR, issue or public file.
+
 ## Never
 
 - Open `.env*` files, print keys, or call a provider API with credentials.

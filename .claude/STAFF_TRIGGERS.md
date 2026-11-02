@@ -28,6 +28,7 @@ Native staff are callable from sessions in `shoonaya-mobile`. Backend staff are 
 | `shoonaya-cto` | Native (reads both) | Head, read-only | Weekly engineering brief across both repos |
 | `shoonaya-ciso` | Native (reads both) | Head, read-only | Security and privacy brief (not legal advice) |
 | `shoonaya-cfo` | Native (reads both) | Head, read-only | Infrastructure spend brief from activity, never invented amounts |
+| `shoonaya-cmo` | Native (reads both + web research) | Head, read-only | Brand, launch, SEO, GEO/AEO, backlinks, ASO, social; weekly brief and campaign drafts from `docs/growth/CMO_PLAYBOOK.md` |
 | `shoonaya-release-gatekeeper` | Native | Agent, read-only | What can honestly be claimed about a change (sections 7, 10, 11, 13) |
 | `shoonaya-migration-preflight-reviewer` | Native | Agent, read-only | Five-point pre-flight and Native callers of a migration (section 4) |
 | `shoonaya-calendar-governance-reviewer` | Native | Agent, read-only | Dates, Panchang and observances shown in the app (sections 2, 15, 20) |
@@ -61,9 +62,10 @@ Most backend agents were written in June 2026, before the PWA was retired. For N
 | Scripture, mantra, translation, ritual instruction, story or AI answer text is added or changed | `shoonaya-content-integrity-reviewer` | Backend `shoonaya-pramana-content-reviewer`; then a named human reviewer decides |
 | A PNG, JPEG or WebP is added, replaced or copied into `assets/` | `asset-intake` skill | `shoonaya-release-gatekeeper` checks it was viewed on a device |
 | A tester, device or production reports a bug | `defect-closure` skill | `shoonaya-release-gatekeeper` before closing |
-| Public copy, store listing, notification wording or feature-status claim | Backend `shoonaya-brand-manager` | `shoonaya-content-integrity-reviewer` if it mentions scripture or tradition |
+| Launch plan, campaign, SEO/GEO/ASO or backlink question | `shoonaya-cmo` | Draft copy goes to the brand manager and content integrity reviewer |
+| Public copy, store listing, notification wording or feature-status claim | Backend `shoonaya-brand-manager` (or `shoonaya-cmo` for strategy) | `shoonaya-content-integrity-reviewer` if it mentions scripture or tradition |
 | Scope or rollout of a feature is unclear | Backend `shoonaya-product-manager` | — |
-| Weekly review, or "what should we do next" | `shoonaya-cto`, `shoonaya-ciso`, `shoonaya-cfo` | Founder decides; heads name which reviewer to run |
+| Weekly review, or "what should we do next" | `shoonaya-cto`, `shoonaya-ciso`, `shoonaya-cfo`, `shoonaya-cmo` | Founder decides; heads name which reviewer to run |
 | Store submission, new SDK, new table holding user data | `shoonaya-ciso` | Update store privacy disclosures if data flows changed |
 | New cron, AI call, OTP/WhatsApp send or email producer | `shoonaya-cfo` | Founder decides if the cost is worth it |
 | A session made a durable decision | Backend `shoonaya-knowledge-curator` (fires by hook at the end of backend sessions) | Native: record in `AGENTS.md` or `docs/` |
@@ -72,7 +74,7 @@ Most backend agents were written in June 2026, before the PWA was retired. For N
 
 Every card answers: when, how to ask, what it needs, what it returns, what it can never do.
 
-### Heads (CTO, CISO, CFO)
+### Heads (CTO, CISO, CFO, CMO)
 
 The founder is the CEO; heads brief, they never decide. Each produces a one-page brief ending in the top 3
 decisions waiting for the founder, each with a recommendation and evidence, plus what it could not check. Heads ask
@@ -83,9 +85,13 @@ reviewers for detail instead of redoing their work.
 | `shoonaya-cto` | "CTO brief" | Git state and CI in both repos, migration drift, open "not verified" items in both `AGENTS.md`, contract snapshots, incident follow-ups, graphify report | Push, build, deploy, apply, write files |
 | `shoonaya-ciso` | "CISO brief", before a store submission | Secrets hygiene, `src/lib/api-auth.ts`, `lib/secureAuthStorage.ts`, RLS in migrations, cache keys, account deletion coverage, third-party data flows, backend `PRIVACY_SECURITY_BASELINE.md`, `verify:compliance-engineering` | Open `.env*` files, query production, call anything compliant |
 | `shoonaya-cfo` | "CFO brief", "is this change expensive" | Backend pushes to `main`, `vercel.json` crons, EAS build and update lists, AI call sites and limits, Twilio and Resend producers | Invent a price, bill or tier; change any plan or setting |
+| `shoonaya-cmo` | "CMO brief", "campaign for <festival>", "review this copy" | `docs/growth/CMO_PLAYBOOK.md`, backend claims registry and brand manager, public copy, sitemap, robots, `llms.txt`, JSON-LD, store assets, primary-source policy pages | Post, send, publish, pay, submit store metadata; write dates or verses; invent figures |
 
-Limits: in a scheduled cloud run, heads see only what is pushed to GitHub. The CFO reports activity, not amounts,
-until the founder supplies dashboard figures.
+**Where briefs live.** Each head writes `docs/briefs/<YYYY-MM-DD>-<cto|ciso|cfo|cmo>.md` and starts from its previous
+one. `docs/briefs/` and `docs/growth/` are git-ignored: both repositories are public, and the briefs contain security
+findings, unbounded routes and strategy. Never quote a brief into a commit, PR, issue or public page. A cloud run sees
+only what is pushed to GitHub, so it cannot read these files; the CFO reports activity, not amounts, until the founder
+supplies dashboard figures.
 
 ### Release gatekeeper (`shoonaya-release-gatekeeper`)
 - **When:** before saying a change is done; before any build, OTA update or status report.
@@ -149,7 +155,7 @@ Each needs its own change and testing. Listed in order of value.
 | H4 | Claude `Stop` hook in Native | Reminds the session to run the release gatekeeper if files changed, and to record decisions (mirrors the backend's knowledge-curator hook) | "Done" claims without evidence |
 | S1 | Weekly cloud routine | Runs the release gatekeeper across both repos: commits not pushed, migrations not applied, builds never smoke-tested | Work silently stuck between states |
 | S2 | Weekly cloud routine | Lists open "not verified on a device" items in `AGENTS.md` and project memory | Device-verification debt piling up |
-| S3 | Weekly cloud routine (Monday) | Runs `shoonaya-cto`, `shoonaya-ciso` and `shoonaya-cfo` and sends the three briefs | Decisions waiting unseen; security and spend drifting unwatched |
+| S3 | **Live since 2026-11-03:** local scheduled task `shoonaya-weekly-heads-briefs`, Mondays 09:00 IST, runs while the desktop app is open (else on next launch) | Runs `shoonaya-cto`, `shoonaya-ciso`, `shoonaya-cfo` and `shoonaya-cmo`, writes the four briefs to `docs/briefs/` | Decisions waiting unseen; security and spend drifting unwatched |
 | C1 | Native CI | Add `rollback file exists` and `no new KNOWN_BROKEN entries` checks | Same as H2 and section 11, outside Claude |
 
 ## 6. Decisions that stay with the founder

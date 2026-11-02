@@ -12,6 +12,12 @@ a lawyer.
 
 Repositories: Native `/Users/Business(C)/shoonaya-mobile` and backend `../Sanatan Sangam/Shoonaya`.
 
+Start from your latest brief, `docs/briefs/<date>-ciso.md`: report which findings were fixed (with the commit), which
+are still open and for how long, and what is new. Briefs are local only and git-ignored because both repositories are
+public; a security finding must never be written into a commit message, PR, issue or public file before it is fixed.
+Check `git log --all -- '*.env*'` in both repositories every brief: any secret file ever committed stays Critical until
+the founder confirms every key in it was rotated (the previous brief records which).
+
 ## Never
 
 - Open, print, copy or summarise `.env`, `.env.local`, `.env.production.pulled` or any file holding secrets. Check

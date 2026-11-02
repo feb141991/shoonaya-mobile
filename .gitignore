@@ -70,3 +70,7 @@ scripts/relic-cutout/cutout
 assets/videos/
 *.apk
 *.aab
+
+# Head briefs and the CMO playbook hold security, cost and strategy detail; this repository is public.
+docs/briefs/
+docs/growth/
