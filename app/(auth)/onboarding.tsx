@@ -314,8 +314,16 @@ export default function OnboardingScreen() {
   // or editing something they already answered.
   type Scrollable = ScrollView;
   const stepScrollRef = useRef<Scrollable>(null);
+  const preferencesContainerYRef = useRef(0);
+  const traditionSectionYRef = useRef(0);
+  const traditionRelativeYRef = useRef(0);
+  const consentSectionYRef = useRef(0);
+  const consentRelativeYRef = useRef(0);
   const genderSectionYRef = useRef(0);
   const rashiSectionYRef = useRef(0);
+  const hasAdvancedToTraditionRef = useRef(false);
+  const hasAdvancedToConsentRef = useRef(false);
+  const shouldScrollToConsentOnLayoutRef = useRef(false);
   const hasAdvancedToGenderRef = useRef(false);
   const hasAdvancedToRashiRef = useRef(false);
   const scrollToSection = (y: number) => {
@@ -324,6 +332,9 @@ export default function OnboardingScreen() {
     }, 380);
   };
   useEffect(() => {
+    hasAdvancedToTraditionRef.current = false;
+    hasAdvancedToConsentRef.current = false;
+    shouldScrollToConsentOnLayoutRef.current = false;
     hasAdvancedToGenderRef.current = false;
     hasAdvancedToRashiRef.current = false;
   }, [step]);
@@ -524,6 +535,11 @@ export default function OnboardingScreen() {
     void syncDraft(step, { religiousDataConsent: agreed });
     const plan = planConsentChange({ tradition, agreed, now: new Date().toISOString() });
     if (plan) void persistPreferenceEarly(plan);
+    if (agreed) {
+      setTimeout(() => {
+        stepScrollRef.current?.scrollToEnd({ animated: true });
+      }, 250);
+    }
   };
 
   const handleNotificationCategoryToggle = (key: keyof NotificationCategoryChoices, value: boolean) => {
@@ -1068,7 +1084,18 @@ export default function OnboardingScreen() {
         ) : null}
 
         {step === 'preferences' && (
-          <View style={{ gap: 20 }}>
+          <View
+            style={{ gap: 20 }}
+            onLayout={(e) => {
+              preferencesContainerYRef.current = e.nativeEvent.layout.y;
+              if (traditionRelativeYRef.current > 0) {
+                traditionSectionYRef.current = e.nativeEvent.layout.y + traditionRelativeYRef.current;
+              }
+              if (consentRelativeYRef.current > 0) {
+                consentSectionYRef.current = e.nativeEvent.layout.y + consentRelativeYRef.current;
+              }
+            }}
+          >
             {/* Language Segmented Control */}
             <View style={{ gap: 8 }}>
               <Text
@@ -1104,6 +1131,10 @@ export default function OnboardingScreen() {
                           setNameStory(null);
                           setNameStoryError('');
                           void persistPreferenceEarly({ app_language: item.key, meaning_language: item.key });
+                          if (!hasAdvancedToTraditionRef.current) {
+                            hasAdvancedToTraditionRef.current = true;
+                            scrollToSection(traditionSectionYRef.current);
+                          }
                         });
                       }}
                       accessibilityRole="button"
@@ -1143,7 +1174,13 @@ export default function OnboardingScreen() {
             </View>
 
             {/* Tradition Selector */}
-            <View style={{ gap: 10 }}>
+            <View
+              style={{ gap: 10 }}
+              onLayout={(e) => {
+                traditionRelativeYRef.current = e.nativeEvent.layout.y;
+                traditionSectionYRef.current = preferencesContainerYRef.current + e.nativeEvent.layout.y;
+              }}
+            >
               <Text
                 style={{
                   fontFamily: language === 'hi' ? FONTS.devanagariBold : FONTS.sansSemiBold,
@@ -1187,6 +1224,31 @@ export default function OnboardingScreen() {
                           void saveDeviceStartupPreferences({
                             tradition: t.key === 'none' ? 'neutral' : t.key,
                           });
+
+                          if (traditionNeedsReligiousDataConsent(t.key)) {
+                            if (consentSectionYRef.current > 0) {
+                              if (!hasAdvancedToConsentRef.current) {
+                                hasAdvancedToConsentRef.current = true;
+                                scrollToSection(consentSectionYRef.current);
+                              }
+                            } else {
+                              shouldScrollToConsentOnLayoutRef.current = true;
+                              setTimeout(() => {
+                                if (shouldScrollToConsentOnLayoutRef.current) {
+                                  shouldScrollToConsentOnLayoutRef.current = false;
+                                  hasAdvancedToConsentRef.current = true;
+                                  stepScrollRef.current?.scrollToEnd({ animated: true });
+                                }
+                              }, 450);
+                            }
+                          } else {
+                            if (!hasAdvancedToConsentRef.current) {
+                              hasAdvancedToConsentRef.current = true;
+                              setTimeout(() => {
+                                stepScrollRef.current?.scrollToEnd({ animated: true });
+                              }, 380);
+                            }
+                          }
                         });
                       }}
                       accessibilityRole="button"
@@ -1273,6 +1335,16 @@ export default function OnboardingScreen() {
                 agreed={religiousDataConsent}
                 onChange={handleReligiousConsentChange}
                 accent={accent}
+                onLayout={(e) => {
+                  consentRelativeYRef.current = e.nativeEvent.layout.y;
+                  const y = preferencesContainerYRef.current + e.nativeEvent.layout.y;
+                  consentSectionYRef.current = y;
+                  if (shouldScrollToConsentOnLayoutRef.current) {
+                    shouldScrollToConsentOnLayoutRef.current = false;
+                    hasAdvancedToConsentRef.current = true;
+                    scrollToSection(y > 0 ? y : e.nativeEvent.layout.y);
+                  }
+                }}
               />
             ) : null}
           </View>

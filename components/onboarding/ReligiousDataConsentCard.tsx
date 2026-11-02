@@ -1,4 +1,4 @@
-import { Pressable, Switch, Text, View } from 'react-native';
+import { type LayoutChangeEvent, Pressable, Switch, Text, View } from 'react-native';
 
 import { FONTS, MIN_TOUCH_TARGET, RADII, themeColor } from '@/lib/constants';
 import { RELIGIOUS_DATA_CONSENT_COPY } from '@/lib/religious-data-consent';
@@ -10,6 +10,7 @@ type Props = {
   agreed: boolean;
   onChange: (agreed: boolean) => void;
   accent: string;
+  onLayout?: (e: LayoutChangeEvent) => void;
 };
 
 /**
@@ -17,7 +18,7 @@ type Props = {
  * onboarding switches (a labelled Pressable around a Switch, 56pt target, theme tokens): the switch is off
  * until the person turns it on, and the reason the button below stays disabled is written next to it.
  */
-export function ReligiousDataConsentCard({ isDark, language, agreed, onChange, accent }: Props) {
+export function ReligiousDataConsentCard({ isDark, language, agreed, onChange, accent, onLayout }: Props) {
   const theme = themeColor(isDark);
   const isHindi = language === 'hi';
   const copy = RELIGIOUS_DATA_CONSENT_COPY[isHindi ? 'hi' : 'en'];
@@ -25,6 +26,7 @@ export function ReligiousDataConsentCard({ isDark, language, agreed, onChange, a
 
   return (
     <View
+      onLayout={onLayout}
       accessibilityRole="summary"
       style={{
         gap: 12,

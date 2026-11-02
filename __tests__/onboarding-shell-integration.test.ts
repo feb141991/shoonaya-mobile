@@ -45,4 +45,20 @@ describe('Onboarding shell integration contracts', () => {
     assert.match(welcome, /recommendedPractice/);
     assert.match(welcome, /calendarScopeLabel/);
   });
+
+  it('implements progressive auto-scroll on multi-field steps (preferences and personal)', () => {
+    // Preferences: Language tap advances to Tradition
+    assert.match(onboarding, /hasAdvancedToTraditionRef\.current\s*=\s*true;\s*\n\s*scrollToSection\(traditionSectionYRef\.current\);/);
+    // Preferences: Tradition layout measures layout Y
+    assert.match(onboarding, /traditionRelativeYRef\.current\s*=\s*e\.nativeEvent\.layout\.y;/);
+    assert.match(onboarding, /traditionSectionYRef\.current\s*=\s*preferencesContainerYRef\.current\s*\+\s*e\.nativeEvent\.layout\.y;/);
+    // Preferences: Tradition tap triggers auto-movement to consent card or scrollToEnd
+    assert.match(onboarding, /if\s*\(traditionNeedsReligiousDataConsent\(t\.key\)\)\s*\{/);
+    assert.match(onboarding, /shouldScrollToConsentOnLayoutRef\.current\s*=\s*true;/);
+    // Preferences: Religious consent change scrolls to end when agreed
+    assert.match(onboarding, /stepScrollRef\.current\?\.scrollToEnd\(\{ animated: true \}\);/);
+    // Personal: Life stage & Gender auto-advance
+    assert.match(onboarding, /hasAdvancedToGenderRef\.current\s*=\s*true;\s*\n\s*scrollToSection\(genderSectionYRef\.current\);/);
+    assert.match(onboarding, /hasAdvancedToRashiRef\.current\s*=\s*true;\s*\n\s*scrollToSection\(rashiSectionYRef\.current\);/);
+  });
 });
