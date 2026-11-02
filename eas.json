@@ -52,12 +52,15 @@
     },
     "production": {
       "autoIncrement": true,
+      "developmentClient": false,
+      "distribution": "store",
       "channel": "production",
       "android": {
         "buildType": "app-bundle",
         "gradleCommand": ":app:bundleRelease"
       },
       "ios": {
+        "buildConfiguration": "Release",
         "resourceClass": "m-medium"
       },
       "env": {

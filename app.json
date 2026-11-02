@@ -169,6 +169,7 @@
             "enableShrinkResourcesInReleaseBuilds": true
           },
           "ios": {
+            "networkInspector": false,
             "extraPods": [
               {
                 "name": "GoogleUtilities",

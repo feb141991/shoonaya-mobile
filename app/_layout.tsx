@@ -4,7 +4,7 @@ import 'react-native-reanimated';
 import '../global.css';
 
 import { useEffect, useState, useCallback, useRef, useSyncExternalStore } from 'react';
-import { Alert, AppState, LogBox, View } from 'react-native';
+import { Alert, AppState, LogBox, Platform, Settings, View } from 'react-native';
 
 LogBox.ignoreLogs([
   'The network connection was lost',
@@ -18,6 +18,15 @@ LogBox.ignoreLogs([
   '[expo-notifications] Error reading persisted server registration info',
   'ERR_NOTIFICATIONS_KEYCHAIN_ACCESS',
 ]);
+
+// Suppress React Native performance monitor HUD if stale preferences exist in iOS NSUserDefaults
+if (Platform.OS === 'ios') {
+  try {
+    Settings.set({ RCTPerfMonitorKey: false });
+  } catch {
+    // Settings module unavailable or non-standard runtime
+  }
+}
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
