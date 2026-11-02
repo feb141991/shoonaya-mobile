@@ -1,5 +1,6 @@
 import * as Crypto from 'expo-crypto';
 import { apiFetch } from '@/lib/api';
+import { createSanskaraCache } from './sanskaraCache';
 import { describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
 import {
   SanskaraError,
@@ -34,20 +35,10 @@ export function generateSanskaraUuid(): string {
   return Crypto.randomUUID().toLowerCase();
 }
 
-type SanskaraCacheEntry = {
-  overview: SanskaraOverview;
-  timestamp: number;
-};
-
-const overviewCache = new Map<string, SanskaraCacheEntry>();
-const CACHE_TTL_MS = 60_000;
+const overviewCache = createSanskaraCache<SanskaraOverview>();
 
 export function clearSanskaraCache(userId?: string): void {
-  if (userId) {
-    overviewCache.delete(userId);
-  } else {
-    overviewCache.clear();
-  }
+  overviewCache.clear(userId);
 }
 
 async function handleReadResponse<K extends keyof SanskaraReads>(
@@ -74,11 +65,10 @@ async function handleReadResponse<K extends keyof SanskaraReads>(
 export async function fetchSanskaraOverview(userId: string, forceRefresh = false): Promise<SanskaraOverview> {
   if (!forceRefresh) {
     const cached = overviewCache.get(userId);
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
-      return cached.overview;
-    }
+    if (cached) return cached;
   }
 
+  const ticket = overviewCache.ticket();
   const [timelineRes, dependentsRes, sharedRes] = await Promise.all([
     apiFetch('/api/native/sanskara/timeline', { expectedUserId: userId }),
     apiFetch('/api/native/sanskara/dependents', { expectedUserId: userId }),
@@ -97,7 +87,7 @@ export async function fetchSanskaraOverview(userId: string, forceRefresh = false
     shared,
   };
 
-  overviewCache.set(userId, { overview, timestamp: Date.now() });
+  overviewCache.set(userId, overview, ticket);
   return overview;
 }
 

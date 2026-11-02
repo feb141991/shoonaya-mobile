@@ -59,6 +59,7 @@ import {
 import { StartupLifecycleController } from '@/lib/startup-scenes/lifecycle';
 import type { AppLanguage, StartupPreferences, StartupScene } from '@/lib/startup-scenes/types';
 import { trackScreenView } from '@/lib/analytics';
+import { clearSanskaraCache } from '@/lib/sanskara';
 import { apiFetch, setApiAccessTokenFromSession } from '@/lib/api';
 import { markAuthReady } from '@/lib/authReadyGate';
 import { exchangeOAuthUrlIfPresent } from '@/lib/authRedirect';
@@ -1223,7 +1224,11 @@ function RootLayout() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
-      if (event === 'SIGNED_OUT') resetNotificationTapState();
+      if (event === 'SIGNED_OUT') {
+        resetNotificationTapState();
+        // Private family and religious records are held in memory for a minute; sign-out ends that (AGENTS 5).
+        clearSanskaraCache();
+      }
       // Keep the auth callback synchronous. routeForSession can perform API
       // work (including a token refresh during profile repair); running that
       // work inside an auth event callback can make refresh completion wait

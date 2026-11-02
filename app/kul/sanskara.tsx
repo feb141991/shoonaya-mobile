@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -81,24 +81,35 @@ export default function SanskaraScreen() {
   const [handoverMode, setHandoverMode] = useState<'start' | 'accept'>('accept');
   const [handoverDependent, setHandoverDependent] = useState<SanskaraDependent | null>(null);
 
-  // Initial user fetch
+  // The identity this screen is showing, and the newest load. A response is published only if it is still the newest
+  // load for the identity that is still signed in (AGENTS 22: a late response must not overwrite newer state).
+  const identityRef = useRef<string | null>(null);
+  const loadSeqRef = useRef(0);
+
+  // Initial user fetch, and every later change of identity: the previous person's records never stay on screen.
   useEffect(() => {
     let mounted = true;
-    void supabase.auth.getUser().then(({ data }) => {
-      if (!mounted) return;
-      if (data.user) {
-        setCurrentUserId(data.user.id);
-      } else {
-        setLoading(false);
-      }
-    });
+    const adopt = (id: string | null) => {
+      if (!mounted || identityRef.current === id) return;
+      identityRef.current = id;
+      loadSeqRef.current += 1;
+      setOverview(null);
+      setKulSnapshot(null);
+      setCurrentUserId(id);
+      if (!id) setLoading(false);
+    };
+    void supabase.auth.getUser().then(({ data }) => adopt(data.user?.id ?? null));
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => adopt(session?.user?.id ?? null));
     return () => {
       mounted = false;
+      sub.subscription.unsubscribe();
     };
   }, []);
 
   const loadData = useCallback(
     async (userId: string, isRefresh = false) => {
+      const seq = ++loadSeqRef.current;
+      const isCurrent = () => seq === loadSeqRef.current && identityRef.current === userId;
       if (isRefresh) setRefreshing(true);
       else setLoading(true);
       setErrorText(null);
@@ -110,17 +121,21 @@ export default function SanskaraScreen() {
           fetchKulSnapshot(userId).catch(() => null),
         ]);
 
+        if (!isCurrent()) return;
         setOverview(overviewData);
         if (kulData) setKulSnapshot(kulData);
       } catch (err: any) {
+        if (!isCurrent()) return;
         if (err instanceof SanskaraConsentRequiredError) {
           setConsentRequired(true);
         } else {
           setErrorText(describeSanskaraFailure(err, 'Unable to load sacred milestones. Please try again.'));
         }
       } finally {
-        setLoading(false);
-        setRefreshing(false);
+        if (isCurrent()) {
+          setLoading(false);
+          setRefreshing(false);
+        }
       }
     },
     [],
