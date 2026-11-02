@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, themeColor } from '@/lib/constants';
+import { supabase } from '@/lib/supabase';
 
 const UPCOMING_WINDOW_DAYS = 7;
 
@@ -36,6 +37,9 @@ export function FestivalQuizBanner() {
     let cancelled = false;
     (async () => {
       try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!sessionData?.session?.user) return;
+
         const response = await apiFetch('/api/native/festival-quiz-seasons');
         if (!response.ok) return;
         const data = (await response.json()) as { seasons: SeasonSummary[] };
