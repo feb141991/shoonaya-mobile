@@ -780,3 +780,14 @@ test('The Pert Hen-Sparrow story uses six paragraph-aligned offline scenes', () 
     assert.ok(getPanchatantraSceneArtwork('panchatantra-pert-hen-sparrow', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });
+
+test('How Supersmart Ate the Elephant story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-how-supersmart-ate-the-elephant');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-how-supersmart-ate-the-elephant'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-how-supersmart-ate-the-elephant'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-how-supersmart-ate-the-elephant', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
