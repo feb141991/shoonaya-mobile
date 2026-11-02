@@ -131,6 +131,7 @@ function getReaderCopy(language: 'en' | 'hi' | 'pa') {
 }
 
 import { useAppIdentity } from '@/lib/appIdentity';
+import { readUserScoped, USER_SCOPED_NAMES, writeUserScoped } from '@/lib/userScopedStorage';
 import { useReaderAppearance } from '@/lib/useReaderAppearance';
 import { ReaderPaperScope } from '@/components/reader/ReaderPaperScope';
 import { useReaderPrefs } from '@/lib/readerPrefs';
@@ -285,19 +286,19 @@ export default function DharmVeerDetailScreen() {
 
         if (ok) {
           await AsyncStorage.setItem(dailyKey, 'true');
-          const historyRaw = await AsyncStorage.getItem('shoonaya-dharmveer-history');
+          const historyRaw = await readUserScoped(appIdentity, USER_SCOPED_NAMES.dharmVeerHistory);
           const historyArr = historyRaw ? (JSON.parse(historyRaw) as string[]) : [];
           if (!historyArr.includes(hero.id)) {
             historyArr.push(hero.id);
             const newHistory = historyArr.slice(-14);
-            await AsyncStorage.setItem('shoonaya-dharmveer-history', JSON.stringify(newHistory));
+            await writeUserScoped(appIdentity, USER_SCOPED_NAMES.dharmVeerHistory, JSON.stringify(newHistory));
           }
         }
       } catch (e) {}
     }, 30_000);
 
     return () => clearTimeout(timer);
-  }, [hero, isGuest, profile]);
+  }, [appIdentity, hero, isGuest, profile]);
 
   const confirmCheckIn = useCallback(async () => {
     if (!hero || !profile) return;
@@ -321,12 +322,12 @@ export default function DharmVeerDetailScreen() {
       const dailyKey = `shoonaya-dharmveer-done-${today}-${profile.userId}-${hero.id}`;
       await AsyncStorage.setItem(dailyKey, 'true');
 
-      const historyRaw = await AsyncStorage.getItem('shoonaya-dharmveer-history');
+      const historyRaw = await readUserScoped(appIdentity, USER_SCOPED_NAMES.dharmVeerHistory);
       const historyArr = historyRaw ? (JSON.parse(historyRaw) as string[]) : [];
       if (!historyArr.includes(hero.id)) {
         historyArr.push(hero.id);
         const newHistory = historyArr.slice(-14);
-        await AsyncStorage.setItem('shoonaya-dharmveer-history', JSON.stringify(newHistory));
+        await writeUserScoped(appIdentity, USER_SCOPED_NAMES.dharmVeerHistory, JSON.stringify(newHistory));
       }
 
       setPendingCheckIn(false);
@@ -339,7 +340,7 @@ export default function DharmVeerDetailScreen() {
     } finally {
       setSubmitting(false);
     }
-  }, [hero, mood, intention, privacyCommunity, profile]);
+  }, [appIdentity, hero, mood, intention, privacyCommunity, profile]);
 
   const handleAskMore = async () => {
     if (!askMoreQuery.trim() || !hero) return;

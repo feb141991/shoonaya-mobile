@@ -10,8 +10,9 @@ import {
 import Feather from '@expo/vector-icons/Feather';
 import { useRouter, type Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { useAppIdentity } from '@/lib/appIdentity';
+import { readUserScoped, USER_SCOPED_NAMES, writeUserScoped } from '@/lib/userScopedStorage';
 import { COLORS, FONTS, RADII, themeColor } from '@/lib/constants';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 
@@ -112,15 +113,18 @@ export const VratFastingCard = memo(function VratFastingCard({
   const theme = themeColor(isDark);
   const copy = COPY[language] ?? COPY.en;
 
+  const appIdentity = useAppIdentity();
   const [selectedMode, setSelectedMode] = useState<FastingMode>('phalahar');
   const [sankalpaCommitted, setSankalpaCommitted] = useState(false);
   const [remindersEnabled, setRemindersEnabled] = useState(wantsReminders);
   const [togglingReminders, setTogglingReminders] = useState(false);
 
-  // Restore saved mode or sankalpa from local storage
+  // Restore this person's saved mode or sankalpa; another account on the device starts fresh.
   useEffect(() => {
     let mounted = true;
-    AsyncStorage.getItem(`shoonaya_vrat_mode_${vratSlug}`)
+    setSelectedMode('phalahar');
+    setSankalpaCommitted(false);
+    readUserScoped(appIdentity, `${USER_SCOPED_NAMES.vratMode}:${vratSlug}`)
       .then((val) => {
         if (mounted && val && (['nirjala', 'phalahar', 'ekbhukta', 'sankalpa'] as FastingMode[]).includes(val as FastingMode)) {
           setSelectedMode(val as FastingMode);
@@ -128,7 +132,7 @@ export const VratFastingCard = memo(function VratFastingCard({
       })
       .catch(() => {});
 
-    AsyncStorage.getItem(`shoonaya_vrat_sankalpa_${vratSlug}`)
+    readUserScoped(appIdentity, `${USER_SCOPED_NAMES.vratSankalpa}:${vratSlug}`)
       .then((val) => {
         if (mounted && val === 'true') {
           setSankalpaCommitted(true);
@@ -139,13 +143,13 @@ export const VratFastingCard = memo(function VratFastingCard({
     return () => {
       mounted = false;
     };
-  }, [vratSlug]);
+  }, [appIdentity, vratSlug]);
 
   const handleSelectMode = async (mode: FastingMode) => {
     setSelectedMode(mode);
     void Haptics.selectionAsync().catch(() => {});
     try {
-      await AsyncStorage.setItem(`shoonaya_vrat_mode_${vratSlug}`, mode);
+      await writeUserScoped(appIdentity, `${USER_SCOPED_NAMES.vratMode}:${vratSlug}`, mode);
     } catch {
       // non-blocking
     }
@@ -155,7 +159,7 @@ export const VratFastingCard = memo(function VratFastingCard({
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     setSankalpaCommitted(true);
     try {
-      await AsyncStorage.setItem(`shoonaya_vrat_sankalpa_${vratSlug}`, 'true');
+      await writeUserScoped(appIdentity, `${USER_SCOPED_NAMES.vratSankalpa}:${vratSlug}`, 'true');
     } catch {
       // non-blocking
     }

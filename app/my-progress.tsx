@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useMemo } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import {
   ScrollView,
   Text,
@@ -7,7 +7,6 @@ import {
 } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { useRouter, type Href } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { Screen } from '@/components/ui/Screen';
 import { SacredLoader } from '@/components/ui/SacredLoader';
@@ -15,7 +14,9 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, TYPE, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
-import { useAppIdentity } from '@/lib/appIdentity';
+import { captureAppIdentity, useAppIdentity } from '@/lib/appIdentity';
+import { readUserScoped, USER_SCOPED_NAMES, writeUserScoped } from '@/lib/userScopedStorage';
+import { parseProgressCache, serializeProgressCache } from '@/lib/progressCache';
 import { setGuestMode } from '@/lib/guestSession';
 import {
   malaSessionDurationSeconds,
@@ -32,8 +33,6 @@ import { SlenderNeedlesChart } from '@/components/progress/SlenderNeedlesChart';
 import { PrecisionAstrolabeDial } from '@/components/progress/PrecisionAstrolabeDial';
 import { FeatherweightSheet } from '@/components/progress/FeatherweightSheet';
 import { VrataTrackCard } from '@/components/progress/VrataTrackCard';
-
-const PROGRESS_CACHE_KEY = 'shoonaya_progress_cache_v2';
 
 type ProgressApiResponse = {
   profile: ProfileRow | null;
@@ -188,24 +187,19 @@ export default function MyProgressScreen() {
   const [loadError, setLoadError] = useState(false);
   const [isGuest, setIsGuest] = useState(false);
   const [data, setData] = useState<ProgressData | null>(null);
+  // Set while a saved copy is on screen and the latest refresh did not replace it.
+  const [savedAt, setSavedAt] = useState<number | null>(null);
   const [showCalendar, setShowCalendar] = useState(false);
+  const hasDataRef = useRef(false);
 
-  // Fast SWR Cache Loader
+  // Each identity starts empty: nothing shown for one person may survive a sign-out or account switch.
   useEffect(() => {
-    async function loadCachedData() {
-      try {
-        const raw = await AsyncStorage.getItem(PROGRESS_CACHE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw) as ProgressApiResponse;
-          setData(processProgressPayload(parsed));
-          setLoading(false);
-        }
-      } catch {
-        // Cache miss is normal
-      }
-    }
-    void loadCachedData();
-  }, []);
+    hasDataRef.current = false;
+    setData(null);
+    setSavedAt(null);
+    setLoadError(false);
+    setLoading(true);
+  }, [appIdentity]);
 
   const loadData = useCallback(async () => {
     setLoadError(false);
@@ -221,26 +215,44 @@ export default function MyProgressScreen() {
     }
 
     setIsGuest(false);
+    const lease = captureAppIdentity();
+
+    // A saved copy for this person paints first; the network response replaces it.
+    if (!hasDataRef.current) {
+      const cached = parseProgressCache<ProgressApiResponse>(
+        await readUserScoped(appIdentity, USER_SCOPED_NAMES.progress),
+        Date.now(),
+      );
+      if (!lease.isCurrent()) return;
+      if (cached && !hasDataRef.current) {
+        hasDataRef.current = true;
+        setData(processProgressPayload(cached.payload));
+        setSavedAt(cached.savedAt);
+        setLoading(false);
+      }
+    }
 
     try {
       const res = await apiFetch('/api/native/progress');
+      if (!lease.isCurrent()) return;
       if (!res.ok) {
-        if (!data) setLoadError(true);
+        if (!hasDataRef.current) setLoadError(true);
         return;
       }
 
       const payload = (await res.json()) as ProgressApiResponse;
-      const processed = processProgressPayload(payload);
-      setData(processed);
+      if (!lease.isCurrent()) return;
+      hasDataRef.current = true;
+      setData(processProgressPayload(payload));
+      setSavedAt(null);
 
-      // Update offline SWR cache asynchronously
-      void AsyncStorage.setItem(PROGRESS_CACHE_KEY, JSON.stringify(payload)).catch(() => {});
+      void writeUserScoped(appIdentity, USER_SCOPED_NAMES.progress, serializeProgressCache(payload, Date.now()));
     } catch {
-      if (!data) setLoadError(true);
+      if (lease.isCurrent() && !hasDataRef.current) setLoadError(true);
     } finally {
-      setLoading(false);
+      if (lease.isCurrent()) setLoading(false);
     }
-  }, [appIdentity, data]);
+  }, [appIdentity]);
 
   useEffect(() => {
     if (appIdentity.kind === 'loading') return;
@@ -325,6 +337,15 @@ export default function MyProgressScreen() {
         contentContainerStyle={{ paddingBottom: 140 }}
         showsVerticalScrollIndicator={false}
       >
+        {savedAt !== null ? (
+          <Text
+            accessibilityRole="alert"
+            style={{ ...TYPE.caption, color: theme.dim, paddingHorizontal: 20, paddingTop: 8 }}
+          >
+            Showing your progress saved on {new Date(savedAt).toLocaleDateString()}. Today's streak may be out of date.
+          </Text>
+        ) : null}
+
         {/* 1. Unboxed Sacred Hero Relic & Devotional Presence */}
         <UnboxedHeroRelic
           streak={streak}

@@ -15,6 +15,8 @@ import { BackButton } from '@/components/ui/BackButton';
 import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
+import { useAppIdentity } from '@/lib/appIdentity';
+import { readUserScoped, USER_SCOPED_NAMES, writeUserScoped } from '@/lib/userScopedStorage';
 import { apiFetch } from '@/lib/api';
 import { COLORS, FONTS, TYPE, RADII } from '@/lib/constants';
 import { lookupVratData, getVratData, type VratData } from '@/lib/vrat-data';
@@ -34,7 +36,6 @@ import { useReaderAppearance } from '@/lib/useReaderAppearance';
 import { useReaderPrefs } from '@/lib/readerPrefs';
 import { buildVratChapters, clampChapterIndex, usesChapterLayout, type VratChapterKey } from '@/lib/readerChapters';
 import { useLinkedKatha } from '@/hooks/useLinkedKatha';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { VratFastingCard } from '@/components/vrat/VratFastingCard';
 
@@ -218,12 +219,14 @@ export default function VratDetailScreen() {
   const insets = useSafeAreaInsets();
   const shareCardRef = useRef<View | null>(null);
   const [sharing, setSharing] = useState(false);
+  const appIdentity = useAppIdentity();
   const [readCompleted, setReadCompleted] = useState(false);
 
-  // Restore persisted read status for this slug
+  // Restore this person's read status for this slug
   useEffect(() => {
     let mounted = true;
-    AsyncStorage.getItem(`shoonaya_vrat_read_${slug}`)
+    setReadCompleted(false);
+    readUserScoped(appIdentity, `${USER_SCOPED_NAMES.vratRead}:${slug}`)
       .then((val) => {
         if (mounted && val === 'true') {
           setReadCompleted(true);
@@ -233,7 +236,7 @@ export default function VratDetailScreen() {
     return () => {
       mounted = false;
     };
-  }, [slug]);
+  }, [appIdentity, slug]);
 
   const handleMarkRead = async () => {
     if (readCompleted) {
@@ -244,7 +247,7 @@ export default function VratDetailScreen() {
 
     setReadCompleted(true);
     try {
-      await AsyncStorage.setItem(`shoonaya_vrat_read_${slug}`, 'true');
+      await writeUserScoped(appIdentity, `${USER_SCOPED_NAMES.vratRead}:${slug}`, 'true');
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch {
       // non-fatal

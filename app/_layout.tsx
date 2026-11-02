@@ -90,6 +90,7 @@ import { clearAllReactionOutboxes } from '@/lib/reactionOutbox';
 import { clearAllOnboardingDrafts } from '@/lib/onboardingDraft';
 import { clearAllHomeDiscoveryStates } from '@/lib/homeDiscovery';
 import { clearAllNitiTreasury } from '@/lib/nitiTreasury';
+import { clearAllUserScopedStorage } from '@/lib/userScopedStorage';
 import { clearAllProfileCaches, clearProfileCache, getOrReadProfileCache } from '@/lib/profileCache';
 import {
   getNotificationPermissionState,
@@ -546,6 +547,7 @@ function RootLayout() {
         void clearAllOnboardingDrafts();
         void clearAllHomeDiscoveryStates();
         void clearAllNitiTreasury();
+        void clearAllUserScopedStorage();
         void clearAllProfileCaches();
 
         // If guest mode is active, allow tabs and bypass login
@@ -598,6 +600,7 @@ function RootLayout() {
         void clearAllOnboardingDrafts();
         void clearAllHomeDiscoveryStates();
         void clearAllNitiTreasury();
+        void clearAllUserScopedStorage();
         void clearProfileCache({ kind: 'authenticated', userId: previousRouteKey });
       }
       void getOrReadHomeCache({ kind: 'authenticated', userId: session.user.id });
@@ -797,6 +800,7 @@ function RootLayout() {
         void clearAllOnboardingDrafts();
         void clearAllHomeDiscoveryStates();
         void clearAllNitiTreasury();
+        void clearAllUserScopedStorage();
         void clearAllProfileCaches();
       },
       clearAllPrivateCachesForSwitch: (previousUserId) => {
@@ -821,6 +825,7 @@ function RootLayout() {
         void clearAllOnboardingDrafts();
         void clearAllHomeDiscoveryStates();
         void clearAllNitiTreasury();
+        void clearAllUserScopedStorage();
         void clearProfileCache({ kind: 'authenticated', userId: previousUserId });
       },
       unregisterPushToken: () => { void unregisterPushToken(); },

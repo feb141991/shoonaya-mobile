@@ -36,7 +36,8 @@ import { JapaMalaArtwork } from '@/components/japa/JapaMalaArtwork';
 import { ContextualJapaReminderPrompt } from '@/components/japa/ContextualJapaReminderPrompt';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
-import { getAppIdentity, useAppIdentity } from '@/lib/appIdentity';
+import { captureAppIdentity, getAppIdentity, useAppIdentity } from '@/lib/appIdentity';
+import { readUserScoped, USER_SCOPED_NAMES, writeUserScoped } from '@/lib/userScopedStorage';
 import {
   readPendingJapaCompletions,
   writePendingJapaCompletion,
@@ -128,7 +129,6 @@ const MAX_TARGET_ROUNDS = 108;
 const JAPA_MALA_KEY = 'shoonaya.japa.selectedMala';
 const JAPA_SCENE_KEY = 'shoonaya.japa.scene';
 const JAPA_SOUND_KEY = 'shoonaya.japa.sound';
-const JAPA_CUSTOM_MANTRA_KEY = 'shoonaya.japa.customMantra';
 const JAPA_MANTRA_KEY = 'shoonaya.japa.mantraKey';
 const JAPA_TARGET_ROUNDS_KEY = 'shoonaya.japa.targetRounds';
 const JAPA_GUEST_LIFETIME_KEY = 'shoonaya.japa.guestLifetime';
@@ -906,16 +906,14 @@ export default function JapaScreen() {
     AsyncStorage.multiGet([
       JAPA_MALA_KEY,
       JAPA_SCENE_KEY,
-      JAPA_CUSTOM_MANTRA_KEY,
       JAPA_TARGET_ROUNDS_KEY,
       JAPA_MANTRA_KEY,
       JAPA_SOUND_KEY,
     ])
       .then((pairs) => pairs.map(([, v]) => v))
-      .then(([malaId, sceneId, customText, rounds, mantraKey, soundId]) => {
+      .then(([malaId, sceneId, rounds, mantraKey, soundId]) => {
         if (malaId && MALA_SKINS[malaId]) setSelectedMalaId(malaId);
         if (sceneId && BG_SCENES.some((item) => item.id === sceneId)) setSelectedSceneId(sceneId as JapaSceneId);
-        if (customText) setCustomMantraText(customText);
         if (mantraKey) setSavedMantraKey(mantraKey);
         if (soundId && JAPA_SOUND_OPTIONS.some((item) => item.id === soundId)) setSelectedSoundId(soundId);
         const parsedRounds = rounds ? Number(rounds) : 1;
@@ -967,10 +965,21 @@ export default function JapaScreen() {
     if (mantraIndex >= mantraOptions.length) setMantraIndex(0);
   }, [mantraIndex, mantraOptions.length]);
 
+  // The custom mantra is the person's own text, so it is saved per person
+  // (userScopedStorage) and reloaded whenever the identity changes.
+  useEffect(() => {
+    setCustomMantraText('');
+    if (appIdentity.kind === 'loading') return;
+    const lease = captureAppIdentity();
+    void readUserScoped(appIdentity, USER_SCOPED_NAMES.japaCustomMantra).then((text) => {
+      if (text && lease.isCurrent()) setCustomMantraText(text);
+    });
+  }, [appIdentity]);
+
   // Restore the last-selected mantra once, as soon as both the saved key
   // (from AsyncStorage) and a matching option (mantraOptions depends on
   // tradition, which resolves async from the profile fetch, and on
-  // customMantraText, which loads from its own AsyncStorage read) are
+  // customMantraText, which loads from its own per-person read) are
   // available. Guarded by a ref rather than deps alone so this fires
   // exactly once and never fights a real-time tap after that — without the
   // guard, every mantraOptions recompute (e.g. typing in the custom-mantra
@@ -3691,7 +3700,7 @@ export default function JapaScreen() {
               <PressableSurface
                 onPress={() => {
                   const trimmed = customMantraText.trim();
-                  void AsyncStorage.setItem(JAPA_CUSTOM_MANTRA_KEY, trimmed);
+                  void writeUserScoped(appIdentity, USER_SCOPED_NAMES.japaCustomMantra, trimmed);
                   if (trimmed.length >= 2) {
                     setMantraIndex(mantraOptions.length - 1);
                     void AsyncStorage.setItem(JAPA_MANTRA_KEY, 'custom');

@@ -15,7 +15,6 @@ import Feather from '@expo/vector-icons/Feather';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { BackButton } from '@/components/ui/BackButton';
 import { Card } from '@/components/ui/Card';
@@ -30,8 +29,8 @@ import { describeFailure, requestErrorFromResponse } from '@/lib/user-facing-err
 import { COLORS, FONTS, RADII, SPACING, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { useAppIdentity } from '@/lib/appIdentity';
+import { readUserScoped, USER_SCOPED_NAMES, writeUserScoped } from '@/lib/userScopedStorage';
 
-const STORAGE_KEY = 'shoonaya:last_name_story';
 
 export type NameStoryData = {
   id?: string;
@@ -88,14 +87,17 @@ export default function NameStoryScreen() {
 
   const shareCardRef = useRef<View | null>(null);
 
-  // Load existing story on mount
+  // Load the current person's story; a sign-out or account switch starts again from nothing.
   useEffect(() => {
     let active = true;
+    setStory(null);
+    if (appIdentity.kind === 'loading') return;
+    setLoading(true);
 
     async function loadStory() {
       try {
-        // 1. Try local cache first for instant rendering
-        const cached = await AsyncStorage.getItem(STORAGE_KEY);
+        // 1. Try this person's saved copy first for instant rendering
+        const cached = await readUserScoped(appIdentity, USER_SCOPED_NAMES.nameStory);
         if (cached && active) {
           try {
             const parsed = JSON.parse(cached) as NameStoryData;
@@ -108,19 +110,18 @@ export default function NameStoryScreen() {
         }
 
         // 2. If user is logged in, query remote Supabase
-        const { data: authData } = await supabase.auth.getUser();
-        if (authData?.user?.id && active) {
+        if (appIdentity.kind === 'authenticated' && active) {
           const { data, error } = await supabase
             .from('name_stories')
             .select('*')
-            .eq('user_id', authData.user.id)
+            .eq('user_id', appIdentity.userId)
             .order('created_at', { ascending: false })
             .limit(1)
             .maybeSingle();
 
           if (!error && data && active) {
             setStory(data as NameStoryData);
-            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            await writeUserScoped(appIdentity, USER_SCOPED_NAMES.nameStory, JSON.stringify(data));
           }
         }
       } catch (err) {
@@ -134,7 +135,7 @@ export default function NameStoryScreen() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [appIdentity]);
 
   const handleGenerate = async () => {
     const trimmed = inputName.trim();
@@ -182,7 +183,7 @@ export default function NameStoryScreen() {
 
       setStory(generatedStory);
       setShowForm(false);
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(generatedStory));
+      await writeUserScoped(appIdentity, USER_SCOPED_NAMES.nameStory, JSON.stringify(generatedStory));
 
       try {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

@@ -25,6 +25,7 @@ import { getDharmVeerArtworkSource } from '@/lib/dharm-veer-artwork';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { supabase } from '@/lib/supabase';
 import { useAppIdentity } from '@/lib/appIdentity';
+import { readUserScoped, USER_SCOPED_NAMES } from '@/lib/userScopedStorage';
 import { recordRefreshFailure, recordRouteOpen } from '@/lib/telemetry';
 import { spiritualDate } from '@/lib/spiritualDate';
 
@@ -121,7 +122,7 @@ export default function DharmVeerScreen() {
     setRosterError(!rosterData || rosterData.length === 0);
 
     try {
-      const historyRaw = await AsyncStorage.getItem('shoonaya-dharmveer-history');
+      const historyRaw = await readUserScoped(appIdentity, USER_SCOPED_NAMES.dharmVeerHistory);
       const ids = new Set<string>();
       if (historyRaw) {
         const historyArr = JSON.parse(historyRaw) as string[];

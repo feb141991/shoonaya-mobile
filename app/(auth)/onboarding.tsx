@@ -16,7 +16,6 @@ import * as Location from 'expo-location';
 import { useRouter, type Href } from 'expo-router';
 import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { OnboardingShell } from '@/components/onboarding/OnboardingShell';
 import { NakshatraPicker } from '@/components/onboarding/NakshatraPicker';
@@ -35,6 +34,7 @@ import { AI_CHAT_TIMEOUT_MS } from '@/lib/api-policy';
 import { isFetchCancelled } from '@/lib/fetch-error';
 import { supabase } from '@/lib/supabase';
 import { captureAppIdentity, getAppIdentity } from '@/lib/appIdentity';
+import { USER_SCOPED_NAMES, writeUserScoped } from '@/lib/userScopedStorage';
 import { beginSanctuaryPreparation } from '@/lib/sanctuaryPreparation';
 import { identityChanged } from '@/lib/routeOpenAttribution';
 import {
@@ -589,7 +589,7 @@ export default function OnboardingScreen() {
       const storyData = (body?.data ?? null) as NameStory | null;
       setNameStory(storyData);
       if (storyData) {
-        AsyncStorage.setItem('shoonaya:last_name_story', JSON.stringify(storyData)).catch(() => {});
+        void writeUserScoped(getAppIdentity(), USER_SCOPED_NAMES.nameStory, JSON.stringify(storyData));
       }
       try { await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
     } catch (error) {
