@@ -791,3 +791,14 @@ test('How Supersmart Ate the Elephant story uses six paragraph-aligned offline s
     assert.ok(getPanchatantraSceneArtwork('panchatantra-how-supersmart-ate-the-elephant', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });
+
+test('The Dog Who Went Abroad story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-dog-who-went-abroad');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-dog-who-went-abroad'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-dog-who-went-abroad'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-dog-who-went-abroad', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});

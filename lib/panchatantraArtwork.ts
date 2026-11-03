@@ -84,6 +84,7 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-farmers-wife': require('@/assets/panchatantra/farmers-wife-1.webp'),
   'panchatantra-pert-hen-sparrow': require('@/assets/panchatantra/pert-hen-sparrow-1.webp'),
   'panchatantra-how-supersmart-ate-the-elephant': require('@/assets/panchatantra/how-supersmart-ate-the-elephant-1.webp'),
+  'panchatantra-dog-who-went-abroad': require('@/assets/panchatantra/dog-who-went-abroad-1.webp'),
 };
 
 /**
@@ -612,6 +613,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/how-supersmart-ate-the-elephant-4.webp'),
     require('@/assets/panchatantra/how-supersmart-ate-the-elephant-5.webp'),
     require('@/assets/panchatantra/how-supersmart-ate-the-elephant-6.webp'),
+  ],
+  'panchatantra-dog-who-went-abroad': [
+    require('@/assets/panchatantra/dog-who-went-abroad-1.webp'),
+    require('@/assets/panchatantra/dog-who-went-abroad-2.webp'),
+    require('@/assets/panchatantra/dog-who-went-abroad-3.webp'),
+    require('@/assets/panchatantra/dog-who-went-abroad-4.webp'),
+    require('@/assets/panchatantra/dog-who-went-abroad-5.webp'),
+    require('@/assets/panchatantra/dog-who-went-abroad-6.webp'),
   ],
 };
 
