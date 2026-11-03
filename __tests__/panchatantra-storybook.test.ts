@@ -813,3 +813,14 @@ test('How the Birds Picked a King story uses six paragraph-aligned offline scene
     assert.ok(getPanchatantraSceneArtwork('panchatantra-how-birds-picked-a-king', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });
+
+test('The Snake and the Ants story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-snake-and-the-ants');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-snake-and-the-ants'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-snake-and-the-ants'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-snake-and-the-ants', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
