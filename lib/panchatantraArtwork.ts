@@ -88,6 +88,7 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-how-birds-picked-a-king': require('@/assets/panchatantra/how-birds-picked-a-king-1.webp'),
   'panchatantra-snake-and-the-ants': require('@/assets/panchatantra/snake-and-the-ants-1.webp'),
   'panchatantra-snake-who-paid-cash': require('@/assets/panchatantra/snake-who-paid-cash-1.webp'),
+  'panchatantra-unsocial-swans': require('@/assets/panchatantra/unsocial-swans-1.webp'),
 };
 
 /**
@@ -648,6 +649,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/snake-who-paid-cash-4.webp'),
     require('@/assets/panchatantra/snake-who-paid-cash-5.webp'),
     require('@/assets/panchatantra/snake-who-paid-cash-6.webp'),
+  ],
+  'panchatantra-unsocial-swans': [
+    require('@/assets/panchatantra/unsocial-swans-1.webp'),
+    require('@/assets/panchatantra/unsocial-swans-2.webp'),
+    require('@/assets/panchatantra/unsocial-swans-3.webp'),
+    require('@/assets/panchatantra/unsocial-swans-4.webp'),
+    require('@/assets/panchatantra/unsocial-swans-5.webp'),
+    require('@/assets/panchatantra/unsocial-swans-6.webp'),
   ],
 };
 
