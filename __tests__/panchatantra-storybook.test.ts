@@ -802,3 +802,14 @@ test('The Dog Who Went Abroad story uses six paragraph-aligned offline scenes', 
     assert.ok(getPanchatantraSceneArtwork('panchatantra-dog-who-went-abroad', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });
+
+test('How the Birds Picked a King story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-how-birds-picked-a-king');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-how-birds-picked-a-king'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-how-birds-picked-a-king'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-how-birds-picked-a-king', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
