@@ -54,3 +54,17 @@ export function handoverBannerCopy(name: string, stage: HandoverStage): Handover
     icon: 'share-2',
   };
 }
+
+const milestones = (n: number) => `${n} ${n === 1 ? 'milestone' : 'milestones'}`;
+
+/**
+ * What the person who accepts a hand-over is told. The server moves the milestones and drops any it already has a record
+ * for (the same rite), so the person's own record wins. That is stated whenever it happened: a silent drop would look like data loss.
+ */
+export function acceptResultMessage(result: { moved: number; dropped_as_duplicates: number }): string {
+  const moved = `${milestones(result.moved)} ${result.moved === 1 ? 'was' : 'were'} added to your timeline.`;
+  if (!(result.dropped_as_duplicates > 0)) return `Done. ${moved}`;
+  const dropped = result.dropped_as_duplicates;
+  return `Done. ${moved} ${milestones(dropped)} ${dropped === 1 ? 'was' : 'were'} not added, because your timeline already has a record for the same rite. Your own ${dropped === 1 ? 'record was' : 'records were'} kept.`;
+}
+

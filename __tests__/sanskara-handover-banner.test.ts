@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { handoverStage } from '@/lib/sanskaraHandover';
-import { handoverBannerCopy } from '@/lib/sanskaraHandoverCopy';
+import { acceptResultMessage, handoverBannerCopy } from '@/lib/sanskaraHandoverCopy';
 
 const root = join(__dirname, '..');
 const screen = readFileSync(join(root, 'app/kul/sanskara.tsx'), 'utf8');
@@ -85,5 +85,32 @@ describe('banner component', () => {
 
   it('is a collapsible row that reports its state to a screen reader', () => {
     assert.match(banner, /accessibilityState=\{\{ expanded \}\}/);
+  });
+});
+
+describe('what the accepting person is told', () => {
+  it('says how many were added, with the right singular and plural', () => {
+    assert.equal(acceptResultMessage({ moved: 1, dropped_as_duplicates: 0 }), 'Done. 1 milestone was added to your timeline.');
+    assert.equal(acceptResultMessage({ moved: 0, dropped_as_duplicates: 0 }), 'Done. 0 milestones were added to your timeline.');
+    assert.equal(acceptResultMessage({ moved: 7, dropped_as_duplicates: 0 }), 'Done. 7 milestones were added to your timeline.');
+  });
+
+  it('always says so when a record was not added because the person already had one for that rite', () => {
+    const one = acceptResultMessage({ moved: 3, dropped_as_duplicates: 1 });
+    assert.match(one, /1 milestone was not added/);
+    assert.match(one, /Your own record was kept/);
+    const many = acceptResultMessage({ moved: 3, dropped_as_duplicates: 2 });
+    assert.match(many, /2 milestones were not added/);
+    assert.match(many, /Your own records were kept/);
+  });
+
+  it('is used by the modal instead of a hard-coded success line', () => {
+    const modal = readFileSync(join(root, 'components/sanskara/SanskaraHandoverModal.tsx'), 'utf8');
+    assert.match(modal, /setResultMessage\(acceptResultMessage\(result\)\)/);
+    assert.doesNotMatch(modal, /sacred milestones were transferred/);
+  });
+
+  it('does not mention a dropped record when none was dropped, or when the count is not a positive number', () => {
+    for (const bad of [0, -1, Number.NaN]) assert.doesNotMatch(acceptResultMessage({ moved: 2, dropped_as_duplicates: bad }), /not added/);
   });
 });

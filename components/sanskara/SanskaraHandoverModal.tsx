@@ -19,6 +19,7 @@ import * as Haptics from 'expo-haptics';
 import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, TYPE, themeColor } from '@/lib/constants';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { describeFailure } from '@/lib/user-facing-error';
+import { acceptResultMessage } from '@/lib/sanskaraHandoverCopy';
 
 export interface SanskaraHandoverModalProps {
   visible: boolean;
@@ -97,7 +98,7 @@ export function SanskaraHandoverModal({
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
     try {
       const result = await onAcceptClaim(cleanToken);
-      setResultMessage(`Success! ${result.moved} sacred milestones were transferred to your timeline.`);
+      setResultMessage(acceptResultMessage(result));
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     } catch (e: any) {
       Alert.alert('Transfer Failed', describeFailure(e, 'Could not accept hand-over token. Check token or try again.'));
