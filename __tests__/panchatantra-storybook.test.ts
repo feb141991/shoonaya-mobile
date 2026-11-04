@@ -846,3 +846,14 @@ test('The Unsocial Swans story uses six paragraph-aligned offline scenes', () =>
     assert.ok(getPanchatantraSceneArtwork('panchatantra-unsocial-swans', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });
+
+test('The Self-Sacrificing Dove story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-self-sacrificing-dove');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-self-sacrificing-dove'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-self-sacrificing-dove'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-self-sacrificing-dove', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});

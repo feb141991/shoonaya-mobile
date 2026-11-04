@@ -89,6 +89,7 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-snake-and-the-ants': require('@/assets/panchatantra/snake-and-the-ants-1.webp'),
   'panchatantra-snake-who-paid-cash': require('@/assets/panchatantra/snake-who-paid-cash-1.webp'),
   'panchatantra-unsocial-swans': require('@/assets/panchatantra/unsocial-swans-1.webp'),
+  'panchatantra-self-sacrificing-dove': require('@/assets/panchatantra/self-sacrificing-dove-1.webp'),
 };
 
 /**
@@ -657,6 +658,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/unsocial-swans-4.webp'),
     require('@/assets/panchatantra/unsocial-swans-5.webp'),
     require('@/assets/panchatantra/unsocial-swans-6.webp'),
+  ],
+  'panchatantra-self-sacrificing-dove': [
+    require('@/assets/panchatantra/self-sacrificing-dove-1.webp'),
+    require('@/assets/panchatantra/self-sacrificing-dove-2.webp'),
+    require('@/assets/panchatantra/self-sacrificing-dove-3.webp'),
+    require('@/assets/panchatantra/self-sacrificing-dove-4.webp'),
+    require('@/assets/panchatantra/self-sacrificing-dove-5.webp'),
+    require('@/assets/panchatantra/self-sacrificing-dove-6.webp'),
   ],
 };
 
