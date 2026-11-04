@@ -20,6 +20,8 @@ import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, TYPE, themeColor } from '@/lib/
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { describeFailure } from '@/lib/user-facing-error';
 import { acceptResultMessage } from '@/lib/sanskaraHandoverCopy';
+import { EARLY_ACCEPTED_MESSAGE } from '@/lib/sanskaraEarlyHandover';
+import type { AcceptedHandoverCode } from '@/lib/sanskara';
 
 export interface SanskaraHandoverModalProps {
   visible: boolean;
@@ -29,7 +31,7 @@ export interface SanskaraHandoverModalProps {
   onClose: () => void;
   onStartClaim?: (subjectId: string) => Promise<{ claim_id: string; expires_at: string; token?: string }>;
   onCancelClaim?: (subjectId: string) => Promise<void>;
-  onAcceptClaim?: (token: string) => Promise<{ moved: number; dropped_as_duplicates: number }>;
+  onAcceptClaim?: (token: string) => Promise<AcceptedHandoverCode>;
 }
 
 export function SanskaraHandoverModal({
@@ -98,10 +100,10 @@ export function SanskaraHandoverModal({
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
     try {
       const result = await onAcceptClaim(cleanToken);
-      setResultMessage(acceptResultMessage(result));
+      setResultMessage(result.kind === 'early' ? EARLY_ACCEPTED_MESSAGE : acceptResultMessage(result));
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     } catch (e: any) {
-      Alert.alert('Transfer Failed', describeFailure(e, 'Could not accept hand-over token. Check token or try again.'));
+      Alert.alert('Transfer Failed', describeFailure(e, 'Could not accept this code. Check the code, and that your date of birth is saved in your profile, then try again.'));
     } finally {
       setLoading(false);
     }
@@ -128,7 +130,7 @@ export function SanskaraHandoverModal({
               <Text style={[styles.subtitle, { color: theme.dim }]}>
                 {mode === 'start'
                   ? `Transition ${dependentName || 'child’s'} milestones to their adult account`
-                  : 'Enter the 64-character hand-over token from your guardian'}
+                  : 'Enter the 64-character hand-over code from your parent or guardian'}
               </Text>
             </View>
             <Pressable

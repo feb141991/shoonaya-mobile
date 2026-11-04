@@ -12,8 +12,15 @@ export type SanskaraSharedRecord = { record_id: string; subject: { id: string; k
 export type SanskaraAccess = { id: string; scope: 'record' | 'timeline'; record_id: string | null; created_at: string; shared_by_me: boolean; grantee: SanskaraPerson };
 export type SanskaraReminder = { id: string; record_id: string; lead_days: number; enabled: boolean };
 export type SanskaraExport = { generated_at: string; subjects: Array<{ id: string; kind: 'account' | 'dependent'; display_name: string | null; birth_date: string | null; role: 'owner' | 'manager' | 'former_manager'; records: SanskaraRecord[]; grants: Array<{ scope: 'record' | 'timeline'; record_id: string | null; created_at: string; revoked_at: string | null }> }> };
+export type SanskaraEarlyHandoverState = 'none' | 'awaiting_approval' | 'ready' | 'awaiting_confirmation' | 'expired';
+/** What a manager sees of an early hand-over. `acceptor` is set only for the manager who started it, and only once someone entered the code. */
+export type SanskaraEarlyHandoverStatus = {
+  available: boolean; min_age: number | null; state: SanskaraEarlyHandoverState;
+  approvals_have: number; approvals_total: number; i_approved: boolean; i_started: boolean;
+  expires_at: string | null; acceptor: SanskaraPerson | null;
+};
 export type SanskaraOverview = { timeline: SanskaraTimeline; dependents: SanskaraDependent[]; shared: SanskaraSharedRecord[] };
-export type SanskaraReads = { timeline: SanskaraTimeline; dependents: SanskaraDependent[]; 'shared-with-me': SanskaraSharedRecord[]; access: SanskaraAccess[]; reminders: SanskaraReminder[]; export: SanskaraExport };
+export type SanskaraReads = { timeline: SanskaraTimeline; dependents: SanskaraDependent[]; 'shared-with-me': SanskaraSharedRecord[]; access: SanskaraAccess[]; reminders: SanskaraReminder[]; export: SanskaraExport; 'early-handover-status': SanskaraEarlyHandoverStatus };
 export type SanskaraWrites = {
   'create-dependent': { name: string; birthDate: string; kulFamilyMemberId?: string | null };
   'set-kul-link': { subjectId: string; kulFamilyMemberId: string | null };
@@ -25,6 +32,8 @@ export type SanskaraWrites = {
   'add-manager': { subjectId: string; accountId: string }; 'remove-manager': { subjectId: string; accountId: string };
   'grant-view': { subjectId: string; recordId: string | null; granteeId: string }; 'revoke-grant': { grantId: string };
   'start-claim': { subjectId: string }; 'cancel-claim': { subjectId: string }; 'accept-claim': { token: string };
+  'start-early-handover': { subjectId: string }; 'approve-early-handover': { subjectId: string }; 'cancel-early-handover': { subjectId: string };
+  'accept-early-handover': { token: string }; 'confirm-early-handover': { subjectId: string };
   'set-reminder': { recordId: string; leadDays: number; enabled: boolean };
 };
 type Replayed = { replayed?: true };
@@ -37,6 +46,11 @@ export type SanskaraWriteResults = {
   'revoke-grant': { id: string; revoked: boolean; already_revoked: boolean };
   'start-claim': { claim_id: string; expires_at: string; token?: string };
   'cancel-claim': { cancelled: number }; 'accept-claim': { moved: number; dropped_as_duplicates: number };
+  'start-early-handover': { handover_id: string; status: 'ready' | 'awaiting_approval'; approvals_needed: number; expires_at: string; token?: string };
+  'approve-early-handover': { status: 'ready' | 'awaiting_approval'; approvals_needed: number };
+  'cancel-early-handover': { cancelled: boolean };
+  'accept-early-handover': { status: 'awaiting_confirmation' };
+  'confirm-early-handover': { moved: number; dropped_as_duplicates: number };
   'set-reminder': { id: string | null; enabled: boolean; generation: number | null };
 };
 export type SanskaraWriteResult<K extends keyof SanskaraWrites> = SanskaraWriteResults[K] & Replayed;
@@ -71,6 +85,12 @@ export const isSanskaraSharedRecord = (v: unknown): v is SanskaraSharedRecord =>
 export const isSanskaraAccess = (v: unknown): v is SanskaraAccess => obj(v) && fields(v, ['id', 'scope', 'record_id', 'created_at', 'shared_by_me', 'grantee']) && isSanskaraUuid(v.id) && ['record', 'timeline'].includes(String(v.scope)) && uuidOrNull(v.record_id) && timestamp(v.created_at) && bool(v.shared_by_me) && person(v.grantee);
 export const isSanskaraReminder = (v: unknown): v is SanskaraReminder => obj(v) && fields(v, ['id', 'record_id', 'lead_days', 'enabled']) && isSanskaraUuid(v.id) && isSanskaraUuid(v.record_id) && integer(v.lead_days) && (v.lead_days as number) <= 365 && bool(v.enabled);
 export const isSanskaraExport = (v: unknown): v is SanskaraExport => obj(v) && fields(v, ['generated_at', 'subjects']) && timestamp(v.generated_at) && Array.isArray(v.subjects) && v.subjects.every((s) => obj(s) && fields(s, ['id', 'kind', 'display_name', 'birth_date', 'role', 'records', 'grants']) && isSanskaraUuid(s.id) && ['account', 'dependent'].includes(String(s.kind)) && text(s.display_name) && optionalDate(s.birth_date) && ['owner', 'manager', 'former_manager'].includes(String(s.role)) && list(s.records, isSanskaraRecord) && Array.isArray(s.grants) && s.grants.every((g) => obj(g) && fields(g, ['scope', 'record_id', 'created_at', 'revoked_at']) && ['record', 'timeline'].includes(String(g.scope)) && uuidOrNull(g.record_id) && timestamp(g.created_at) && (g.revoked_at === null || timestamp(g.revoked_at))));
+const EARLY_STATES = ['none', 'awaiting_approval', 'ready', 'awaiting_confirmation', 'expired'];
+export const isSanskaraEarlyHandoverStatus = (v: unknown): v is SanskaraEarlyHandoverStatus => obj(v)
+  && fields(v, ['available', 'min_age', 'state', 'approvals_have', 'approvals_total', 'i_approved', 'i_started', 'expires_at', 'acceptor'])
+  && bool(v.available) && (v.min_age === null || (integer(v.min_age) && (v.min_age as number) <= 120)) && EARLY_STATES.includes(String(v.state))
+  && integer(v.approvals_have) && integer(v.approvals_total) && bool(v.i_approved) && bool(v.i_started)
+  && (v.expires_at === null || timestamp(v.expires_at)) && (v.acceptor === null || person(v.acceptor));
 export const isSanskaraOverview = (v: unknown): v is SanskaraOverview => obj(v) && fields(v, ['timeline', 'dependents', 'shared']) && isSanskaraTimeline(v.timeline) && list(v.dependents, isSanskaraDependent) && list(v.shared, isSanskaraSharedRecord);
 
 export function guardSanskaraRead<K extends keyof SanskaraReads>(action: K, value: unknown): value is SanskaraReads[K] {
@@ -81,6 +101,7 @@ export function guardSanskaraRead<K extends keyof SanskaraReads>(action: K, valu
     case 'access': return list(value, isSanskaraAccess);
     case 'reminders': return list(value, isSanskaraReminder);
     case 'export': return isSanskaraExport(value);
+    case 'early-handover-status': return isSanskaraEarlyHandoverStatus(value);
   }
   return false;
 }
@@ -99,6 +120,11 @@ export function guardSanskaraWrite<K extends keyof SanskaraWrites>(action: K, v:
     case 'start-claim': return fields(v, ['claim_id', 'expires_at'], ['token', 'replayed']) && isSanskaraUuid(v.claim_id) && timestamp(v.expires_at) && (v.replayed === true ? !('token' in v) : typeof v.token === 'string' && /^[a-f0-9]{64}$/i.test(v.token));
     case 'cancel-claim': return valid(['cancelled']) && integer(v.cancelled);
     case 'accept-claim': return valid(['moved', 'dropped_as_duplicates']) && integer(v.moved) && integer(v.dropped_as_duplicates);
+    case 'start-early-handover': return fields(v, ['handover_id', 'status', 'approvals_needed', 'expires_at'], ['token', 'replayed']) && isSanskaraUuid(v.handover_id) && ['ready', 'awaiting_approval'].includes(String(v.status)) && integer(v.approvals_needed) && timestamp(v.expires_at) && (v.replayed === true ? !('token' in v) : typeof v.token === 'string' && /^[a-f0-9]{64}$/i.test(v.token));
+    case 'approve-early-handover': return valid(['status', 'approvals_needed']) && ['ready', 'awaiting_approval'].includes(String(v.status)) && integer(v.approvals_needed);
+    case 'cancel-early-handover': return valid(['cancelled']) && bool(v.cancelled);
+    case 'accept-early-handover': return valid(['status']) && v.status === 'awaiting_confirmation';
+    case 'confirm-early-handover': return valid(['moved', 'dropped_as_duplicates']) && integer(v.moved) && integer(v.dropped_as_duplicates);
     case 'set-reminder': return valid(['id', 'enabled', 'generation']) && uuidOrNull(v.id) && bool(v.enabled) && (v.generation === null || integer(v.generation));
   }
   return false;
@@ -109,7 +135,9 @@ const WRITE_FIELDS: Record<keyof SanskaraWrites, string[]> = {
   'create-record': ['subjectId','riteKey','customTitle','plannedDate'], 'update-record': ['recordId','customTitle','plannedDate','expectedVersion'],
   'save-private': ['recordId','notes','location','performedBy','expectedDueDate','expectedVersion'], 'set-completion': ['recordId','completedDate','expectedVersion'],
   'delete-record': ['recordId'], 'delete-dependent': ['subjectId'], 'delete-mine': [], 'add-manager': ['subjectId','accountId'], 'remove-manager': ['subjectId','accountId'],
-  'grant-view': ['subjectId','recordId','granteeId'], 'revoke-grant': ['grantId'], 'start-claim': ['subjectId'], 'cancel-claim': ['subjectId'], 'accept-claim': ['token'], 'set-reminder': ['recordId','leadDays','enabled'],
+  'grant-view': ['subjectId','recordId','granteeId'], 'revoke-grant': ['grantId'], 'start-claim': ['subjectId'], 'cancel-claim': ['subjectId'], 'accept-claim': ['token'],
+  'start-early-handover': ['subjectId'], 'approve-early-handover': ['subjectId'], 'cancel-early-handover': ['subjectId'], 'accept-early-handover': ['token'], 'confirm-early-handover': ['subjectId'],
+  'set-reminder': ['recordId','leadDays','enabled'],
 };
 
 /** Screen fields must already be canonical; never reinterpret ambiguous typed dates in a write. */

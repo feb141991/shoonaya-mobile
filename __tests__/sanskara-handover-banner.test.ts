@@ -106,7 +106,7 @@ describe('what the accepting person is told', () => {
 
   it('is used by the modal instead of a hard-coded success line', () => {
     const modal = readFileSync(join(root, 'components/sanskara/SanskaraHandoverModal.tsx'), 'utf8');
-    assert.match(modal, /setResultMessage\(acceptResultMessage\(result\)\)/);
+    assert.match(modal, /setResultMessage\(result\.kind === 'early' \? EARLY_ACCEPTED_MESSAGE : acceptResultMessage\(result\)\)/);
     assert.doesNotMatch(modal, /sacred milestones were transferred/);
   });
 

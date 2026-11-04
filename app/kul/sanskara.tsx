@@ -25,6 +25,7 @@ import { fetchKulSnapshot, type KulSnapshot } from '@/lib/kul';
 import {
   fetchSanskaraOverview,
   fetchSanskaraAccess,
+  acceptHandoverCode,
   executeSanskaraWrite,
   describeSanskaraFailure,
   SanskaraConsentRequiredError,
@@ -40,6 +41,7 @@ import { AddChildSheet } from '@/components/sanskara/AddChildSheet';
 import { SharingSheet } from '@/components/sanskara/SharingSheet';
 import { SanskaraHandoverModal } from '@/components/sanskara/SanskaraHandoverModal';
 import { SanskaraHandoverBanner } from '@/components/sanskara/SanskaraHandoverBanner';
+import { SanskaraEarlyHandover } from '@/components/sanskara/SanskaraEarlyHandover';
 import { handoverStage, type HandoverStage } from '@/lib/sanskaraHandover';
 
 type ActiveSubject =
@@ -345,8 +347,9 @@ export default function SanskaraScreen() {
   const handleAcceptClaim = useCallback(
     async (token: string) => {
       if (!currentUserId) throw new Error('Not authenticated');
-      const res = await executeSanskaraWrite(currentUserId, 'accept-claim', { token });
-      void loadData(currentUserId, true);
+      const res = await acceptHandoverCode(currentUserId, token);
+      // Only a hand-over at 18 puts records on this timeline now; an early hand-over waits for the parent's confirmation.
+      if (res.kind === 'claim') void loadData(currentUserId, true);
       return res;
     },
     [currentUserId, loadData],
@@ -591,6 +594,19 @@ export default function SanskaraScreen() {
                 setHandoverDependent(activeSubject.dependent);
                 setHandoverMode('start');
                 setHandoverModalVisible(true);
+              }}
+            />
+          ) : null}
+          {activeSubject.kind === 'dependent' && activeSubject.dependent.can_manage && currentUserId
+            && (activeHandover.stage === 'minor' || activeHandover.stage === 'approaching') ? (
+            <SanskaraEarlyHandover
+              key={`${currentUserId}:${activeSubject.dependent.id}`}
+              userId={currentUserId}
+              subjectId={activeSubject.dependent.id}
+              dependentName={activeSubject.dependent.display_name}
+              onHandedOver={() => {
+                setActiveTab('me');
+                void loadData(currentUserId, true);
               }}
             />
           ) : null}

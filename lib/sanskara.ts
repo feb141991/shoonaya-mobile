@@ -1,5 +1,6 @@
 import * as Crypto from 'expo-crypto';
 import { apiFetch } from '@/lib/api';
+import { acceptHandoverCodeWith, type AcceptedHandoverCode } from './sanskaraAcceptCode';
 import { createSanskaraCache } from './sanskaraCache';
 import { describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
 import {
@@ -9,6 +10,7 @@ import {
   guardSanskaraWrite,
   type SanskaraAccess,
   type SanskaraDependent,
+  type SanskaraEarlyHandoverStatus,
   type SanskaraExport,
   type SanskaraOverview,
   type SanskaraReads,
@@ -23,6 +25,7 @@ import {
 } from './sanskaraContract';
 
 export * from './sanskaraContract';
+export type { AcceptedHandoverCode } from './sanskaraAcceptCode';
 
 export class SanskaraConsentRequiredError extends Error {
   constructor(message = 'Religious-data consent is needed before this can be used.') {
@@ -98,6 +101,17 @@ export async function fetchSanskaraAccess(userId: string, subjectId: string): Pr
   return handleReadResponse('access', response, userId);
 }
 
+/**
+ * The early hand-over state of one managed child. Read on demand for the child on screen only, never cached: it is the answer to
+ * "may I act right now", and a copy would let a stale "ready" authorize a tap the server will refuse.
+ */
+export async function fetchEarlyHandoverStatus(userId: string, subjectId: string): Promise<SanskaraEarlyHandoverStatus> {
+  const response = await apiFetch(`/api/native/sanskara/early-handover-status?subject=${encodeURIComponent(subjectId)}`, {
+    expectedUserId: userId,
+  });
+  return handleReadResponse('early-handover-status', response, userId);
+}
+
 export async function fetchSanskaraReminders(userId: string): Promise<SanskaraReminder[]> {
   const response = await apiFetch('/api/native/sanskara/reminders', {
     expectedUserId: userId,
@@ -137,6 +151,13 @@ export async function executeSanskaraWrite<K extends keyof SanskaraWrites>(
   clearSanskaraCache(userId);
 
   return body;
+}
+
+export async function acceptHandoverCode(userId: string, token: string): Promise<AcceptedHandoverCode> {
+  return acceptHandoverCodeWith({
+    acceptClaim: (code) => executeSanskaraWrite(userId, 'accept-claim', { token: code }),
+    acceptEarly: (code) => executeSanskaraWrite(userId, 'accept-early-handover', { token: code }),
+  }, token);
 }
 
 export function describeSanskaraFailure(error: unknown, fallbackMessage = 'Unable to complete milestone update. Please try again.'): string {
