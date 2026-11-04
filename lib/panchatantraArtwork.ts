@@ -90,6 +90,7 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-snake-who-paid-cash': require('@/assets/panchatantra/snake-who-paid-cash-1.webp'),
   'panchatantra-unsocial-swans': require('@/assets/panchatantra/unsocial-swans-1.webp'),
   'panchatantra-self-sacrificing-dove': require('@/assets/panchatantra/self-sacrificing-dove-1.webp'),
+  'panchatantra-old-man-with-young-wife': require('@/assets/panchatantra/old-man-with-young-wife-1.webp'),
 };
 
 /**
@@ -666,6 +667,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/self-sacrificing-dove-4.webp'),
     require('@/assets/panchatantra/self-sacrificing-dove-5.webp'),
     require('@/assets/panchatantra/self-sacrificing-dove-6.webp'),
+  ],
+  'panchatantra-old-man-with-young-wife': [
+    require('@/assets/panchatantra/old-man-with-young-wife-1.webp'),
+    require('@/assets/panchatantra/old-man-with-young-wife-2.webp'),
+    require('@/assets/panchatantra/old-man-with-young-wife-3.webp'),
+    require('@/assets/panchatantra/old-man-with-young-wife-4.webp'),
+    require('@/assets/panchatantra/old-man-with-young-wife-5.webp'),
+    require('@/assets/panchatantra/old-man-with-young-wife-6.webp'),
   ],
 };
 
