@@ -91,6 +91,7 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-unsocial-swans': require('@/assets/panchatantra/unsocial-swans-1.webp'),
   'panchatantra-self-sacrificing-dove': require('@/assets/panchatantra/self-sacrificing-dove-1.webp'),
   'panchatantra-old-man-with-young-wife': require('@/assets/panchatantra/old-man-with-young-wife-1.webp'),
+  'panchatantra-brahman-thief-and-ghost': require('@/assets/panchatantra/brahman-thief-and-ghost-1.webp'),
 };
 
 /**
@@ -675,6 +676,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/old-man-with-young-wife-4.webp'),
     require('@/assets/panchatantra/old-man-with-young-wife-5.webp'),
     require('@/assets/panchatantra/old-man-with-young-wife-6.webp'),
+  ],
+  'panchatantra-brahman-thief-and-ghost': [
+    require('@/assets/panchatantra/brahman-thief-and-ghost-1.webp'),
+    require('@/assets/panchatantra/brahman-thief-and-ghost-2.webp'),
+    require('@/assets/panchatantra/brahman-thief-and-ghost-3.webp'),
+    require('@/assets/panchatantra/brahman-thief-and-ghost-4.webp'),
+    require('@/assets/panchatantra/brahman-thief-and-ghost-5.webp'),
+    require('@/assets/panchatantra/brahman-thief-and-ghost-6.webp'),
   ],
 };
 

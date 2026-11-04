@@ -868,3 +868,14 @@ test('The Old Man with the Young Wife story uses six paragraph-aligned offline s
     assert.ok(getPanchatantraSceneArtwork('panchatantra-old-man-with-young-wife', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });
+
+test('The Brahman, the Thief, and the Ghost story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-brahman-thief-and-ghost');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-brahman-thief-and-ghost'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-brahman-thief-and-ghost'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-brahman-thief-and-ghost', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
