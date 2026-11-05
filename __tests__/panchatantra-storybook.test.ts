@@ -901,3 +901,14 @@ test('The Gullible Carpenter story uses six paragraph-aligned offline scenes', (
     assert.ok(getPanchatantraSceneArtwork('panchatantra-gullible-carpenter', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });
+
+test('Mouse-Maid Made Mouse story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-mouse-maid-made-mouse');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-mouse-maid-made-mouse'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-mouse-maid-made-mouse'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-mouse-maid-made-mouse', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
