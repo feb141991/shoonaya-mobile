@@ -27,3 +27,4 @@ test('getKinshipTier returns human kinship labels and tooltips for all generatio
   const grandChildren = getKinshipTier(6);
   assert.equal(grandChildren.label, 'Grandchildren');
 });
+

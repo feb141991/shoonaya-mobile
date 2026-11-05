@@ -91,12 +91,13 @@ type HubSection = "home" | "sabha" | "practice" | "family";
 const SECTIONS: Array<{
   id: HubSection;
   title: string;
+  subtitle: string;
   icon: keyof typeof Feather.glyphMap;
 }> = [
-  { id: "home", title: "Home", icon: "home" },
-  { id: "sabha", title: "Sabha", icon: "message-circle" },
-  { id: "practice", title: "Practice", icon: "check-circle" },
-  { id: "family", title: "Family", icon: "users" },
+  { id: "home", title: "Home", subtitle: "Sanctuary", icon: "home" },
+  { id: "sabha", title: "Sabha", subtitle: "Dialogue", icon: "message-circle" },
+  { id: "practice", title: "Practice", subtitle: "Sadhana", icon: "check-circle" },
+  { id: "family", title: "Vansh", subtitle: "Lineage", icon: "users" },
 ];
 
 const EMOJIS = ["🏡", "🪔", "🌿", "🕉️", "🪷", "🙏"];
@@ -1462,7 +1463,8 @@ export default function KulScreen() {
               )}
             </Card>
 
-            <View style={{ flexDirection: "row", gap: 6 }}>
+            {/* Sacred Card-Style Section Menu */}
+            <View style={{ flexDirection: "row", gap: 8 }}>
               {SECTIONS.map((section) => {
                 const selected = activeSection === section.id;
                 return (
@@ -1474,28 +1476,60 @@ export default function KulScreen() {
                     haptic="selection"
                     style={{
                       flex: 1,
-                      minHeight: 48,
-                      borderRadius: 15,
-                      borderWidth: 1,
+                      minHeight: 74,
+                      borderRadius: 18,
+                      borderWidth: selected ? 1.5 : 1,
                       borderColor: selected ? theme.brand : theme.border,
                       backgroundColor: selected ? theme.brandSoft : theme.card,
                       alignItems: "center",
                       justifyContent: "center",
-                      gap: 3,
+                      paddingVertical: 10,
+                      paddingHorizontal: 4,
+                      gap: 4,
+                      shadowColor: selected ? theme.brand : COLORS.darkBg,
+                      shadowOpacity: selected ? 0.25 : 0.04,
+                      shadowRadius: selected ? 8 : 2,
+                      elevation: selected ? 3 : 1,
                     }}
                   >
-                    <Feather
-                      name={section.icon}
-                      size={16}
-                      color={selected ? theme.brand : theme.dim}
-                    />
-                    <Text
+                    <View
                       style={{
-                        ...TYPE.chip,
-                        color: selected ? theme.brand : theme.dim,
+                        width: 30,
+                        height: 30,
+                        borderRadius: 15,
+                        backgroundColor: selected ? theme.brand : theme.cardSoft,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Feather
+                        name={section.icon}
+                        size={14}
+                        color={selected ? "#FFFFFF" : theme.dim}
+                      />
+                    </View>
+                    <Text
+                      numberOfLines={1}
+                      style={{
+                        ...TYPE.label,
+                        fontSize: 12,
+                        fontFamily: selected ? FONTS.sansSemiBold : FONTS.sansMedium,
+                        color: selected ? theme.brand : theme.text,
+                        lineHeight: 15,
                       }}
                     >
                       {section.title}
+                    </Text>
+                    <Text
+                      numberOfLines={1}
+                      style={{
+                        ...TYPE.caption,
+                        fontSize: 9.5,
+                        color: selected ? theme.brand : theme.dim,
+                        lineHeight: 12,
+                      }}
+                    >
+                      {section.subtitle}
                     </Text>
                   </PressableSurface>
                 );
