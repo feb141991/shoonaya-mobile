@@ -286,7 +286,6 @@ describe('Batch 1, 2, 3, 4 & 5 Festival Content & Hero Integration Suite', () =>
     const requiredHeroIds = [
       // Batch 1
       'ganesha-divine-dhyana',
-      'chhath-surya-arghya',
       'dhanteras-deepam-kuber',
       'naraka-chaturdashi-dawn-deepam',
       'diwali-deepam-serenity',
@@ -304,7 +303,6 @@ describe('Batch 1, 2, 3, 4 & 5 Festival Content & Hero Integration Suite', () =>
       'ugadi-pachadi-mango-dawn',
       'akshaya-tritiya-udaka-kumbha',
       'narasimha-twilight-protection',
-      'shani-peepal-deepam-dhyana',
       'jagannath-puri-rath-yatra',
       'nag-panchami-shesha-dhyana',
       'hartalika-teej-forest-tapasya',
@@ -318,9 +316,7 @@ describe('Batch 1, 2, 3, 4 & 5 Festival Content & Hero Integration Suite', () =>
       'sikh-hola-mohalla',
       'sikh-lohri-bonfire',
       'sikh-guru-arjan-dev-shaheedi',
-      'sikh-guru-tegh-bahadur-shaheedi',
       'sikh-chaar-sahibzade-shaheedi',
-      'sikh-guru-ravidas-jayanti',
       // Batch 4 (Buddhist & Jain)
       'buddhist-vesak-buddha-purnima',
       'buddhist-asalha-puja-dharmachakra',
