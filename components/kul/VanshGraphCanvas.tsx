@@ -302,21 +302,8 @@ export function VanshGraphCanvas({
                     />
                   ) : null}
 
-                  {/* Top Badge: Gen pill & Smriti/Living status */}
+                  {/* Top Header: Subtle Diya indicator for departed elders; clean for living */}
                   <View style={styles.cardHeaderRow}>
-                    <View
-                      style={[
-                        styles.genPill,
-                        {
-                          backgroundColor: theme.brandSoft,
-                        },
-                      ]}
-                    >
-                      <Text style={[styles.genPillText, { color: theme.brand, fontFamily: FONTS.sansSemiBold }]}>
-                        Gen {node.generation}
-                      </Text>
-                    </View>
-
                     {node.isRemembered ? (
                       <View
                         style={[
@@ -328,12 +315,11 @@ export function VanshGraphCanvas({
                         ]}
                       >
                         <Text style={styles.diyaIcon}>🪔</Text>
-                        <Text style={[styles.smritiText, { color: theme.brandStrong, fontFamily: FONTS.serifBold }]}>
-                          स्मृति
-                        </Text>
                       </View>
-                    ) : (
+                    ) : node.data.linked_user_id ? (
                       <View style={[styles.statusDot, { backgroundColor: COLORS.success }]} />
+                    ) : (
+                      <View style={{ height: 6 }} />
                     )}
                   </View>
 
@@ -487,7 +473,8 @@ const styles = StyleSheet.create({
   cardHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
+    minHeight: 18,
   },
   genPill: {
     paddingHorizontal: 7,
