@@ -140,8 +140,7 @@ export function SanskaraTree({ subjectKey, records, editable, selectedId, viewpo
           </Animated.View>
         </Animated.View>
       </GestureDetector>
-      <View style={[styles.bottom, { bottom: insets.bottom + SPACING.lg }]}>
-        {editable && <PressableSurface onPress={() => onAdd()} style={[styles.add, { backgroundColor: theme.card, borderColor: theme.border }]}><Text style={[TYPE.label, { color: theme.brand }]}>{records.length ? 'Plant a milestone' : 'Plant your first milestone'}</Text></PressableSurface>}
+      <View style={[styles.hudDock, { bottom: insets.bottom + 72 }]}>
         <View style={[styles.hud, { backgroundColor: theme.glass, borderColor: theme.border }]}>
           <PressableSurface style={styles.control} accessibilityLabel="Zoom in" onPress={() => zoom(scale.value + 0.25)}><Feather name="plus" size={20} color={theme.text} /></PressableSurface>
           <PressableSurface style={styles.control} accessibilityLabel="Zoom out" onPress={() => zoom(scale.value - 0.25)}><Feather name="minus" size={20} color={theme.text} /></PressableSurface>
@@ -160,7 +159,7 @@ const styles = StyleSheet.create({
   viewport: { flex: 1, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   node: { flex: 1, borderWidth: 1, borderRadius: RADII.lg, padding: SPACING.sm, alignItems: 'center', justifyContent: 'center' },
   control: { minWidth: MIN_TOUCH_TARGET, minHeight: MIN_TOUCH_TARGET, alignItems: 'center', justifyContent: 'center' },
-  bottom: { position: 'absolute', left: SPACING.lg, right: SPACING.lg, alignItems: 'center', gap: SPACING.sm },
+  hudDock: { position: 'absolute', right: SPACING.lg, zIndex: 10 },
   hud: { flexDirection: 'row', borderWidth: 1, borderRadius: RADII.pill, paddingHorizontal: SPACING.sm },
   add: { minHeight: MIN_TOUCH_TARGET, padding: SPACING.md, borderRadius: RADII.pill, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
   listRow: { borderWidth: 1, borderRadius: RADII.lg, padding: SPACING.lg, minHeight: MIN_TOUCH_TARGET, gap: SPACING.sm },

@@ -3,7 +3,9 @@ import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
+  Modal,
   Platform,
+  Pressable,
   RefreshControl,
   ScrollView,
   Text,
@@ -303,6 +305,7 @@ export default function KulScreen() {
   const [newKulEmoji, setNewKulEmoji] = useState("🏡");
   const [isEditingKulName, setIsEditingKulName] = useState(false);
   const [editedKulName, setEditedKulName] = useState("");
+  const [showKutumbInfo, setShowKutumbInfo] = useState(false);
   const [inviteCode, setInviteCode] = useState("");
   const [messageDraft, setMessageDraft] = useState("");
 
@@ -1287,6 +1290,31 @@ export default function KulScreen() {
                   <Text style={{ fontSize: 28 }}>{kul.avatarEmoji}</Text>
                 </View>
                 <View style={{ flex: 1 }}>
+                  {/* Kutumb eyebrow with English meaning and (i) info button */}
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                    <Text style={{ ...TYPE.caption, color: theme.brand, fontFamily: FONTS.serifBold, lineHeight: 18 }}>
+                      Kutumb (कुटुम्ब)
+                    </Text>
+                    <Text style={{ ...TYPE.caption, color: theme.dim, lineHeight: 18 }}>
+                      · Family Sanctuary
+                    </Text>
+                    <PressableSurface
+                      accessibilityRole="button"
+                      accessibilityLabel="About Kutumb"
+                      accessibilityHint="Learn about Kutumb and its meaning"
+                      onPress={() => setShowKutumbInfo(true)}
+                      style={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: 10,
+                        backgroundColor: theme.brandSoft,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Feather name="info" size={11} color={theme.brand} />
+                    </PressableSurface>
+                  </View>
                   {isEditingKulName ? (
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                       <TextInput
@@ -2538,6 +2566,78 @@ export default function KulScreen() {
           theme={theme}
           isDark={isDark}
         />
+      ) : null}
+      {showKutumbInfo ? (
+        <Modal
+          visible={showKutumbInfo}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowKutumbInfo(false)}
+        >
+          <Pressable
+            onPress={() => setShowKutumbInfo(false)}
+            style={{
+              flex: 1,
+              backgroundColor: COLORS.celebrationScrim,
+              justifyContent: "center",
+              alignItems: "center",
+              padding: 20,
+            }}
+          >
+            <Pressable
+              onPress={(event) => event.stopPropagation()}
+              style={{
+                width: "100%",
+                maxWidth: 360,
+                borderRadius: RADII.xl,
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+                borderWidth: 1,
+                padding: 22,
+                gap: 12,
+                shadowColor: "#000",
+                shadowOpacity: 0.25,
+                shadowRadius: 16,
+                elevation: 8,
+              }}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1 }}>
+                  <Text style={{ fontSize: 20 }}>🪔</Text>
+                  <Text style={{ ...TYPE.title, color: theme.text, fontFamily: FONTS.serifBold, flex: 1, lineHeight: 24 }}>
+                    Kutumb · कुटुम्ब
+                  </Text>
+                </View>
+                <PressableSurface
+                  accessibilityLabel="Close"
+                  onPress={() => setShowKutumbInfo(false)}
+                  style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: theme.cardSoft, alignItems: "center", justifyContent: "center" }}
+                >
+                  <Feather name="x" size={16} color={theme.dim} />
+                </PressableSurface>
+              </View>
+
+              <Text style={{ ...TYPE.caption, color: theme.brand, fontFamily: FONTS.sansSemiBold }}>
+                Sacred Family Sanctuary & Lineage
+              </Text>
+
+              <Text style={{ ...TYPE.body, color: theme.text, lineHeight: 22 }}>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, color: theme.brandStrong }}>Kutumba</Text> is the ancient Sanskrit term for the sacred household, family clan, and spiritual hearth, celebrated in the timeless adage <Text style={{ fontFamily: FONTS.serifBold, fontStyle: "italic" }}>Vasudhaiva Kutumbakam</Text> (&quot;The world is one family&quot;).
+              </Text>
+
+              <Text style={{ ...TYPE.caption, color: theme.dim, lineHeight: 18, borderTopWidth: 1, borderTopColor: theme.borderSoft, paddingTop: 10 }}>
+                In Shoonaya, your Kutumb is a private generational sanctuary to preserve ancestral lineage (Vansh), share daily practice (Japa &amp; Nitya Karma), and nurture shared sacred roots.
+              </Text>
+
+              <ActionButton
+                label="Understood"
+                onPress={() => setShowKutumbInfo(false)}
+                theme={theme}
+                isDark={isDark}
+              />
+            </Pressable>
+          </Pressable>
+        </Modal>
       ) : null}
     </Screen>
   );

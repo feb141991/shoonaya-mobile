@@ -97,8 +97,8 @@ export function computeVanshFitScale(
 }
 
 const DEFAULT_OPTIONS: Required<VanshLayoutOptions> = {
-  nodeWidth: 176,
-  nodeHeight: 110,
+  nodeWidth: 140,
+  nodeHeight: 140,
   levelGap: 96,
   siblingGap: 28,
   paddingX: 48,

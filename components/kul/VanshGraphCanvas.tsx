@@ -337,6 +337,11 @@ export function VanshGraphCanvas({
                     )}
                   </View>
 
+                  {/* Centered Sacred Avatar Circle */}
+                  <View style={[styles.avatarCircle, { backgroundColor: theme.brandSoft }]}>
+                    <Feather name="user" size={17} color={theme.brand} />
+                  </View>
+
                   {/* Member Name & Role */}
                   <View style={styles.memberBody}>
                     <Text
@@ -514,6 +519,15 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
+  },
+  avatarCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    marginVertical: 2,
   },
   memberBody: {
     gap: 2,
