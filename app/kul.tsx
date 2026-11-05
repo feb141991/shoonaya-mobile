@@ -66,6 +66,7 @@ import {
   transferKulGuardian,
   updateKulFamilyMember,
   updateKulLineage,
+  updateKulName,
   updateKulTirthaWish,
   type KulCalendarReference,
   type KulEvent,
@@ -300,6 +301,8 @@ export default function KulScreen() {
 
   const [newKulName, setNewKulName] = useState("");
   const [newKulEmoji, setNewKulEmoji] = useState("🏡");
+  const [isEditingKulName, setIsEditingKulName] = useState(false);
+  const [editedKulName, setEditedKulName] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [messageDraft, setMessageDraft] = useState("");
 
@@ -361,6 +364,8 @@ export default function KulScreen() {
     setAuthGateVisible(false);
     setNewKulName("");
     setNewKulEmoji("🏡");
+    setIsEditingKulName(false);
+    setEditedKulName("");
     setInviteCode("");
     setMessageDraft("");
     setShowTaskForm(false);
@@ -664,6 +669,26 @@ export default function KulScreen() {
       createKul(userId, { name, emoji: newKulEmoji }),
     );
     if (success) setNewKulName("");
+  };
+
+  const handleSaveKulName = async () => {
+    const name = editedKulName.trim();
+    if (name.length < 2) {
+      Alert.alert(
+        "Add a family name",
+        "Use at least two characters for your family circle name.",
+      );
+      return;
+    }
+    const success = await runMutation(
+      (userId) => updateKulName(userId, { name }),
+      {
+        successMessage: "Family circle name updated.",
+      },
+    );
+    if (success) {
+      setIsEditingKulName(false);
+    }
   };
 
   const handleJoinKul = async () => {
@@ -1262,14 +1287,90 @@ export default function KulScreen() {
                   <Text style={{ fontSize: 28 }}>{kul.avatarEmoji}</Text>
                 </View>
                 <View style={{ flex: 1 }}>
+                  {isEditingKulName ? (
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                      <TextInput
+                        value={editedKulName}
+                        onChangeText={setEditedKulName}
+                        style={{
+                          flex: 1,
+                          ...TYPE.title,
+                          lineHeight: 28,
+                          color: theme.text,
+                          borderBottomWidth: 1.5,
+                          borderColor: theme.brand,
+                          paddingVertical: 2,
+                        }}
+                        placeholder="Family circle name"
+                        placeholderTextColor={theme.dim}
+                        autoFocus
+                        maxLength={60}
+                      />
+                      <PressableSurface
+                        accessibilityLabel="Save family name"
+                        onPress={handleSaveKulName}
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 16,
+                          backgroundColor: theme.brand,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                        disabled={working || !editedKulName.trim()}
+                      >
+                        {working ? (
+                          <ActivityIndicator size="small" color="#fff" />
+                        ) : (
+                          <Feather name="check" size={16} color="#fff" />
+                        )}
+                      </PressableSurface>
+                      <PressableSurface
+                        accessibilityLabel="Cancel editing family name"
+                        onPress={() => setIsEditingKulName(false)}
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 16,
+                          backgroundColor: theme.cardSoft,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Feather name="x" size={16} color={theme.dim} />
+                      </PressableSurface>
+                    </View>
+                  ) : (
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                      <Text
+                        style={{ ...TYPE.hero, color: theme.text, flex: 1, lineHeight: 32 }}
+                        numberOfLines={2}
+                      >
+                        {kul.name}
+                      </Text>
+                      {snapshot.role === "guardian" && (
+                        <PressableSurface
+                          accessibilityLabel="Edit family name"
+                          onPress={() => {
+                            setEditedKulName(kul.name);
+                            setIsEditingKulName(true);
+                          }}
+                          style={{
+                            width: 30,
+                            height: 30,
+                            borderRadius: 15,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: theme.brandSoft,
+                          }}
+                        >
+                          <Feather name="edit-2" size={14} color={theme.brand} />
+                        </PressableSurface>
+                      )}
+                    </View>
+                  )}
                   <Text
-                    style={{ ...TYPE.hero, color: theme.text }}
-                    numberOfLines={2}
-                  >
-                    {kul.name}
-                  </Text>
-                  <Text
-                    style={{ ...TYPE.caption, color: theme.dim, marginTop: 2 }}
+                    style={{ ...TYPE.caption, color: theme.dim, marginTop: 2, lineHeight: 18 }}
                   >
                     {snapshot.members.length} family{" "}
                     {snapshot.members.length === 1 ? "member" : "members"} ·{" "}

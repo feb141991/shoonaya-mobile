@@ -303,6 +303,13 @@ export function leaveOrRemoveKulMember(userId: string, targetUserId: string) {
   return requestJson<{ success: true; deletedLastMember?: boolean }>("/api/native/kul/members", userId, { method: "DELETE", body: JSON.stringify({ targetUserId }) });
 }
 
+export function updateKulName(userId: string, input: { name?: string; emoji?: string }) {
+  return requestJson<{ success: true; name?: string; avatar_emoji?: string }>("/api/native/kul", userId, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
 export async function searchKulTirtha(userId: string, query: string) {
   const result = await requestJson<{ places: KulTirthaSearchResult[] }>(
     `/api/native/kul/tirtha?q=${encodeURIComponent(query)}`,
