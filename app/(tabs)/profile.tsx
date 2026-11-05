@@ -26,7 +26,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { SADHANA_REPORT_NAME } from '@/lib/privateExportFiles';
-import { sharePrivateExport } from '@/lib/privateExportFilesDevice';
+import { removeImagePickerCopies, sharePrivateExport } from '@/lib/privateExportFilesDevice';
 import { type AppLanguage } from '@/lib/language-runtime';
 import { type ProfileSuggestion } from '@/lib/profile-suggestions';
 import {
@@ -858,6 +858,9 @@ export default function ProfileScreen() {
       if (!isCurrent()) return;
       Alert.alert('Photo update failed', describeFailure(err, 'Could not update your profile picture. Please try again.'));
     } finally {
+      // The upload reads the picker's base64, never its file, so the cropped copy in the cache is finished with (AGENTS 25).
+      // It is removed even when the pick was abandoned, and again at sign-out.
+      removeImagePickerCopies();
       if (isCurrent()) setAvatarUploading(false);
     }
   };

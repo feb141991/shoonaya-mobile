@@ -472,11 +472,23 @@ Rules:
   `Sharing.shareAsync` resolves (same reason as above). The account-wide export (`/api/user/export`) holds no Sanskāra data, so the Sanskāra sheet is
   the only way to download it. Any new private file in the cache goes through one of the two purged device modules; `__tests__/private-export-files.test.ts`
   fails for any other file that references `Paths.cache` or `cacheDirectory`, and its list of allowed files (the two purged modules, the public
-  `shoonaya-dharmic-calendar.ics`, and the public read-aloud audio `tts_audio_N`) may only shrink. Guard: that test (25 mutations each proven to turn
-  it red, including reverting Settings, Profile and the layout to their previous files).
-- Classified in that sweep and not changed, because the guard's text search cannot see them: the share-card PNGs (`lib/share-card.ts` through
-  `react-native-view-shot` `tmpfile`; images the person chooses to post publicly, but the name-story card and its file name carry the person's own name,
-  and nothing here purges them) and the profile photo picker (`expo-image-picker` with `allowsEditing`; whether it leaves a copy in the cache was not
-  checked). Whether either needs a purge is a founder decision.
-- Not verified on a device: that the share sheet still opens for both files, that an old build's copy is removed on the first sign-out after the update,
-  or that a share started on Android still reads the file after the app moves on. This applies equally to human and AI-agent contributors.
+  `shoonaya-dharmic-calendar.ics`, and the public read-aloud audio `tts_audio_N`) may only shrink. Guard: that test (see the rule below).
+- Closed 2026-11-06 (the two classes the first fix could not see, because the libraries write the files, not our code): the share-card images and the
+  profile photo picker's copy. `lib/share-card.ts` takes the picture with `react-native-view-shot` (`tmpfile`), which leaves it in the cache root on
+  Android (named after the caller's `fileName` plus digits, so the library's own cleanup, which only matches its default prefix, never removes it) and in
+  `tmp/ReactNative` on iOS, as a bare path rather than a `file://` uri. The name-story card and its file name carry the person's own name. The card is now
+  copied into the same purged `private-exports` directory and the original is deleted; if the copy fails the original is shared exactly as before
+  (a leftover file, never a lost share). Sharing availability is now checked before the picture is taken. `expo-image-picker` writes its crop to
+  `<cache>/ImagePicker/` on both platforms (read in its Android and iOS sources); the profile picture is uploaded from the base64 the picker returns, so
+  `pickAvatar` removes that folder in its `finally` block and the sign-out purge removes it too. Only the folder is ever removed, never a uri a pick
+  returns, because an unedited pick can be the person's own photo.
+- Rule for the next file: any library that writes its own files (`react-native-view-shot`, `expo-image-picker`, and `expo-print`, `expo-document-picker`,
+  `expo-image-manipulator`, `expo-camera`, `expo-media-library` if they are ever added) is listed in `__tests__/private-export-files.test.ts` with the
+  files that import it and how its output is purged; a new importer fails the test until it is. Every caller of `Sharing.shareAsync` is likewise
+  listed. Guard: that test (50 mutations each proven to turn it red, including reverting Settings, Profile, the layout and `lib/share-card.ts` to
+  their previous files).
+- Not verified on a device (and not exercised on any platform, only by unit tests with fake file systems and by reading the library sources): that the
+  share sheet still opens for the data export, the sadhana report and a share card on iOS and Android; that `File.copy` accepts the iOS bare path once
+  prefixed with `file://` and a cache-root source on Android (if not, the fallback shares the original, so a card still shares but is not purged);
+  that an old build's copy is removed on the first sign-out after the update; and that a share started on Android still reads the file after the app
+  moves on. Not measured: the added copy per share card. This applies equally to human and AI-agent contributors.
