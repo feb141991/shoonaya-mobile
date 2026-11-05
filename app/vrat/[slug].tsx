@@ -889,23 +889,22 @@ export default function VratDetailScreen() {
       }}
     >
       {currentChapter ? (
-        // Chapter layout: the date, observe and community cards open the
-        // first chapter; each later chapter is one section.
+        // Chapter layout: the date and community cards open the first chapter;
+        // fasting/vow card is placed on the final chapter after the sacred reading.
         <View>
           {currentChapterIndex === 0 ? (
             <>
               {headerCard}
-              {observeCard}
               {statsCard}
             </>
           ) : null}
           {chapterSection[currentChapter.key]}
+          {currentChapterIndex === chapters.length - 1 ? observeCard : null}
           {readCompletionCard}
         </View>
       ) : (
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
           {headerCard}
-          {observeCard}
           {statsCard}
           {significanceCard}
           {practiceCard}
@@ -913,6 +912,7 @@ export default function VratDetailScreen() {
           {dontsCard}
           {mantraCard}
           {kathaCard}
+          {observeCard}
           {readCompletionCard}
         </ScrollView>
       )}
