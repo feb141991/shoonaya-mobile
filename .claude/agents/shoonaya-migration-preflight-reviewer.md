@@ -41,6 +41,38 @@ them, or run anything against a database. You produce a pre-flight report that t
 5. **Rollback.** A matching rollback file exists, undoes every object the migration creates or changes, and does not
    drop user data the forward migration did not create.
 
+## Gaps the five checks do not cover (check these too)
+
+6. **Destructive migrations (`DROP TABLE/COLUMN`, `DELETE`, `TRUNCATE`).** Require: an empty-or-archived assertion that
+   aborts the migration if user rows exist, an archive of any non-user data, no `CASCADE` (list dependents with
+   `rg` for views, functions, triggers, FKs, policies), and a rollback that restores from the archive. Then search
+   *every* reader of the dropped object: Native, backend `src/`, cron routes, **deployed edge functions**
+   (`list_edge_functions` is not available to you, so say "edge functions not checked" and name the ones whose source
+   is in the repo), and `packages/`. A reader that still exists is a blocker, not a note.
+7. **Dependency and ordering among unapplied migrations.** List every unapplied migration that touches the same
+   objects (`rg` the object names across `supabase/migrations` newer than the last applied one). State the required
+   apply order, and whether any migration needs an earlier unapplied one. Never assume the timestamps are the order.
+8. **Deploy order.** For each change say which side must ship first (backend route, dispatcher/cron code, Native
+   build or OTA). A cron or dispatcher that calls a function the migration has not created must tolerate its absence
+   (PGRST202 / 42883); say whether it does, with file:line.
+9. **Scheduled jobs and concurrency.** New or moved `cron.schedule` entries: check collisions with existing minutes,
+   and that the job is idempotent. For DDL, require `lock_timeout` / `statement_timeout` and say when in the cron
+   cycle it is safe to apply (between runs).
+10. **Policies, grants and definers.** For each new table/function list RLS on/forced, every policy's `USING` and
+    `WITH CHECK`, `GRANT`/`REVOKE` to `anon`, `authenticated`, `service_role`, `SECURITY DEFINER` + fixed
+    `search_path`, and `REVOKE ... FROM PUBLIC` on definers. A function reachable by `authenticated` must derive
+    identity from `auth.uid()`.
+11. **Test evidence.** Look for `supabase/tests/<name>.test.sql` and say whether it exists and what it covers
+    (apply, rollback, re-apply, constraint rejections). You cannot run it; say "not run by me" unless the founder
+    gives output. A migration with no database test is not ready.
+12. **Notification and privacy contracts.** If it touches `notifications`, `notification_schedule`, event types or
+    key spaces: list the key prefixes, show they do not overlap legacy keys (section 6), and that quiet hours,
+    opt-in and dedupe are re-checked at send time. If it stores anything about a person: retention, deletion on
+    account deletion, and audit content (ids only, never content).
+13. **Applied state and types.** Report applied/unapplied per environment from `verify:migrations:linked` output
+    only, else write "applied state unknown". Say whether `src/types/database.generated.ts` needs regeneration and
+    whether it was already hand-edited ahead of the migration (then flag drift risk).
+
 Also check: RLS enabled on new tables, policies derive identity from `auth.uid()` (never a request-body user id),
 grants and `SECURITY DEFINER` functions set `search_path`, private writes are idempotent with a database constraint
 (section 4), and generated types need regenerating.
@@ -54,6 +86,14 @@ Migration: <file>   Rollback: <file or MISSING>
 3 Data:       <updates/defaults found>; counts query: <sql>
 4 Locks:      <statements of concern or none>
 5 Rollback:   PASS / FAIL — <what is not undone>
+6 Destructive: n/a / <assertion, archive, readers found>
+7 Order:      <apply order and dependencies>
+8 Deploy:     <what ships first; tolerance of absence file:line>
+9 Jobs/locks: <cron, lock_timeout, safe window>
+10 Policies:  <RLS, grants, definers>
+11 Tests:     <file, coverage, not run by me>
+12 Notif/privacy: <keys, retention, deletion, audit>
+13 Applied/types: <state per environment or unknown; regeneration>
 RLS/grants:   <findings>
 Verdict:      Ready to request approval / Not ready — <blocking items>
 Not checked:  <anything you could not verify>
