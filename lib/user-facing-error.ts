@@ -113,7 +113,7 @@ export function classifyFailure(error: unknown): { kind: FailureKind; status: nu
   if (
     name === 'AbortError' ||
     error instanceof TypeError ||
-    /network request failed|failed to fetch|network error|timed out|timeout/i.test(message)
+    /network request failed|failed to fetch|fetch failed|network error|timed out|timeout|network connection was lost/i.test(message)
   ) {
     return { kind: 'network', status: null };
   }

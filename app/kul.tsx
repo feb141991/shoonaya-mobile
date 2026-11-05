@@ -83,6 +83,7 @@ import {
   type KulTirthaSearchResult,
 } from "@/lib/kul";
 import { recordInteractionTiming, recordRefreshFailure, recordRouteOpen } from "@/lib/telemetry";
+import { describeFailure } from "@/lib/user-facing-error";
 
 type HubSection = "home" | "sabha" | "practice" | "family";
 
@@ -644,13 +645,13 @@ export default function KulScreen() {
         return true;
       } catch (mutationError) {
         if (lease.isCurrent()) recordInteractionTiming({ kind: "authenticated", userId: currentUserId }, "kul_mutation", Date.now() - startedAt);
-        if (lease.isCurrent())
-          Alert.alert(
-            "Could not complete that action",
-            mutationError instanceof Error
-              ? mutationError.message
-              : "Please try again.",
+        if (lease.isCurrent()) {
+          const userMessage = describeFailure(
+            mutationError,
+            "Could not save family details. Please check your connection and try again.",
           );
+          Alert.alert("Could not complete that action", userMessage);
+        }
         return false;
       } finally {
         if (lease.isCurrent()) setWorking(false);
