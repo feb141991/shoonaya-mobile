@@ -444,3 +444,26 @@ Rules:
 - Screens and components may call AsyncStorage directly only for values already keyed by user id, device preferences, or UI flags; the guard keeps a shrink-only list of the files that do, each with its reason.
 - A load callback must not depend on the data it sets: My Progress listed `data` in its `loadData` dependencies, so each response re-created the callback, re-ran the effect and fetched again.
 - Origin: the 2026-11-03 baseline security brief found My Progress (added 2026-10-31, `cdc12bc`) saved `/api/native/progress` under the fixed key `shoonaya_progress_cache_v2`, rendered it on mount before checking identity, and was not purged at sign-out: on a shared device the next person saw the previous person's practice progress, and kept seeing it if their own fetch failed. The sweep found the same shape in the name story (`shoonaya:last_name_story`, also written by onboarding), Japa's custom mantra, Dharm Veer history, and Vrat fasting mode, sankalpa and read flags; all now go through `lib/userScopedStorage.ts`, and every purge also deletes the old unscoped keys an earlier build left on the device. The remaining direct AsyncStorage callers were classified (user-keyed, device preference or UI flag) and listed. Guard: `__tests__/user-scoped-storage.test.ts` (its source checks fail with the screens reverted). Not verified on a device.
+
+### 25. A Person Can Always Take Their Sanskāra Data and Delete It
+- "Your Sanskāra data" (`components/sanskara/SanskaraDataSheet.tsx`, opened from `app/kul/sanskara.tsx`) lists the person's timelines from the
+  server's **export**, never from the Sanskāra overview. Export, `delete-mine` and `delete-dependent` work after religious-data consent is
+  withdrawn; the overview does not. Rebuilding the list on the overview, or opening the sheet only from the loaded state, hides the buttons
+  from exactly the people who withdrew consent and still need to take their data or remove it. The sheet is mounted outside every state
+  branch of the screen and the consent card offers it too.
+- The export holds private notes. It lives in the sheet's state only while the sheet is open for one identity, is never cached or stored, and is
+  dropped when the sheet closes or the identity changes (section 22: a late response is discarded). A downloaded copy lives in one cache directory
+  (`sanskara-export`, `lib/sanskaraExportDevice.ts`) and is removed before each new download, after a failed share, after a delete, at sign-out and
+  on an account switch. It is deliberately NOT removed when the share sheet resolves: the Expo SDK 57 sharing docs do not say whether that is before
+  or after the receiving app has read the file, and an attachment read late would arrive empty.
+- A delete says who loses the timeline (any manager deletes it for every manager), that it cannot be undone, and that a downloaded copy is the only
+  way back. One request id is made per confirmation and reused on retry, so a lost response replays instead of deleting twice. A 404 means the
+  list was stale (another manager deleted it, or the person is no longer a manager): reload, do not loop. A former manager has no delete button.
+- Never say "saved" or "downloaded" after the share sheet closes: whether the person saved the file is not reported back.
+- Origin: 2026-11-05. Draft privacy wording promised deleting a timeline and downloading a copy; reading the app showed `delete-dependent`,
+  `delete-mine` and `export` existed in the API and the contract file but no screen called them, although the authorization contract (E7) promised an
+  export before the 12-month former-manager window ends. Guard: `__tests__/sanskara-data.test.ts` (33 mutations each proven to turn a test red).
+  Not verified on a device, in light and dark mode, with large text or on 3-button Android navigation, and not in any build or over-the-air update.
+- Still open, found in the same sweep (two more private files written to the cache and never removed at sign-out): Settings "Download your data"
+  writes `shoonaya-data.json` and Profile's sadhana report writes `sadhana-report.html`. The account-wide export (`/api/user/export`) also holds no
+  Sanskāra data, so this sheet is the only way to download it. This applies equally to human and AI-agent contributors.

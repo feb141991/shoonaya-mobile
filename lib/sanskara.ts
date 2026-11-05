@@ -131,6 +131,25 @@ export async function fetchSoleManagerDependents(userId: string): Promise<Sanska
   return handleReadResponse('sole-manager-dependents', response, userId);
 }
 
+/**
+ * Everything the caller owns, manages or can still read as a former manager, notes included. Works without religious-data
+ * consent (the server allows export whatever the consent state). Never cached and never stored: the caller holds it in memory
+ * while a sheet is open and hands it to the system share sheet (AGENTS 25).
+ */
+export async function fetchSanskaraExport(userId: string): Promise<SanskaraExport> {
+  const response = await apiFetch('/api/native/sanskara/export', { expectedUserId: userId });
+  return handleReadResponse('export', response, userId);
+}
+
+/**
+ * Removes any downloaded copy of the Sanskāra export from the app's cache. Called at sign-out and on an account switch.
+ * Best effort and never throws: it must not stand in the way of a sign-out. The file module is loaded only when this runs, so
+ * the root layout does not load the file-system module at startup.
+ */
+export function purgeSanskaraExportFiles(): void {
+  void import('./sanskaraExportDevice').then((device) => device.removeSanskaraExportFiles()).catch(() => {});
+}
+
 export async function fetchSanskaraReminders(userId: string): Promise<SanskaraReminder[]> {
   const response = await apiFetch('/api/native/sanskara/reminders', {
     expectedUserId: userId,

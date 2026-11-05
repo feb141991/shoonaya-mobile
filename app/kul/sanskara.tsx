@@ -43,6 +43,7 @@ import { SanskaraHandoverModal } from '@/components/sanskara/SanskaraHandoverMod
 import { SanskaraHandoverBanner } from '@/components/sanskara/SanskaraHandoverBanner';
 import { SanskaraEarlyHandover } from '@/components/sanskara/SanskaraEarlyHandover';
 import { SanskaraManagers } from '@/components/sanskara/SanskaraManagers';
+import { SanskaraDataSheet } from '@/components/sanskara/SanskaraDataSheet';
 import { handoverStage, type HandoverStage } from '@/lib/sanskaraHandover';
 
 type ActiveSubject =
@@ -81,6 +82,9 @@ export default function SanskaraScreen() {
   const [newMilestoneDate, setNewMilestoneDate] = useState<string | null>(null);
   const [savingMilestone, setSavingMilestone] = useState(false);
 
+  // "Your Sanskāra data": download a copy, delete a timeline. Closed whenever the identity changes.
+  const [showData, setShowData] = useState(false);
+
   // Handover modal
   const [handoverModalVisible, setHandoverModalVisible] = useState(false);
   const [handoverMode, setHandoverMode] = useState<'start' | 'accept'>('accept');
@@ -100,6 +104,7 @@ export default function SanskaraScreen() {
       loadSeqRef.current += 1;
       setOverview(null);
       setKulSnapshot(null);
+      setShowData(false);
       setCurrentUserId(id);
       if (!id) setLoading(false);
     };
@@ -336,6 +341,15 @@ export default function SanskaraScreen() {
     [currentUserId, activeSubjectId],
   );
 
+  // A timeline was deleted from the data sheet (or found already gone). Leave a tab that no longer exists and reload.
+  const handleDataChanged = useCallback(
+    (deletedId: string | null) => {
+      if (deletedId) setActiveTab((tab) => (tab === deletedId ? 'me' : tab));
+      if (currentUserId) void loadData(currentUserId, true);
+    },
+    [currentUserId, loadData],
+  );
+
   // Handover actions
   const handleStartClaim = useCallback(
     async (subjectId: string) => {
@@ -374,6 +388,14 @@ export default function SanskaraScreen() {
         </View>
 
         <View style={styles.topActionRow}>
+          <PressableSurface
+            onPress={() => setShowData(true)}
+            hitSlop={8}
+            style={[styles.iconAction, { backgroundColor: theme.cardSoft, borderColor: theme.borderSoft }]}
+            accessibilityLabel="Your Sanskāra data: download a copy or delete"
+          >
+            <Feather name="database" size={16} color={theme.brand} />
+          </PressableSurface>
           <PressableSurface
             onPress={() => {
               setHandoverMode('accept');
@@ -497,6 +519,12 @@ export default function SanskaraScreen() {
               style={[styles.primaryButton, { backgroundColor: theme.brand }]}
             >
               <Text style={[styles.primaryButtonText, { color: theme.textOnBrand }]}>Open Privacy Settings</Text>
+            </PressableSurface>
+            <PressableSurface
+              onPress={() => setShowData(true)}
+              style={[styles.primaryButton, { backgroundColor: theme.cardSoft, borderColor: theme.border, borderWidth: 1 }]}
+            >
+              <Text style={[styles.primaryButtonText, { color: theme.text }]}>Download or delete my data</Text>
             </PressableSurface>
           </View>
         </View>
@@ -706,6 +734,14 @@ export default function SanskaraScreen() {
         onClose={() => setShowSharing(false)}
         onGrantView={handleGrantView}
         onRevokeGrant={handleRevokeGrant}
+      />
+
+      {/* Your Sanskāra data: works without religious-data consent (AGENTS 25) */}
+      <SanskaraDataSheet
+        visible={showData}
+        userId={currentUserId}
+        onClose={() => setShowData(false)}
+        onChanged={handleDataChanged}
       />
 
       {/* Handover Modal */}
