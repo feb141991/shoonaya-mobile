@@ -92,6 +92,7 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-self-sacrificing-dove': require('@/assets/panchatantra/self-sacrificing-dove-1.webp'),
   'panchatantra-old-man-with-young-wife': require('@/assets/panchatantra/old-man-with-young-wife-1.webp'),
   'panchatantra-brahman-thief-and-ghost': require('@/assets/panchatantra/brahman-thief-and-ghost-1.webp'),
+  'panchatantra-snake-in-princes-belly': require('@/assets/panchatantra/snake-in-princes-belly-1.webp'),
 };
 
 /**
@@ -684,6 +685,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/brahman-thief-and-ghost-4.webp'),
     require('@/assets/panchatantra/brahman-thief-and-ghost-5.webp'),
     require('@/assets/panchatantra/brahman-thief-and-ghost-6.webp'),
+  ],
+  'panchatantra-snake-in-princes-belly': [
+    require('@/assets/panchatantra/snake-in-princes-belly-1.webp'),
+    require('@/assets/panchatantra/snake-in-princes-belly-2.webp'),
+    require('@/assets/panchatantra/snake-in-princes-belly-3.webp'),
+    require('@/assets/panchatantra/snake-in-princes-belly-4.webp'),
+    require('@/assets/panchatantra/snake-in-princes-belly-5.webp'),
+    require('@/assets/panchatantra/snake-in-princes-belly-6.webp'),
   ],
 };
 
