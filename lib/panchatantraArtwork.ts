@@ -93,6 +93,7 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-old-man-with-young-wife': require('@/assets/panchatantra/old-man-with-young-wife-1.webp'),
   'panchatantra-brahman-thief-and-ghost': require('@/assets/panchatantra/brahman-thief-and-ghost-1.webp'),
   'panchatantra-snake-in-princes-belly': require('@/assets/panchatantra/snake-in-princes-belly-1.webp'),
+  'panchatantra-gullible-carpenter': require('@/assets/panchatantra/gullible-carpenter-1.webp'),
 };
 
 /**
@@ -693,6 +694,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/snake-in-princes-belly-4.webp'),
     require('@/assets/panchatantra/snake-in-princes-belly-5.webp'),
     require('@/assets/panchatantra/snake-in-princes-belly-6.webp'),
+  ],
+  'panchatantra-gullible-carpenter': [
+    require('@/assets/panchatantra/gullible-carpenter-1.webp'),
+    require('@/assets/panchatantra/gullible-carpenter-2.webp'),
+    require('@/assets/panchatantra/gullible-carpenter-3.webp'),
+    require('@/assets/panchatantra/gullible-carpenter-4.webp'),
+    require('@/assets/panchatantra/gullible-carpenter-5.webp'),
+    require('@/assets/panchatantra/gullible-carpenter-6.webp'),
   ],
 };
 

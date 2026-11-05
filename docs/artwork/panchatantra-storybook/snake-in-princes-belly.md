@@ -29,3 +29,4 @@ through `scripts/optimize-panchatantra-art.py` at quality 80, 1376×768:
 | `snake-in-princes-belly-6.webp` | 104 KB | 37.7 dB |
 
 Scene 1 also serves as the offline cover. No text, captions, or source claims are embedded in the artwork.
+

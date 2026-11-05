@@ -890,3 +890,14 @@ test('The Snake in the Prince\'s Belly story uses six paragraph-aligned offline 
     assert.ok(getPanchatantraSceneArtwork('panchatantra-snake-in-princes-belly', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });
+
+test('The Gullible Carpenter story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-gullible-carpenter');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-gullible-carpenter'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-gullible-carpenter'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-gullible-carpenter', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
