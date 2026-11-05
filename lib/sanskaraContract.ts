@@ -19,8 +19,13 @@ export type SanskaraEarlyHandoverStatus = {
   approvals_have: number; approvals_total: number; i_approved: boolean; i_started: boolean;
   expires_at: string | null; acceptor: SanskaraPerson | null;
 };
+/** A manager of a managed child, and the Kul members who could be added (G4). A candidate is a person, nothing else. */
+export type SanskaraManagerEntry = SanskaraPerson & { is_me: boolean; added_at: string };
+export type SanskaraManagerPicker = { managers: SanskaraManagerEntry[]; candidates: SanskaraPerson[]; limit: number };
+/** A managed child whose only manager is the caller: what deleting the account would delete. */
+export type SanskaraSoleDependent = { id: string; display_name: string };
 export type SanskaraOverview = { timeline: SanskaraTimeline; dependents: SanskaraDependent[]; shared: SanskaraSharedRecord[] };
-export type SanskaraReads = { timeline: SanskaraTimeline; dependents: SanskaraDependent[]; 'shared-with-me': SanskaraSharedRecord[]; access: SanskaraAccess[]; reminders: SanskaraReminder[]; export: SanskaraExport; 'early-handover-status': SanskaraEarlyHandoverStatus };
+export type SanskaraReads = { managers: SanskaraManagerPicker; 'sole-manager-dependents': SanskaraSoleDependent[]; timeline: SanskaraTimeline; dependents: SanskaraDependent[]; 'shared-with-me': SanskaraSharedRecord[]; access: SanskaraAccess[]; reminders: SanskaraReminder[]; export: SanskaraExport; 'early-handover-status': SanskaraEarlyHandoverStatus };
 export type SanskaraWrites = {
   'create-dependent': { name: string; birthDate: string; kulFamilyMemberId?: string | null };
   'set-kul-link': { subjectId: string; kulFamilyMemberId: string | null };
@@ -91,10 +96,16 @@ export const isSanskaraEarlyHandoverStatus = (v: unknown): v is SanskaraEarlyHan
   && bool(v.available) && (v.min_age === null || (integer(v.min_age) && (v.min_age as number) <= 120)) && EARLY_STATES.includes(String(v.state))
   && integer(v.approvals_have) && integer(v.approvals_total) && bool(v.i_approved) && bool(v.i_started)
   && (v.expires_at === null || timestamp(v.expires_at)) && (v.acceptor === null || person(v.acceptor));
+export const isSanskaraManagerPicker = (v: unknown): v is SanskaraManagerPicker => obj(v) && fields(v, ['managers', 'candidates', 'limit'])
+  && list(v.managers, (m): m is SanskaraManagerEntry => obj(m) && fields(m, ['id', 'username', 'full_name', 'is_me', 'added_at']) && isSanskaraUuid(m.id) && text(m.username) && text(m.full_name) && bool(m.is_me) && timestamp(m.added_at))
+  && list(v.candidates, person) && integer(v.limit) && (v.limit as number) >= 1 && (v.limit as number) <= 10;
+export const isSanskaraSoleDependent = (v: unknown): v is SanskaraSoleDependent => obj(v) && fields(v, ['id', 'display_name']) && isSanskaraUuid(v.id) && str(v.display_name);
 export const isSanskaraOverview = (v: unknown): v is SanskaraOverview => obj(v) && fields(v, ['timeline', 'dependents', 'shared']) && isSanskaraTimeline(v.timeline) && list(v.dependents, isSanskaraDependent) && list(v.shared, isSanskaraSharedRecord);
 
 export function guardSanskaraRead<K extends keyof SanskaraReads>(action: K, value: unknown): value is SanskaraReads[K] {
   switch (action) {
+    case 'managers': return isSanskaraManagerPicker(value);
+    case 'sole-manager-dependents': return list(value, isSanskaraSoleDependent);
     case 'timeline': return isSanskaraTimeline(value);
     case 'dependents': return list(value, isSanskaraDependent);
     case 'shared-with-me': return list(value, isSanskaraSharedRecord);

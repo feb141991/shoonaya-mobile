@@ -21,6 +21,7 @@ import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, SPACING, TYPE, themeCo
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { accountDeletionCopy, deletionReasonLabel } from '@/lib/accountDeletionCopy';
 import { Button } from '@/components/ui/Button';
+import { soleManagerNames } from '@/lib/sanskaraManagers';
 
 // Exit-feedback reasons come from GET /api/user/delete/preview (backend
 // DELETION_REASONS, src/lib/account-deletion-reasons.ts) and the chosen `id`
@@ -39,6 +40,11 @@ export type DeletionJourneySnapshot = {
   activeSankalpas?: number;
   ownedKuls?: Array<{ id: string; name: string }>;
   ownedMandalis?: Array<{ id: string; name: string }>;
+  /**
+   * Children on Sanskāra whose only manager is this account (they are deleted with it): their names; `null` when the check could not be
+   * made, which is shown as such and never as "none"; omitted when the person has no Sanskāra access to check.
+   */
+  soleManagerDependents?: string[] | null;
   reasons?: DeletionReason[];
   /** false when the preview could not be loaded: show no numbers rather than guessed ones. */
   summaryAvailable?: boolean;
@@ -308,6 +314,28 @@ export function AccountDeletionSheet({
                     <Feather name="users" size={16} color={isDark ? COLORS.warningDark : COLORS.warningLight} style={{ marginTop: 1 }} />
                     <Text style={{ ...TYPE.caption, color: theme.text, flex: 1, lineHeight: 18 }}>
                       {copy.kulCreated(snapshot.ownedKuls.map((kul) => kul.name).join(', '))}
+                    </Text>
+                  </View>
+                )}
+
+                {/* Sanskāra: children whose only manager is this account are deleted with it (contract E10). */}
+                {snapshot.soleManagerDependents !== undefined
+                  && (snapshot.soleManagerDependents === null || snapshot.soleManagerDependents.length > 0) && (
+                  <View
+                    accessibilityRole="alert"
+                    style={[
+                      styles.infoBanner,
+                      {
+                        backgroundColor: isDark ? COLORS.warningBgDark : COLORS.warningBgLight,
+                        borderColor: isDark ? COLORS.warningBorderDark : COLORS.warningBorderLight,
+                      },
+                    ]}
+                  >
+                    <Feather name="alert-triangle" size={16} color={isDark ? COLORS.warningDark : COLORS.warningLight} style={{ marginTop: 1 }} />
+                    <Text style={{ ...TYPE.caption, color: theme.text, flex: 1, lineHeight: 18 }}>
+                      {snapshot.soleManagerDependents === null
+                        ? copy.soleManagerUnchecked
+                        : copy.soleManagerDependents(soleManagerNames(snapshot.soleManagerDependents))}
                     </Text>
                   </View>
                 )}

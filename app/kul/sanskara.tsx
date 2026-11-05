@@ -42,6 +42,7 @@ import { SharingSheet } from '@/components/sanskara/SharingSheet';
 import { SanskaraHandoverModal } from '@/components/sanskara/SanskaraHandoverModal';
 import { SanskaraHandoverBanner } from '@/components/sanskara/SanskaraHandoverBanner';
 import { SanskaraEarlyHandover } from '@/components/sanskara/SanskaraEarlyHandover';
+import { SanskaraManagers } from '@/components/sanskara/SanskaraManagers';
 import { handoverStage, type HandoverStage } from '@/lib/sanskaraHandover';
 
 type ActiveSubject =
@@ -594,6 +595,19 @@ export default function SanskaraScreen() {
                 setHandoverDependent(activeSubject.dependent);
                 setHandoverMode('start');
                 setHandoverModalVisible(true);
+              }}
+            />
+          ) : null}
+          {activeSubject.kind === 'dependent' && activeSubject.dependent.can_manage && currentUserId
+            && (activeHandover.stage === 'minor' || activeHandover.stage === 'approaching') ? (
+            <SanskaraManagers
+              key={`managers:${currentUserId}:${activeSubject.dependent.id}`}
+              userId={currentUserId}
+              subjectId={activeSubject.dependent.id}
+              dependentName={activeSubject.dependent.display_name}
+              onSteppedDown={() => {
+                setActiveTab('me');
+                void loadData(currentUserId, true);
               }}
             />
           ) : null}

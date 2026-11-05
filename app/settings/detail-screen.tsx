@@ -31,6 +31,7 @@ import { SectionHeader } from '@/components/ui/SectionHeader';
 import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, OFFICIAL_EMAIL, RADII, SHADOWS, SOCIAL_LINKS, TYPE, themeColor } from '@/lib/constants';
 import { APP_VERSION_LABEL } from '@/lib/appVersion';
 import { apiFetch } from '@/lib/api';
+import { fetchSoleManagerDependents } from '@/lib/sanskara';
 import {
   openNotificationSettings,
   registerPushToken,
@@ -961,6 +962,11 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   // web repo.
   const openDeletionSheet = async () => {
     if (appIdentity.kind !== 'authenticated') return;
+    // Children whose only manager is this account would be deleted with it. Started alongside the preview so the sheet does not open
+    // later. A failed check is shown as "could not check", never as "none" (AGENTS 18); it never blocks the deletion flow itself.
+    const soleManagerRequest = fetchSoleManagerDependents(appIdentity.userId)
+      .then((rows) => rows.map((row) => row.display_name))
+      .catch(() => null);
     try {
       const res = await apiFetch('/api/user/delete/preview', { expectedUserId: appIdentity.userId });
       if (res.ok) {
@@ -980,6 +986,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
         } | null;
 
         if (preview?.success) {
+          const soleManagerDependents = await soleManagerRequest;
           setDeletionSnapshot({
             userName: preview.userName || 'Seeker',
             tradition: preview.tradition || profileTradition || 'hindu',
@@ -991,6 +998,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
             activeSankalpas: preview.activeSankalpas ?? 0,
             ownedKuls: preview.ownedKuls ?? [],
             ownedMandalis: preview.ownedMandalis ?? [],
+            soleManagerDependents,
             reasons: readDeletionReasons(preview.reasons),
             summaryAvailable: true,
             lang: language,

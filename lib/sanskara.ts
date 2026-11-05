@@ -12,6 +12,8 @@ import {
   type SanskaraDependent,
   type SanskaraEarlyHandoverStatus,
   type SanskaraExport,
+  type SanskaraManagerPicker,
+  type SanskaraSoleDependent,
   type SanskaraOverview,
   type SanskaraReads,
   type SanskaraRecord,
@@ -110,6 +112,23 @@ export async function fetchEarlyHandoverStatus(userId: string, subjectId: string
     expectedUserId: userId,
   });
   return handleReadResponse('early-handover-status', response, userId);
+}
+
+/**
+ * The managers of one managed child and the Kul members who could be added (G4). Read on demand, never cached: it decides
+ * who may be offered a child's private timeline, and a stale list could offer someone who has since left the Kul.
+ */
+export async function fetchSanskaraManagers(userId: string, subjectId: string): Promise<SanskaraManagerPicker> {
+  const response = await apiFetch(`/api/native/sanskara/managers?subject=${encodeURIComponent(subjectId)}`, {
+    expectedUserId: userId,
+  });
+  return handleReadResponse('managers', response, userId);
+}
+
+/** The caller's managed children for whom the caller is the only manager (what deleting the account would delete). Never cached. */
+export async function fetchSoleManagerDependents(userId: string): Promise<SanskaraSoleDependent[]> {
+  const response = await apiFetch('/api/native/sanskara/sole-manager-dependents', { expectedUserId: userId });
+  return handleReadResponse('sole-manager-dependents', response, userId);
 }
 
 export async function fetchSanskaraReminders(userId: string): Promise<SanskaraReminder[]> {
