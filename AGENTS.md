@@ -464,6 +464,19 @@ Rules:
   `delete-mine` and `export` existed in the API and the contract file but no screen called them, although the authorization contract (E7) promised an
   export before the 12-month former-manager window ends. Guard: `__tests__/sanskara-data.test.ts` (33 mutations each proven to turn a test red).
   Not verified on a device, in light and dark mode, with large text or on 3-button Android navigation, and not in any build or over-the-air update.
-- Still open, found in the same sweep (two more private files written to the cache and never removed at sign-out): Settings "Download your data"
-  writes `shoonaya-data.json` and Profile's sadhana report writes `sadhana-report.html`. The account-wide export (`/api/user/export`) also holds no
-  Sanskāra data, so this sheet is the only way to download it. This applies equally to human and AI-agent contributors.
+- Closed 2026-11-06 (found in the same sweep: two more private files written to the cache and never removed at sign-out): Settings "Download your
+  data" wrote `shoonaya-data.json` (the account-wide export) and Profile's sadhana report wrote `sadhana-report.html`, each straight into the cache root.
+  Both now go through `lib/privateExportFilesDevice.ts` (rules in `lib/privateExportFiles.ts`): one cache directory (`private-exports`), removed before
+  each new export and after a failed share, and purged at sign-out and on an account switch by `app/_layout.tsx`; the purge also removes the two files
+  an earlier build left in the cache root. Sharing availability is checked before anything is written. The file is still NOT removed when
+  `Sharing.shareAsync` resolves (same reason as above). The account-wide export (`/api/user/export`) holds no Sanskāra data, so the Sanskāra sheet is
+  the only way to download it. Any new private file in the cache goes through one of the two purged device modules; `__tests__/private-export-files.test.ts`
+  fails for any other file that references `Paths.cache` or `cacheDirectory`, and its list of allowed files (the two purged modules, the public
+  `shoonaya-dharmic-calendar.ics`, and the public read-aloud audio `tts_audio_N`) may only shrink. Guard: that test (25 mutations each proven to turn
+  it red, including reverting Settings, Profile and the layout to their previous files).
+- Classified in that sweep and not changed, because the guard's text search cannot see them: the share-card PNGs (`lib/share-card.ts` through
+  `react-native-view-shot` `tmpfile`; images the person chooses to post publicly, but the name-story card and its file name carry the person's own name,
+  and nothing here purges them) and the profile photo picker (`expo-image-picker` with `allowsEditing`; whether it leaves a copy in the cache was not
+  checked). Whether either needs a purge is a founder decision.
+- Not verified on a device: that the share sheet still opens for both files, that an old build's copy is removed on the first sign-out after the update,
+  or that a share started on Android still reads the file after the app moves on. This applies equally to human and AI-agent contributors.
