@@ -114,7 +114,7 @@ export default function KulJoinScreen() {
               {error || "This invitation link is no longer valid or has expired."}
             </Text>
             <PressableSurface
-              accessibilityLabel="Go to Family KUL"
+              accessibilityLabel="Go to Kutumb"
               onPress={() => router.replace("/kul")}
               haptic="selection"
               style={{

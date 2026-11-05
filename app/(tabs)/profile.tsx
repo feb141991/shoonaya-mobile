@@ -1429,7 +1429,7 @@ export default function ProfileScreen() {
         ) : null}
 
         <PressableSurface
-          accessibilityLabel={profile.kul_id ? `Open ${profile.kul_name || 'family KUL'}` : 'Create or join a family KUL'}
+          accessibilityLabel={profile.kul_id ? `Open ${profile.kul_name || 'Kutumb'}` : 'Create or join your Kutumb'}
           onPress={() => router.push('/kul' as Href)}
           haptic="selection"
           style={{
@@ -1449,7 +1449,7 @@ export default function ProfileScreen() {
             <Feather name="home" size={22} color={theme.brand} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={{ ...TYPE.cardHeading, color: theme.text }}>{profile.kul_name || 'Family KUL'}</Text>
+            <Text style={{ ...TYPE.cardHeading, color: theme.text }}>{profile.kul_name || 'Kutumb (कुटुम्ब)'}</Text>
             <Text style={{ ...TYPE.caption, color: theme.dim }}>{profile.kul_id ? 'Open your private family circle' : 'Create or join a family circle'}</Text>
           </View>
           <Feather name="chevron-right" size={20} color={theme.dim} />
@@ -1594,8 +1594,8 @@ export default function ProfileScreen() {
             </Text>
             <Text style={{ ...TYPE.caption, color: theme.dim, lineHeight: 16 }}>
               {deletionLanguage === 'hi'
-                ? 'पंचांग, जप, भक्ति और कुल का दृश्य परिचय'
-                : 'Visual tour of Panchang, Japa, Bhakti & KUL'}
+                ? 'पंचांग, जप, भक्ति और कुटुम्ब का दृश्य परिचय'
+                : 'Visual tour of Panchang, Japa, Bhakti & Kutumb'}
             </Text>
           </View>
           <Feather name="chevron-right" size={20} color={theme.dim} />

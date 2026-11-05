@@ -181,7 +181,7 @@ export function SharingSheet({
             {/* Available Kul Members */}
             {eligibleMembers.length > 0 ? (
               <View style={styles.section}>
-                <Text style={[styles.sectionHeading, { color: theme.brand }]}>SHARE WITH KUL MEMBER</Text>
+                <Text style={[styles.sectionHeading, { color: theme.brand }]}>SHARE WITH KUTUMB MEMBER</Text>
                 <View style={styles.memberList}>
                   {eligibleMembers.map((member) => {
                     const isAlreadyGranted = activeGrants.some((g) => g.grantee.id === member.userId);
@@ -192,7 +192,7 @@ export function SharingSheet({
                       >
                         <View style={styles.memberInfo}>
                           <Text style={[styles.memberName, { color: theme.text }]}>
-                            {member.profile?.full_name || member.profile?.username || 'Kul Member'}
+                            {member.profile?.full_name || member.profile?.username || 'Kutumb Member'}
                           </Text>
                           <Text style={[styles.memberRole, { color: theme.dim }]}>
                             {member.role ? `${member.role.toUpperCase()} · ` : ''}Joined {member.joinedAt?.slice(0, 10)}

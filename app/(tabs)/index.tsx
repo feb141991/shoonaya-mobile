@@ -2770,7 +2770,7 @@ function HomeContent() {
           </View>
 
           <PressableSurface
-            accessibilityLabel="Open family KUL"
+            accessibilityLabel="Open Kutumb family sanctuary"
             onPress={() => navigate('/kul' as Href)}
             haptic="selection"
             style={{
@@ -2792,8 +2792,8 @@ function HomeContent() {
               <Feather name="home" size={22} color={theme.brand} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ ...TYPE.cardHeading, color: theme.text }}>Family KUL</Text>
-              <Text style={{ ...TYPE.caption, color: theme.dim }}>Your family circle, practice, and shared dates</Text>
+              <Text style={{ ...TYPE.cardHeading, color: theme.text }}>Kutumb (कुटुम्ब)</Text>
+              <Text style={{ ...TYPE.caption, color: theme.dim }}>Family sanctuary, sacred lineage, and practice</Text>
             </View>
             <Feather name="chevron-right" size={20} color={theme.dim} />
           </PressableSurface>

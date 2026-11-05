@@ -548,7 +548,7 @@ export default function SanskaraScreen() {
           <View style={[styles.sharedHeaderBox, { backgroundColor: theme.cardSoft, borderColor: theme.borderSoft }]}>
             <Feather name="share-2" size={16} color={theme.brand} />
             <Text style={[styles.sharedHeaderText, { color: theme.dim }]}>
-              Milestones shared with you by family circle members in your Kul.
+              Milestones shared with you by family circle members in your Kutumb.
             </Text>
           </View>
 
@@ -557,7 +557,7 @@ export default function SanskaraScreen() {
               <Feather name="inbox" size={36} color={theme.dim} />
               <Text style={[styles.emptySharedTitle, { color: theme.text }]}>No Shared Milestones</Text>
               <Text style={[styles.emptySharedDesc, { color: theme.dim }]}>
-                When members of your Kul choose to share a milestone with you, it will appear here.
+                When members of your Kutumb choose to share a milestone with you, it will appear here.
               </Text>
             </View>
           ) : (
@@ -569,7 +569,7 @@ export default function SanskaraScreen() {
                       {item.custom_title || 'Sacred Milestone'}
                     </Text>
                     <Text style={[styles.sharedByText, { color: theme.brand }]}>
-                      Shared by {item.shared_by.full_name || item.shared_by.username || 'Kul Member'}
+                      Shared by {item.shared_by.full_name || item.shared_by.username || 'Kutumb Member'}
                       {item.subject.label ? ` · For ${item.subject.label}` : ''}
                     </Text>
                   </View>

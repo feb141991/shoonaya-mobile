@@ -1397,7 +1397,7 @@ export default function TirthaScreen() {
             {kulMember && selectedTemple ? (
               <View style={{ gap: 6 }}>
                 <PressableSurface
-                  accessibilityLabel={kulWishPlaceIds.includes(tirthaPlaceId(selectedTemple)) ? 'This place is on your family Yatra' : 'Add this place to your family KUL wishlist'}
+                  accessibilityLabel={kulWishPlaceIds.includes(tirthaPlaceId(selectedTemple)) ? 'This place is on your family Yatra' : 'Add this place to your Kutumb wishlist'}
                   disabled={kulWishSaving || kulWishPlaceIds.includes(tirthaPlaceId(selectedTemple))}
                   onPress={() => void addSelectedPlaceToFamilyYatra()}
                   haptic="selection"
@@ -1417,7 +1417,7 @@ export default function TirthaScreen() {
                 >
                   {kulWishSaving ? <ActivityIndicator size="small" color={brand} /> : <Feather name={kulWishPlaceIds.includes(tirthaPlaceId(selectedTemple)) ? 'check-circle' : 'users'} size={16} color={brand} />}
                   <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: brand }}>
-                    {kulWishSaving ? 'Adding to family Yatra…' : kulWishPlaceIds.includes(tirthaPlaceId(selectedTemple)) ? 'On family Yatra' : 'Add to family KUL wishlist'}
+                    {kulWishSaving ? 'Adding to family Yatra…' : kulWishPlaceIds.includes(tirthaPlaceId(selectedTemple)) ? 'On family Yatra' : 'Add to Kutumb wishlist'}
                   </Text>
                 </PressableSurface>
                 {kulWishNotice ? <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: dim }}>{kulWishNotice}</Text> : null}

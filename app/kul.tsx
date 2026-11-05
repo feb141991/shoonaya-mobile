@@ -641,7 +641,7 @@ export default function KulScreen() {
         options.apply?.(result);
         if (options.reload !== false) await loadSnapshot(currentUserId, true);
         recordInteractionTiming({ kind: "authenticated", userId: currentUserId }, "kul_mutation", Date.now() - startedAt);
-        if (options.successMessage) Alert.alert("KUL", options.successMessage);
+        if (options.successMessage) Alert.alert("Kutumb", options.successMessage);
         return true;
       } catch (mutationError) {
         if (lease.isCurrent()) recordInteractionTiming({ kind: "authenticated", userId: currentUserId }, "kul_mutation", Date.now() - startedAt);
@@ -665,7 +665,7 @@ export default function KulScreen() {
     if (name.length < 2) {
       Alert.alert(
         "Add a family name",
-        "Use at least two characters for your KUL name.",
+        "Use at least two characters for your Kutumb name.",
       );
       return;
     }
@@ -700,7 +700,7 @@ export default function KulScreen() {
     if (!code) {
       Alert.alert(
         "Enter an invite code",
-        "Ask a family guardian for their KUL invite code.",
+        "Ask a family guardian for their Kutumb invite code.",
       );
       return;
     }
@@ -1013,7 +1013,7 @@ export default function KulScreen() {
     if (!currentUserId) return;
     Alert.alert(
       "Leave this family circle?",
-      "If other members remain, the oldest member becomes guardian when needed. If you are the last member, the KUL and its private family records are deleted.",
+      "If other members remain, the oldest member becomes guardian when needed. If you are the last member, the Kutumb and its private family records are deleted.",
       [
         { text: "Stay", style: "cancel" },
         { text: "Leave", style: "destructive", onPress: () => void runMutation(
@@ -1027,7 +1027,7 @@ export default function KulScreen() {
   const manageKulMember = (member: KulSnapshot["members"][number]) => {
     if (!currentUserId || snapshot?.role !== "guardian" || member.userId === currentUserId) return;
     const transfer = () => void runMutation((userId) => transferKulGuardian(userId, member.userId), { reload: true });
-    const remove = () => Alert.alert("Remove this member?", "Their account will leave the KUL. Shared KUL records remain with the other members.", [
+    const remove = () => Alert.alert("Remove this member?", "Their account will leave the Kutumb. Shared Kutumb records remain with the other members.", [
       { text: "Cancel", style: "cancel" },
       { text: "Remove member", style: "destructive", onPress: () => void runMutation((userId) => leaveOrRemoveKulMember(userId, member.userId), { reload: true }) },
     ]);
@@ -1040,7 +1040,7 @@ export default function KulScreen() {
 
   if (identity.kind === "loading" || (loading && !snapshot && currentUserId)) {
     return (
-      <Screen header={{ title: "Family KUL" }}>
+      <Screen header={{ title: "Kutumb (कुटुम्ब)" }}>
         <SacredLoader
           title="Opening your family circle"
           subtitle="Bringing your family space together…"
@@ -1051,7 +1051,7 @@ export default function KulScreen() {
 
   return (
     <Screen
-      header={{ title: "Family KUL" }}
+      header={{ title: "Kutumb (कुटुम्ब)" }}
       style={{ paddingHorizontal: 16 }}
     >
       <KeyboardAvoidingView
@@ -1095,7 +1095,7 @@ export default function KulScreen() {
                   Your family circle
                 </Text>
                 <Text style={{ ...TYPE.body, color: theme.dim, marginTop: 3 }}>
-                  Create a KUL or join your family with an invite code.
+                  Create a Kutumb or join your family with an invite code.
                 </Text>
               </View>
             </View>
@@ -1174,7 +1174,7 @@ export default function KulScreen() {
                 <Text style={{ fontSize: 30 }}>🏡</Text>
                 <View style={{ flex: 1 }}>
                   <Text style={{ ...TYPE.cardHeading, color: theme.text }}>
-                    Start your family KUL
+                    Start your Kutumb (कुटुम्ब)
                   </Text>
                   <Text
                     style={{ ...TYPE.body, color: theme.dim, marginTop: 3 }}
@@ -1185,7 +1185,7 @@ export default function KulScreen() {
                 </View>
               </View>
               <Field
-                accessibilityLabel="Family KUL name"
+                accessibilityLabel="Kutumb family name"
                 value={newKulName}
                 onChangeText={setNewKulName}
                 placeholder="For example, Sharma Family"
@@ -1221,7 +1221,7 @@ export default function KulScreen() {
                 ))}
               </View>
               <ActionButton
-                label={working ? "Creating…" : "Create family KUL"}
+                label={working ? "Creating…" : "Create Kutumb"}
                 icon="plus"
                 disabled={working}
                 onPress={() => void handleCreateKul()}
@@ -1244,7 +1244,7 @@ export default function KulScreen() {
                 Enter the code shared by your family guardian.
               </Text>
               <Field
-                accessibilityLabel="KUL invite code"
+                accessibilityLabel="Kutumb invite code"
                 value={inviteCode}
                 onChangeText={(value) => setInviteCode(value.toUpperCase())}
                 placeholder="Invite code"
@@ -1252,7 +1252,7 @@ export default function KulScreen() {
                 maxLength={16}
               />
               <ActionButton
-                label={working ? "Joining…" : "Join family KUL"}
+                label={working ? "Joining…" : "Join Kutumb"}
                 icon="log-in"
                 disabled={working}
                 onPress={() => void handleJoinKul()}
@@ -1641,7 +1641,7 @@ export default function KulScreen() {
                         <View style={{ gap: 8, borderRadius: 15, backgroundColor: theme.cardSoft, padding: 12 }}>
                           <Text style={{ ...TYPE.caption, color: theme.dim }}>
                             {eventType === "death_anniversary"
-                              ? "For a Pitru Paksha remembrance, enter the tithi your family follows. KUL resolves its civil date at sunrise for this family calendar; it does not calculate a Shraddha muhurta."
+                              ? "For a Pitru Paksha remembrance, enter the tithi your family follows. Kutumb resolves its civil date at sunrise for this family calendar; it does not calculate a Shraddha muhurta."
                               : "The next date is calculated at sunrise using your family calendar reference. Confirm ritual timing with your tradition."}
                           </Text>
                           <Text style={{ ...TYPE.caption, color: theme.dim }}>Lunar month</Text>
@@ -1783,7 +1783,7 @@ export default function KulScreen() {
                     </Text>
                   )}
                   <Text style={{ ...TYPE.caption, color: theme.dim }}>
-                    Family dates stay private to this KUL. A tithi date follows
+                    Family dates stay private to this Kutumb. A tithi date follows
                     the selected family calendar; confirm ritual timing with
                     your family tradition.
                   </Text>
@@ -2133,7 +2133,7 @@ export default function KulScreen() {
                     action={snapshot.role === "guardian" ? showLineageForm ? "Close" : "Edit lineage" : undefined}
                     onAction={snapshot.role === "guardian" ? () => showLineageForm ? setShowLineageForm(false) : beginEditLineage() : undefined}
                   />
-                  <Text style={{ ...TYPE.caption, color: theme.dim }}>Private family archive · shared only with KUL members</Text>
+                  <Text style={{ ...TYPE.caption, color: theme.dim }}>Private family archive · shared only with Kutumb members</Text>
                   {showLineageForm && lineageDraft ? (
                     <View style={{ gap: 9 }}>
                       <Field accessibilityLabel="Gotra" value={lineageDraft.gotra ?? ""} onChangeText={(value) => setLineageDraft((current) => current ? { ...current, gotra: value || null } : current)} placeholder="Gotra" theme={theme} maxLength={120} />
@@ -2540,8 +2540,8 @@ export default function KulScreen() {
                 </View>
                 <View style={{ borderTopWidth: 1, borderTopColor: theme.borderSoft, paddingTop: 12, gap: 8 }}>
                   <SectionHeading title="Family access" theme={theme} />
-                  <Text style={{ ...TYPE.caption, color: theme.dim }}>A KUL has one guardian. If a guardian leaves, the oldest remaining member is promoted. The last member leaving deletes the private family space.</Text>
-                  <ActionButton label="Leave family KUL" icon="log-out" secondary onPress={leaveFamilyCircle} theme={theme} isDark={isDark} disabled={working} />
+                  <Text style={{ ...TYPE.caption, color: theme.dim }}>A Kutumb has one guardian. If a guardian leaves, the oldest remaining member is promoted. The last member leaving deletes the private family space.</Text>
+                  <ActionButton label="Leave Kutumb" icon="log-out" secondary onPress={leaveFamilyCircle} theme={theme} isDark={isDark} disabled={working} />
                 </View>
               </Card>
             ) : null}
@@ -2552,7 +2552,7 @@ export default function KulScreen() {
       <AuthGate
         visible={authGateVisible}
         onClose={() => setAuthGateVisible(false)}
-        title="Join your family KUL"
+        title="Join your Kutumb"
         message="Sign in to create or join a private family circle."
       />
       {kul && currentUserId && snapshot?.role === "guardian" ? (

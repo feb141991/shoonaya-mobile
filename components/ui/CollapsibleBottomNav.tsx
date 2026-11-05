@@ -170,7 +170,7 @@ export function CollapsibleBottomNav() {
         // No clay-art SacredIcon exists for KUL yet, so it uses Feather.
         key: 'kul',
         href: '/kul' as Href,
-        label: isHindi ? 'कुल' : 'KUL',
+        label: isHindi ? 'कुटुम्ब' : 'Kutumb',
         match: (p) => matchesAny(p, ['/kul']),
         isCenter: true,
         renderIcon: (color, size) => <Feather name="users" color={color} size={size} />,

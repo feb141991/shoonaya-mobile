@@ -409,11 +409,11 @@ export function SanskaraNodeSheet({
                 <View style={styles.lockHeader}>
                   <Feather name="users" size={14} color={theme.brand} />
                   <Text style={[styles.sectionHeading, { color: theme.brand, marginBottom: 0 }]}>
-                    KUL FAMILY SHARING
+                    KUTUMB FAMILY SHARING
                   </Text>
                 </View>
                 <Text style={[styles.sharingDesc, { color: theme.dim }]}>
-                  Share this milestone with specific members in your Kul. Custom milestones share their title and completion status, keeping private notes hidden.
+                  Share this milestone with specific members in your Kutumb. Custom milestones share their title and completion status, keeping private notes hidden.
                 </Text>
                 <PressableSurface
                   onPress={onOpenSharing}

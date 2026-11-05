@@ -523,15 +523,15 @@ export function AppTourModal({ visible, onClose, isHindi = false }: AppTourModal
                 }}
               >
                 <Text style={{ ...TYPE.chip, color: theme.brand, fontWeight: "700" }}>
-                  {isHindi ? "सम्बन्ध · CONNECT" : "CONNECT · KUL & MANDALI"}
+                  {isHindi ? "सम्बन्ध · CONNECT" : "CONNECT · KUTUMB & MANDALI"}
                 </Text>
               </View>
               <Text style={{ ...TYPE.screenTitle, color: theme.text }}>
-                {isHindi ? "कुल व सत्संग मंडली" : "KUL & Mandali"}
+                {isHindi ? "कुटुम्ब व सत्संग मंडली" : "Kutumb & Mandali"}
               </Text>
               <Text style={{ ...TYPE.body, color: theme.dim, lineHeight: 21 }}>
                 {isHindi
-                  ? "कुल में पारिवारिक वंशावली व पितृ स्मरण संजोएँ, और मंडली में सह-साधकों के साथ विचार साझा करें।"
+                  ? "कुटुम्ब में पारिवारिक वंशावली व पितृ स्मरण संजोएँ, और मंडली में सह-साधकों के साथ विचार साझा करें।"
                   : "Private family lineage space, ancestral remembrance, and contemplative community satsang."}
               </Text>
             </View>
@@ -567,7 +567,7 @@ export function AppTourModal({ visible, onClose, isHindi = false }: AppTourModal
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flex: 1 }}>
                     <Text style={{ fontSize: 16 }}>🏡</Text>
                     <Text numberOfLines={1} style={{ ...TYPE.label, color: theme.text, flex: 1, lineHeight: 19 }}>
-                      {isHindi ? "कुल (पारिवारिक वृत्त)" : "KUL Lineage Space"}
+                      {isHindi ? "कुटुम्ब (पारिवारिक वृत्त)" : "Kutumb · Family Sanctuary"}
                     </Text>
                   </View>
                   <View style={{ paddingHorizontal: 7, paddingVertical: 2, borderRadius: RADII.sm, backgroundColor: theme.brandSoft, flexShrink: 0 }}>
