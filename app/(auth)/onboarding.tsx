@@ -68,6 +68,7 @@ import {
   type ReligiousConsentWrite,
 } from '@/lib/religious-data-consent';
 import { saveDeviceStartupPreferences, syncStartupPreferencesFromProfile } from '@/lib/startup-scenes/preferences';
+import { setHeroPick } from '@/lib/heroPreference';
 import { describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
 import {
   LIFE_STAGES,
@@ -853,6 +854,7 @@ export default function OnboardingScreen() {
       }
 
       await clearOnboardingDraft(user.id);
+      void setHeroPick(null);
       void syncStartupPreferencesFromProfile(
         { tradition, appLanguage: language },
         null,

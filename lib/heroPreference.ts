@@ -98,6 +98,7 @@ export const LOCAL_HERO_ASSETS: Record<string, any> = {
   'chintpurni-devi-shrine': require('@/assets/heroes/hindu/chintpurni-devi-shrine.webp'),
   'vat-savitri-banyan': require('@/assets/heroes/hindu/vat-savitri-banyan.webp'),
   'pradosh-vrat-shiva': require('@/assets/heroes/hindu/pradosh-vrat-shiva.webp'),
+  'hindu-default': require('@/assets/heroes/hindu/shiva-default.webp'),
   'shaiva-default': require('@/assets/heroes/hindu/shiva-default.webp'),
   'maha-shivaratri': require('@/assets/heroes/hindu/mahashivratri.webp'),
   'sikh-guru-amar-das': require('@/assets/heroes/sikh/sikh-guru-amar-das-ji.webp'),
@@ -445,6 +446,13 @@ export const BUNDLED_HERO_THEMES: Array<{
     label: 'Pradosh Vrat Sandhya Shiva',
     heroImage: '/assets/images/heroes/hindu/pradosh-vrat-shiva.webp',
     objectPosition: '50% 25%',
+    traditions: ['hindu'],
+  },
+  {
+    id: 'hindu-default',
+    label: 'Hindu Default',
+    heroImage: '/assets/images/heroes/hindu/shiva-default.webp',
+    objectPosition: '58% 25%',
     traditions: ['hindu'],
   },
   {

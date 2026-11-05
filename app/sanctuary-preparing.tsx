@@ -6,7 +6,7 @@ import { SanctuaryPreparationScene } from '@/components/onboarding/SanctuaryPrep
 import { getAppIdentity, useAppIdentity } from '@/lib/appIdentity';
 import { apiFetch } from '@/lib/api';
 import { API_BASE } from '@/lib/constants';
-import { getHeroPick, LOCAL_HERO_ASSETS } from '@/lib/heroPreference';
+import { getHeroPick, LOCAL_HERO_ASSETS, BUNDLED_HERO_THEMES } from '@/lib/heroPreference';
 import { getGreetingPick } from '@/lib/greetingPreference';
 import { selectStartupScene } from '@/lib/startup-scenes/selector';
 import { resolveHomeGreeting } from '@/lib/greetings';
@@ -56,6 +56,10 @@ export default function SanctuaryPreparingScreen() {
     controller.current = abort;
     void getHeroPick().then(pick => {
       if (!active || !isCurrent() || !pick) return;
+      const matchedTheme = BUNDLED_HERO_THEMES.find(t => t.id === pick.id);
+      if (context?.tradition && context.tradition !== 'none' && matchedTheme?.traditions?.length && !matchedTheme.traditions.includes(context.tradition)) {
+        return;
+      }
       const local = LOCAL_HERO_ASSETS[pick.id];
       const uri = /^https?:\/\//i.test(pick.imageUrl) ? pick.imageUrl : `${API_BASE}${pick.imageUrl.startsWith('/') ? '' : '/'}${pick.imageUrl}`;
       setArtwork(local ?? { uri });
