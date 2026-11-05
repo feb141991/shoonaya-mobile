@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
+  Modal,
   Pressable,
   StyleSheet,
   Text,
@@ -32,6 +33,7 @@ import {
   RADII,
   themeColor,
 } from '@/lib/constants';
+import { getKinshipTier, type KinshipTier } from '@/lib/kinship';
 
 interface VanshGraphCanvasProps {
   layout: VanshLayoutResult;
@@ -50,6 +52,7 @@ export function VanshGraphCanvas({
   const theme = themeColor(isDark);
   const { width: windowWidth } = useWindowDimensions();
   const [viewportSize, setViewportSize] = useState({ width: windowWidth - 32, height: 480 });
+  const [activeKinshipTier, setActiveKinshipTier] = useState<KinshipTier | null>(null);
   const fitScale = computeVanshFitScale(
     layout.canvasWidth,
     layout.canvasHeight,
@@ -263,6 +266,7 @@ export function VanshGraphCanvas({
             {layout.nodes.map((node: LayoutVanshNode) => {
               const member = node.data;
               const isSelected = selectedMemberId === member.id;
+              const kinshipTier = getKinshipTier(node.generation);
 
               return (
                 <Pressable
@@ -288,7 +292,7 @@ export function VanshGraphCanvas({
                     },
                   ]}
                   accessibilityRole="button"
-                  accessibilityLabel={`${member.name}, ${member.role || 'Family member'}, generation ${node.generation}, ${node.isRemembered ? 'remembered' : 'living'}`}
+                  accessibilityLabel={`${member.name}, ${member.role || 'Family member'}, ${kinshipTier.label}, generation ${node.generation}, ${node.isRemembered ? 'remembered' : 'living'}`}
                   accessibilityHint={isGuardian
                     ? 'Select to view details and family record actions.'
                     : 'Select to view family details.'}
@@ -302,8 +306,33 @@ export function VanshGraphCanvas({
                     />
                   ) : null}
 
-                  {/* Top Header: Subtle Diya indicator for departed elders; clean for living */}
+                  {/* Top Header: Kinship Badge (left) & Diya/status indicator (right) */}
                   <View style={styles.cardHeaderRow}>
+                    <Pressable
+                      onPress={(event) => {
+                        event.stopPropagation();
+                        void Haptics.selectionAsync();
+                        setActiveKinshipTier(kinshipTier);
+                      }}
+                      hitSlop={6}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${kinshipTier.label}, generation ${node.generation}. Tap for kinship explanation.`}
+                      style={[
+                        styles.kinshipPill,
+                        {
+                          borderColor: theme.borderSoft,
+                          backgroundColor: theme.brandSoft,
+                        },
+                      ]}
+                    >
+                      <Text
+                        numberOfLines={1}
+                        style={[styles.kinshipPillText, { color: theme.brand }]}
+                      >
+                        {kinshipTier.label}
+                      </Text>
+                    </Pressable>
+
                     {node.isRemembered ? (
                       <View
                         style={[
@@ -319,7 +348,7 @@ export function VanshGraphCanvas({
                     ) : node.data.linked_user_id ? (
                       <View style={[styles.statusDot, { backgroundColor: COLORS.success }]} />
                     ) : (
-                      <View style={{ height: 6 }} />
+                      <View style={{ width: 6 }} />
                     )}
                   </View>
 
@@ -389,6 +418,66 @@ export function VanshGraphCanvas({
           <Feather name="maximize-2" size={14} color={theme.brand} />
         </Pressable>
       </View>
+
+      {/* Kinship Explainer Tooltip Modal */}
+      {activeKinshipTier ? (
+        <Modal
+          transparent
+          animationType="fade"
+          visible={Boolean(activeKinshipTier)}
+          onRequestClose={() => setActiveKinshipTier(null)}
+        >
+          <Pressable
+            style={styles.modalBackdrop}
+            onPress={() => setActiveKinshipTier(null)}
+          >
+            <Pressable
+              onPress={(e) => e.stopPropagation()}
+              style={[
+                styles.tooltipCard,
+                {
+                  backgroundColor: theme.card,
+                  borderColor: theme.border,
+                },
+              ]}
+            >
+              <View style={styles.tooltipHeaderRow}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                  <Text style={[styles.tooltipTitle, { color: theme.text, fontFamily: FONTS.serifBold }]}>
+                    {activeKinshipTier.label}
+                  </Text>
+                  <View style={[styles.genTag, { backgroundColor: theme.brandSoft }]}>
+                    <Text style={[styles.genTagText, { color: theme.brand }]}>
+                      Gen {activeKinshipTier.generation}
+                    </Text>
+                  </View>
+                </View>
+                <Pressable
+                  onPress={() => setActiveKinshipTier(null)}
+                  hitSlop={10}
+                  accessibilityLabel="Close kinship explanation"
+                >
+                  <Feather name="x" size={18} color={theme.dim} />
+                </Pressable>
+              </View>
+
+              <Text style={[styles.tooltipSubtitle, { color: theme.brand, fontFamily: FONTS.sansSemiBold }]}>
+                {activeKinshipTier.hindiLabel} · {activeKinshipTier.description}
+              </Text>
+
+              <Text style={[styles.tooltipBody, { color: theme.text, fontFamily: FONTS.sans }]}>
+                {activeKinshipTier.tooltip}
+              </Text>
+
+              <View style={[styles.tooltipDivider, { borderTopColor: theme.borderSoft }]}>
+                <Text style={[styles.tooltipNote, { color: theme.dim, fontFamily: FONTS.sans }]}>
+                  In Kutumb Vansh, generations trace your sacred roots from foundational elders down to future descendants.
+                </Text>
+              </View>
+            </Pressable>
+          </Pressable>
+        </Modal>
+      ) : null}
     </View>
   );
 }
@@ -473,8 +562,71 @@ const styles = StyleSheet.create({
   cardHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
     minHeight: 18,
+  },
+  kinshipPill: {
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 5,
+    borderWidth: 1,
+    maxWidth: 84,
+  },
+  kinshipPillText: {
+    fontSize: 9,
+    fontFamily: FONTS.sansSemiBold,
+    lineHeight: 12,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: '#0C0A07BB',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  tooltipCard: {
+    width: '100%',
+    maxWidth: 320,
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: 18,
+  },
+  tooltipHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  tooltipTitle: {
+    fontSize: 17,
+    lineHeight: 22,
+  },
+  genTag: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  genTagText: {
+    fontSize: 10,
+    fontFamily: FONTS.sansSemiBold,
+  },
+  tooltipSubtitle: {
+    fontSize: 12,
+    lineHeight: 16,
+    marginBottom: 8,
+  },
+  tooltipBody: {
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  tooltipDivider: {
+    marginTop: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+  },
+  tooltipNote: {
+    fontSize: 11,
+    lineHeight: 16,
   },
   genPill: {
     paddingHorizontal: 7,

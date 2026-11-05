@@ -27,6 +27,7 @@ import { DatePickerField } from "@/components/ui/DatePickerField";
 import { formatLocalDateOnly } from "@/lib/dateOnly";
 import { KulInviteModal } from "@/components/kul/KulInviteModal";
 import { VanshGraphCanvas } from "@/components/kul/VanshGraphCanvas";
+import { getKinshipTier } from "@/lib/kinship";
 import {
   computeVanshLayout,
   formatVanshHeritageLabel,
@@ -297,7 +298,11 @@ export default function KulScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<HubSection>("home");
+  const [activeSection, setActiveSection] = useState<HubSection>(
+    routeParams.section === "family" || routeParams.section === "sabha" || routeParams.section === "practice"
+      ? routeParams.section
+      : "home"
+  );
   const [authGateVisible, setAuthGateVisible] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [working, setWorking] = useState(false);
@@ -2111,7 +2116,7 @@ export default function KulScreen() {
                 }}
               >
                 <SectionHeading
-                  title="Vansh · family roots"
+                  title="Kutumb Vansh · Family Roots"
                   theme={theme}
                   action={
                     snapshot.role === "guardian"
@@ -2352,7 +2357,7 @@ export default function KulScreen() {
                                     {member.name}
                                   </Text>
                                   <Text style={{ ...TYPE.caption, color: theme.dim }}>
-                                    {member.role || "Family member"} · Generation {node.generation}
+                                    {member.role || "Family member"} · {getKinshipTier(node.generation).label} (Generation {node.generation})
                                     {member.generation == null ? " · inferred" : ""}
                                     {member.generation != null && member.generation !== node.generation ? ` · recorded as ${member.generation}` : ""}
                                   </Text>
@@ -2463,7 +2468,7 @@ export default function KulScreen() {
                         }}
                       >
                         <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 11, color: theme.brandStrong }}>
-                          आदरणीय पूर्वज · Sacred Pitru Smriti preserved in Kul Vansh.
+                          आदरणीय पूर्वज · Sacred Pitru Smriti preserved in Kutumb Vansh.
                         </Text>
                       </View>
                     ) : null}
