@@ -1060,6 +1060,721 @@ export default function KulScreen() {
     );
   }
 
+  if (identity.kind === "authenticated" && kul && snapshot && activeSection === "family") {
+    const selectedHeritageLabel = formatVanshHeritageLabel(kul?.lineage);
+    return (
+      <Screen
+        header={{
+          title: "Kutumb Vansh",
+          onBack: () => setActiveSection("home"),
+          rightElement: snapshot.role === "guardian" ? (
+            <PressableSurface
+              accessibilityRole="button"
+              accessibilityLabel="Add person to family tree"
+              onPress={() => {
+                setEditingFamilyMemberId(null);
+                setFamilyName("");
+                setFamilyRelationship("");
+                setFamilyGeneration("");
+                setFamilyParent("");
+                setFamilySpouse("");
+                setFamilyIsAlive(true);
+                setShowFamilyForm(true);
+              }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 5,
+                backgroundColor: theme.brand,
+                paddingHorizontal: 12,
+                paddingVertical: 7,
+                borderRadius: RADII.pill,
+                minHeight: 36,
+              }}
+            >
+              <Feather name="plus" size={14} color={COLORS.ink} />
+              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: COLORS.ink, lineHeight: 16 }}>
+                Add person
+              </Text>
+            </PressableSurface>
+          ) : undefined,
+        }}
+        style={{ flex: 1, paddingHorizontal: 0, backgroundColor: theme.bg }}
+      >
+        {/* Subheader bar: member count & view mode selector */}
+        <View
+          style={{
+            paddingHorizontal: 16,
+            paddingVertical: 10,
+            borderBottomWidth: 1,
+            borderBottomColor: theme.borderSoft,
+            backgroundColor: theme.cardSoft,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
+          <View style={{ flex: 1 }}>
+            <Text
+              style={{
+                fontFamily: FONTS.sansMedium,
+                fontSize: 12,
+                color: theme.dim,
+                lineHeight: 16,
+              }}
+              numberOfLines={1}
+            >
+              {snapshot.familyMembers.length} {snapshot.familyMembers.length === 1 ? "member" : "members"} · Kutumb Lineage Sanctuary
+            </Text>
+          </View>
+
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <Choice
+              label="Tree Canvas"
+              selected={vanshViewMode === "canvas"}
+              onPress={() => setVanshViewMode("canvas")}
+              theme={theme}
+            />
+            <Choice
+              label="List"
+              selected={vanshViewMode === "list"}
+              onPress={() => setVanshViewMode("list")}
+              theme={theme}
+            />
+            <PressableSurface
+              accessibilityRole="button"
+              accessibilityLabel="View Kul Parampara and Gotra details"
+              onPress={() => {
+                if (snapshot.role === "guardian" && !lineageDraft) {
+                  beginEditLineage();
+                }
+                setShowLineageForm((v) => !v);
+              }}
+              style={{
+                height: 32,
+                paddingHorizontal: 10,
+                borderRadius: RADII.pill,
+                borderWidth: 1,
+                borderColor: showLineageForm ? theme.brand : theme.border,
+                backgroundColor: showLineageForm ? theme.brandSoft : theme.card,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 5,
+              }}
+            >
+              <Feather name="shield" size={12} color={showLineageForm ? theme.brand : theme.dim} />
+              <Text
+                style={{
+                  fontFamily: FONTS.sansMedium,
+                  fontSize: 11,
+                  color: showLineageForm ? theme.brand : theme.text,
+                  lineHeight: 14,
+                }}
+              >
+                Gotra
+              </Text>
+            </PressableSurface>
+          </View>
+        </View>
+
+        {vanshViewMode === "canvas" ? (
+          <View style={{ flex: 1, position: "relative", backgroundColor: theme.bg }}>
+            {snapshot.familyMembers.length ? (
+              <VanshGraphCanvas
+                layout={familyTreeLayout}
+                selectedMemberId={selectedFamilyMemberId}
+                onSelectMember={(member) =>
+                  setSelectedFamilyMemberId((prev) =>
+                    prev === member.id ? null : member.id
+                  )
+                }
+                isGuardian={snapshot.role === "guardian"}
+                style={{ flex: 1, borderRadius: 0, marginVertical: 0 }}
+              />
+            ) : (
+              <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 24 }}>
+                <EmptyState
+                  title="Your family story starts here"
+                  subtitle="Guardians can add the people and relationships your family wants to preserve."
+                />
+              </View>
+            )}
+
+            {/* Floating Selected Member Inspection Card */}
+            {selectedFamilyMember ? (
+              <View
+                style={{
+                  position: "absolute",
+                  left: 16,
+                  right: 16,
+                  bottom: 24,
+                  zIndex: 30,
+                  borderRadius: RADII.lg,
+                  borderWidth: 1.5,
+                  borderColor: theme.brand,
+                  backgroundColor: theme.card,
+                  padding: 14,
+                  gap: 10,
+                  shadowColor: theme.brand,
+                  shadowOpacity: isDark ? 0.25 : 0.12,
+                  shadowRadius: 12,
+                  elevation: 6,
+                }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 10 }}>
+                  <View style={{ flex: 1, gap: 3 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                      <View
+                        style={{
+                          backgroundColor: theme.brandSoft,
+                          paddingHorizontal: 7,
+                          paddingVertical: 2,
+                          borderRadius: 6,
+                        }}
+                      >
+                        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: theme.brand, lineHeight: 14 }}>
+                          Gen {selectedTreeNode?.generation ?? selectedFamilyMember.generation ?? 1}
+                        </Text>
+                      </View>
+                      <View
+                        style={{
+                          backgroundColor: theme.brandSoft,
+                          paddingHorizontal: 7,
+                          paddingVertical: 2,
+                          borderRadius: 6,
+                          borderWidth: 1,
+                          borderColor: theme.borderSoft,
+                        }}
+                      >
+                        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: theme.brand, lineHeight: 14 }}>
+                          {getKinshipTier(selectedTreeNode?.generation ?? selectedFamilyMember.generation ?? 1).label}
+                        </Text>
+                      </View>
+                      {!selectedFamilyMember.is_alive ? (
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 3,
+                            paddingHorizontal: 6,
+                            paddingVertical: 1.5,
+                            borderRadius: 6,
+                            borderWidth: 1,
+                            borderColor: theme.borderSoft,
+                            backgroundColor: theme.brandSoft,
+                          }}
+                        >
+                          <Text style={{ fontSize: 10 }}>🪔</Text>
+                          <Text style={{ fontFamily: FONTS.serifBold, fontSize: 10, color: theme.brandStrong, lineHeight: 14 }}>
+                            स्मृति (Pitru)
+                          </Text>
+                        </View>
+                      ) : (
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: COLORS.success }} />
+                          <Text style={{ ...TYPE.caption, color: theme.dim, lineHeight: 16 }}>Living</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={{ fontFamily: FONTS.serifBold, fontSize: 16, color: theme.text, marginTop: 2, lineHeight: 22 }}>
+                      {selectedFamilyMember.name}
+                    </Text>
+                    <Text style={{ ...TYPE.caption, color: theme.dim, lineHeight: 16 }}>
+                      {selectedFamilyMember.role || "Family member"} · Generation {selectedTreeNode?.generation ?? selectedFamilyMember.generation ?? 1}
+                      {selectedFamilyMember.generation == null ? " (inferred from family links)" : ""}
+                      {selectedTreeNode && selectedFamilyMember.generation != null && selectedFamilyMember.generation !== selectedTreeNode.generation ? ` (recorded as ${selectedFamilyMember.generation}; adjusted to keep the parent link downward)` : ""}
+                      {selectedFamilyMember.is_alive ? " · Living" : " · Remembered"}
+                      {selectedFamilyMember.linked_user_id ? " · On Shoonaya" : ""}
+                    </Text>
+                    {selectedHeritageLabel ? (
+                      <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 11, color: theme.brand, marginTop: 2, lineHeight: 15 }}>
+                        {selectedHeritageLabel}
+                      </Text>
+                    ) : null}
+                  </View>
+                  <PressableSurface
+                    accessibilityRole="button"
+                    accessibilityLabel={`Clear selection for ${selectedFamilyMember.name}`}
+                    onPress={() => setSelectedFamilyMemberId(null)}
+                    style={{ minHeight: MIN_TOUCH_TARGET, minWidth: MIN_TOUCH_TARGET, alignItems: "center", justifyContent: "center" }}
+                  >
+                    <Feather name="x" size={17} color={theme.dim} />
+                  </PressableSurface>
+                </View>
+
+                {!selectedFamilyMember.is_alive ? (
+                  <View
+                    style={{
+                      backgroundColor: theme.brandSoft,
+                      borderRadius: RADII.sm,
+                      padding: 8,
+                      borderLeftWidth: 3,
+                      borderLeftColor: theme.brand,
+                    }}
+                  >
+                    <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 11, color: theme.brandStrong, lineHeight: 15 }}>
+                      आदरणीय पूर्वज · Sacred Pitru Smriti preserved in Kutumb Vansh.
+                    </Text>
+                  </View>
+                ) : null}
+
+                {snapshot.role === "guardian" ? (
+                  <View style={{ flexDirection: "row", gap: 8, marginTop: 2 }}>
+                    <PressableSurface
+                      accessibilityRole="button"
+                      accessibilityLabel={`Edit ${selectedFamilyMember.name}`}
+                      onPress={() => beginEditFamilyMember(selectedFamilyMember)}
+                      style={{ minHeight: MIN_TOUCH_TARGET, flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, borderRadius: RADII.md, borderWidth: 1, borderColor: theme.brand, backgroundColor: theme.brandSoft, paddingHorizontal: 10 }}
+                    >
+                      <Feather name="edit-2" size={15} color={theme.brand} />
+                      <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.brand, lineHeight: 16 }}>Edit person</Text>
+                    </PressableSurface>
+                    <PressableSurface
+                      accessibilityRole="button"
+                      accessibilityLabel={`Remove ${selectedFamilyMember.name} from family tree`}
+                      onPress={() => removeFamilyRecord(selectedFamilyMember)}
+                      style={{ minHeight: MIN_TOUCH_TARGET, flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, borderRadius: RADII.md, borderWidth: 1, borderColor: theme.border, paddingHorizontal: 10 }}
+                    >
+                      <Feather name="trash-2" size={15} color={theme.dim} />
+                      <Text style={{ ...TYPE.caption, color: theme.dim, lineHeight: 16 }}>Remove</Text>
+                    </PressableSurface>
+                  </View>
+                ) : null}
+              </View>
+            ) : null}
+          </View>
+        ) : (
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{
+              padding: 16,
+              paddingBottom: NAV_BAR_CLEARANCE + 100,
+              gap: 10,
+            }}
+            showsVerticalScrollIndicator={false}
+          >
+            {familyTreeLayout.nodes.map((node) => {
+              const member = node.data;
+              const selected = selectedFamilyMemberId === member.id;
+              const parentName = node.resolvedParentId
+                ? familyMemberById.get(node.resolvedParentId)?.name
+                : null;
+              return (
+                <View
+                  key={member.id}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    minHeight: MIN_TOUCH_TARGET,
+                    gap: 8,
+                    paddingLeft: Math.min(node.generation - 1, 4) * 12,
+                    borderTopWidth: 1,
+                    borderTopColor: theme.borderSoft,
+                  }}
+                >
+                  <PressableSurface
+                    accessibilityRole="button"
+                    accessibilityLabel={`${member.name}, ${member.role || "Family member"}, generation ${node.generation}${parentName ? `, child of ${parentName}` : ""}`}
+                    accessibilityState={{ selected }}
+                    onPress={() => setSelectedFamilyMemberId((previous) => previous === member.id ? null : member.id)}
+                    style={{
+                      minHeight: MIN_TOUCH_TARGET,
+                      flex: 1,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 10,
+                      borderRadius: RADII.md,
+                      paddingHorizontal: 8,
+                      borderWidth: selected ? 1 : 0,
+                      borderColor: theme.brand,
+                      backgroundColor: selected ? theme.brandSoft : theme.cardSoft,
+                    }}
+                  >
+                    <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: theme.brandSoft, alignItems: "center", justifyContent: "center" }}>
+                      <Text style={{ fontFamily: FONTS.serifBold, fontSize: 14, color: theme.brand, lineHeight: 18 }}>
+                        {member.name.trim().charAt(0).toUpperCase() || 'ॐ'}
+                      </Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ ...TYPE.label, color: theme.text, lineHeight: 18 }}>
+                        {member.name}
+                      </Text>
+                      <Text style={{ ...TYPE.caption, color: theme.dim, lineHeight: 16 }}>
+                        {member.role || "Family member"} · {getKinshipTier(node.generation).label} (Generation {node.generation})
+                        {member.generation == null ? " · inferred" : ""}
+                        {member.generation != null && member.generation !== node.generation ? ` · recorded as ${member.generation}` : ""}
+                      </Text>
+                    </View>
+                    {parentName ? <Feather name="corner-down-right" size={15} color={theme.dim} /> : null}
+                  </PressableSurface>
+                </View>
+              );
+            })}
+
+            {selectedFamilyMember ? (
+              <View
+                style={{
+                  borderRadius: RADII.lg,
+                  borderWidth: 1.5,
+                  borderColor: theme.brand,
+                  backgroundColor: theme.card,
+                  padding: 14,
+                  gap: 10,
+                  marginTop: 10,
+                  shadowColor: theme.brand,
+                  shadowOpacity: isDark ? 0.22 : 0.08,
+                  shadowRadius: 10,
+                  elevation: 3,
+                }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 10 }}>
+                  <View style={{ flex: 1, gap: 3 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                      <View
+                        style={{
+                          backgroundColor: theme.brandSoft,
+                          paddingHorizontal: 7,
+                          paddingVertical: 2,
+                          borderRadius: 6,
+                        }}
+                      >
+                        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: theme.brand, lineHeight: 14 }}>
+                          Gen {selectedTreeNode?.generation ?? selectedFamilyMember.generation ?? 1}
+                        </Text>
+                      </View>
+                      <View
+                        style={{
+                          backgroundColor: theme.brandSoft,
+                          paddingHorizontal: 7,
+                          paddingVertical: 2,
+                          borderRadius: 6,
+                          borderWidth: 1,
+                          borderColor: theme.borderSoft,
+                        }}
+                      >
+                        <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: theme.brand, lineHeight: 14 }}>
+                          {getKinshipTier(selectedTreeNode?.generation ?? selectedFamilyMember.generation ?? 1).label}
+                        </Text>
+                      </View>
+                      {!selectedFamilyMember.is_alive ? (
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 3,
+                            paddingHorizontal: 6,
+                            paddingVertical: 1.5,
+                            borderRadius: 6,
+                            borderWidth: 1,
+                            borderColor: theme.borderSoft,
+                            backgroundColor: theme.brandSoft,
+                          }}
+                        >
+                          <Text style={{ fontSize: 10 }}>🪔</Text>
+                          <Text style={{ fontFamily: FONTS.serifBold, fontSize: 10, color: theme.brandStrong, lineHeight: 14 }}>
+                            स्मृति (Pitru)
+                          </Text>
+                        </View>
+                      ) : (
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: COLORS.success }} />
+                          <Text style={{ ...TYPE.caption, color: theme.dim, lineHeight: 16 }}>Living</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={{ fontFamily: FONTS.serifBold, fontSize: 16, color: theme.text, marginTop: 2, lineHeight: 22 }}>
+                      {selectedFamilyMember.name}
+                    </Text>
+                    <Text style={{ ...TYPE.caption, color: theme.dim, lineHeight: 16 }}>
+                      {selectedFamilyMember.role || "Family member"} · Generation {selectedTreeNode?.generation ?? selectedFamilyMember.generation ?? 1}
+                      {selectedFamilyMember.generation == null ? " (inferred from family links)" : ""}
+                      {selectedTreeNode && selectedFamilyMember.generation != null && selectedFamilyMember.generation !== selectedTreeNode.generation ? ` (recorded as ${selectedFamilyMember.generation}; adjusted to keep the parent link downward)` : ""}
+                      {selectedFamilyMember.is_alive ? " · Living" : " · Remembered"}
+                      {selectedFamilyMember.linked_user_id ? " · On Shoonaya" : ""}
+                    </Text>
+                    {selectedHeritageLabel ? (
+                      <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 11, color: theme.brand, marginTop: 2, lineHeight: 15 }}>
+                        {selectedHeritageLabel}
+                      </Text>
+                    ) : null}
+                  </View>
+                  <PressableSurface
+                    accessibilityRole="button"
+                    accessibilityLabel={`Clear selection for ${selectedFamilyMember.name}`}
+                    onPress={() => setSelectedFamilyMemberId(null)}
+                    style={{ minHeight: MIN_TOUCH_TARGET, minWidth: MIN_TOUCH_TARGET, alignItems: "center", justifyContent: "center" }}
+                  >
+                    <Feather name="x" size={17} color={theme.dim} />
+                  </PressableSurface>
+                </View>
+
+                {!selectedFamilyMember.is_alive ? (
+                  <View
+                    style={{
+                      backgroundColor: theme.brandSoft,
+                      borderRadius: RADII.sm,
+                      padding: 8,
+                      borderLeftWidth: 3,
+                      borderLeftColor: theme.brand,
+                    }}
+                  >
+                    <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 11, color: theme.brandStrong, lineHeight: 15 }}>
+                      आदरणीय पूर्वज · Sacred Pitru Smriti preserved in Kutumb Vansh.
+                    </Text>
+                  </View>
+                ) : null}
+
+                {snapshot.role === "guardian" ? (
+                  <View style={{ flexDirection: "row", gap: 8, marginTop: 2 }}>
+                    <PressableSurface
+                      accessibilityRole="button"
+                      accessibilityLabel={`Edit ${selectedFamilyMember.name}`}
+                      onPress={() => beginEditFamilyMember(selectedFamilyMember)}
+                      style={{ minHeight: MIN_TOUCH_TARGET, flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, borderRadius: RADII.md, borderWidth: 1, borderColor: theme.brand, backgroundColor: theme.brandSoft, paddingHorizontal: 10 }}
+                    >
+                      <Feather name="edit-2" size={15} color={theme.brand} />
+                      <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.brand, lineHeight: 16 }}>Edit person</Text>
+                    </PressableSurface>
+                    <PressableSurface
+                      accessibilityRole="button"
+                      accessibilityLabel={`Remove ${selectedFamilyMember.name} from family tree`}
+                      onPress={() => removeFamilyRecord(selectedFamilyMember)}
+                      style={{ minHeight: MIN_TOUCH_TARGET, flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, borderRadius: RADII.md, borderWidth: 1, borderColor: theme.border, paddingHorizontal: 10 }}
+                    >
+                      <Feather name="trash-2" size={15} color={theme.dim} />
+                      <Text style={{ ...TYPE.caption, color: theme.dim, lineHeight: 16 }}>Remove</Text>
+                    </PressableSurface>
+                  </View>
+                ) : null}
+              </View>
+            ) : null}
+          </ScrollView>
+        )}
+
+        {/* Modal: Add or Edit Family Member */}
+        {showFamilyForm && snapshot.role === "guardian" ? (
+          <Modal
+            transparent
+            animationType="slide"
+            visible={showFamilyForm}
+            onRequestClose={() => setShowFamilyForm(false)}
+          >
+            <Pressable
+              style={{
+                flex: 1,
+                backgroundColor: "#0C0A07BB",
+                justifyContent: "flex-end",
+              }}
+              onPress={() => setShowFamilyForm(false)}
+            >
+              <Pressable
+                onPress={(e) => e.stopPropagation()}
+                style={{
+                  backgroundColor: theme.card,
+                  borderTopLeftRadius: RADII.xl,
+                  borderTopRightRadius: RADII.xl,
+                  borderWidth: 1,
+                  borderColor: theme.border,
+                  padding: 20,
+                  maxHeight: "85%",
+                  gap: 12,
+                }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                  <Text style={{ ...TYPE.cardHeading, color: theme.text, fontFamily: FONTS.serifBold, lineHeight: 24 }}>
+                    {editingFamilyMemberId ? "Edit family record" : "Add a person to lineage tree"}
+                  </Text>
+                  <PressableSurface
+                    accessibilityRole="button"
+                    accessibilityLabel="Close form"
+                    onPress={() => setShowFamilyForm(false)}
+                    style={{ width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: theme.cardSoft }}
+                  >
+                    <Feather name="x" size={18} color={theme.dim} />
+                  </PressableSurface>
+                </View>
+
+                <ScrollView style={{ maxHeight: 420 }} contentContainerStyle={{ gap: 10 }} showsVerticalScrollIndicator={false}>
+                  <Field
+                    accessibilityLabel="Family tree person's name"
+                    value={familyName}
+                    onChangeText={setFamilyName}
+                    placeholder="Name"
+                    theme={theme}
+                    maxLength={80}
+                  />
+                  <Field
+                    accessibilityLabel="Relationship to the family"
+                    value={familyRelationship}
+                    onChangeText={setFamilyRelationship}
+                    placeholder="Relationship · e.g. Grandmother"
+                    theme={theme}
+                    maxLength={50}
+                  />
+                  <Field
+                    accessibilityLabel="Family generation number"
+                    value={familyGeneration}
+                    onChangeText={setFamilyGeneration}
+                    placeholder="Generation number"
+                    theme={theme}
+                    maxLength={2}
+                  />
+                  {snapshot.familyMembers.length ? (
+                    <>
+                      <Text style={{ ...TYPE.caption, color: theme.dim, lineHeight: 16 }}>
+                        Optional parent in this tree
+                      </Text>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          flexWrap: "wrap",
+                          gap: 7,
+                        }}
+                      >
+                        <Choice
+                          label="No parent selected"
+                          selected={!familyParent}
+                          onPress={() => setFamilyParent("")}
+                          theme={theme}
+                        />
+                        {snapshot.familyMembers.filter((member) => eligibleFamilyParentIds.has(member.id)).map((member) => (
+                          <Choice
+                            key={member.id}
+                            label={member.name}
+                            selected={familyParent === member.id}
+                            onPress={() => setFamilyParent(member.id)}
+                            theme={theme}
+                          />
+                        ))}
+                      </View>
+                    </>
+                  ) : null}
+                  {snapshot.familyMembers.length > 1 ? (
+                    <>
+                      <Text style={{ ...TYPE.caption, color: theme.dim, lineHeight: 16 }}>Optional spouse / partner link</Text>
+                      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
+                        <Choice label="No link" selected={!familySpouse} onPress={() => setFamilySpouse("")} theme={theme} />
+                        {snapshot.familyMembers.filter((member) => member.id !== editingFamilyMemberId).slice(0, 20).map((member) => (
+                          <Choice key={`spouse-${member.id}`} label={member.name} selected={familySpouse === member.id} onPress={() => setFamilySpouse(member.id)} theme={theme} />
+                        ))}
+                      </View>
+                    </>
+                  ) : null}
+                  {editingFamilyMemberId ? (
+                    <View style={{ flexDirection: "row", gap: 7 }}>
+                      <Choice label="Living" selected={familyIsAlive} onPress={() => setFamilyIsAlive(true)} theme={theme} />
+                      <Choice label="Remembered" selected={!familyIsAlive} onPress={() => setFamilyIsAlive(false)} theme={theme} />
+                    </View>
+                  ) : null}
+                  <ActionButton
+                    label={working ? "Saving…" : editingFamilyMemberId ? "Save family record" : "Add to family tree"}
+                    disabled={working}
+                    onPress={() => void handleAddFamilyMember()}
+                    theme={theme}
+                    isDark={isDark}
+                  />
+                </ScrollView>
+              </Pressable>
+            </Pressable>
+          </Modal>
+        ) : null}
+
+        {/* Modal: Gotra & Parampara */}
+        {showLineageForm ? (
+          <Modal
+            transparent
+            animationType="slide"
+            visible={showLineageForm}
+            onRequestClose={() => setShowLineageForm(false)}
+          >
+            <Pressable
+              style={{
+                flex: 1,
+                backgroundColor: "#0C0A07BB",
+                justifyContent: "flex-end",
+              }}
+              onPress={() => setShowLineageForm(false)}
+            >
+              <Pressable
+                onPress={(e) => e.stopPropagation()}
+                style={{
+                  backgroundColor: theme.card,
+                  borderTopLeftRadius: RADII.xl,
+                  borderTopRightRadius: RADII.xl,
+                  borderWidth: 1,
+                  borderColor: theme.border,
+                  padding: 20,
+                  maxHeight: "85%",
+                  gap: 12,
+                }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                  <Text style={{ ...TYPE.cardHeading, color: theme.text, fontFamily: FONTS.serifBold, lineHeight: 24 }}>
+                    Kul Parampara & Gotra
+                  </Text>
+                  <PressableSurface
+                    accessibilityRole="button"
+                    accessibilityLabel="Close lineage modal"
+                    onPress={() => setShowLineageForm(false)}
+                    style={{ width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: theme.cardSoft }}
+                  >
+                    <Feather name="x" size={18} color={theme.dim} />
+                  </PressableSurface>
+                </View>
+
+                <ScrollView style={{ maxHeight: 450 }} contentContainerStyle={{ gap: 10 }} showsVerticalScrollIndicator={false}>
+                  {snapshot.role === "guardian" && lineageDraft ? (
+                    <View style={{ gap: 9 }}>
+                      <Field accessibilityLabel="Gotra" value={lineageDraft.gotra ?? ""} onChangeText={(value) => setLineageDraft((current) => current ? { ...current, gotra: value || null } : current)} placeholder="Gotra" theme={theme} maxLength={120} />
+                      <Field accessibilityLabel="Pravara" value={lineageDraft.pravara ?? ""} onChangeText={(value) => setLineageDraft((current) => current ? { ...current, pravara: value || null } : current)} placeholder="Pravara" theme={theme} maxLength={240} />
+                      <Field accessibilityLabel="Kuldevi" value={lineageDraft.kuldeviName ?? ""} onChangeText={(value) => setLineageDraft((current) => current ? { ...current, kuldeviName: value || null } : current)} placeholder="Kuldevi name" theme={theme} maxLength={120} />
+                      <Field accessibilityLabel="Kuldevta" value={lineageDraft.kuldevtaName ?? ""} onChangeText={(value) => setLineageDraft((current) => current ? { ...current, kuldevtaName: value || null } : current)} placeholder="Kuldevta name" theme={theme} maxLength={120} />
+                      <Field accessibilityLabel="Ancestral origin" value={lineageDraft.ancestralOrigin ?? ""} onChangeText={(value) => setLineageDraft((current) => current ? { ...current, ancestralOrigin: value || null } : current)} placeholder="Ancestral village / region" theme={theme} maxLength={160} />
+                      <Field accessibilityLabel="Kulachara notes" value={lineageDraft.kulacharaNotes ?? ""} onChangeText={(value) => setLineageDraft((current) => current ? { ...current, kulacharaNotes: value || null } : current)} placeholder="Family customs and observances" theme={theme} maxLength={2000} multiline />
+                      <Text style={{ ...TYPE.caption, color: theme.dim, lineHeight: 16 }}>Family lunar calendar reference</Text>
+                      <Field accessibilityLabel="Calendar reference label" value={calendarLabel} onChangeText={setCalendarLabel} placeholder="Reference place · e.g. Ujjain reference" theme={theme} maxLength={100} />
+                      <Field accessibilityLabel="Calendar timezone" value={calendarTimezone} onChangeText={setCalendarTimezone} placeholder="IANA timezone · Asia/Kolkata" theme={theme} maxLength={80} />
+                      <View style={{ flexDirection: "row", gap: 7 }}>
+                        <Choice label="Amanta" selected={calendarMonthSystem === "amanta"} onPress={() => setCalendarMonthSystem("amanta")} theme={theme} />
+                        <Choice label="Purnimanta" selected={calendarMonthSystem === "purnimanta"} onPress={() => setCalendarMonthSystem("purnimanta")} theme={theme} />
+                      </View>
+                      <ActionButton label={working ? "Saving…" : "Save lineage & calendar"} disabled={working} onPress={() => void saveLineage()} theme={theme} isDark={isDark} />
+                    </View>
+                  ) : (
+                    <View style={{ gap: 8 }}>
+                      <Text style={{ ...TYPE.body, color: theme.text, lineHeight: 20 }}>Gotra: {kul?.lineage.gotra || "Not added"}{kul?.lineage.pravara ? ` · Pravara: ${kul.lineage.pravara}` : ""}</Text>
+                      {kul?.lineage.gotra || kul?.lineage.pravara ? (
+                        <PressableSurface accessibilityLabel="Copy Gotra and Pravara for family sankalpa" onPress={() => void copyLineageForSankalpa()} style={{ minHeight: MIN_TOUCH_TARGET, flexDirection: "row", alignItems: "center", gap: 7 }}>
+                          <Feather name="copy" size={14} color={theme.brand} />
+                          <Text style={{ ...TYPE.caption, color: theme.brand, fontFamily: FONTS.sansSemiBold, lineHeight: 16 }}>Copy lineage details for sankalpa</Text>
+                        </PressableSurface>
+                      ) : null}
+                      <Text style={{ ...TYPE.body, color: theme.text, lineHeight: 20 }}>Kuldevi: {kul?.lineage.kuldeviName || "Not added"}</Text>
+                      <Text style={{ ...TYPE.body, color: theme.text, lineHeight: 20 }}>Kuldevta: {kul?.lineage.kuldevtaName || "Not added"}</Text>
+                      <Text style={{ ...TYPE.body, color: theme.text, lineHeight: 20 }}>Ancestral origin: {kul?.lineage.ancestralOrigin || "Not added"}</Text>
+                      {kul?.lineage.kulacharaNotes ? <Text style={{ ...TYPE.body, color: theme.dim, lineHeight: 20 }}>{kul.lineage.kulacharaNotes}</Text> : null}
+                      {snapshot.role === "guardian" ? (
+                        <ActionButton
+                          label="Edit lineage & Gotra"
+                          icon="edit-2"
+                          secondary
+                          onPress={() => beginEditLineage()}
+                          theme={theme}
+                          isDark={isDark}
+                        />
+                      ) : null}
+                    </View>
+                  )}
+                </ScrollView>
+              </Pressable>
+            </Pressable>
+          </Modal>
+        ) : null}
+      </Screen>
+    );
+  }
+
   return (
     <Screen
       header={{ title: "Kutumb (कुटुम्ब)" }}

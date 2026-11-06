@@ -7,6 +7,8 @@ import {
   View,
   useColorScheme,
   useWindowDimensions,
+  type StyleProp,
+  type ViewStyle,
 } from 'react-native';
 import Svg, { Path, Defs, LinearGradient, Stop, Circle as SvgCircle } from 'react-native-svg';
 import Feather from '@expo/vector-icons/Feather';
@@ -40,6 +42,7 @@ interface VanshGraphCanvasProps {
   selectedMemberId?: string | null;
   onSelectMember?: (member: KulFamilyMember) => void;
   isGuardian?: boolean;
+  style?: StyleProp<ViewStyle>;
 }
 
 export function VanshGraphCanvas({
@@ -47,11 +50,15 @@ export function VanshGraphCanvas({
   selectedMemberId,
   onSelectMember,
   isGuardian = false,
+  style,
 }: VanshGraphCanvasProps) {
   const isDark = useColorScheme() === 'dark';
   const theme = themeColor(isDark);
-  const { width: windowWidth } = useWindowDimensions();
-  const [viewportSize, setViewportSize] = useState({ width: windowWidth - 32, height: 480 });
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const [viewportSize, setViewportSize] = useState({
+    width: windowWidth - 32,
+    height: Math.max(windowHeight - 200, 480),
+  });
   const [activeKinshipTier, setActiveKinshipTier] = useState<KinshipTier | null>(null);
   const fitScale = computeVanshFitScale(
     layout.canvasWidth,
@@ -143,7 +150,7 @@ export function VanshGraphCanvas({
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.bg }]}>
+    <View style={[styles.container, { backgroundColor: theme.bg }, style]}>
       {/* Interactive Gesture Viewport */}
       <GestureDetector gesture={composedGesture}>
         <Animated.View
@@ -364,19 +371,19 @@ export function VanshGraphCanvas({
                     <Text
                       style={[
                         styles.memberName,
-                        { color: theme.text, fontFamily: FONTS.serifBold },
+                        { color: theme.text, fontFamily: FONTS.serifBold, textAlign: 'center' },
                       ]}
                       numberOfLines={1}
                     >
                       {member.name}
                     </Text>
-                    <Text style={[styles.memberRole, { color: theme.dim, fontFamily: FONTS.sans }]} numberOfLines={1}>
+                    <Text style={[styles.memberRole, { color: theme.dim, fontFamily: FONTS.sans, textAlign: 'center' }]} numberOfLines={1}>
                       {member.role || 'Family member'}
                     </Text>
                     {member.linked_user_id ? (
-                      <View style={styles.linkedBadgeRow}>
+                      <View style={[styles.linkedBadgeRow, { justifyContent: 'center' }]}>
                         <Feather name="check-circle" size={9} color={theme.brand} />
-                        <Text numberOfLines={1} style={[styles.linkedBadgeText, { color: theme.brand, fontFamily: FONTS.sansSemiBold, flex: 1 }]}>
+                        <Text numberOfLines={1} style={[styles.linkedBadgeText, { color: theme.brand, fontFamily: FONTS.sansSemiBold }]}>
                           On Shoonaya
                         </Text>
                       </View>
@@ -486,11 +493,12 @@ export function VanshGraphCanvas({
 
 const styles = StyleSheet.create({
   container: {
-    height: 480,
+    flex: 1,
+    minHeight: 480,
     borderRadius: RADII.xl,
     overflow: 'hidden',
     position: 'relative',
-    marginVertical: 8,
+    marginVertical: 0,
   },
   viewport: {
     flex: 1,
@@ -693,9 +701,9 @@ const styles = StyleSheet.create({
   },
   controlsDock: {
     position: 'absolute',
-    bottom: 14,
-    right: 14,
-    flexDirection: 'row',
+    bottom: 24,
+    right: 16,
+    flexDirection: 'column',
     gap: 8,
   },
   controlBtn: {
