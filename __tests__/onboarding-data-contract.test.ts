@@ -759,10 +759,11 @@ describe('4. Marketing email consent from onboarding', () => {
     }
   });
 
-  it('the profile payload has no marketing keys unless the person opted in', () => {
+  it('the onboarding profile payload never carries e-mail consent: it is recorded through the backend with its wording and region', () => {
     for (const payload of [
       buildOnboardingProfilePayload(base),
-      buildOnboardingProfilePayload({ ...base, marketingOptIn: false }),
+      // A caller that still passes the removed option (an old call site) must not be able to put consent in the payload.
+      buildOnboardingProfilePayload({ ...base, marketingOptIn: true } as unknown as typeof base),
     ]) {
       for (const key of MARKETING_KEYS) assert.equal(key in payload, false, `${key} must be absent`);
     }
@@ -774,12 +775,12 @@ describe('4. Marketing email consent from onboarding', () => {
     assert.equal('marketing_consent' in payload, false);
   });
 
-  it('turning marketing on does not turn reminders on', () => {
-    const payload = buildOnboardingProfilePayload({ ...base, notificationCategories: ALL_CATEGORIES_FALSE, marketingOptIn: true });
-    assert.equal(payload.wants_festival_reminders, false);
-    assert.equal(payload.marketing_consent, true);
-    assert.equal(payload.email_newsletter, true);
-    assert.ok(!Number.isNaN(Date.parse(String(payload.consent_updated_at))));
+  it('the fallback write (used only when the backend cannot answer) opts in both columns the audience reads and stamps the time', () => {
+    const fallback = getMarketingConsentPayload(true) as Record<string, unknown>;
+    assert.equal(fallback.marketing_consent, true);
+    assert.equal(fallback.email_newsletter, true);
+    assert.ok(!Number.isNaN(Date.parse(String(fallback.consent_updated_at))));
+    assert.equal('wants_festival_reminders' in fallback, false, 'it must not touch the reminder choices');
   });
 
   it('the email choice itself does not touch the other consent columns (religious data, activity, analytics)', () => {
@@ -789,20 +790,17 @@ describe('4. Marketing email consent from onboarding', () => {
     }
   });
 
-  it('the email choice and the religious-data choice are independent in all four combinations', () => {
-    for (const email of [false, true]) {
-      for (const religious of [false, true]) {
-        const p = buildOnboardingProfilePayload({
-          ...base,
-          tradition: 'hindu',
-          religiousDataConsent: religious,
-          marketingOptIn: email,
-        }) as Record<string, unknown>;
-        assert.equal(p.consent_religious_data, religious, `religious=${religious} email=${email}`);
-        assert.equal('marketing_consent' in p, email, `religious=${religious} email=${email}`);
-        assert.equal('email_newsletter' in p, email, `religious=${religious} email=${email}`);
-        assert.equal(p.tradition, religious ? 'hindu' : 'none', `religious=${religious} email=${email}`);
-      }
+  it('the religious-data choice decides the religious fields, and e-mail consent is never in the payload whichever way it goes', () => {
+    for (const religious of [false, true]) {
+      const p = buildOnboardingProfilePayload({
+        ...base,
+        tradition: 'hindu',
+        religiousDataConsent: religious,
+      }) as Record<string, unknown>;
+      assert.equal(p.consent_religious_data, religious, `religious=${religious}`);
+      assert.equal(p.tradition, religious ? 'hindu' : 'none', `religious=${religious}`);
+      assert.equal('marketing_consent' in p, false, `religious=${religious}`);
+      assert.equal('email_newsletter' in p, false, `religious=${religious}`);
     }
   });
 });

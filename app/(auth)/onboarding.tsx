@@ -44,6 +44,9 @@ import {
   registerPushToken,
 } from '@/lib/notifications';
 import { captureDeviceLocation } from '@/lib/locationSync';
+import { fetchEmailConsentPolicy, setEmailPreference } from '@/lib/emailPreferencesApi';
+import { recordOnboardingEmailOptInWith } from '@/lib/emailOnboardingConsent';
+import { emailWordingCopy, STRICTEST_EMAIL_WORDING, type EmailWordingVersion } from '@/lib/emailConsentCopy';
 import {
   type Step,
   type NotificationChoice,
@@ -53,6 +56,7 @@ import {
   stepEyebrow,
   getPermissionRecoveryAction,
   buildOnboardingProfilePayload,
+  getMarketingConsentPayload,
   getOnboardingReadyPracticeCta,
   computePushNotificationEligibility,
   DEFAULT_NOTIFICATION_CATEGORY_CHOICES,
@@ -284,6 +288,9 @@ export default function OnboardingScreen() {
   // Optional email updates: off unless the person turns it on, and deliberately not kept in the onboarding
   // draft, so a resumed session never starts from a remembered "yes".
   const [marketingOptIn, setMarketingOptIn] = useState(false);
+  // The wording shown next to the e-mail switch. The backend names the version for the person's region; until it answers (or if it
+  // cannot) the strictest text is shown, and the version shown when the choice is saved is the one recorded with it.
+  const [emailWording, setEmailWording] = useState<EmailWordingVersion>(STRICTEST_EMAIL_WORDING);
   const [notificationsDenied, setNotificationsDenied] = useState(false);
   const [notificationsCanAskAgain, setNotificationsCanAskAgain] = useState(true);
   const [requestingNotifications, setRequestingNotifications] = useState(false);
@@ -372,6 +379,19 @@ export default function OnboardingScreen() {
     callback();
     try { await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
   };
+
+  // Ask the backend which wording applies to this person's region, once, when the step with the e-mail switch opens. A failure keeps
+  // the strictest text; a late answer for a different account is ignored.
+  useEffect(() => {
+    if (step !== 'notifications') return;
+    const lease = captureAppIdentity();
+    if (lease.identity.kind !== 'authenticated') return;
+    let cancelled = false;
+    void fetchEmailConsentPolicy(lease.identity.userId)
+      .then((policy) => { if (!cancelled && lease.isCurrent()) setEmailWording(policy.wordingVersion); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [step]);
 
   useEffect(() => {
     let isMounted = true;
@@ -811,7 +831,6 @@ export default function OnboardingScreen() {
         calendarScope,
         goals,
         notificationCategories,
-        marketingOptIn,
         religiousDataConsent,
         consentRecordedAt: new Date().toISOString(),
         location: capturedLocation,
@@ -836,6 +855,22 @@ export default function OnboardingScreen() {
           { onConflict: 'id' }
         );
         if (insertError) throw insertError;
+      }
+
+      // The e-mail opt-in is NOT part of the profile payload: it is recorded through the backend with the wording shown and the
+      // region that applied, and falls back to the old direct write only if the backend cannot answer (AGENTS 26). It never blocks
+      // finishing onboarding, and nothing about it is kept on the device.
+      if (marketingOptIn) {
+        const wordingShown = emailWording;
+        void recordOnboardingEmailOptInWith({
+          record: () => setEmailPreference(user.id, { category: 'newsletter', granted: true, source: 'onboarding', wordingVersion: wordingShown }),
+          writeDirect: async () => {
+            const { error: directError } = await supabase.from('profiles').update(getMarketingConsentPayload(true)).eq('id', user.id);
+            if (directError) throw directError;
+          },
+        }).then((outcome) => {
+          if (outcome === 'not_recorded') console.warn('[Onboarding] e-mail opt-in could not be recorded; the switch stays off in Settings');
+        });
       }
 
       // The write above already committed under `user.id` explicitly (never
@@ -1869,10 +1904,7 @@ export default function OnboardingScreen() {
                   {translated('Occasional email from Shoonaya', 'Shoonaya से कभी-कभार ईमेल')}
                 </Text>
                 <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 12, lineHeight: 18, color: dim }}>
-                  {translated(
-                    'New features, festival guides and a weekly newsletter. Optional, and you can unsubscribe at any time.',
-                    'नई सुविधाएँ, पर्व मार्गदर्शन और साप्ताहिक न्यूज़लेटर। वैकल्पिक, और आप कभी भी सदस्यता छोड़ सकते हैं।'
-                  )}
+                  {emailWordingCopy(emailWording, isHindi ? 'hi' : 'en').newsletter.help}
                 </Text>
               </View>
               <Switch

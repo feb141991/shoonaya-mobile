@@ -467,3 +467,25 @@ Rules:
 - Still open, found in the same sweep (two more private files written to the cache and never removed at sign-out): Settings "Download your data"
   writes `shoonaya-data.json` and Profile's sadhana report writes `sadhana-report.html`. The account-wide export (`/api/user/export`) also holds no
   Sanskāra data, so this sheet is the only way to download it. This applies equally to human and AI-agent contributors.
+
+### 26. E-mail Consent Is Recorded by the Server and the App Keeps No Copy
+- Every change to an e-mail choice (festival e-mail, newsletter) goes through `POST /api/native/email-preferences` (`lib/emailPreferencesApi.ts`), which
+  records it with its path, the wording version shown and the region that applied. The screen (Settings, Email) reads the choice from
+  `GET /api/native/email-preferences` every time it is shown and moves a switch only after the server has answered. Nothing about e-mail consent is cached,
+  persisted or defaulted on the device, and the onboarding profile payload never carries it (`buildOnboardingProfilePayload` has no such option).
+- The onboarding opt-in is recorded through the same API after the profile exists. Only when the backend cannot answer (no network, a 5xx, a route not yet
+  deployed) is the old direct profile write used (`getMarketingConsentPayload`, `lib/emailOnboardingConsent.ts`). A refusal (400, 401, 403, 409, 429) is an
+  answer and is never worked around: writing the flags directly after "this account is being deleted" would defeat it.
+- Every switch starts off in every region. The backend names the wording for the person's region (`eu-uk-v1` for the EEA, the UK, Switzerland and any unknown
+  region; `global-v1` elsewhere); a version this build does not know shows the strictest text. Location only chooses wording and is recorded as evidence; it never
+  loosens the default. Hindi text has not been reviewed by a native reader or a lawyer.
+- A failed read is a retryable error, never "everything off"; a failed refresh keeps what is on screen; a late answer for another account is dropped (sections 22
+  and 24). Failures show `describeFailure`, never a message or a status (section 12).
+- Guard: `__tests__/email-preferences.test.ts` fails if any other file names a consent column, if the screen persists anything or skips an identity check, or
+  if the onboarding opt-in works around a refusal; `__tests__/onboarding-marketing-optin-contract.test.ts` pins the onboarding wiring.
+- Origin: 2026-11-06. Marketing consent was three booleans and one timestamp; festival e-mail defaulted to on for every account although nobody was asked; no
+  record said when, how, where or under which wording anyone agreed or withdrew; and the app had no place to change or withdraw a choice. The backend counterpart
+  (migration `20261106090000`, `docs/EMAIL_CONSENT_PLAN.md`) is written but NOT applied to any database. Until it is applied and deployed, Settings, Email shows a
+  retryable error and onboarding falls back to the direct write.
+- Not verified on a device or simulator: the screen in light and dark mode, large text, 44pt targets on a phone, the onboarding step, or any request against a deployed
+  backend. A green test suite does not show that the screen is usable (sections 7 and 13).

@@ -180,14 +180,15 @@ export function getNotificationPersistencePayload(
 }
 
 /**
- * Marketing email consent from the optional onboarding switch.
+ * The profile write for the optional onboarding e-mail switch. It is NO LONGER part of the onboarding profile payload: the opt-in is
+ * recorded through the backend (lib/emailPreferencesApi.ts), which keeps the wording shown and the region that applied. This is only
+ * the FALLBACK, used when the backend cannot answer (lib/emailOnboardingConsent.ts), and it is what every earlier build wrote.
  *
- * It is separate from the reminder choice above and off unless the person turns it on: nothing here is ever
- * inferred from another answer. When they opt in, both columns the campaign audience reads are set together
- * (marketing_consent and email_newsletter) and the consent time is stamped. When they do not, NOTHING is
- * written, so a skip can never overwrite an existing choice and the column defaults (false) apply.
+ * Separate from the reminder choices and off unless the person turned it on: nothing here is ever inferred from another answer. An
+ * opt-in sets both columns the campaign audience reads (marketing_consent and email_newsletter) and stamps the consent time. Anything
+ * else writes NOTHING, so a skip can never overwrite an existing choice and the column defaults (false) apply.
  *
- * Not recorded: which wording was shown. consent_updated_at is the only timestamp the profile has.
+ * The database records every change to these columns, so even this direct write leaves a history row (without wording or region).
  */
 export function getMarketingConsentPayload(optedIn: boolean, now: Date = new Date()) {
   if (optedIn !== true) return {};
@@ -212,7 +213,6 @@ export function buildOnboardingProfilePayload({
   calendarScope,
   goals,
   notificationCategories,
-  marketingOptIn = false,
   religiousDataConsent,
   consentRecordedAt,
   location,
@@ -230,8 +230,6 @@ export function buildOnboardingProfilePayload({
   calendarScope: CalendarScopeSlug | '';
   goals: string[];
   notificationCategories: NotificationCategoryChoices;
-  /** Optional email updates switch. Absent means no consent. */
-  marketingOptIn?: boolean;
   /** The switch the person turned on (or not) when choosing a tradition. Required so no caller can forget it. */
   religiousDataConsent: boolean;
   /** When that choice was saved, as an ISO string. Passed in so this stays pure. */
@@ -265,7 +263,7 @@ export function buildOnboardingProfilePayload({
     calendar_scope: isHinduProfile ? calendarScope || null : null,
     onboarding_goal: goals.join(','),
     ...getNotificationPersistencePayload(notificationCategories),
-    ...getMarketingConsentPayload(marketingOptIn),
+    // No e-mail consent here, by design: it is recorded through the backend with its wording and region (see getMarketingConsentPayload).
     // Omitted entirely (not written as null) when the user skipped or denied
     // location during onboarding -- never overwrite an existing value with
     // nothing, and never substitute a default location here either; a
