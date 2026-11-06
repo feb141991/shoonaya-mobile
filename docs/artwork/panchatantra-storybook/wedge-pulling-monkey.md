@@ -29,3 +29,4 @@ through `scripts/optimize-panchatantra-art.py` at quality 80, 1376×768:
 | `wedge-pulling-monkey-6.webp` | 166 KB | 35.9 dB |
 
 Scene 1 also serves as the offline cover. No text, captions, or source claims are embedded in the artwork.
+
