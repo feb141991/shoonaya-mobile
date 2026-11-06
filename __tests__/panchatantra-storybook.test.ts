@@ -923,3 +923,14 @@ test('The Cave That Talked story uses six paragraph-aligned offline scenes', () 
     assert.ok(getPanchatantraSceneArtwork('panchatantra-cave-that-talked', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });
+
+test('The Butter-Blinded Brahman story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-butter-blinded-brahman');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-butter-blinded-brahman'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-butter-blinded-brahman'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-butter-blinded-brahman', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});

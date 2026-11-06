@@ -96,6 +96,7 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-gullible-carpenter': require('@/assets/panchatantra/gullible-carpenter-1.webp'),
   'panchatantra-mouse-maid-made-mouse': require('@/assets/panchatantra/mouse-maid-made-mouse-1.webp'),
   'panchatantra-cave-that-talked': require('@/assets/panchatantra/cave-that-talked-1.webp'),
+  'panchatantra-butter-blinded-brahman': require('@/assets/panchatantra/butter-blinded-brahman-1.webp'),
 };
 
 /**
@@ -720,6 +721,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/cave-that-talked-4.webp'),
     require('@/assets/panchatantra/cave-that-talked-5.webp'),
     require('@/assets/panchatantra/cave-that-talked-6.webp'),
+  ],
+  'panchatantra-butter-blinded-brahman': [
+    require('@/assets/panchatantra/butter-blinded-brahman-1.webp'),
+    require('@/assets/panchatantra/butter-blinded-brahman-2.webp'),
+    require('@/assets/panchatantra/butter-blinded-brahman-3.webp'),
+    require('@/assets/panchatantra/butter-blinded-brahman-4.webp'),
+    require('@/assets/panchatantra/butter-blinded-brahman-5.webp'),
+    require('@/assets/panchatantra/butter-blinded-brahman-6.webp'),
   ],
 };
 
