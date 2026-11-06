@@ -45,6 +45,7 @@ import { SanskaraEarlyHandover } from '@/components/sanskara/SanskaraEarlyHandov
 import { SanskaraManagers } from '@/components/sanskara/SanskaraManagers';
 import { SanskaraDataSheet } from '@/components/sanskara/SanskaraDataSheet';
 import { handoverStage, type HandoverStage } from '@/lib/sanskaraHandover';
+import { SANSKARA_CATALOG, SANSKARA_CATALOG_SOURCE_NOTE, type SanskaraCatalogEntry } from '@/lib/sanskaraCatalog';
 
 type ActiveSubject =
   | { kind: 'me' }
@@ -81,6 +82,11 @@ export default function SanskaraScreen() {
   const [newMilestoneTitle, setNewMilestoneTitle] = useState('');
   const [newMilestoneDate, setNewMilestoneDate] = useState<string | null>(null);
   const [savingMilestone, setSavingMilestone] = useState(false);
+  // Catalog picker inside the New Milestone modal: 'list' (browse the 16
+  // samskaras) -> 'detail' (experience card for one) -> 'form' (the title +
+  // date + submit step, shared by both a catalog pick and "write your own").
+  const [milestoneStep, setMilestoneStep] = useState<'list' | 'detail' | 'form'>('list');
+  const [selectedCatalogEntry, setSelectedCatalogEntry] = useState<SanskaraCatalogEntry | null>(null);
 
   // "Your Sanskāra data": download a copy, delete a timeline. Closed whenever the identity changes.
   const [showData, setShowData] = useState(false);
@@ -217,6 +223,37 @@ export default function SanskaraScreen() {
     [currentUserId, activeSubjectId],
   );
 
+  // Reset the catalog picker to its start every time the modal is (re)opened,
+  // so a previous pick doesn't linger into the next "Plant Milestone".
+  useEffect(() => {
+    if (showAddMilestone) {
+      setMilestoneStep('list');
+      setSelectedCatalogEntry(null);
+    }
+  }, [showAddMilestone]);
+
+  const handleChooseCatalogEntry = useCallback((entry: SanskaraCatalogEntry) => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    setSelectedCatalogEntry(entry);
+    setMilestoneStep('detail');
+  }, []);
+
+  const handleUseCatalogEntry = useCallback(() => {
+    if (!selectedCatalogEntry) return;
+    // Still a free-typed custom_title under the hood (sanskara_rites has no
+    // per-samskara rite_key yet — see lib/sanskaraCatalog.ts); the catalog
+    // only supplies a well-sourced starting title instead of a blank field.
+    const title = `${selectedCatalogEntry.nameTransliteration} (${selectedCatalogEntry.nameEnglish})`;
+    setNewMilestoneTitle(title.length > 60 ? selectedCatalogEntry.nameTransliteration : title);
+    setMilestoneStep('form');
+  }, [selectedCatalogEntry]);
+
+  const handleWriteOwnMilestone = useCallback(() => {
+    setSelectedCatalogEntry(null);
+    setNewMilestoneTitle('');
+    setMilestoneStep('form');
+  }, []);
+
   // Milestone Mutations
   const handleCreateMilestone = useCallback(async () => {
     if (!currentUserId || !activeSubjectId) return;
@@ -237,6 +274,8 @@ export default function SanskaraScreen() {
       setShowAddMilestone(false);
       setNewMilestoneTitle('');
       setNewMilestoneDate(null);
+      setSelectedCatalogEntry(null);
+      setMilestoneStep('list');
       void loadData(currentUserId, true);
     } catch (e: any) {
       Alert.alert('Could Not Save', describeSanskaraFailure(e, 'Could not create milestone.'));
@@ -767,47 +806,145 @@ export default function SanskaraScreen() {
             </View>
 
             <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, { color: theme.text }]}>Plant Sacred Milestone</Text>
+              <View style={styles.modalHeaderLeft}>
+                {milestoneStep !== 'list' ? (
+                  <Pressable
+                    onPress={() => setMilestoneStep('list')}
+                    hitSlop={12}
+                    style={styles.modalBackButton}
+                    accessibilityLabel="Back to the milestone list"
+                  >
+                    <Feather name="chevron-left" size={20} color={theme.text} />
+                  </Pressable>
+                ) : null}
+                <Text style={[styles.modalTitle, { color: theme.text }]} numberOfLines={1}>
+                  {milestoneStep === 'list'
+                    ? 'Choose a Sacred Milestone'
+                    : milestoneStep === 'detail'
+                      ? selectedCatalogEntry?.nameEnglish ?? 'Sacred Milestone'
+                      : 'Plant Sacred Milestone'}
+                </Text>
+              </View>
               <Pressable onPress={() => setShowAddMilestone(false)} hitSlop={12}>
                 <Feather name="x" size={18} color={theme.text} />
               </Pressable>
             </View>
 
-            <View style={styles.modalBody}>
-              <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, { color: theme.dim }]}>Milestone Title *</Text>
-                <TextInput
-                  value={newMilestoneTitle}
-                  onChangeText={setNewMilestoneTitle}
-                  placeholder="e.g. Annaprashana, Upanayana, Vivaha"
-                  placeholderTextColor={theme.dim}
-                  maxLength={60}
-                  style={[styles.textInput, { color: theme.text, backgroundColor: theme.cardSoft, borderColor: theme.border }]}
-                />
-              </View>
+            {milestoneStep === 'list' ? (
+              <ScrollView style={styles.milestoneListScroll} contentContainerStyle={styles.modalBody} showsVerticalScrollIndicator={false}>
+                <Text style={[styles.milestoneListIntro, { color: theme.dim }]}>
+                  The sixteen traditional samskaras, in order — or write your own.
+                </Text>
+                {SANSKARA_CATALOG.map((entry) => (
+                  <PressableSurface
+                    key={entry.key}
+                    haptic="selection"
+                    onPress={() => handleChooseCatalogEntry(entry)}
+                    style={[styles.catalogRow, { borderColor: theme.borderSoft, backgroundColor: theme.cardSoft }]}
+                  >
+                    <View style={styles.catalogRowText}>
+                      <Text style={[styles.catalogRowTitle, { color: theme.text }]}>{entry.nameTransliteration}</Text>
+                      <Text style={[styles.catalogRowStage, { color: theme.dim }]} numberOfLines={1}>
+                        {entry.nameEnglish} · {entry.lifeStage}
+                      </Text>
+                    </View>
+                    <Feather name="chevron-right" size={16} color={theme.dim} />
+                  </PressableSurface>
+                ))}
 
-              <View style={styles.inputGroup}>
-                <DatePickerField
-                  label="Planned Date (Optional)"
-                  value={newMilestoneDate}
-                  onChangeDate={(iso) => setNewMilestoneDate(iso)}
-                  placeholder="Select planned date"
-                  modalTitle="Select Milestone Date"
-                />
-              </View>
+                <PressableSurface
+                  haptic="selection"
+                  onPress={handleWriteOwnMilestone}
+                  style={[styles.catalogRow, styles.catalogRowCustom, { borderColor: theme.border }]}
+                >
+                  <View style={styles.catalogRowText}>
+                    <Text style={[styles.catalogRowTitle, { color: theme.brand }]}>Write your own</Text>
+                    <Text style={[styles.catalogRowStage, { color: theme.dim }]}>For any other milestone, in any tradition</Text>
+                  </View>
+                  <Feather name="edit-3" size={16} color={theme.brand} />
+                </PressableSurface>
+              </ScrollView>
+            ) : milestoneStep === 'detail' && selectedCatalogEntry ? (
+              <ScrollView style={styles.milestoneListScroll} contentContainerStyle={styles.modalBody} showsVerticalScrollIndicator={false}>
+                <View style={styles.experienceCard}>
+                  <Text style={[styles.experienceSanskrit, { color: theme.text }]}>{selectedCatalogEntry.nameSanskrit}</Text>
+                  <Text style={[styles.experienceTransliteration, { color: theme.dim }]}>
+                    {selectedCatalogEntry.nameTransliteration} · {selectedCatalogEntry.nameEnglish}
+                  </Text>
 
-              <PressableSurface
-                onPress={handleCreateMilestone}
-                disabled={savingMilestone}
-                style={[styles.primaryButton, { backgroundColor: theme.brand, marginTop: 12 }]}
-              >
-                {savingMilestone ? (
-                  <ActivityIndicator size="small" color={theme.textOnBrand} />
-                ) : (
-                  <Text style={[styles.primaryButtonText, { color: theme.textOnBrand }]}>Plant Milestone 🌱</Text>
-                )}
-              </PressableSurface>
-            </View>
+                  <View style={styles.experienceStageRow}>
+                    <Feather name="clock" size={14} color={theme.brand} />
+                    <Text style={[styles.experienceStageText, { color: theme.text }]}>{selectedCatalogEntry.lifeStage}</Text>
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={[styles.inputLabel, { color: theme.dim }]}>PURPOSE</Text>
+                    <Text style={[styles.experienceBody, { color: theme.text }]}>{selectedCatalogEntry.purpose}</Text>
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={[styles.inputLabel, { color: theme.dim }]}>VALUES THIS CULTIVATES</Text>
+                    <View style={styles.valuesRow}>
+                      {selectedCatalogEntry.values.map((value) => (
+                        <View key={value} style={[styles.valueChip, { backgroundColor: theme.brandSoft, borderColor: theme.borderSoft }]}>
+                          <Text style={[styles.valueChipText, { color: theme.brand }]}>{value}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+
+                  <View style={[styles.reviewNotice, { borderColor: theme.borderSoft, backgroundColor: theme.cardSoft }]}>
+                    <Feather name="info" size={13} color={theme.dim} />
+                    <Text style={[styles.reviewNoticeText, { color: theme.dim }]}>
+                      Not yet reviewed by Shoonaya's council. {SANSKARA_CATALOG_SOURCE_NOTE}
+                    </Text>
+                  </View>
+
+                  <PressableSurface
+                    onPress={handleUseCatalogEntry}
+                    style={[styles.primaryButton, { backgroundColor: theme.brand, marginTop: 4 }]}
+                  >
+                    <Text style={[styles.primaryButtonText, { color: theme.textOnBrand }]}>Use This Milestone</Text>
+                  </PressableSurface>
+                </View>
+              </ScrollView>
+            ) : (
+              <View style={styles.modalBody}>
+                <View style={styles.inputGroup}>
+                  <Text style={[styles.inputLabel, { color: theme.dim }]}>Milestone Title *</Text>
+                  <TextInput
+                    value={newMilestoneTitle}
+                    onChangeText={setNewMilestoneTitle}
+                    placeholder="e.g. Annaprashana, Upanayana, Vivaha"
+                    placeholderTextColor={theme.dim}
+                    maxLength={60}
+                    style={[styles.textInput, { color: theme.text, backgroundColor: theme.cardSoft, borderColor: theme.border }]}
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <DatePickerField
+                    label="Planned Date (Optional)"
+                    value={newMilestoneDate}
+                    onChangeDate={(iso) => setNewMilestoneDate(iso)}
+                    placeholder="Select planned date"
+                    modalTitle="Select Milestone Date"
+                  />
+                </View>
+
+                <PressableSurface
+                  onPress={handleCreateMilestone}
+                  disabled={savingMilestone}
+                  style={[styles.primaryButton, { backgroundColor: theme.brand, marginTop: 12 }]}
+                >
+                  {savingMilestone ? (
+                    <ActivityIndicator size="small" color={theme.textOnBrand} />
+                  ) : (
+                    <Text style={[styles.primaryButtonText, { color: theme.textOnBrand }]}>Plant Milestone 🌱</Text>
+                  )}
+                </PressableSurface>
+              </View>
+            )}
           </Pressable>
         </Pressable>
       </Modal>
@@ -1100,13 +1237,116 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 12,
   },
+  modalHeaderLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginRight: 12,
+  },
+  modalBackButton: {
+    marginLeft: -6,
+    padding: 4,
+  },
   modalTitle: {
+    flexShrink: 1,
     fontFamily: FONTS.serifBold,
     fontSize: 18,
   },
   modalBody: {
     paddingHorizontal: 20,
     gap: 16,
+  },
+  milestoneListScroll: {
+    maxHeight: 520,
+  },
+  milestoneListIntro: {
+    fontFamily: FONTS.sans,
+    fontSize: 12,
+    marginBottom: 2,
+  },
+  catalogRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderWidth: 1,
+    borderRadius: RADII.md,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    minHeight: MIN_TOUCH_TARGET,
+  },
+  catalogRowCustom: {
+    marginTop: 2,
+    borderStyle: 'dashed',
+  },
+  catalogRowText: {
+    flex: 1,
+  },
+  catalogRowTitle: {
+    fontFamily: FONTS.sansSemiBold,
+    fontSize: 14,
+  },
+  catalogRowStage: {
+    fontFamily: FONTS.sans,
+    fontSize: 11,
+    marginTop: 2,
+  },
+  experienceCard: {
+    gap: 14,
+    paddingBottom: 8,
+  },
+  experienceSanskrit: {
+    fontFamily: FONTS.serif,
+    fontSize: 30,
+    lineHeight: 40,
+  },
+  experienceTransliteration: {
+    fontFamily: FONTS.sansMedium,
+    fontSize: 14,
+    marginTop: -8,
+  },
+  experienceStageRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  experienceStageText: {
+    fontFamily: FONTS.sansMedium,
+    fontSize: 13,
+  },
+  experienceBody: {
+    fontFamily: FONTS.sans,
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  valuesRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  valueChip: {
+    borderWidth: 1,
+    borderRadius: RADII.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  valueChipText: {
+    fontFamily: FONTS.sansSemiBold,
+    fontSize: 11,
+  },
+  reviewNotice: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: RADII.sm,
+    padding: 10,
+  },
+  reviewNoticeText: {
+    flex: 1,
+    fontFamily: FONTS.sans,
+    fontSize: 11,
+    lineHeight: 16,
   },
   inputGroup: {
     gap: 6,
