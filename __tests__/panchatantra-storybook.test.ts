@@ -332,13 +332,13 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-flop-ear-and-dusty'), 2);
 
     // Tier 0: Manuscript folios without local art
-    assert.equal(getPanchatantraStoryVisualTier('panchatantra-wedge-pulling-monkey'), 0);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-merchant-strong-tooth'), 0);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-nonexistent'), 0);
   });
 
   await t.test('sorts stories so full scene storybooks appear first, then manuscript', () => {
     const mixed = [
-      { id: 'panchatantra-wedge-pulling-monkey', title: 'Wedge Pulling Monkey' },
+      { id: 'panchatantra-merchant-strong-tooth', title: 'Merchant Strong-Tooth' },
       { id: 'panchatantra-monk-and-jackal', title: 'The Monk and the Jackal' },
       { id: 'panchatantra-dove-king-and-net', title: 'The Dove King and the Net' },
       { id: 'panchatantra-fiend-who-washed-his-feet', title: "The Fiend Who Washed His Feet" },
@@ -356,7 +356,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(sorted[4].id, 'panchatantra-lion-and-rabbit');
 
     // Tier 0 item must follow at index 5
-    assert.equal(sorted[5].id, 'panchatantra-wedge-pulling-monkey');
+    assert.equal(sorted[5].id, 'panchatantra-merchant-strong-tooth');
   });
 
   await t.test('katha.tsx integrates visual tier sorting and thumbnail priority for Story of the Day', () => {
@@ -932,5 +932,16 @@ test('The Butter-Blinded Brahman story uses six paragraph-aligned offline scenes
   assert.equal(hasDedicatedSceneArtwork('panchatantra-butter-blinded-brahman'), true);
   for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
     assert.ok(getPanchatantraSceneArtwork('panchatantra-butter-blinded-brahman', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('The Wedge-Pulling Monkey story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-wedge-pulling-monkey');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-wedge-pulling-monkey'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-wedge-pulling-monkey'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-wedge-pulling-monkey', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });
