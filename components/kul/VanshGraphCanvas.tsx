@@ -354,7 +354,9 @@ export function VanshGraphCanvas({
 
                   {/* Centered Sacred Avatar Circle */}
                   <View style={[styles.avatarCircle, { backgroundColor: theme.brandSoft }]}>
-                    <Feather name="user" size={17} color={theme.brand} />
+                    <Text style={{ fontFamily: FONTS.serifBold, fontSize: 15, color: theme.brand }}>
+                      {member.name.trim().charAt(0).toUpperCase() || 'ॐ'}
+                    </Text>
                   </View>
 
                   {/* Member Name & Role */}

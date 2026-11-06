@@ -300,9 +300,9 @@ export default function KulScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<HubSection>(
-    routeParams.section === "family" || routeParams.section === "sabha" || routeParams.section === "practice"
-      ? routeParams.section
-      : "home"
+    routeParams.section === "family" || routeParams.section === "sabha" || routeParams.section === "practice" || routeParams.section === "home"
+      ? (routeParams.section as HubSection)
+      : "family"
   );
   const [authGateVisible, setAuthGateVisible] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -370,7 +370,10 @@ export default function KulScreen() {
     setRefreshing(false);
     setError(null);
     setWorking(false);
-    setActiveSection("home");
+    const initialSection = routeParams.section === "family" || routeParams.section === "sabha" || routeParams.section === "practice" || routeParams.section === "home"
+      ? (routeParams.section as HubSection)
+      : "home";
+    setActiveSection(initialSection);
     setAuthGateVisible(false);
     setNewKulName("");
     setNewKulEmoji("🏡");
@@ -520,7 +523,9 @@ export default function KulScreen() {
   const currentUserId =
     identity.kind === "authenticated" ? identity.userId : null;
   useEffect(() => {
-    if (routeParams.section === "family") setActiveSection("family");
+    if (routeParams.section === "family" || routeParams.section === "sabha" || routeParams.section === "practice" || routeParams.section === "home") {
+      setActiveSection(routeParams.section);
+    }
   }, [routeParams.section]);
   const kul = snapshot?.kul ?? null;
   const memberNameById = useMemo(() => {
@@ -1927,245 +1932,624 @@ export default function KulScreen() {
             ) : null}
 
             {activeSection === "sabha" ? (
-              <Card
-                tone="auto"
-                style={{
-                  backgroundColor: theme.card,
-                  borderColor: theme.border,
-                  gap: 12,
-                }}
-              >
-                <SectionHeading title="Family Sabha" theme={theme} />
-                <Text style={{ ...TYPE.body, color: theme.dim }}>
-                  A private place for your family to share reflections and
-                  updates.
-                </Text>
-                <Field
-                  accessibilityLabel="Write a family Sabha message"
-                  value={messageDraft}
-                  onChangeText={setMessageDraft}
-                  placeholder="Share something with your family…"
-                  theme={theme}
-                  multiline
-                  maxLength={500}
-                />
-                <ActionButton
-                  label={working ? "Sending…" : "Send to family"}
-                  icon="send"
-                  disabled={working || !messageDraft.trim()}
-                  onPress={() => void handleSendMessage()}
-                  theme={theme}
-                  isDark={isDark}
-                />
-                <View
+              <>
+                <Card
+                  tone="auto"
                   style={{
-                    height: 1,
-                    backgroundColor: theme.border,
-                    marginVertical: 2,
+                    backgroundColor: theme.card,
+                    borderColor: theme.border,
+                    gap: 12,
                   }}
-                />
-                {snapshot.messages.length ? (
-                  snapshot.messages.map((message) => (
-                    <MessageRow
-                      key={message.id}
-                      message={message}
-                      author={
-                        memberNameById.get(message.sender_id) ?? "Family member"
-                      }
-                      theme={theme}
-                    />
-                  ))
-                ) : (
+                >
+                  <SectionHeading title="Family Sabha" theme={theme} />
                   <Text style={{ ...TYPE.body, color: theme.dim }}>
-                    Start the first family conversation.
+                    A private sacred place for your family to share reflections,
+                    blessings, and updates.
                   </Text>
-                )}
-                {snapshot.messages.length >= 30 ? (
-                  <Text
+                  <Field
+                    accessibilityLabel="Write a family Sabha message"
+                    value={messageDraft}
+                    onChangeText={setMessageDraft}
+                    placeholder="Share something with your family…"
+                    theme={theme}
+                    multiline
+                    maxLength={500}
+                  />
+                  <ActionButton
+                    label={working ? "Sending…" : "Send to family"}
+                    icon="send"
+                    disabled={working || !messageDraft.trim()}
+                    onPress={() => void handleSendMessage()}
+                    theme={theme}
+                    isDark={isDark}
+                  />
+                </Card>
+
+                {snapshot.messages.length ? (
+                  <View style={{ gap: 10 }}>
+                    <Text style={{ ...TYPE.caption, color: theme.dim, paddingHorizontal: 4 }}>
+                      Recent family messages
+                    </Text>
+                    {snapshot.messages.map((message) => (
+                      <MessageRow
+                        key={message.id}
+                        message={message}
+                        author={
+                          memberNameById.get(message.sender_id) ?? "Family member"
+                        }
+                        theme={theme}
+                      />
+                    ))}
+                    {snapshot.messages.length >= 30 ? (
+                      <Text
+                        style={{
+                          ...TYPE.caption,
+                          color: theme.dim,
+                          textAlign: "center",
+                        }}
+                      >
+                        Showing the latest 30 messages.
+                      </Text>
+                    ) : null}
+                  </View>
+                ) : (
+                  <Card
+                    tone="auto"
                     style={{
-                      ...TYPE.caption,
-                      color: theme.dim,
-                      textAlign: "center",
+                      backgroundColor: theme.cardSoft,
+                      borderColor: theme.borderSoft,
+                      padding: 16,
+                      alignItems: "center",
                     }}
                   >
-                    Showing the latest 30 messages.
-                  </Text>
-                ) : null}
-              </Card>
+                    <Text style={{ ...TYPE.body, color: theme.dim, textAlign: "center" }}>
+                      Start the first family conversation above.
+                    </Text>
+                  </Card>
+                )}
+              </>
             ) : null}
 
             {activeSection === "practice" ? (
-              <Card
-                tone="auto"
-                style={{
-                  backgroundColor: theme.card,
-                  borderColor: theme.border,
-                  gap: 12,
-                }}
-              >
-                <SectionHeading
-                  title="Family practice"
-                  theme={theme}
-                  action={
-                    snapshot.role === "guardian"
-                      ? showTaskForm
-                        ? "Close"
-                        : "Assign task"
-                      : undefined
-                  }
-                  onAction={
-                    snapshot.role === "guardian"
-                      ? () => setShowTaskForm((value) => !value)
-                      : undefined
-                  }
-                />
-                <Text style={{ ...TYPE.body, color: theme.dim }}>
-                  Tasks are invitations to practice together. Completing one
-                  opens the matching Native practice.
-                </Text>
-                {showTaskForm && snapshot.role === "guardian" ? (
-                  <View style={{ gap: 10 }}>
-                    <Field
-                      accessibilityLabel="Practice task title"
-                      value={taskTitle}
-                      onChangeText={setTaskTitle}
-                      placeholder="A small practice intention"
-                      theme={theme}
-                      maxLength={100}
-                    />
-                    <Field
-                      accessibilityLabel="Practice task description"
-                      value={taskDescription}
-                      onChangeText={setTaskDescription}
-                      placeholder="Optional details"
-                      theme={theme}
-                      maxLength={500}
-                      multiline
-                    />
-                    <View
-                      style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}
-                    >
-                      {TASK_TYPES.map((item) => (
-                        <Choice
-                          key={item.id}
-                          label={item.label}
-                          selected={taskType === item.id}
-                          onPress={() => setTaskType(item.id)}
-                          theme={theme}
-                        />
-                      ))}
+              <>
+                <Card
+                  tone="auto"
+                  style={{
+                    backgroundColor: theme.card,
+                    borderColor: theme.border,
+                    gap: 12,
+                  }}
+                >
+                  <SectionHeading
+                    title="Family practice"
+                    theme={theme}
+                    action={
+                      snapshot.role === "guardian"
+                        ? showTaskForm
+                          ? "Close"
+                          : "Assign task"
+                        : undefined
+                    }
+                    onAction={
+                      snapshot.role === "guardian"
+                        ? () => setShowTaskForm((value) => !value)
+                        : undefined
+                    }
+                  />
+                  <Text style={{ ...TYPE.body, color: theme.dim }}>
+                    Tasks are invitations to practice together. Completing one
+                    opens the matching Native practice.
+                  </Text>
+                  {showTaskForm && snapshot.role === "guardian" ? (
+                    <View style={{ gap: 10 }}>
+                      <Field
+                        accessibilityLabel="Practice task title"
+                        value={taskTitle}
+                        onChangeText={setTaskTitle}
+                        placeholder="A small practice intention"
+                        theme={theme}
+                        maxLength={100}
+                      />
+                      <Field
+                        accessibilityLabel="Practice task description"
+                        value={taskDescription}
+                        onChangeText={setTaskDescription}
+                        placeholder="Optional details"
+                        theme={theme}
+                        maxLength={500}
+                        multiline
+                      />
+                      <View
+                        style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}
+                      >
+                        {TASK_TYPES.map((item) => (
+                          <Choice
+                            key={item.id}
+                            label={item.label}
+                            selected={taskType === item.id}
+                            onPress={() => setTaskType(item.id)}
+                            theme={theme}
+                          />
+                        ))}
+                      </View>
+                      <Text style={{ ...TYPE.caption, color: theme.dim }}>
+                        Assign to
+                      </Text>
+                      <View
+                        style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}
+                      >
+                        {snapshot.members.map((member) => (
+                          <Choice
+                            key={member.userId}
+                            label={personLabel(member.profile)}
+                            selected={taskAssignee === member.userId}
+                            onPress={() => setTaskAssignee(member.userId)}
+                            theme={theme}
+                          />
+                        ))}
+                      </View>
+                      <DatePickerField
+                        value={taskDueDate}
+                        onChangeDate={setTaskDueDate}
+                        placeholder="Optional due date (YYYY-MM-DD)"
+                        modalTitle="Select Task Due Date"
+                        minDate={formatLocalDateOnly(new Date())}
+                      />
+                      <ActionButton
+                        label={working ? "Assigning…" : "Assign practice"}
+                        disabled={working}
+                        onPress={() => void handleAssignTask()}
+                        theme={theme}
+                        isDark={isDark}
+                      />
                     </View>
-                    <Text style={{ ...TYPE.caption, color: theme.dim }}>
-                      Assign to
-                    </Text>
-                    <View
-                      style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}
-                    >
-                      {snapshot.members.map((member) => (
-                        <Choice
-                          key={member.userId}
-                          label={personLabel(member.profile)}
-                          selected={taskAssignee === member.userId}
-                          onPress={() => setTaskAssignee(member.userId)}
-                          theme={theme}
-                        />
-                      ))}
-                    </View>
-                    <DatePickerField
-                      value={taskDueDate}
-                      onChangeDate={setTaskDueDate}
-                      placeholder="Optional due date (YYYY-MM-DD)"
-                      modalTitle="Select Task Due Date"
-                      minDate={formatLocalDateOnly(new Date())}
-                    />
-                    <ActionButton
-                      label={working ? "Assigning…" : "Assign practice"}
-                      disabled={working}
-                      onPress={() => void handleAssignTask()}
-                      theme={theme}
-                      isDark={isDark}
-                    />
-                  </View>
-                ) : null}
+                  ) : null}
+                </Card>
+
                 {snapshot.tasks.length ? (
-                  snapshot.tasks.map((task) => (
-                    <TaskRow
-                      key={task.id}
-                      task={task}
-                      assignee={
-                        memberNameById.get(task.assigned_to) ?? "Family member"
-                      }
-                      theme={theme}
-                      onOpen={() => router.push(getKulTaskHref(task.task_type))}
-                      onComplete={
-                        currentUserId &&
-                        (task.assigned_to === currentUserId ||
-                          snapshot.role === "guardian") &&
-                        !task.completed
-                          ? () =>
-                              Alert.alert(
-                                "Complete this practice?",
-                                "Mark the family task as complete?",
-                                [
-                                  { text: "Cancel", style: "cancel" },
-                                  {
-                                    text: "Complete",
-                                    onPress: () =>
-                                      void runMutation(
-                                        (userId) => completeKulTask(userId, task.id),
-                                        {
-                                          reload: false,
-                                          apply: (result) => patchSnapshot((current) => ({
-                                            ...current,
-                                            tasks: current.tasks.map((row) => row.id === result.id
-                                              ? { ...row, completed: true, completed_at: result.completed_at ?? row.completed_at }
-                                              : row),
-                                          })),
-                                        },
-                                      ),
-                                  },
-                                ],
-                              )
-                          : undefined
-                      }
-                      busy={working}
-                    />
-                  ))
+                  <View style={{ gap: 10 }}>
+                    <Text style={{ ...TYPE.caption, color: theme.dim, paddingHorizontal: 4 }}>
+                      Family practices & intentions
+                    </Text>
+                    {snapshot.tasks.map((task) => (
+                      <TaskRow
+                        key={task.id}
+                        task={task}
+                        assignee={
+                          memberNameById.get(task.assigned_to) ?? "Family member"
+                        }
+                        theme={theme}
+                        onOpen={() => router.push(getKulTaskHref(task.task_type))}
+                        onComplete={
+                          currentUserId &&
+                          (task.assigned_to === currentUserId ||
+                            snapshot.role === "guardian") &&
+                          !task.completed
+                            ? () =>
+                                Alert.alert(
+                                  "Complete this practice?",
+                                  "Mark the family task as complete?",
+                                  [
+                                    { text: "Cancel", style: "cancel" },
+                                    {
+                                      text: "Complete",
+                                      onPress: () =>
+                                        void runMutation(
+                                          (userId) => completeKulTask(userId, task.id),
+                                          {
+                                            reload: false,
+                                            apply: (result) => patchSnapshot((current) => ({
+                                              ...current,
+                                              tasks: current.tasks.map((row) => row.id === result.id
+                                                ? { ...row, completed: true, completed_at: result.completed_at ?? row.completed_at }
+                                                : row),
+                                            })),
+                                          },
+                                        ),
+                                    },
+                                  ],
+                                )
+                            : undefined
+                        }
+                        busy={working}
+                      />
+                    ))}
+                  </View>
                 ) : (
                   <EmptyState
                     title="No family tasks yet"
                     subtitle="A guardian can assign a practice intention for the family."
                   />
                 )}
-              </Card>
+              </>
             ) : null}
 
             {activeSection === "family" ? (
-              <Card
-                tone="auto"
-                style={{
-                  backgroundColor: theme.card,
-                  borderColor: theme.border,
-                  gap: 12,
-                }}
-              >
-                <SectionHeading
-                  title="Kutumb Vansh · Family Roots"
-                  theme={theme}
-                  action={
-                    snapshot.role === "guardian"
-                      ? showFamilyForm
-                        ? "Close"
-                        : editingFamilyMemberId ? "Edit person" : "Add person"
-                      : undefined
-                  }
-                  onAction={
-                    snapshot.role === "guardian"
-                      ? () => { setEditingFamilyMemberId(null); setShowFamilyForm((value) => !value); }
-                      : undefined
-                  }
-                />
-                <View style={{ borderTopWidth: 1, borderTopColor: theme.borderSoft, paddingTop: 12, gap: 10 }}>
+              <>
+                {/* Card 1: Kutumb Vansh · Generational Tree */}
+                <Card
+                  tone="auto"
+                  style={{
+                    backgroundColor: theme.card,
+                    borderColor: theme.border,
+                    gap: 12,
+                  }}
+                >
+                  <SectionHeading
+                    title="Kutumb Vansh · Family Roots"
+                    theme={theme}
+                    action={
+                      snapshot.role === "guardian"
+                        ? showFamilyForm
+                          ? "Close"
+                          : editingFamilyMemberId ? "Edit person" : "Add person"
+                        : undefined
+                    }
+                    onAction={
+                      snapshot.role === "guardian"
+                        ? () => {
+                            if (showFamilyForm && !editingFamilyMemberId) {
+                              setShowFamilyForm(false);
+                            } else {
+                              setEditingFamilyMemberId(null);
+                              setShowFamilyForm((value) => !value);
+                            }
+                          }
+                        : undefined
+                    }
+                  />
+                  <Text style={{ ...TYPE.body, color: theme.dim }}>
+                    Visual lineage and generational roots. Preserved privately within your Kutumb circle.
+                  </Text>
+
+                  {showFamilyForm && snapshot.role === "guardian" ? (
+                    <View
+                      style={{
+                        padding: 14,
+                        borderRadius: RADII.md,
+                        backgroundColor: theme.cardSoft,
+                        borderWidth: 1,
+                        borderColor: theme.borderSoft,
+                        gap: 10,
+                      }}
+                    >
+                      <Text style={{ ...TYPE.label, color: theme.brand, fontFamily: FONTS.serifBold }}>
+                        {editingFamilyMemberId ? "Edit family record" : "Add a person to lineage tree"}
+                      </Text>
+                      <Field
+                        accessibilityLabel="Family tree person's name"
+                        value={familyName}
+                        onChangeText={setFamilyName}
+                        placeholder="Name"
+                        theme={theme}
+                        maxLength={80}
+                      />
+                      <Field
+                        accessibilityLabel="Relationship to the family"
+                        value={familyRelationship}
+                        onChangeText={setFamilyRelationship}
+                        placeholder="Relationship · e.g. Grandmother"
+                        theme={theme}
+                        maxLength={50}
+                      />
+                      <Field
+                        accessibilityLabel="Family generation number"
+                        value={familyGeneration}
+                        onChangeText={setFamilyGeneration}
+                        placeholder="Generation number"
+                        theme={theme}
+                        maxLength={2}
+                      />
+                      {snapshot.familyMembers.length ? (
+                        <>
+                          <Text style={{ ...TYPE.caption, color: theme.dim }}>
+                            Optional parent in this tree
+                          </Text>
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              flexWrap: "wrap",
+                              gap: 7,
+                            }}
+                          >
+                            <Choice
+                              label="No parent selected"
+                              selected={!familyParent}
+                              onPress={() => setFamilyParent("")}
+                              theme={theme}
+                            />
+                            {snapshot.familyMembers.filter((member) => eligibleFamilyParentIds.has(member.id)).map((member) => (
+                              <Choice
+                                key={member.id}
+                                label={member.name}
+                                selected={familyParent === member.id}
+                                onPress={() => setFamilyParent(member.id)}
+                                theme={theme}
+                              />
+                            ))}
+                          </View>
+                        </>
+                      ) : null}
+                      {snapshot.familyMembers.length > 1 ? (
+                        <>
+                          <Text style={{ ...TYPE.caption, color: theme.dim }}>Optional spouse / partner link</Text>
+                          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
+                            <Choice label="No link" selected={!familySpouse} onPress={() => setFamilySpouse("")} theme={theme} />
+                            {snapshot.familyMembers.filter((member) => member.id !== editingFamilyMemberId).slice(0, 20).map((member) => (
+                              <Choice key={`spouse-${member.id}`} label={member.name} selected={familySpouse === member.id} onPress={() => setFamilySpouse(member.id)} theme={theme} />
+                            ))}
+                          </View>
+                        </>
+                      ) : null}
+                      {editingFamilyMemberId ? (
+                        <View style={{ flexDirection: "row", gap: 7 }}>
+                          <Choice label="Living" selected={familyIsAlive} onPress={() => setFamilyIsAlive(true)} theme={theme} />
+                          <Choice label="Remembered" selected={!familyIsAlive} onPress={() => setFamilyIsAlive(false)} theme={theme} />
+                        </View>
+                      ) : null}
+                      <ActionButton
+                        label={working ? "Saving…" : editingFamilyMemberId ? "Save family record" : "Add to family tree"}
+                        disabled={working}
+                        onPress={() => void handleAddFamilyMember()}
+                        theme={theme}
+                        isDark={isDark}
+                      />
+                    </View>
+                  ) : null}
+
+                  {snapshot.familyMembers.length ? (
+                    <View style={{ gap: 10 }}>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          paddingTop: 4,
+                        }}
+                      >
+                        <Text style={{ ...TYPE.caption, color: theme.dim, flex: 1, paddingRight: 8 }}>
+                          {vanshViewMode === "canvas"
+                            ? "Interactive tree · drag to explore · pinch to zoom"
+                            : "Family list"}
+                        </Text>
+                        <View style={{ flexDirection: "row", gap: 6 }}>
+                          <Choice
+                            label="Tree Canvas"
+                            selected={vanshViewMode === "canvas"}
+                            onPress={() => setVanshViewMode("canvas")}
+                            theme={theme}
+                          />
+                          <Choice
+                            label="List"
+                            selected={vanshViewMode === "list"}
+                            onPress={() => setVanshViewMode("list")}
+                            theme={theme}
+                          />
+                        </View>
+                      </View>
+
+                      {vanshViewMode === "canvas" ? (
+                        <VanshGraphCanvas
+                          layout={familyTreeLayout}
+                          selectedMemberId={selectedFamilyMemberId}
+                          onSelectMember={(member) =>
+                            setSelectedFamilyMemberId((prev) =>
+                              prev === member.id ? null : member.id
+                            )
+                          }
+                          isGuardian={snapshot.role === "guardian"}
+                        />
+                      ) : (
+                        <View style={{ gap: 8 }}>
+                          {familyTreeLayout.nodes.map((node) => {
+                            const member = node.data;
+                            const selected = selectedFamilyMemberId === member.id;
+                            const parentName = node.resolvedParentId
+                              ? familyMemberById.get(node.resolvedParentId)?.name
+                              : null;
+                            return (
+                              <View
+                                key={member.id}
+                                style={{
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                  minHeight: MIN_TOUCH_TARGET,
+                                  gap: 8,
+                                  paddingLeft: Math.min(node.generation - 1, 4) * 12,
+                                  borderTopWidth: 1,
+                                  borderTopColor: theme.borderSoft,
+                                }}
+                              >
+                                <PressableSurface
+                                  accessibilityRole="button"
+                                  accessibilityLabel={`${member.name}, ${member.role || "Family member"}, generation ${node.generation}${parentName ? `, child of ${parentName}` : ""}`}
+                                  accessibilityState={{ selected }}
+                                  onPress={() => setSelectedFamilyMemberId((previous) => previous === member.id ? null : member.id)}
+                                  style={{
+                                    minHeight: MIN_TOUCH_TARGET,
+                                    flex: 1,
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    gap: 10,
+                                    borderRadius: RADII.md,
+                                    paddingHorizontal: 8,
+                                    borderWidth: selected ? 1 : 0,
+                                    borderColor: theme.brand,
+                                    backgroundColor: selected ? theme.brandSoft : theme.cardSoft,
+                                  }}
+                                >
+                                  <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: theme.brandSoft, alignItems: "center", justifyContent: "center" }}>
+                                    <Text style={{ fontFamily: FONTS.serifBold, fontSize: 14, color: theme.brand }}>
+                                      {member.name.trim().charAt(0).toUpperCase() || 'ॐ'}
+                                    </Text>
+                                  </View>
+                                  <View style={{ flex: 1 }}>
+                                    <Text style={{ ...TYPE.label, color: theme.text }}>
+                                      {member.name}
+                                    </Text>
+                                    <Text style={{ ...TYPE.caption, color: theme.dim }}>
+                                      {member.role || "Family member"} · {getKinshipTier(node.generation).label} (Generation {node.generation})
+                                      {member.generation == null ? " · inferred" : ""}
+                                      {member.generation != null && member.generation !== node.generation ? ` · recorded as ${member.generation}` : ""}
+                                    </Text>
+                                  </View>
+                                  {parentName ? <Feather name="corner-down-right" size={15} color={theme.dim} /> : null}
+                                </PressableSurface>
+                              </View>
+                            );
+                          })}
+                        </View>
+                      )}
+                    </View>
+                  ) : (
+                    <EmptyState
+                      title="Your family story starts here"
+                      subtitle="Guardians can add the people and relationships your family wants to preserve."
+                    />
+                  )}
+
+                  {selectedFamilyMember ? (
+                    <View
+                      style={{
+                        borderRadius: RADII.lg,
+                        borderWidth: 1.5,
+                        borderColor: theme.brand,
+                        backgroundColor: theme.card,
+                        padding: 14,
+                        gap: 10,
+                        shadowColor: theme.brand,
+                        shadowOpacity: isDark ? 0.22 : 0.08,
+                        shadowRadius: 10,
+                        elevation: 3,
+                      }}
+                    >
+                      <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 10 }}>
+                        <View style={{ flex: 1, gap: 3 }}>
+                          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                            <View
+                              style={{
+                                backgroundColor: theme.brandSoft,
+                                paddingHorizontal: 7,
+                                paddingVertical: 2,
+                                borderRadius: 6,
+                              }}
+                            >
+                              <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: theme.brand }}>
+                                Gen {selectedTreeNode?.generation ?? selectedFamilyMember.generation ?? 1}
+                              </Text>
+                            </View>
+                            {!selectedFamilyMember.is_alive ? (
+                              <View
+                                style={{
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                  gap: 3,
+                                  paddingHorizontal: 6,
+                                  paddingVertical: 1.5,
+                                  borderRadius: 6,
+                                  borderWidth: 1,
+                                  borderColor: theme.borderSoft,
+                                  backgroundColor: theme.brandSoft,
+                                }}
+                              >
+                                <Text style={{ fontSize: 10 }}>🪔</Text>
+                                <Text style={{ fontFamily: FONTS.serifBold, fontSize: 10, color: theme.brandStrong }}>
+                                  स्मृति (Pitru)
+                                </Text>
+                              </View>
+                            ) : (
+                              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: COLORS.success }} />
+                                <Text style={{ ...TYPE.caption, color: theme.dim }}>Living</Text>
+                              </View>
+                            )}
+                          </View>
+                          <Text style={{ fontFamily: FONTS.serifBold, fontSize: 16, color: theme.text, marginTop: 2 }}>
+                            {selectedFamilyMember.name}
+                          </Text>
+                          <Text style={{ ...TYPE.caption, color: theme.dim }}>
+                            {selectedFamilyMember.role || "Family member"} · Generation {selectedTreeNode?.generation ?? selectedFamilyMember.generation ?? 1}
+                            {selectedFamilyMember.generation == null ? " (inferred from family links)" : ""}
+                            {selectedTreeNode && selectedFamilyMember.generation != null && selectedFamilyMember.generation !== selectedTreeNode.generation ? ` (recorded as ${selectedFamilyMember.generation}; adjusted to keep the parent link downward)` : ""}
+                            {selectedFamilyMember.is_alive ? " · Living" : " · Remembered"}
+                            {selectedFamilyMember.linked_user_id ? " · On Shoonaya" : ""}
+                          </Text>
+                          {selectedHeritageLabel ? (
+                            <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 11, color: theme.brand, marginTop: 2 }}>
+                              {selectedHeritageLabel}
+                            </Text>
+                          ) : null}
+                        </View>
+                        <PressableSurface
+                          accessibilityRole="button"
+                          accessibilityLabel={`Clear selection for ${selectedFamilyMember.name}`}
+                          onPress={() => setSelectedFamilyMemberId(null)}
+                          style={{ minHeight: MIN_TOUCH_TARGET, minWidth: MIN_TOUCH_TARGET, alignItems: "center", justifyContent: "center" }}
+                        >
+                          <Feather name="x" size={17} color={theme.dim} />
+                        </PressableSurface>
+                      </View>
+                      {!selectedFamilyMember.is_alive ? (
+                        <View
+                          style={{
+                            backgroundColor: theme.brandSoft,
+                            borderRadius: RADII.sm,
+                            padding: 8,
+                            borderLeftWidth: 3,
+                            borderLeftColor: theme.brand,
+                          }}
+                        >
+                          <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 11, color: theme.brandStrong }}>
+                            आदरणीय पूर्वज · Sacred Pitru Smriti preserved in Kutumb Vansh.
+                          </Text>
+                        </View>
+                      ) : null}
+                      {snapshot.role === "guardian" ? (
+                        <View style={{ flexDirection: "row", gap: 8, marginTop: 2 }}>
+                          <PressableSurface
+                            accessibilityRole="button"
+                            accessibilityLabel={`Edit ${selectedFamilyMember.name}`}
+                            onPress={() => beginEditFamilyMember(selectedFamilyMember)}
+                            style={{ minHeight: MIN_TOUCH_TARGET, flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, borderRadius: RADII.md, borderWidth: 1, borderColor: theme.brand, backgroundColor: theme.brandSoft, paddingHorizontal: 10 }}
+                          >
+                            <Feather name="edit-2" size={15} color={theme.brand} />
+                            <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.brand }}>Edit person</Text>
+                          </PressableSurface>
+                          <PressableSurface
+                            accessibilityRole="button"
+                            accessibilityLabel={`Remove ${selectedFamilyMember.name} from family tree`}
+                            onPress={() => removeFamilyRecord(selectedFamilyMember)}
+                            style={{ minHeight: MIN_TOUCH_TARGET, flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, borderRadius: RADII.md, borderWidth: 1, borderColor: theme.border, paddingHorizontal: 10 }}
+                          >
+                            <Feather name="trash-2" size={15} color={theme.dim} />
+                            <Text style={{ ...TYPE.caption, color: theme.dim }}>Remove</Text>
+                          </PressableSurface>
+                        </View>
+                      ) : null}
+                    </View>
+                  ) : null}
+                  {snapshot.familyMembers.length >= 100 ? (
+                    <Text
+                      style={{
+                        ...TYPE.caption,
+                        color: theme.dim,
+                        textAlign: "center",
+                      }}
+                    >
+                      Showing up to 100 family records.
+                    </Text>
+                  ) : null}
+                </Card>
+
+                {/* Card 2: Kul Parampara & Gotra */}
+                <Card
+                  tone="auto"
+                  style={{
+                    backgroundColor: theme.card,
+                    borderColor: theme.border,
+                    gap: 12,
+                  }}
+                >
                   <SectionHeading
                     title="Kul Parampara & Gotra"
                     theme={theme}
@@ -2181,14 +2565,18 @@ export default function KulScreen() {
                       <Field accessibilityLabel="Kuldevta" value={lineageDraft.kuldevtaName ?? ""} onChangeText={(value) => setLineageDraft((current) => current ? { ...current, kuldevtaName: value || null } : current)} placeholder="Kuldevta name" theme={theme} maxLength={120} />
                       <Field accessibilityLabel="Ancestral origin" value={lineageDraft.ancestralOrigin ?? ""} onChangeText={(value) => setLineageDraft((current) => current ? { ...current, ancestralOrigin: value || null } : current)} placeholder="Ancestral village / region" theme={theme} maxLength={160} />
                       <Field accessibilityLabel="Kulachara notes" value={lineageDraft.kulacharaNotes ?? ""} onChangeText={(value) => setLineageDraft((current) => current ? { ...current, kulacharaNotes: value || null } : current)} placeholder="Family customs and observances" theme={theme} maxLength={2000} multiline />
-                      {tirthaSearchResults.length ? <View style={{ gap: 6 }}>
-                        <Text style={{ ...TYPE.caption, color: theme.dim }}>Link a Tirtha place</Text>
-                        {tirthaSearchResults.slice(0, 8).map((place) => <View key={`lineage-${place.id}`} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                          <Text style={{ ...TYPE.caption, color: theme.text, flex: 1 }} numberOfLines={1}>{place.name}</Text>
-                          <Choice label="Kuldevi" selected={lineageDraft.kuldeviPlaceId === place.id} onPress={() => setLineageDraft((current) => current ? { ...current, kuldeviPlaceId: place.id } : current)} theme={theme} />
-                          <Choice label="Kuldevta" selected={lineageDraft.kuldevtaPlaceId === place.id} onPress={() => setLineageDraft((current) => current ? { ...current, kuldevtaPlaceId: place.id } : current)} theme={theme} />
-                        </View>)}
-                      </View> : null}
+                      {tirthaSearchResults.length ? (
+                        <View style={{ gap: 6 }}>
+                          <Text style={{ ...TYPE.caption, color: theme.dim }}>Link a Tirtha place</Text>
+                          {tirthaSearchResults.slice(0, 8).map((place) => (
+                            <View key={`lineage-${place.id}`} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                              <Text style={{ ...TYPE.caption, color: theme.text, flex: 1 }} numberOfLines={1}>{place.name}</Text>
+                              <Choice label="Kuldevi" selected={lineageDraft.kuldeviPlaceId === place.id} onPress={() => setLineageDraft((current) => current ? { ...current, kuldeviPlaceId: place.id } : current)} theme={theme} />
+                              <Choice label="Kuldevta" selected={lineageDraft.kuldevtaPlaceId === place.id} onPress={() => setLineageDraft((current) => current ? { ...current, kuldevtaPlaceId: place.id } : current)} theme={theme} />
+                            </View>
+                          ))}
+                        </View>
+                      ) : null}
                       <Text style={{ ...TYPE.caption, color: theme.dim }}>Family lunar calendar reference</Text>
                       <Field accessibilityLabel="Calendar reference label" value={calendarLabel} onChangeText={setCalendarLabel} placeholder="Reference place · e.g. Ujjain reference" theme={theme} maxLength={100} />
                       <Field accessibilityLabel="Calendar timezone" value={calendarTimezone} onChangeText={setCalendarTimezone} placeholder="IANA timezone · Asia/Kolkata" theme={theme} maxLength={80} />
@@ -2201,13 +2589,28 @@ export default function KulScreen() {
                       <ActionButton label={working ? "Saving…" : "Save lineage & calendar"} disabled={working} onPress={() => void saveLineage()} theme={theme} isDark={isDark} />
                     </View>
                   ) : (
-                    <View style={{ gap: 6 }}>
+                    <View style={{ gap: 8 }}>
                       <Text style={{ ...TYPE.body, color: theme.text }}>Gotra: {kul?.lineage.gotra || "Not added"}{kul?.lineage.pravara ? ` · Pravara: ${kul.lineage.pravara}` : ""}</Text>
-                      {kul?.lineage.gotra || kul?.lineage.pravara ? <PressableSurface accessibilityLabel="Copy Gotra and Pravara for family sankalpa" onPress={() => void copyLineageForSankalpa()} style={{ minHeight: MIN_TOUCH_TARGET, flexDirection: "row", alignItems: "center", gap: 7 }}><Feather name="copy" size={14} color={theme.brand} /><Text style={{ ...TYPE.caption, color: theme.brand }}>Copy lineage details for sankalpa</Text></PressableSurface> : null}
+                      {kul?.lineage.gotra || kul?.lineage.pravara ? (
+                        <PressableSurface accessibilityLabel="Copy Gotra and Pravara for family sankalpa" onPress={() => void copyLineageForSankalpa()} style={{ minHeight: MIN_TOUCH_TARGET, flexDirection: "row", alignItems: "center", gap: 7 }}>
+                          <Feather name="copy" size={14} color={theme.brand} />
+                          <Text style={{ ...TYPE.caption, color: theme.brand, fontFamily: FONTS.sansSemiBold }}>Copy lineage details for sankalpa</Text>
+                        </PressableSurface>
+                      ) : null}
                       <Text style={{ ...TYPE.body, color: theme.text }}>Kuldevi: {kul?.lineage.kuldeviName || "Not added"}</Text>
-                      {kul?.lineage.kuldeviPlaceId ? <PressableSurface onPress={() => openPlaceInTirtha(kul.lineage.kuldeviPlaceId!)} style={{ minHeight: MIN_TOUCH_TARGET, flexDirection: "row", alignItems: "center", gap: 7 }}><Feather name="map-pin" size={15} color={theme.brand} /><Text style={{ ...TYPE.caption, color: theme.brand }}>View Kuldevi temple in Tirtha</Text></PressableSurface> : null}
+                      {kul?.lineage.kuldeviPlaceId ? (
+                        <PressableSurface onPress={() => openPlaceInTirtha(kul.lineage.kuldeviPlaceId!)} style={{ minHeight: MIN_TOUCH_TARGET, flexDirection: "row", alignItems: "center", gap: 7 }}>
+                          <Feather name="map-pin" size={15} color={theme.brand} />
+                          <Text style={{ ...TYPE.caption, color: theme.brand, fontFamily: FONTS.sansSemiBold }}>View Kuldevi temple in Tirtha</Text>
+                        </PressableSurface>
+                      ) : null}
                       <Text style={{ ...TYPE.body, color: theme.text }}>Kuldevta: {kul?.lineage.kuldevtaName || "Not added"}</Text>
-                      {kul?.lineage.kuldevtaPlaceId ? <PressableSurface onPress={() => openPlaceInTirtha(kul.lineage.kuldevtaPlaceId!)} style={{ minHeight: MIN_TOUCH_TARGET, flexDirection: "row", alignItems: "center", gap: 7 }}><Feather name="map-pin" size={15} color={theme.brand} /><Text style={{ ...TYPE.caption, color: theme.brand }}>View Kuldevta temple in Tirtha</Text></PressableSurface> : null}
+                      {kul?.lineage.kuldevtaPlaceId ? (
+                        <PressableSurface onPress={() => openPlaceInTirtha(kul.lineage.kuldevtaPlaceId!)} style={{ minHeight: MIN_TOUCH_TARGET, flexDirection: "row", alignItems: "center", gap: 7 }}>
+                          <Feather name="map-pin" size={15} color={theme.brand} />
+                          <Text style={{ ...TYPE.caption, color: theme.brand, fontFamily: FONTS.sansSemiBold }}>View Kuldevta temple in Tirtha</Text>
+                        </PressableSurface>
+                      ) : null}
                       <Text style={{ ...TYPE.body, color: theme.text }}>Ancestral origin: {kul?.lineage.ancestralOrigin || "Not added"}</Text>
                       {kul?.lineage.kulacharaNotes ? <Text style={{ ...TYPE.body, color: theme.dim }}>{kul.lineage.kulacharaNotes}</Text> : null}
                       <Text style={{ ...TYPE.caption, color: theme.dim }}>Lunar dates use {kul?.calendarReference.label}, {kul?.calendarReference.timezone}, {kul?.calendarReference.monthSystem}. Resolve ceremonial timing with your family tradition.</Text>
@@ -2215,333 +2618,17 @@ export default function KulScreen() {
                   )}
                   <Field accessibilityLabel="Search sacred Tirtha places" value={tirthaQuery} onChangeText={setTirthaQuery} placeholder="Search Tirtha catalog to link a temple" theme={theme} maxLength={80} />
                   {tirthaSearchLoading ? <ActivityIndicator color={theme.brand} /> : null}
-                </View>
-                <Text style={{ ...TYPE.body, color: theme.dim }}>
-                  Keep family relationships and stories together. Personal birth
-                  details are not collected in this Native flow.
-                </Text>
-                {showFamilyForm && snapshot.role === "guardian" ? (
-                  <View style={{ gap: 10 }}>
-                    <Field
-                      accessibilityLabel="Family tree person's name"
-                      value={familyName}
-                      onChangeText={setFamilyName}
-                      placeholder="Name"
-                      theme={theme}
-                      maxLength={80}
-                    />
-                    <Field
-                      accessibilityLabel="Relationship to the family"
-                      value={familyRelationship}
-                      onChangeText={setFamilyRelationship}
-                      placeholder="Relationship · e.g. Grandmother"
-                      theme={theme}
-                      maxLength={50}
-                    />
-                    <Field
-                      accessibilityLabel="Family generation number"
-                      value={familyGeneration}
-                      onChangeText={setFamilyGeneration}
-                      placeholder="Generation number"
-                      theme={theme}
-                      maxLength={2}
-                    />
-                    {snapshot.familyMembers.length ? (
-                      <>
-                        <Text style={{ ...TYPE.caption, color: theme.dim }}>
-                          Optional parent in this tree
-                        </Text>
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            flexWrap: "wrap",
-                            gap: 7,
-                          }}
-                        >
-                          <Choice
-                            label="No parent selected"
-                            selected={!familyParent}
-                            onPress={() => setFamilyParent("")}
-                            theme={theme}
-                          />
-                          {snapshot.familyMembers.filter((member) => eligibleFamilyParentIds.has(member.id)).map((member) => (
-                            <Choice
-                              key={member.id}
-                              label={member.name}
-                              selected={familyParent === member.id}
-                              onPress={() => setFamilyParent(member.id)}
-                              theme={theme}
-                            />
-                          ))}
-                        </View>
-                      </>
-                    ) : null}
-                    {snapshot.familyMembers.length > 1 ? (
-                      <>
-                        <Text style={{ ...TYPE.caption, color: theme.dim }}>Optional spouse / partner link</Text>
-                        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
-                          <Choice label="No link" selected={!familySpouse} onPress={() => setFamilySpouse("")} theme={theme} />
-                          {snapshot.familyMembers.filter((member) => member.id !== editingFamilyMemberId).slice(0, 20).map((member) => <Choice key={`spouse-${member.id}`} label={member.name} selected={familySpouse === member.id} onPress={() => setFamilySpouse(member.id)} theme={theme} />)}
-                        </View>
-                      </>
-                    ) : null}
-                    {editingFamilyMemberId ? (
-                      <View style={{ flexDirection: "row", gap: 7 }}>
-                        <Choice label="Living" selected={familyIsAlive} onPress={() => setFamilyIsAlive(true)} theme={theme} />
-                        <Choice label="Remembered" selected={!familyIsAlive} onPress={() => setFamilyIsAlive(false)} theme={theme} />
-                      </View>
-                    ) : null}
-                    <ActionButton
-                      label={working ? "Saving…" : editingFamilyMemberId ? "Save family record" : "Add to family tree"}
-                      disabled={working}
-                      onPress={() => void handleAddFamilyMember()}
-                      theme={theme}
-                      isDark={isDark}
-                    />
-                  </View>
-                ) : null}
-                {snapshot.familyMembers.length ? (
-                  <View style={{ gap: 10 }}>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        paddingTop: 8,
-                      }}
-                    >
-                      <Text style={{ ...TYPE.caption, color: theme.dim }}>
-                        {vanshViewMode === "canvas"
-                          ? "Interactive lineage tree · drag to explore · pinch to zoom"
-                          : "Family list"}
-                      </Text>
-                      <View style={{ flexDirection: "row", gap: 6 }}>
-                        <Choice
-                          label="Tree Canvas"
-                          selected={vanshViewMode === "canvas"}
-                          onPress={() => setVanshViewMode("canvas")}
-                          theme={theme}
-                        />
-                        <Choice
-                          label="List"
-                          selected={vanshViewMode === "list"}
-                          onPress={() => setVanshViewMode("list")}
-                          theme={theme}
-                        />
-                      </View>
-                    </View>
+                </Card>
 
-                    {vanshViewMode === "canvas" ? (
-                      <>
-                        <VanshGraphCanvas
-                          layout={familyTreeLayout}
-                          selectedMemberId={selectedFamilyMemberId}
-                          onSelectMember={(member) =>
-                            setSelectedFamilyMemberId((prev) =>
-                              prev === member.id ? null : member.id
-                            )
-                          }
-                          isGuardian={snapshot.role === "guardian"}
-                        />
-                      </>
-                    ) : (
-                      <View style={{ gap: 8 }}>
-                        {familyTreeLayout.nodes.map((node) => {
-                          const member = node.data;
-                          const selected = selectedFamilyMemberId === member.id;
-                          const parentName = node.resolvedParentId
-                            ? familyMemberById.get(node.resolvedParentId)?.name
-                            : null;
-                          return (
-                            <View
-                              key={member.id}
-                              style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                minHeight: MIN_TOUCH_TARGET,
-                                gap: 8,
-                                paddingLeft: Math.min(node.generation - 1, 4) * 12,
-                                borderTopWidth: 1,
-                                borderTopColor: theme.borderSoft,
-                              }}
-                            >
-                              <PressableSurface
-                                accessibilityRole="button"
-                                accessibilityLabel={`${member.name}, ${member.role || "Family member"}, generation ${node.generation}${parentName ? `, child of ${parentName}` : ""}`}
-                                accessibilityState={{ selected }}
-                                onPress={() => setSelectedFamilyMemberId((previous) => previous === member.id ? null : member.id)}
-                                style={{
-                                  minHeight: MIN_TOUCH_TARGET,
-                                  flex: 1,
-                                  flexDirection: "row",
-                                  alignItems: "center",
-                                  gap: 10,
-                                  borderRadius: RADII.md,
-                                  paddingHorizontal: 8,
-                                  borderWidth: selected ? 1 : 0,
-                                  borderColor: theme.brand,
-                                  backgroundColor: selected ? theme.brandSoft : theme.cardSoft,
-                                }}
-                              >
-                                <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: theme.brandSoft, alignItems: "center", justifyContent: "center" }}>
-                                  <Feather name="user" size={16} color={theme.brand} />
-                                </View>
-                                <View style={{ flex: 1 }}>
-                                  <Text style={{ ...TYPE.label, color: theme.text }}>
-                                    {member.name}
-                                  </Text>
-                                  <Text style={{ ...TYPE.caption, color: theme.dim }}>
-                                    {member.role || "Family member"} · {getKinshipTier(node.generation).label} (Generation {node.generation})
-                                    {member.generation == null ? " · inferred" : ""}
-                                    {member.generation != null && member.generation !== node.generation ? ` · recorded as ${member.generation}` : ""}
-                                  </Text>
-                                </View>
-                                {parentName ? <Feather name="corner-down-right" size={15} color={theme.dim} /> : null}
-                              </PressableSurface>
-                            </View>
-                          );
-                        })}
-                      </View>
-                    )}
-                  </View>
-                ) : (
-                  <EmptyState
-                    title="Your family story starts here"
-                    subtitle="Guardians can add the people and relationships your family wants to preserve."
-                  />
-                )}
-                {selectedFamilyMember ? (
-                  <View
-                    style={{
-                      borderRadius: RADII.lg,
-                      borderWidth: 1.5,
-                      borderColor: theme.brand,
-                      backgroundColor: theme.card,
-                      padding: 14,
-                      gap: 10,
-                      shadowColor: theme.brand,
-                      shadowOpacity: isDark ? 0.22 : 0.08,
-                      shadowRadius: 10,
-                      elevation: 3,
-                    }}
-                  >
-                    <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 10 }}>
-                      <View style={{ flex: 1, gap: 3 }}>
-                        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                          <View
-                            style={{
-                              backgroundColor: theme.brandSoft,
-                              paddingHorizontal: 7,
-                              paddingVertical: 2,
-                              borderRadius: 6,
-                            }}
-                          >
-                            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: theme.brand }}>
-                              Gen {selectedTreeNode?.generation ?? selectedFamilyMember.generation ?? 1}
-                            </Text>
-                          </View>
-                          {!selectedFamilyMember.is_alive ? (
-                            <View
-                              style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                gap: 3,
-                                paddingHorizontal: 6,
-                                paddingVertical: 1.5,
-                                borderRadius: 6,
-                                borderWidth: 1,
-                                borderColor: theme.borderSoft,
-                                backgroundColor: theme.brandSoft,
-                              }}
-                            >
-                              <Text style={{ fontSize: 10 }}>🪔</Text>
-                              <Text style={{ fontFamily: FONTS.serifBold, fontSize: 10, color: theme.brandStrong }}>
-                                स्मृति (Pitru)
-                              </Text>
-                            </View>
-                          ) : (
-                            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: COLORS.success }} />
-                              <Text style={{ ...TYPE.caption, color: theme.dim }}>Living</Text>
-                            </View>
-                          )}
-                        </View>
-                        <Text style={{ fontFamily: FONTS.serifBold, fontSize: 16, color: theme.text, marginTop: 2 }}>
-                          {selectedFamilyMember.name}
-                        </Text>
-                        <Text style={{ ...TYPE.caption, color: theme.dim }}>
-                          {selectedFamilyMember.role || "Family member"} · Generation {selectedTreeNode?.generation ?? selectedFamilyMember.generation ?? 1}
-                          {selectedFamilyMember.generation == null ? " (inferred from family links)" : ""}
-                          {selectedTreeNode && selectedFamilyMember.generation != null && selectedFamilyMember.generation !== selectedTreeNode.generation ? ` (recorded as ${selectedFamilyMember.generation}; adjusted to keep the parent link downward)` : ""}
-                          {selectedFamilyMember.is_alive ? " · Living" : " · Remembered"}
-                          {selectedFamilyMember.linked_user_id ? " · On Shoonaya" : ""}
-                        </Text>
-                        {selectedHeritageLabel ? (
-                          <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 11, color: theme.brand, marginTop: 2 }}>
-                            {selectedHeritageLabel}
-                          </Text>
-                        ) : null}
-                      </View>
-                      <PressableSurface
-                        accessibilityRole="button"
-                        accessibilityLabel={`Clear selection for ${selectedFamilyMember.name}`}
-                        onPress={() => setSelectedFamilyMemberId(null)}
-                        style={{ minHeight: MIN_TOUCH_TARGET, minWidth: MIN_TOUCH_TARGET, alignItems: "center", justifyContent: "center" }}
-                      >
-                        <Feather name="x" size={17} color={theme.dim} />
-                      </PressableSurface>
-                    </View>
-                    {!selectedFamilyMember.is_alive ? (
-                      <View
-                        style={{
-                          backgroundColor: theme.brandSoft,
-                          borderRadius: RADII.sm,
-                          padding: 8,
-                          borderLeftWidth: 3,
-                          borderLeftColor: theme.brand,
-                        }}
-                      >
-                        <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 11, color: theme.brandStrong }}>
-                          आदरणीय पूर्वज · Sacred Pitru Smriti preserved in Kutumb Vansh.
-                        </Text>
-                      </View>
-                    ) : null}
-                    {snapshot.role === "guardian" ? (
-                      <View style={{ flexDirection: "row", gap: 8, marginTop: 2 }}>
-                        <PressableSurface
-                          accessibilityRole="button"
-                          accessibilityLabel={`Edit ${selectedFamilyMember.name}`}
-                          onPress={() => beginEditFamilyMember(selectedFamilyMember)}
-                          style={{ minHeight: MIN_TOUCH_TARGET, flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, borderRadius: RADII.md, borderWidth: 1, borderColor: theme.brand, backgroundColor: theme.brandSoft, paddingHorizontal: 10 }}
-                        >
-                          <Feather name="edit-2" size={15} color={theme.brand} />
-                          <Text style={{ ...TYPE.caption, fontFamily: FONTS.sansSemiBold, color: theme.brand }}>Edit person</Text>
-                        </PressableSurface>
-                        <PressableSurface
-                          accessibilityRole="button"
-                          accessibilityLabel={`Remove ${selectedFamilyMember.name} from family tree`}
-                          onPress={() => removeFamilyRecord(selectedFamilyMember)}
-                          style={{ minHeight: MIN_TOUCH_TARGET, flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, borderRadius: RADII.md, borderWidth: 1, borderColor: theme.border, paddingHorizontal: 10 }}
-                        >
-                          <Feather name="trash-2" size={15} color={theme.dim} />
-                          <Text style={{ ...TYPE.caption, color: theme.dim }}>Remove</Text>
-                        </PressableSurface>
-                      </View>
-                    ) : null}
-                  </View>
-                ) : null}
-                {snapshot.familyMembers.length >= 100 ? (
-                  <Text
-                    style={{
-                      ...TYPE.caption,
-                      color: theme.dim,
-                      textAlign: "center",
-                    }}
-                  >
-                    Showing up to 100 family records.
-                  </Text>
-                ) : null}
-                <View style={{ borderTopWidth: 1, borderTopColor: theme.borderSoft, paddingTop: 12, gap: 10 }}>
+                {/* Card 3: Family Yatra & Tirthas */}
+                <Card
+                  tone="auto"
+                  style={{
+                    backgroundColor: theme.card,
+                    borderColor: theme.border,
+                    gap: 12,
+                  }}
+                >
                   <SectionHeading title="Family Yatra & Tirthas" theme={theme} />
                   <Text style={{ ...TYPE.body, color: theme.dim }}>Build a shared pilgrimage list from the Tirtha catalog and record places your family has visited together.</Text>
                   <Field accessibilityLabel="Search Tirtha catalog" value={tirthaQuery} onChangeText={setTirthaQuery} placeholder="Search temples, gurudwaras, viharas…" theme={theme} maxLength={80} />
@@ -2567,22 +2654,43 @@ export default function KulScreen() {
                     <Choice label={`Wishlist · ${snapshot.tirthaWishes.filter((wish) => wish.status === "wishlist").length}`} selected={yatraFilter === "wishlist"} onPress={() => setYatraFilter("wishlist")} theme={theme} />
                     <Choice label={`Visited · ${snapshot.tirthaWishes.filter((wish) => wish.status === "visited").length}`} selected={yatraFilter === "visited"} onPress={() => setYatraFilter("visited")} theme={theme} />
                   </View>
-                  {snapshot.tirthaWishes.filter((wish) => yatraFilter === "all" || wish.status === yatraFilter).length ? snapshot.tirthaWishes.filter((wish) => yatraFilter === "all" || wish.status === yatraFilter).map((wish) => <View key={wish.id} style={{ borderTopWidth: 1, borderTopColor: theme.borderSoft, paddingTop: 9, gap: 6 }}>
-                    <Text style={{ ...TYPE.label, color: theme.text }}>{wish.name}</Text>
-                    <Text style={{ ...TYPE.caption, color: theme.dim }}>{wish.tradition}{wish.deity ? ` · ${wish.deity}` : ""}{wish.status === "visited" && wish.visitedAt ? ` · Visited ${formatDate(wish.visitedAt)}` : " · On family wishlist"}</Text>
-                    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
-                      <PressableSurface accessibilityLabel={`Open ${wish.name} in Tirtha`} onPress={() => openPlaceInTirtha(wish.placeId)} haptic="selection" style={{ minHeight: MIN_TOUCH_TARGET, flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 9, backgroundColor: theme.brandSoft, borderRadius: 12 }}><Feather name="map-pin" size={13} color={theme.brand} /><Text style={{ ...TYPE.caption, color: theme.brand }}>Open in Tirtha</Text></PressableSurface>
-                      <PressableSurface accessibilityLabel={wish.status === "visited" ? `Move ${wish.name} to wishlist` : `Mark ${wish.name} visited`} onPress={() => setYatraStatus(wish.placeId, wish.status === "visited" ? "wishlist" : "visited")} haptic="selection" style={{ minHeight: MIN_TOUCH_TARGET, flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 9, borderWidth: 1, borderColor: theme.border, borderRadius: 12 }}><Feather name={wish.status === "visited" ? "rotate-ccw" : "check-circle"} size={13} color={theme.brand} /><Text style={{ ...TYPE.caption, color: theme.text }}>{wish.status === "visited" ? "Wishlist" : "Mark visited"}</Text></PressableSurface>
-                      <PressableSurface accessibilityLabel={`Remove ${wish.name} from family Yatra`} onPress={() => removeYatraPlace(wish.placeId, wish.name)} style={{ minHeight: MIN_TOUCH_TARGET, width: MIN_TOUCH_TARGET, alignItems: "center", justifyContent: "center" }}><Feather name="trash-2" size={14} color={theme.dim} /></PressableSurface>
-                    </View>
-                  </View>) : <Text style={{ ...TYPE.body, color: theme.dim }}>Your family Yatra list is empty. Search the catalog or add a temple from Tirtha.</Text>}
-                </View>
-                <View style={{ borderTopWidth: 1, borderTopColor: theme.borderSoft, paddingTop: 12, gap: 8 }}>
+                  {snapshot.tirthaWishes.filter((wish) => yatraFilter === "all" || wish.status === yatraFilter).length ? snapshot.tirthaWishes.filter((wish) => yatraFilter === "all" || wish.status === yatraFilter).map((wish) => (
+                    <Card
+                      key={wish.id}
+                      tone="auto"
+                      style={{
+                        backgroundColor: theme.cardSoft,
+                        borderColor: theme.borderSoft,
+                        padding: 12,
+                        gap: 8,
+                        borderRadius: RADII.md,
+                      }}
+                    >
+                      <Text style={{ ...TYPE.label, color: theme.text, fontFamily: FONTS.serifBold }}>{wish.name}</Text>
+                      <Text style={{ ...TYPE.caption, color: theme.dim }}>{wish.tradition}{wish.deity ? ` · ${wish.deity}` : ""}{wish.status === "visited" && wish.visitedAt ? ` · Visited ${formatDate(wish.visitedAt)}` : " · On family wishlist"}</Text>
+                      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+                        <PressableSurface accessibilityLabel={`Open ${wish.name} in Tirtha`} onPress={() => openPlaceInTirtha(wish.placeId)} haptic="selection" style={{ minHeight: MIN_TOUCH_TARGET, flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, backgroundColor: theme.brandSoft, borderRadius: 12 }}><Feather name="map-pin" size={13} color={theme.brand} /><Text style={{ ...TYPE.caption, color: theme.brand, fontFamily: FONTS.sansSemiBold }}>Open in Tirtha</Text></PressableSurface>
+                        <PressableSurface accessibilityLabel={wish.status === "visited" ? `Move ${wish.name} to wishlist` : `Mark ${wish.name} visited`} onPress={() => setYatraStatus(wish.placeId, wish.status === "visited" ? "wishlist" : "visited")} haptic="selection" style={{ minHeight: MIN_TOUCH_TARGET, flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, borderWidth: 1, borderColor: theme.border, borderRadius: 12 }}><Feather name={wish.status === "visited" ? "rotate-ccw" : "check-circle"} size={13} color={theme.brand} /><Text style={{ ...TYPE.caption, color: theme.text }}>{wish.status === "visited" ? "Wishlist" : "Mark visited"}</Text></PressableSurface>
+                        <PressableSurface accessibilityLabel={`Remove ${wish.name} from family Yatra`} onPress={() => removeYatraPlace(wish.placeId, wish.name)} style={{ minHeight: MIN_TOUCH_TARGET, width: MIN_TOUCH_TARGET, alignItems: "center", justifyContent: "center" }}><Feather name="trash-2" size={14} color={theme.dim} /></PressableSurface>
+                      </View>
+                    </Card>
+                  )) : <Text style={{ ...TYPE.body, color: theme.dim }}>Your family Yatra list is empty. Search the catalog or add a temple from Tirtha.</Text>}
+                </Card>
+
+                {/* Card 4: Family Access */}
+                <Card
+                  tone="auto"
+                  style={{
+                    backgroundColor: theme.card,
+                    borderColor: theme.border,
+                    gap: 10,
+                  }}
+                >
                   <SectionHeading title="Family access" theme={theme} />
                   <Text style={{ ...TYPE.caption, color: theme.dim }}>A Kutumb has one guardian. If a guardian leaves, the oldest remaining member is promoted. The last member leaving deletes the private family space.</Text>
                   <ActionButton label="Leave Kutumb" icon="log-out" secondary onPress={leaveFamilyCircle} theme={theme} isDark={isDark} disabled={working} />
-                </View>
-              </Card>
+                </Card>
+              </>
             ) : null}
           </>
         ) : null}
@@ -2735,12 +2843,14 @@ function TaskRow({
   busy?: boolean;
 }) {
   return (
-    <View
+    <Card
+      tone="auto"
       style={{
-        borderTopWidth: 1,
-        borderTopColor: theme.borderSoft,
-        paddingTop: 10,
-        gap: 8,
+        backgroundColor: task.completed ? theme.cardSoft : theme.card,
+        borderColor: task.completed ? theme.borderSoft : theme.border,
+        padding: 14,
+        gap: 12,
+        borderRadius: RADII.md,
       }}
     >
       <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 10 }}>
@@ -2748,12 +2858,12 @@ function TaskRow({
           name={task.completed ? "check-circle" : "circle"}
           size={19}
           color={task.completed ? COLORS.success : theme.brand}
-          style={{ marginTop: 1 }}
+          style={{ marginTop: 2 }}
         />
         <View style={{ flex: 1 }}>
-          <Text style={{ ...TYPE.label, color: theme.text }}>{task.title}</Text>
+          <Text style={{ ...TYPE.label, color: theme.text, fontFamily: FONTS.serifBold }}>{task.title}</Text>
           <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 2 }}>
-            {task.task_type} · {assignee}
+            {task.task_type.toUpperCase()} · {assignee}
             {task.due_date ? ` · Due ${formatDate(task.due_date)}` : ""}
           </Text>
           {task.description ? (
@@ -2762,8 +2872,13 @@ function TaskRow({
             </Text>
           ) : null}
         </View>
+        {task.completed ? (
+          <View style={{ backgroundColor: theme.brandSoft, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
+            <Text style={{ ...TYPE.caption, color: COLORS.success, fontFamily: FONTS.sansSemiBold }}>Done</Text>
+          </View>
+        ) : null}
       </View>
-      <View style={{ flexDirection: "row", gap: 8, paddingLeft: 28 }}>
+      <View style={{ flexDirection: "row", gap: 8 }}>
         <PressableSurface
           accessibilityLabel={taskRouteLabel(task.task_type)}
           onPress={onOpen}
@@ -2779,11 +2894,11 @@ function TaskRow({
           }}
         >
           <Feather name="arrow-up-right" size={14} color={theme.brand} />
-          <Text style={{ ...TYPE.caption, color: theme.brand }}>
+          <Text style={{ ...TYPE.caption, color: theme.brand, fontFamily: FONTS.sansSemiBold }}>
             {taskRouteLabel(task.task_type)}
           </Text>
         </PressableSurface>
-        {onComplete ? (
+        {onComplete && !task.completed ? (
           <PressableSurface
             accessibilityLabel="Mark family practice complete"
             disabled={busy}
@@ -2809,19 +2924,8 @@ function TaskRow({
             <Text style={{ ...TYPE.caption, color: theme.text }}>Complete</Text>
           </PressableSurface>
         ) : null}
-        {task.completed ? (
-          <Text
-            style={{
-              ...TYPE.caption,
-              color: COLORS.success,
-              alignSelf: "center",
-            }}
-          >
-            Done
-          </Text>
-        ) : null}
       </View>
-    </View>
+    </Card>
   );
 }
 
@@ -2834,12 +2938,16 @@ function MessageRow({
   author: string;
   theme: ReturnType<typeof themeColor>;
 }) {
+  const initial = author.trim().charAt(0).toUpperCase() || 'ॐ';
   return (
-    <View
+    <Card
+      tone="auto"
       style={{
-        paddingVertical: 9,
-        borderTopWidth: 1,
-        borderTopColor: theme.borderSoft,
+        backgroundColor: theme.card,
+        borderColor: theme.borderSoft,
+        padding: 14,
+        gap: 10,
+        borderRadius: RADII.md,
       }}
     >
       <View
@@ -2847,15 +2955,20 @@ function MessageRow({
           flexDirection: "row",
           justifyContent: "space-between",
           alignItems: "center",
-          gap: 8,
+          gap: 10,
         }}
       >
-        <Text
-          style={{ ...TYPE.label, color: theme.text, flex: 1 }}
-          numberOfLines={1}
-        >
-          {author}
-        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 9, flex: 1 }}>
+          <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: theme.brandSoft, alignItems: "center", justifyContent: "center" }}>
+            <Text style={{ fontFamily: FONTS.serifBold, fontSize: 14, color: theme.brand }}>{initial}</Text>
+          </View>
+          <Text
+            style={{ ...TYPE.label, color: theme.text, flex: 1 }}
+            numberOfLines={1}
+          >
+            {author}
+          </Text>
+        </View>
         <Text style={{ ...TYPE.caption, color: theme.dim }}>
           {new Date(message.created_at).toLocaleDateString(undefined, {
             month: "short",
@@ -2863,9 +2976,9 @@ function MessageRow({
           })}
         </Text>
       </View>
-      <Text style={{ ...TYPE.body, color: theme.text, marginTop: 5 }}>
+      <Text style={{ ...TYPE.body, color: theme.text, marginTop: 2, lineHeight: 21 }}>
         {message.content}
       </Text>
-    </View>
+    </Card>
   );
 }
