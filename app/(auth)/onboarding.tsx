@@ -56,8 +56,12 @@ import {
   getOnboardingReadyPracticeCta,
   computePushNotificationEligibility,
   DEFAULT_NOTIFICATION_CATEGORY_CHOICES,
+  hasAnyNotificationChoice,
+  readNotificationChoices,
   type NotificationCategoryChoices,
+  type NotificationChoiceKey,
 } from '@/lib/onboarding-contract';
+import { ONBOARDING_NOTIFICATION_GROUPS } from '@/lib/onboardingNotificationCatalog';
 import { describeSaveError } from '@/lib/save-error';
 import { saveOnboardingDraft, readOnboardingDraft, clearOnboardingDraft, type OnboardingDraftData } from '@/lib/onboardingDraft';
 import {
@@ -394,11 +398,14 @@ export default function OnboardingScreen() {
           if (draft.goals) setGoals(draft.goals);
           setReligiousDataConsent(draft.religiousDataConsent === true);
           if (draft.name) setName(draft.name);
+          // Only known switches holding a real boolean are restored; a draft from a build that bundled the choices restores
+          // nothing, and a saved "enabled" with nothing chosen is not an opt-in (AGENTS 19).
+          const restoredChoices = readNotificationChoices(draft.notificationCategories);
+          setNotificationCategories(restoredChoices);
           if (draft.notificationChoice) {
-            setNotificationChoice(draft.notificationChoice);
-          }
-          if (draft.notificationCategories) {
-            setNotificationCategories((current) => ({ ...current, ...draft.notificationCategories }));
+            setNotificationChoice(
+              draft.notificationChoice === 'enabled' && !hasAnyNotificationChoice(restoredChoices) ? 'unset' : draft.notificationChoice
+            );
           }
           if (draft.notificationChoice === 'enabled' || draft.deniedNotificationPromptShown) {
             const permission = await getNotificationPermissionDetails();
@@ -543,12 +550,17 @@ export default function OnboardingScreen() {
     }
   };
 
-  const handleNotificationCategoryToggle = (key: keyof NotificationCategoryChoices, value: boolean) => {
-    setNotificationCategories((current) => {
-      const next = { ...current, [key]: value };
-      void syncDraft('notifications', { notificationCategories: next });
-      return next;
-    });
+  const handleNotificationCategoryToggle = (key: NotificationChoiceKey, value: boolean) => {
+    // The next value is computed here, not inside a state updater: an updater must stay pure and these also set other state.
+    const next: NotificationCategoryChoices = { ...notificationCategories, [key]: value };
+    setNotificationCategories(next);
+    void syncDraft('notifications', { notificationCategories: next });
+    // Clearing the last switch withdraws the in-app choice (and any "Notifications not enabled" notice): nothing is chosen,
+    // so nothing is requested from the OS.
+    if (!hasAnyNotificationChoice(next)) {
+      setNotificationChoice('unset');
+      setNotificationsDenied(false);
+    }
   };
 
   const goBack = () => {
@@ -672,9 +684,15 @@ export default function OnboardingScreen() {
 
   const handleNotNow = () => {
     if (requestingNotifications || saving) return;
+    // "Not now" is not consent to any reminder: it clears every switch so nothing a person half-chose is saved with it.
+    setNotificationCategories(DEFAULT_NOTIFICATION_CATEGORY_CHOICES);
     setNotificationChoice('disabled');
     setNotificationsDenied(false);
-    goToStep('location', { notificationChoice: 'disabled', deniedNotificationPromptShown: false });
+    goToStep('location', {
+      notificationChoice: 'disabled',
+      notificationCategories: DEFAULT_NOTIFICATION_CATEGORY_CHOICES,
+      deniedNotificationPromptShown: false,
+    });
   };
 
   const handleAllowLocation = async () => {
@@ -972,6 +990,8 @@ export default function OnboardingScreen() {
     });
   };
   const notificationRecoveryAction = getPermissionRecoveryAction(notificationsDenied, notificationsCanAskAgain);
+  // With nothing chosen there is nothing to ask the OS for, so the primary button just continues (the same as "Not now").
+  const anyReminderChosen = hasAnyNotificationChoice(notificationCategories);
   const locationRecoveryAction = getPermissionRecoveryAction(locationDenied, locationCanAskAgain);
 
   const primaryActionLabel =
@@ -982,6 +1002,8 @@ export default function OnboardingScreen() {
         ? translated('Try notifications again', 'सूचनाओं के लिए फिर प्रयास करें')
         : notificationChoice === 'enabled'
         ? translated('Continue', 'आगे बढ़ें')
+        : !anyReminderChosen
+        ? translated('Continue without reminders', 'बिना स्मरण के आगे बढ़ें')
         : translated('Allow notifications', 'सूचनाएँ अनुमति दें')
       : step === 'location'
       ? locationRecoveryAction === 'settings'
@@ -996,6 +1018,7 @@ export default function OnboardingScreen() {
   const onPrimaryAction = () => {
     if (step === 'notifications') {
       if (notificationRecoveryAction === 'settings') openPermissionSettings('notifications');
+      else if (!anyReminderChosen) handleNotNow();
       else if (notificationChoice === 'enabled' && !notificationsDenied) {
         goToStep('location', { notificationChoice: 'enabled', deniedNotificationPromptShown: false });
       } else void handleAllowNotifications();
@@ -1757,77 +1780,57 @@ export default function OnboardingScreen() {
           <>
             <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 15, lineHeight: isHindi ? 23 : 21, color: dim }}>
               {translated(
-                'Choose which reminders you’d like. Zero spam, quiet hours respected automatically. You can customize anytime in Settings.',
-                'अपनी पसंद के स्मरण चुनें। कोई स्पैम नहीं, शांत पहर का स्वतः सम्मान। आप सेटिंग्स में कभी भी बदलाव कर सकते हैं।'
+                'Everything is off until you turn it on. Choose only the reminders you’d like; you can change any of them later in Settings.',
+                'जब तक आप चालू न करें, सब कुछ बंद है। केवल वही स्मरण चुनें जो आप चाहें; इन्हें बाद में सेटिंग्स में कभी भी बदला जा सकता है।'
               )}
             </Text>
-            <View style={{ borderRadius: RADII.xl, borderWidth: 1, borderColor: border, backgroundColor: cardBg, padding: 6, gap: 2 }}>
-              {([
-                {
-                  key: 'festivalsAndVrats' as const,
-                  icon: 'calendar' as const,
-                  title: translated('Sacred Festivals & Vrats', 'पावन पर्व और व्रत'),
-                  desc: translated('Ekadashi, Pradosha, Purnima & major holy days', 'एकादशी, प्रदोष, पूर्णिमा और प्रमुख पवित्र दिवस'),
-                },
-                {
-                  key: 'dailySadhana' as const,
-                  icon: 'book-open' as const,
-                  title: translated('Daily Wisdom & Sadhana', 'दैनिक ज्ञान और साधना'),
-                  desc: translated('Morning shloka, reflection & peaceful guidance', 'प्रातः श्लोक, आत्मचिंतन और शांतिपूर्ण मार्गदर्शन'),
-                },
-                {
-                  key: 'dailyQuiz' as const,
-                  icon: 'award' as const,
-                  title: translated('Daily Quiz Challenge', 'दैनिक ज्ञानोत्कर्ष क्विज़'),
-                  desc: translated('Ready at 10:00 AM to deepen your learning', 'प्रातः 10:00 बजे धर्म ज्ञान संवर्धन के लिए'),
-                },
-                {
-                  key: 'communityAndFamily' as const,
-                  icon: 'users' as const,
-                  title: translated('Mandali & Community', 'मंडली और समुदाय'),
-                  desc: translated('Shared blessings, satsang reflections & streaks', 'आशीर्वाद, सत्संग और साधना क्रम'),
-                },
-                {
-                  key: 'brahmaMuhurta' as const,
-                  icon: 'sunrise' as const,
-                  title: translated('Brahma Muhurta', 'ब्रह्म मुहूर्त'),
-                  desc: translated(
-                    'A pre-dawn wake reminder – arrives at night, about 1½ hours before sunrise',
-                    'एक प्रातःपूर्व स्मरण – रात में प्राप्त होता है, सूर्योदय से लगभग डेढ़ घंटे पहले'
-                  ),
-                },
-              ]).map((item) => (
-                <Pressable
-                  key={item.key}
-                  onPress={() => handleNotificationCategoryToggle(item.key, !notificationCategories[item.key])}
-                  accessibilityRole="switch"
-                  accessibilityState={{ checked: notificationCategories[item.key] }}
-                  accessibilityLabel={item.title}
-                  accessibilityHint={item.desc}
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingVertical: 8, paddingHorizontal: 10 }}
+            {ONBOARDING_NOTIFICATION_GROUPS.map((group) => (
+              <View key={group.id} style={{ gap: 6 }}>
+                <Text
+                  accessibilityRole="header"
+                  style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 12, lineHeight: isHindi ? 18 : 16, letterSpacing: isHindi ? 0 : 0.8, color: dim, paddingHorizontal: 4 }}
                 >
-                  <View style={{ width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: wellBg }}>
-                    <Feather name={item.icon} size={18} color={accent} />
-                  </View>
-                  <View style={{ flex: 1, flexShrink: 1, gap: 2 }}>
-                    <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansMedium, fontSize: 14, lineHeight: isHindi ? 20 : 18, color: text }}>
-                      {item.title}
-                    </Text>
-                    <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 12, lineHeight: isHindi ? 17 : 16, color: dim }}>
-                      {item.desc}
-                    </Text>
-                  </View>
-                  <Switch
-                    value={notificationCategories[item.key]}
-                    onValueChange={(next) => handleNotificationCategoryToggle(item.key, next)}
-                    trackColor={{ true: accent }}
-                    pointerEvents="none"
-                    accessible={false}
-                    importantForAccessibility="no-hide-descendants"
-                  />
-                </Pressable>
-              ))}
-            </View>
+                  {isHindi ? group.titleHi : group.title.toUpperCase()}
+                </Text>
+                <View style={{ borderRadius: RADII.xl, borderWidth: 1, borderColor: border, backgroundColor: cardBg, padding: 6, gap: 2 }}>
+                  {group.items.map((item) => {
+                    const title = isHindi ? item.titleHi : item.title;
+                    const description = isHindi ? item.descriptionHi : item.description;
+                    return (
+                      <Pressable
+                        key={item.key}
+                        onPress={() => handleNotificationCategoryToggle(item.key, !notificationCategories[item.key])}
+                        accessibilityRole="switch"
+                        accessibilityState={{ checked: notificationCategories[item.key] }}
+                        accessibilityLabel={title}
+                        accessibilityHint={description}
+                        style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingVertical: 8, paddingHorizontal: 10 }}
+                      >
+                        <View style={{ width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: wellBg }}>
+                          <Feather name={item.icon} size={18} color={accent} />
+                        </View>
+                        <View style={{ flex: 1, flexShrink: 1, gap: 2 }}>
+                          <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansMedium, fontSize: 14, lineHeight: isHindi ? 20 : 18, color: text }}>
+                            {title}
+                          </Text>
+                          <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 12, lineHeight: isHindi ? 17 : 16, color: dim }}>
+                            {description}
+                          </Text>
+                        </View>
+                        <Switch
+                          value={notificationCategories[item.key]}
+                          onValueChange={(next) => handleNotificationCategoryToggle(item.key, next)}
+                          trackColor={{ true: accent }}
+                          pointerEvents="none"
+                          accessible={false}
+                          importantForAccessibility="no-hide-descendants"
+                        />
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+            ))}
             {notificationsDenied ? (
               <View style={{ borderRadius: RADII.lg, borderWidth: 1, borderColor: COLORS.dangerBorder, backgroundColor: COLORS.dangerBg, padding: 14, gap: 4 }}>
                 <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 13, lineHeight: isHindi ? 19 : 17, color: COLORS.danger }}>

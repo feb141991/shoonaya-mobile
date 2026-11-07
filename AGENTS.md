@@ -467,3 +467,22 @@ Rules:
 - Still open, found in the same sweep (two more private files written to the cache and never removed at sign-out): Settings "Download your data"
   writes `shoonaya-data.json` and Profile's sadhana report writes `sadhana-report.html`. The account-wide export (`/api/user/export`) also holds no
   Sanskāra data, so this sheet is the only way to download it. This applies equally to human and AI-agent contributors.
+
+### 27. Every Notification Starts Off, Is Shown One by One, and the OS Is Asked Only for a Chosen One
+- Every reminder starts OFF, in the app and in the database. Onboarding lists every notification a person can choose in Settings (17, in six groups),
+  one switch each, all off (`lib/onboardingNotificationCatalog.ts`, generated from Settings' own labels and descriptions;
+  `__tests__/onboarding-notification-choices.test.ts` keeps the two equal and keeps each switch writing only its own column). The old five bundled buckets,
+  one of which switched on seven reminder families behind a single "Daily Wisdom" switch, are gone and are never restored from an old draft.
+- "Not now" is not consent: it clears every switch. The OS notification prompt is asked for only when at least one notification is chosen; with none
+  chosen the primary button reads "Continue without reminders" and nothing is requested. Clearing the last switch withdraws the in-app choice.
+- The database half is migration `20261107100000` (18 reminder columns default to false, no existing row touched). A profile created any other way
+  (an older build, the auth repair) then receives no reminder until the person chooses. It is written and tested, and is NOT applied unless the status line
+  in the backend `docs` or the migration list says so; check before reasoning from it.
+- Still open, and do not assume them closed: an already-installed OLDER build still writes its old ON defaults during onboarding until it updates; the
+  delivery policy treats a NULL flag as ON (it skips only on `=== false`); the 32 profiles that existed before this are unchanged (the founder has not yet
+  chosen between resetting Brahma Muhurta only, also holding pushes for people who never finished onboarding, or resetting everything); the Hindi group names
+  are unreviewed by a native reader.
+- Origin: 2026-11-07 notification audit. Migration `20261026113000` had turned every reminder default ON and overwrote each OFF; on that date 10 of 32 profiles had
+  never finished onboarding, 6 of them held a push token and received 137 pushes in 14 days, and Brahma Muhurta (opt-in by the founder's 2026-10-11 decision)
+  was ON for 21 of 32 profiles, one of which looks like a choice. This is rule 19's defect, found live. Not verified on a device or simulator: the new step in
+  light and dark mode, large text, or the long scroll of 17 rows; a green test suite does not show the step is usable (sections 7 and 13).
