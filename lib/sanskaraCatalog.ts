@@ -12,11 +12,14 @@
 // framing of what the rite cultivates, clearly a curated gloss rather
 // than translated or sourced text.
 //
-// `reviewStatus` is 'pending_review' for every entry. This content has
-// NOT been through Shoonaya's council/founder review yet (AGENTS.md: a
-// named reviewer, "D3" in docs/SANSKARA_TRACKER_BACKEND_DESIGN.md, still
-// needs to sign off). The UI that renders this must say so visibly, not
-// present it as settled.
+// `reviewStatus` is 'approved' for every entry. Reviewed and approved by
+// Pt. Prince Sharma (the named reviewer for "D3" in
+// docs/SANSKARA_TRACKER_BACKEND_DESIGN.md) on 2026-11-07, after reading
+// the full table of all 16 entries (name, Sanskrit, life stage, purpose,
+// values) presented in chat — not a blanket sign-off on unseen text. If
+// an entry is ever edited after this date, or a new one added, it must
+// go back to 'pending_review' until it is shown for review again; never
+// carry an old approval onto changed content.
 //
 // This list does NOT include Vanaprastha or Sannyasa: some reference
 // lists fold the four ashramas (life stages) into the 16 samskaras, but
@@ -37,7 +40,7 @@
 // titles are today. Wiring a real `rite_key` per samskara needs a
 // reviewed migration (AGENTS.md section 4) and is out of scope here.
 
-export type SanskaraReviewStatus = 'pending_review';
+export type SanskaraReviewStatus = 'pending_review' | 'approved';
 
 export interface SanskaraCatalogEntry {
   key: string;
@@ -51,7 +54,10 @@ export interface SanskaraCatalogEntry {
 }
 
 export const SANSKARA_CATALOG_SOURCE_NOTE =
-  'Cross-checked against hindu-blog.com (Shodasha Samskara list) and hindupad.com (16 Hindu Samskaras), 2026-11-06. Pending review.';
+  'Cross-checked against hindu-blog.com (Shodasha Samskara list) and hindupad.com (16 Hindu Samskaras), 2026-11-06.';
+
+export const SANSKARA_CATALOG_REVIEWED_BY = 'Pt. Prince Sharma';
+export const SANSKARA_CATALOG_REVIEWED_DATE = '2026-11-07';
 
 export const SANSKARA_CATALOG: SanskaraCatalogEntry[] = [
   {
@@ -62,7 +68,7 @@ export const SANSKARA_CATALOG: SanskaraCatalogEntry[] = [
     lifeStage: 'Before conception, for a married couple',
     purpose: 'Marks and blesses the intention to conceive a child.',
     values: ['Intention', 'Responsibility', 'Welcoming new life'],
-    reviewStatus: 'pending_review',
+    reviewStatus: 'approved',
   },
   {
     key: 'pumsavana',
@@ -72,7 +78,7 @@ export const SANSKARA_CATALOG: SanskaraCatalogEntry[] = [
     lifeStage: '3rd–4th month of pregnancy',
     purpose: "A rite for the pregnancy's health and the child's vitality.",
     values: ['Care', 'Protection', 'Gratitude'],
-    reviewStatus: 'pending_review',
+    reviewStatus: 'approved',
   },
   {
     key: 'simantonnayana',
@@ -82,7 +88,7 @@ export const SANSKARA_CATALOG: SanskaraCatalogEntry[] = [
     lifeStage: '5th–7th month of pregnancy',
     purpose: "A hair-parting rite for the mother's calm and the child's wellbeing.",
     values: ['Nurture', 'Calm', 'Protection'],
-    reviewStatus: 'pending_review',
+    reviewStatus: 'approved',
   },
   {
     key: 'jatakarma',
@@ -92,7 +98,7 @@ export const SANSKARA_CATALOG: SanskaraCatalogEntry[] = [
     lifeStage: 'At birth',
     purpose: 'Welcomes the newborn and invites good fortune.',
     values: ['Welcome', 'Blessing', 'Gratitude'],
-    reviewStatus: 'pending_review',
+    reviewStatus: 'approved',
   },
   {
     key: 'namakarana',
@@ -102,7 +108,7 @@ export const SANSKARA_CATALOG: SanskaraCatalogEntry[] = [
     lifeStage: '11th–21st day after birth',
     purpose: 'Gives the child a name and a sacred identity.',
     values: ['Identity', 'Belonging'],
-    reviewStatus: 'pending_review',
+    reviewStatus: 'approved',
   },
   {
     key: 'nishkramana',
@@ -112,7 +118,7 @@ export const SANSKARA_CATALOG: SanskaraCatalogEntry[] = [
     lifeStage: '3rd–4th month',
     purpose: "Introduces the child to the sun, the sky, and the wider world beyond home.",
     values: ['Connection', 'Openness to the world'],
-    reviewStatus: 'pending_review',
+    reviewStatus: 'approved',
   },
   {
     key: 'annaprashana',
@@ -122,7 +128,7 @@ export const SANSKARA_CATALOG: SanskaraCatalogEntry[] = [
     lifeStage: '6th–8th month',
     purpose: 'Marks the first feeding of solid food, beyond milk alone.',
     values: ['Nourishment', 'Growth'],
-    reviewStatus: 'pending_review',
+    reviewStatus: 'approved',
   },
   {
     key: 'chudakarana',
@@ -132,7 +138,7 @@ export const SANSKARA_CATALOG: SanskaraCatalogEntry[] = [
     lifeStage: '1st–3rd year',
     purpose: 'The first haircut, symbolizing purification and a fresh start.',
     values: ['Purification', 'New beginning'],
-    reviewStatus: 'pending_review',
+    reviewStatus: 'approved',
   },
   {
     key: 'karnavedha',
@@ -142,7 +148,7 @@ export const SANSKARA_CATALOG: SanskaraCatalogEntry[] = [
     lifeStage: 'Usually with Chudakarana, 1st–5th year',
     purpose: 'Ear-piercing, traditionally linked to health and adornment.',
     values: ['Health', 'Tradition'],
-    reviewStatus: 'pending_review',
+    reviewStatus: 'approved',
   },
   {
     key: 'vidyarambha',
@@ -152,7 +158,7 @@ export const SANSKARA_CATALOG: SanskaraCatalogEntry[] = [
     lifeStage: 'Around age 4–5',
     purpose: "The child's first formal introduction to letters and learning.",
     values: ['Knowledge', 'Discipline', 'Reverence for learning'],
-    reviewStatus: 'pending_review',
+    reviewStatus: 'approved',
   },
   {
     key: 'upanayana',
@@ -162,7 +168,7 @@ export const SANSKARA_CATALOG: SanskaraCatalogEntry[] = [
     lifeStage: 'Traditionally around age 8',
     purpose: 'Investiture with the sacred thread, beginning formal Vedic study under a teacher.',
     values: ['Discipline', 'Spiritual commitment', 'Teacher–student respect'],
-    reviewStatus: 'pending_review',
+    reviewStatus: 'approved',
   },
   {
     key: 'vedarambha',
@@ -172,7 +178,7 @@ export const SANSKARA_CATALOG: SanskaraCatalogEntry[] = [
     lifeStage: 'Shortly after Upanayana',
     purpose: 'Marks the formal start of Vedic and scriptural study.',
     values: ['Dedication to study', 'Humility'],
-    reviewStatus: 'pending_review',
+    reviewStatus: 'approved',
   },
   {
     key: 'keshanta',
@@ -182,7 +188,7 @@ export const SANSKARA_CATALOG: SanskaraCatalogEntry[] = [
     lifeStage: 'Around age 16',
     purpose: 'The first shave, marking the approach of adulthood.',
     values: ['Maturity', 'Responsibility'],
-    reviewStatus: 'pending_review',
+    reviewStatus: 'approved',
   },
   {
     key: 'samavartana',
@@ -192,7 +198,7 @@ export const SANSKARA_CATALOG: SanskaraCatalogEntry[] = [
     lifeStage: 'End of formal education',
     purpose: 'Completion of studentship, returning home ready for householder life.',
     values: ['Readiness', 'Gratitude to one’s teacher'],
-    reviewStatus: 'pending_review',
+    reviewStatus: 'approved',
   },
   {
     key: 'vivaha',
@@ -202,7 +208,7 @@ export const SANSKARA_CATALOG: SanskaraCatalogEntry[] = [
     lifeStage: 'At marriage',
     purpose: 'Unites two people in partnership and shared householder duties.',
     values: ['Partnership', 'Duty', 'Commitment'],
-    reviewStatus: 'pending_review',
+    reviewStatus: 'approved',
   },
   {
     key: 'antyeshti',
@@ -212,6 +218,6 @@ export const SANSKARA_CATALOG: SanskaraCatalogEntry[] = [
     lifeStage: 'At death',
     purpose: "Funeral rites that honor the departed and guide the soul's journey onward.",
     values: ['Honoring the departed', 'Continuity', 'Letting go'],
-    reviewStatus: 'pending_review',
+    reviewStatus: 'approved',
   },
 ];

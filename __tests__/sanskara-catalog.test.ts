@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { SANSKARA_CATALOG } from '../lib/sanskaraCatalog';
+import { SANSKARA_CATALOG, SANSKARA_CATALOG_REVIEWED_BY, SANSKARA_CATALOG_REVIEWED_DATE } from '../lib/sanskaraCatalog';
 
 test('Sanskara catalog (the "Plant Sacred Milestone" picker)', async (t) => {
   await t.test('has exactly the traditional 16 entries', () => {
@@ -31,12 +31,30 @@ test('Sanskara catalog (the "Plant Sacred Milestone" picker)', async (t) => {
     }
   });
 
-  await t.test('every entry is marked pending_review, never a stronger claim', () => {
-    // AGENTS.md section 3: this content has not been through Shoonaya's
-    // council/founder review. Nothing here may claim otherwise until that
-    // review actually happens and this field is updated by hand.
+  await t.test('every entry is marked approved, with a named reviewer and date recorded', () => {
+    // AGENTS.md section 3: approval must be real, not assumed. Reviewed
+    // and approved by Pt. Prince Sharma on 2026-11-07 after reading the
+    // full table of all 16 entries in chat. If an entry is ever edited,
+    // or a new one added, it must go back to 'pending_review' until shown
+    // for review again -- this test only asserts today's approved state,
+    // it does not grant a blanket future exemption.
     for (const entry of SANSKARA_CATALOG) {
-      assert.equal(entry.reviewStatus, 'pending_review', `${entry.key}: not pending_review`);
+      assert.equal(entry.reviewStatus, 'approved', `${entry.key}: not approved`);
+    }
+    assert.equal(SANSKARA_CATALOG_REVIEWED_BY, 'Pt. Prince Sharma');
+    assert.ok(SANSKARA_CATALOG_REVIEWED_DATE.trim().length > 0);
+  });
+
+  await t.test('only reviewStatus "pending_review" or "approved" are valid -- no silent third state', () => {
+    // Guards the UI branch in app/kul/sanskara.tsx, which renders one of
+    // exactly two notices keyed off this field. A typo'd or new status
+    // value would silently fall through to the "not yet reviewed" copy
+    // there (safe by default) but should still be caught here explicitly.
+    for (const entry of SANSKARA_CATALOG) {
+      assert.ok(
+        entry.reviewStatus === 'pending_review' || entry.reviewStatus === 'approved',
+        `${entry.key}: unexpected reviewStatus ${JSON.stringify(entry.reviewStatus)}`,
+      );
     }
   });
 

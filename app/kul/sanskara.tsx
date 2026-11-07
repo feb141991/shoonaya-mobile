@@ -45,7 +45,13 @@ import { SanskaraEarlyHandover } from '@/components/sanskara/SanskaraEarlyHandov
 import { SanskaraManagers } from '@/components/sanskara/SanskaraManagers';
 import { SanskaraDataSheet } from '@/components/sanskara/SanskaraDataSheet';
 import { handoverStage, type HandoverStage } from '@/lib/sanskaraHandover';
-import { SANSKARA_CATALOG, SANSKARA_CATALOG_SOURCE_NOTE, type SanskaraCatalogEntry } from '@/lib/sanskaraCatalog';
+import {
+  SANSKARA_CATALOG,
+  SANSKARA_CATALOG_SOURCE_NOTE,
+  SANSKARA_CATALOG_REVIEWED_BY,
+  SANSKARA_CATALOG_REVIEWED_DATE,
+  type SanskaraCatalogEntry,
+} from '@/lib/sanskaraCatalog';
 
 type ActiveSubject =
   | { kind: 'me' }
@@ -894,9 +900,16 @@ export default function SanskaraScreen() {
                   </View>
 
                   <View style={[styles.reviewNotice, { borderColor: theme.borderSoft, backgroundColor: theme.cardSoft }]}>
-                    <Feather name="info" size={13} color={theme.dim} />
+                    <Feather
+                      name={selectedCatalogEntry.reviewStatus === 'approved' ? 'check-circle' : 'info'}
+                      size={13}
+                      color={selectedCatalogEntry.reviewStatus === 'approved' ? theme.brand : theme.dim}
+                    />
                     <Text style={[styles.reviewNoticeText, { color: theme.dim }]}>
-                      Not yet reviewed by Shoonaya's council. {SANSKARA_CATALOG_SOURCE_NOTE}
+                      {selectedCatalogEntry.reviewStatus === 'approved'
+                        ? `Reviewed by ${SANSKARA_CATALOG_REVIEWED_BY} · ${SANSKARA_CATALOG_REVIEWED_DATE}. `
+                        : "Not yet reviewed by Shoonaya's council. "}
+                      {SANSKARA_CATALOG_SOURCE_NOTE}
                     </Text>
                   </View>
 
