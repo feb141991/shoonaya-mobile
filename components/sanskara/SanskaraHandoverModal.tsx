@@ -22,12 +22,15 @@ import { describeFailure } from '@/lib/user-facing-error';
 import { acceptResultMessage } from '@/lib/sanskaraHandoverCopy';
 import { EARLY_ACCEPTED_MESSAGE } from '@/lib/sanskaraEarlyHandover';
 import type { AcceptedHandoverCode } from '@/lib/sanskara';
+import { SanskaraBirthDateCard } from '@/components/sanskara/SanskaraBirthDateCard';
 
 export interface SanskaraHandoverModalProps {
   visible: boolean;
   mode: 'start' | 'accept';
   subjectId?: string;
   dependentName?: string;
+  /** The signed-in person; the date-of-birth card (early hand-over) is offered only with it. */
+  userId?: string;
   onClose: () => void;
   onStartClaim?: (subjectId: string) => Promise<{ claim_id: string; expires_at: string; token?: string }>;
   onCancelClaim?: (subjectId: string) => Promise<void>;
@@ -39,6 +42,7 @@ export function SanskaraHandoverModal({
   mode,
   subjectId,
   dependentName,
+  userId,
   onClose,
   onStartClaim,
   onCancelClaim,
@@ -212,6 +216,7 @@ export function SanskaraHandoverModal({
               </View>
             ) : (
               <View style={styles.inputContainer}>
+                {mode === 'accept' && userId ? <SanskaraBirthDateCard key={userId} userId={userId} /> : null}
                 <Text style={[styles.inputLabel, { color: theme.dim }]}>Hand-over Token (64 characters)</Text>
                 <TextInput
                   value={tokenInput}

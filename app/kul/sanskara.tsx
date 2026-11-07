@@ -795,6 +795,7 @@ export default function SanskaraScreen() {
         mode={handoverMode}
         subjectId={handoverDependent?.id}
         dependentName={handoverDependent?.display_name}
+        userId={currentUserId ?? undefined}
         onClose={() => setHandoverModalVisible(false)}
         onStartClaim={handleStartClaim}
         onAcceptClaim={handleAcceptClaim}

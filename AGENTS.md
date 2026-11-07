@@ -467,3 +467,17 @@ Rules:
 - Still open, found in the same sweep (two more private files written to the cache and never removed at sign-out): Settings "Download your data"
   writes `shoonaya-data.json` and Profile's sadhana report writes `sadhana-report.html`. The account-wide export (`/api/user/export`) also holds no
   Sanskāra data, so this sheet is the only way to download it. This applies equally to human and AI-agent contributors.
+
+### 26. A Hand-over Code Needs a Saved Date of Birth, and the Screen Must Say So
+- An early Sanskāra hand-over (before 18) accepts a code only from an account whose profile date of birth equals the birth date the managers
+  recorded (backend `sanskara_accept_early_handover`, checked again at confirm). A mismatch is answered with the same "not found" as a wrong code
+  on purpose, so the code field cannot explain it. `SanskaraBirthDateCard` (`lib/sanskaraBirthDate.ts`) therefore offers to save a date of birth
+  above the code field, in accept mode only, and only when a successful profile read shows none. A stored date is never overwritten; a failed read
+  or a missing row offers nothing (section 18); the date goes through the shared parser and the profile PATCH, never raw picker text (section 12);
+  it is never persisted (section 24).
+- The check is identification, not authentication: the profile date of birth is self-declared. The real protections are the one-time code, every
+  manager's agreement and the starter's final confirmation. Do not describe the match as proof of identity.
+- Account-deletion copy for a sole manager says the child's timeline is permanently deleted when the 30-day grace period ends, in every language,
+  using the screen's existing phrasing for permanent removal. Hindi and Punjabi were checked for consistency only; a native speaker has not reviewed them.
+- Origin: 2026-11-07 review. Production had 3 of 32 profiles with a date of birth, so almost every child would have met an unexplained "not found".
+  Guard: `__tests__/sanskara-birth-date.test.ts` (12 mutations each proven red). Not verified on a device, in light and dark mode, or with large text.
