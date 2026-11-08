@@ -945,3 +945,14 @@ test('The Wedge-Pulling Monkey story uses six paragraph-aligned offline scenes',
     assert.ok(getPanchatantraSceneArtwork('panchatantra-wedge-pulling-monkey', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });
+
+test('Godly and June story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-godly-and-june');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-godly-and-june'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-godly-and-june'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-godly-and-june', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
