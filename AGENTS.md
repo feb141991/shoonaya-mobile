@@ -673,3 +673,11 @@ Rules:
   the Japa launcher (10 tests) and the bead ring pendant (6 tests) replaced the source-grep assertions for the same behaviour.
 - Not done: converting the other ~100 files (the roughly 45 that pin UI layout are the best candidates); component tests run on Node, so they say
   nothing about Android or iOS rendering. Device verification is still required (section 7).
+
+### 37. Hide Notification Details Is a Setting the Server Honours, Not the Phone
+- The switch (`profiles.notification_discreet_mode`, backend migration `20261112090000`) makes the backend replace each push's title and body with a neutral line for that person (`push-server.ts`). The app cannot force iOS "Show Previews" or Android lock-screen visibility, so it never tries to; do not word the switch as if the app controls the phone. It applies to new notifications only, and the copy says so.
+- It is read on its own (`lib/discreetMode.ts`), never added to the long Settings column cascade, so a server without the column keeps every other setting readable. A failed or malformed read is `load_failed`, not "off"; the switch stays disabled, because showing "off" invites a tap that overwrites a real "on". It is disabled for guests and until the read succeeds.
+- It is its own row, never part of the reminder list. Every toggle in that list asks for notification permission when switched on; this one is privacy, not consent to receive more, so switching it on must not ask.
+- English is the reviewed text. The Hindi is an unreviewed draft (reviewers deferred by the founder, 2026-11-07).
+- Not built: per-category Android channels. A push naming an Android channel the device has not created is not displayed at all; see the backend `docs/notifications/LOCK_SCREEN_DISCRETION.md` before sending any new `channelId`.
+- Origin: founder queue item 4 (2026-11-08). Not verified on a device, in light and dark mode, with large text, or how the neutral line looks on a locked screen or watch.

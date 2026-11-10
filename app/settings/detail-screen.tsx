@@ -75,6 +75,7 @@ import {
 } from '@/lib/heroPreference';
 import { AccountDeletionSheet, type DeletionJourneySnapshot } from '@/components/settings/AccountDeletionSheet';
 import { ReminderTimePicker } from '@/components/settings/ReminderTimePicker';
+import { DISCREET_MODE_COPY, readDiscreetMode, type DiscreetModeLoadState } from '@/lib/discreetMode';
 import { accountDeletion, readDeletionReasons, useAccountDeletionStatus } from '@/lib/accountDeletion';
 import { accountDeletionCopy, reviewedDeletionLanguage } from '@/lib/accountDeletionCopy';
 import { getGreetingPick } from '@/lib/greetingPreference';
@@ -128,6 +129,7 @@ const INITIAL_SETTINGS: SettingsState = {
   family_remembrance_time: '09:00',
   // Brahma Muhurta is the one opt-in reminder (founder, 2026-10-11 and 2026-11-12): a missing value must read OFF, as onboarding and the database do.
   wants_brahma_muhurta_reminders: false,
+  notification_discreet_mode: false,
   wants_evening_reminder: true,
   wants_madhyahn_reminder: true,
   dharm_veer_reminder_enabled: true,
@@ -239,6 +241,7 @@ function toSettingsState(value: Partial<SettingsState> | null | undefined): Sett
     wants_family_remembrance_reminders: value?.wants_family_remembrance_reminders ?? INITIAL_SETTINGS.wants_family_remembrance_reminders,
     family_remembrance_time: value?.family_remembrance_time ?? INITIAL_SETTINGS.family_remembrance_time,
     wants_brahma_muhurta_reminders: value?.wants_brahma_muhurta_reminders ?? INITIAL_SETTINGS.wants_brahma_muhurta_reminders,
+    notification_discreet_mode: value?.notification_discreet_mode ?? INITIAL_SETTINGS.notification_discreet_mode,
     wants_evening_reminder: value?.wants_evening_reminder ?? INITIAL_SETTINGS.wants_evening_reminder,
     wants_madhyahn_reminder: value?.wants_madhyahn_reminder ?? INITIAL_SETTINGS.wants_madhyahn_reminder,
     dharm_veer_reminder_enabled: value?.dharm_veer_reminder_enabled ?? INITIAL_SETTINGS.dharm_veer_reminder_enabled,
@@ -417,6 +420,8 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   const [settings, setSettings] = useState<SettingsState>(INITIAL_SETTINGS);
   const [familyRemembranceSchemaReady, setFamilyRemembranceSchemaReady] = useState(false);
   const [brahmaMuhurtaSchemaReady, setBrahmaMuhurtaSchemaReady] = useState(false);
+  // 'not_available': the server has no such column yet. 'load_failed': it could not be read (never shown as "off").
+  const [discreetModeState, setDiscreetModeState] = useState<DiscreetModeLoadState>('not_available');
   const [productAnalyticsSchemaReady, setProductAnalyticsSchemaReady] = useState(false);
   // False until a successful read of consent_notification_taps: the switch stays unavailable rather than guessing "off".
   const [tapConsentReady, setTapConsentReady] = useState(false);
@@ -646,6 +651,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
 
     setFamilyRemembranceSchemaReady(false);
     setBrahmaMuhurtaSchemaReady(false);
+    setDiscreetModeState('not_available');
     setProductAnalyticsSchemaReady(false);
     setTapConsentReady(false);
     setReminderCoverageGapSchemaReady(false);
@@ -686,11 +692,17 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       return { ...legacy, familyRemembranceSchemaReady: false, brahmaMuhurtaSchemaReady: false, productAnalyticsSchemaReady: false, reminderCoverageGapSchemaReady: false };
     })();
 
-    const [profileRes, cached, localTheme, tapConsent] = await Promise.all([
+    // Read this privacy setting separately so older servers without the column
+    // do not make the rest of Settings unreadable.
+    const discreetPromise = readDiscreetMode(
+      (columns) => supabase.from('profiles').select(columns).eq('id', appIdentity.userId).single(),
+    );
+    const [profileRes, cached, localTheme, tapConsent, discreet] = await Promise.all([
       profileSettingsPromise,
       readSettingsCache(identity),
       AsyncStorage.getItem(THEME_STORAGE_KEY),
       readServerNotificationTapConsent(appIdentity.userId),
+      discreetPromise,
     ]);
     if (!lease.isCurrent()) return;
 
@@ -706,7 +718,12 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     const profileRow = (profileRes.data ?? null) as (Partial<SettingsState> & { tradition?: string | null }) | null;
     setProfileTradition(profileRow?.tradition || 'hindu');
     setTapConsentReady(tapConsent !== 'unavailable');
-    const remote = { ...toSettingsState(profileRow ?? INITIAL_SETTINGS), consent_notification_taps: tapConsent === 'on' };
+    setDiscreetModeState(discreet.state);
+    const remoteFromProfile = toSettingsState(profileRow ?? INITIAL_SETTINGS);
+    const remote = {
+      ...(discreet.state === 'ready' ? { ...remoteFromProfile, notification_discreet_mode: discreet.value } : remoteFromProfile),
+      consent_notification_taps: tapConsent === 'on',
+    };
     const activePending = writeCoordinator.getPending();
     const pending = activePending ? [activePending] : (cached?.pendingOperations ?? []).filter((op) => op.status === 'pending' || op.status === 'failed');
     const merged = mergeServerWithPending(remote, pending);
@@ -1391,6 +1408,25 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                 value={settings.observance_reminder_time ?? '08:00'}
                 fallback="08:00"
                 onSave={(clock) => { void persistSettings({ ...settings, observance_reminder_time: clock }); }}
+                theme={theme}
+              />
+              <View style={{ height: 1, backgroundColor: theme.borderSoft }} />
+              {/* Its own row, not part of the reminder list: switching it on must not ask for notification permission. */}
+              <ToggleRow
+                label={language === 'hi' ? DISCREET_MODE_COPY.labelHi : DISCREET_MODE_COPY.label}
+                subtitle={isGuest
+                  ? `${language === 'hi' ? DISCREET_MODE_COPY.subtitleHi : DISCREET_MODE_COPY.subtitle} ${language === 'hi' ? '(सक्रिय करने के लिए साइन इन करें)' : '(sign in to turn this on)'}`
+                  : discreetModeState === 'not_available'
+                    ? (language === 'hi' ? 'यह सुविधा सर्वर अपडेट इंस्टॉल होने के बाद उपलब्ध होगी' : 'Available once the server update is installed')
+                    : discreetModeState === 'load_failed'
+                      ? (language === 'hi' ? 'यह सेटिंग अभी लोड नहीं हो सकी। बाद में फिर कोशिश करें।' : 'This setting could not be loaded right now. Try again later.')
+                      : (language === 'hi' ? DISCREET_MODE_COPY.subtitleHi : DISCREET_MODE_COPY.subtitle)}
+                value={settings.notification_discreet_mode === true}
+                disabled={isGuest || discreetModeState !== 'ready'}
+                onChange={(value) => {
+                  if (isGuest || discreetModeState !== 'ready') return;
+                  void persistSettings({ ...settings, notification_discreet_mode: value });
+                }}
                 theme={theme}
               />
             </SettingsSection> : null}
