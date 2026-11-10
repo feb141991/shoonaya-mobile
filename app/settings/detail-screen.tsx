@@ -76,7 +76,7 @@ import {
 import { AccountDeletionSheet, type DeletionJourneySnapshot } from '@/components/settings/AccountDeletionSheet';
 import { ReminderTimePicker } from '@/components/settings/ReminderTimePicker';
 import { accountDeletion, readDeletionReasons, useAccountDeletionStatus } from '@/lib/accountDeletion';
-import { accountDeletionCopy } from '@/lib/accountDeletionCopy';
+import { accountDeletionCopy, reviewedDeletionLanguage } from '@/lib/accountDeletionCopy';
 import { getGreetingPick } from '@/lib/greetingPreference';
 import { applyPracticeAnalyticsConsent, applyProductAnalyticsConsent, revokePracticeAnalyticsConsent, revokeProductAnalyticsConsent } from '@/lib/productAnalyticsRuntime';
 import { classifyFailure, describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
@@ -1227,7 +1227,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                       : pushStatus.status === 'permission_denied' ? pushStatusCopy.permissionOff
                       : pushStatus.status === 'registered' || pushStatus.status === 'fresh' ? pushStatusCopy.registered
                       : pushStatus.status === 'unavailable' ? pushStatusCopy.unavailable
-                      : pushStatus.status === 'deletion_pending' ? pushStatusCopy.deletionPending
+                      : pushStatus.status === 'deletion_pending' ? PUSH_STATUS_COPY[reviewedDeletionLanguage(language)].deletionPending
                       : pushStatusCopy.failed}
                   </Text>
                   {pushStatus.status === 'deletion_pending' ? null : (

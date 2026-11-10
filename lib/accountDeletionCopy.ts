@@ -343,8 +343,21 @@ const pa: AccountDeletionCopy = {
 
 export const ACCOUNT_DELETION_COPY: Record<AppLanguage, AccountDeletionCopy> = { en, hi, pa };
 
+/**
+ * Languages in which the deletion warnings are SHOWN. The Punjabi copy above stays in ACCOUNT_DELETION_COPY, written and tested, but a
+ * person on Punjabi sees English until a native speaker has reviewed it: an unreviewed "this is permanent" warning is worse than a plain
+ * English one (AGENTS 27). Adding 'pa' here is the whole change once it is reviewed. Hindi has not had a native review either; it is
+ * shown because it is one of the two languages the app offers everyone.
+ */
+export const REVIEWED_DELETION_LANGUAGES: readonly AppLanguage[] = ['en', 'hi'];
+
+/** The language deletion wording is shown in for this person: their own if reviewed, otherwise English. */
+export function reviewedDeletionLanguage(language: AppLanguage | undefined | null): AppLanguage {
+  return language && REVIEWED_DELETION_LANGUAGES.includes(language) ? language : 'en';
+}
+
 export function accountDeletionCopy(language: AppLanguage | undefined | null): AccountDeletionCopy {
-  return (language && ACCOUNT_DELETION_COPY[language]) || en;
+  return ACCOUNT_DELETION_COPY[reviewedDeletionLanguage(language)];
 }
 
 /** Translated label for a server reason id; the server's English label for unknown ids. */

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
-import { ACCOUNT_DELETION_COPY, accountDeletionCopy, deletionReasonLabel } from '../lib/accountDeletionCopy';
+import { ACCOUNT_DELETION_COPY, accountDeletionCopy, deletionReasonLabel, reviewedDeletionLanguage } from '../lib/accountDeletionCopy';
 
 // Backend DELETION_REASONS ids (Shoonaya src/lib/account-deletion-reasons.ts).
 const SERVER_REASON_IDS = ['taking_break', 'too_many_notifications', 'privacy_concerns', 'not_useful', 'technical_issues', 'other'];
@@ -42,4 +43,36 @@ test('copy makes none of the claims the backend does not honour', () => {
       assert.ok(!all.includes(banned), `${lang} contains "${banned}"`);
     }
   }
+});
+
+// ── Unreviewed Punjabi is not shown ────────────────────────────────────────────────────────────────────────────────────
+
+test('a person on Punjabi sees the English deletion warnings until a native speaker has reviewed the Punjabi', () => {
+  assert.equal(accountDeletionCopy('pa'), ACCOUNT_DELETION_COPY.en);
+  assert.equal(accountDeletionCopy('en'), ACCOUNT_DELETION_COPY.en);
+  assert.equal(accountDeletionCopy('hi'), ACCOUNT_DELETION_COPY.hi);
+  assert.equal(accountDeletionCopy(undefined), ACCOUNT_DELETION_COPY.en);
+  assert.notEqual(ACCOUNT_DELETION_COPY.pa, ACCOUNT_DELETION_COPY.en, 'the Punjabi copy is kept, only hidden');
+});
+
+test('every reader of the deletion copy goes through the gate, never the table', () => {
+  for (const file of [
+    '../app/_layout.tsx',
+    '../app/settings/detail-screen.tsx',
+    '../app/(tabs)/profile.tsx',
+    '../components/settings/AccountDeletionSheet.tsx',
+    '../components/profile/AccountDeletionBanner.tsx',
+  ]) {
+    const source = readFileSync(new URL(file, import.meta.url), 'utf8');
+    assert.doesNotMatch(source, /ACCOUNT_DELETION_COPY\[/, `${file} must call accountDeletionCopy(), which applies the review gate`);
+  }
+});
+
+test('the deletion-pending notice in Settings uses the same gate, so no Punjabi permanence wording slips past it', () => {
+  const screen = readFileSync(new URL('../app/settings/detail-screen.tsx', import.meta.url), 'utf8');
+  assert.match(screen, /PUSH_STATUS_COPY\[reviewedDeletionLanguage\(language\)\]\.deletionPending/);
+  assert.doesNotMatch(screen, /pushStatusCopy\.deletionPending/);
+  assert.equal(reviewedDeletionLanguage('pa'), 'en');
+  assert.equal(reviewedDeletionLanguage('hi'), 'hi');
+  assert.equal(reviewedDeletionLanguage(null), 'en');
 });

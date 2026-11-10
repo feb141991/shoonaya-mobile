@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
-import { accountDeletionCopy } from '../lib/accountDeletionCopy';
+import { ACCOUNT_DELETION_COPY, accountDeletionCopy } from '../lib/accountDeletionCopy';
 import { BIRTH_DATE_MIN, birthDateState, birthDateToSave } from '../lib/sanskaraBirthDate';
 
 const NOW = new Date('2026-11-07T10:00:00Z');
@@ -74,7 +74,7 @@ test('the sole-manager warning says it is permanent and waits for the 30-day gra
   const hi = accountDeletionCopy('hi').soleManagerDependents('Mira');
   assert.match(hi, /30 दिन/);
   assert.match(hi, /स्थायी रूप से/);
-  const pa = accountDeletionCopy('pa').soleManagerDependents('Mira');
+  const pa = ACCOUNT_DELETION_COPY.pa.soleManagerDependents('Mira');
   assert.match(pa, /30 ਦਿਨਾਂ/);
   assert.match(pa, /ਪੱਕੇ ਤੌਰ/);
   for (const text of [en, hi, pa]) assert.ok(text.includes('Mira'));
@@ -90,9 +90,9 @@ test('the sole-manager warning is plural for more than one child in every langua
   }
   assert.match(accountDeletionCopy('en').soleManagerDependents('A, B', 2), /their timelines/);
   assert.match(accountDeletionCopy('hi').soleManagerDependents('A, B', 2), /समयरेखाएँ/);
-  assert.match(accountDeletionCopy('pa').soleManagerDependents('A, B', 2), /ਸਮਾਂ-ਰੇਖਾਵਾਂ/);
+  assert.match(ACCOUNT_DELETION_COPY.pa.soleManagerDependents('A, B', 2), /ਸਮਾਂ-ਰੇਖਾਵਾਂ/);
   assert.match(accountDeletionCopy('hi').soleManagerDependents('A', 1), /समयरेखा भी/);
-  assert.match(accountDeletionCopy('pa').soleManagerDependents('A', 1), /ਸਮਾਂ-ਰੇਖਾ ਵੀ/);
+  assert.match(ACCOUNT_DELETION_COPY.pa.soleManagerDependents('A', 1), /ਸਮਾਂ-ਰੇਖਾ ਵੀ/);
 });
 
 test('the deletion sheet passes how many children are named', () => {
