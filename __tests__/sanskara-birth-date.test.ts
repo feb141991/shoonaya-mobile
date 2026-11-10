@@ -79,3 +79,29 @@ test('the sole-manager warning says it is permanent and waits for the 30-day gra
   assert.match(pa, /ਪੱਕੇ ਤੌਰ/);
   for (const text of [en, hi, pa]) assert.ok(text.includes('Mira'));
 });
+
+// ── Plural wording and the failed-code message ─────────────────────────────────────────────────────────────────────────
+
+test('the sole-manager warning is plural for more than one child in every language, singular for one', () => {
+  for (const lang of ['en', 'hi', 'pa'] as const) {
+    const copy = accountDeletionCopy(lang);
+    assert.notEqual(copy.soleManagerDependents('A, B', 2), copy.soleManagerDependents('A', 1), `${lang}: two children must not read as one`);
+    assert.equal(copy.soleManagerDependents('A'), copy.soleManagerDependents('A', 1), `${lang}: one child is the default`);
+  }
+  assert.match(accountDeletionCopy('en').soleManagerDependents('A, B', 2), /their timelines/);
+  assert.match(accountDeletionCopy('hi').soleManagerDependents('A, B', 2), /समयरेखाएँ/);
+  assert.match(accountDeletionCopy('pa').soleManagerDependents('A, B', 2), /ਸਮਾਂ-ਰੇਖਾਵਾਂ/);
+  assert.match(accountDeletionCopy('hi').soleManagerDependents('A', 1), /समयरेखा भी/);
+  assert.match(accountDeletionCopy('pa').soleManagerDependents('A', 1), /ਸਮਾਂ-ਰੇਖਾ ਵੀ/);
+});
+
+test('the deletion sheet passes how many children are named', () => {
+  const sheet = read('../components/settings/AccountDeletionSheet.tsx');
+  assert.match(sheet, /copy\.soleManagerDependents\(soleManagerNames\(snapshot\.soleManagerDependents\), snapshot\.soleManagerDependents\.length\)/);
+});
+
+test('a refused code tells the child the date of birth must match the one recorded, without saying which part failed', () => {
+  const modal = read('../components/sanskara/SanskaraHandoverModal.tsx');
+  assert.match(modal, /your date of birth must also be saved in your profile and be the one they recorded/);
+  assert.doesNotMatch(modal, /date of birth does(n't| not) match/i, 'the server answers the same for every refusal; the screen must not claim which one');
+});

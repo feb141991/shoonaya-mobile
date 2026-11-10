@@ -107,7 +107,7 @@ export function SanskaraHandoverModal({
       setResultMessage(result.kind === 'early' ? EARLY_ACCEPTED_MESSAGE : acceptResultMessage(result));
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     } catch (e: any) {
-      Alert.alert('Transfer Failed', describeFailure(e, 'Could not accept this code. Check the code, and that your date of birth is saved in your profile, then try again.'));
+      Alert.alert('Transfer Failed', describeFailure(e, 'Could not accept this code. Check the code. If a parent or guardian started this hand-over before you turned 18, your date of birth must also be saved in your profile and be the one they recorded. Then try again.'));
     } finally {
       setLoading(false);
     }

@@ -28,7 +28,8 @@ export type AccountDeletionCopy = {
   journalWarning: (count: number) => string;
   kulCreated: (names: string) => string;
   /** Children on Sanskāra whose only manager is this account: they are deleted with it. */
-  soleManagerDependents: (names: string) => string;
+  /** `count` is how many children are named; more than one switches to the plural wording. */
+  soleManagerDependents: (names: string, count?: number) => string;
   /** The check for the line above could not be made. */
   soleManagerUnchecked: string;
   exportData: string;
@@ -98,7 +99,7 @@ const en: AccountDeletionCopy = {
   streakValue: (days) => `${days}d`,
   journalWarning: (count) => `You have ${count} journal ${count === 1 ? 'reflection' : 'reflections'}. They are permanently removed when the 30-day grace period ends.`,
   kulCreated: (names) => `You created ${names}. Other members keep their own accounts, but let your family know before you go.`,
-  soleManagerDependents: (names) => `You are the only manager of ${names} on Sanskāra, so their milestones will be permanently deleted with your account when the 30-day grace period ends. To keep them, add another adult from your Kul as a manager first.`,
+  soleManagerDependents: (names, count = 1) => `You are the only manager of ${names} on Sanskāra, so ${count > 1 ? 'their timelines' : 'their milestones'} will be permanently deleted with your account when the 30-day grace period ends. To keep them, add another adult from your Kul as a manager first.`,
   soleManagerUnchecked: "We couldn't check whether a child's Sanskāra timeline would be deleted with your account. Open Sanskāra to see whether you are the only manager of any child.",
   exportData: 'Download my practice data (.json) first',
   keepAccount: 'Keep my account',
@@ -181,7 +182,9 @@ const hi: AccountDeletionCopy = {
   streakValue: (days) => `${days} दिन`,
   journalWarning: (count) => `आपके ${count} जर्नल चिंतन हैं। 30 दिन की अवधि पूरी होने पर ये स्थायी रूप से हटा दिए जाएँगे।`,
   kulCreated: (names) => `आपने ${names} बनाया है। अन्य सदस्यों के खाते बने रहेंगे, पर जाने से पहले अपने परिवार को बता दें।`,
-  soleManagerDependents: (names) => `संस्कार पर आप ${names} के अकेले प्रबंधक हैं, इसलिए 30 दिन की अवधि पूरी होने पर आपके खाते के साथ उनकी संस्कार-समयरेखा भी स्थायी रूप से हटा दी जाएगी। उसे रखने के लिए पहले अपने कुल के किसी और वयस्क को प्रबंधक बनाएँ।`,
+  soleManagerDependents: (names, count = 1) => count > 1
+    ? `संस्कार पर आप ${names} के अकेले प्रबंधक हैं, इसलिए 30 दिन की अवधि पूरी होने पर आपके खाते के साथ उनकी संस्कार-समयरेखाएँ भी स्थायी रूप से हटा दी जाएँगी। उन्हें रखने के लिए पहले अपने कुल के किसी और वयस्क को प्रबंधक बनाएँ।`
+    : `संस्कार पर आप ${names} के अकेले प्रबंधक हैं, इसलिए 30 दिन की अवधि पूरी होने पर आपके खाते के साथ उनकी संस्कार-समयरेखा भी स्थायी रूप से हटा दी जाएगी। उसे रखने के लिए पहले अपने कुल के किसी और वयस्क को प्रबंधक बनाएँ।`,
   soleManagerUnchecked: 'हम यह जाँच नहीं पाए कि आपके खाते के साथ किसी बच्चे की संस्कार-समयरेखा हटेगी या नहीं। संस्कार खोलकर देखें कि क्या आप किसी बच्चे के अकेले प्रबंधक हैं।',
   exportData: 'पहले मेरा साधना डेटा (.json) डाउनलोड करें',
   keepAccount: 'मेरा खाता रखें',
@@ -264,7 +267,9 @@ const pa: AccountDeletionCopy = {
   streakValue: (days) => `${days} ਦਿਨ`,
   journalWarning: (count) => `ਤੁਹਾਡੇ ${count} ਜਰਨਲ ਵਿਚਾਰ ਹਨ। 30 ਦਿਨਾਂ ਦੀ ਮਿਆਦ ਖਤਮ ਹੋਣ 'ਤੇ ਇਹ ਪੱਕੇ ਤੌਰ 'ਤੇ ਹਟਾ ਦਿੱਤੇ ਜਾਣਗੇ।`,
   kulCreated: (names) => `ਤੁਸੀਂ ${names} ਬਣਾਇਆ ਹੈ। ਹੋਰ ਮੈਂਬਰਾਂ ਦੇ ਖਾਤੇ ਬਣੇ ਰਹਿਣਗੇ, ਪਰ ਜਾਣ ਤੋਂ ਪਹਿਲਾਂ ਆਪਣੇ ਪਰਿਵਾਰ ਨੂੰ ਦੱਸ ਦਿਓ।`,
-  soleManagerDependents: (names) => `ਸੰਸਕਾਰ ਉੱਤੇ ਤੁਸੀਂ ${names} ਦੇ ਇਕੱਲੇ ਪ੍ਰਬੰਧਕ ਹੋ, ਇਸ ਲਈ 30 ਦਿਨਾਂ ਦੀ ਮਿਆਦ ਖਤਮ ਹੋਣ 'ਤੇ ਤੁਹਾਡੇ ਖਾਤੇ ਦੇ ਨਾਲ ਉਨ੍ਹਾਂ ਦੀ ਸੰਸਕਾਰ-ਸਮਾਂ-ਰੇਖਾ ਵੀ ਪੱਕੇ ਤੌਰ 'ਤੇ ਹਟਾ ਦਿੱਤੀ ਜਾਵੇਗੀ। ਇਸ ਨੂੰ ਰੱਖਣ ਲਈ ਪਹਿਲਾਂ ਆਪਣੇ ਕੁਲ ਦੇ ਕਿਸੇ ਹੋਰ ਬਾਲਗ ਨੂੰ ਪ੍ਰਬੰਧਕ ਬਣਾਓ।`,
+  soleManagerDependents: (names, count = 1) => count > 1
+    ? `ਸੰਸਕਾਰ ਉੱਤੇ ਤੁਸੀਂ ${names} ਦੇ ਇਕੱਲੇ ਪ੍ਰਬੰਧਕ ਹੋ, ਇਸ ਲਈ 30 ਦਿਨਾਂ ਦੀ ਮਿਆਦ ਖਤਮ ਹੋਣ 'ਤੇ ਤੁਹਾਡੇ ਖਾਤੇ ਦੇ ਨਾਲ ਉਨ੍ਹਾਂ ਦੀਆਂ ਸੰਸਕਾਰ-ਸਮਾਂ-ਰੇਖਾਵਾਂ ਵੀ ਪੱਕੇ ਤੌਰ 'ਤੇ ਹਟਾ ਦਿੱਤੀਆਂ ਜਾਣਗੀਆਂ। ਇਨ੍ਹਾਂ ਨੂੰ ਰੱਖਣ ਲਈ ਪਹਿਲਾਂ ਆਪਣੇ ਕੁਲ ਦੇ ਕਿਸੇ ਹੋਰ ਬਾਲਗ ਨੂੰ ਪ੍ਰਬੰਧਕ ਬਣਾਓ।`
+    : `ਸੰਸਕਾਰ ਉੱਤੇ ਤੁਸੀਂ ${names} ਦੇ ਇਕੱਲੇ ਪ੍ਰਬੰਧਕ ਹੋ, ਇਸ ਲਈ 30 ਦਿਨਾਂ ਦੀ ਮਿਆਦ ਖਤਮ ਹੋਣ 'ਤੇ ਤੁਹਾਡੇ ਖਾਤੇ ਦੇ ਨਾਲ ਉਨ੍ਹਾਂ ਦੀ ਸੰਸਕਾਰ-ਸਮਾਂ-ਰੇਖਾ ਵੀ ਪੱਕੇ ਤੌਰ 'ਤੇ ਹਟਾ ਦਿੱਤੀ ਜਾਵੇਗੀ। ਇਸ ਨੂੰ ਰੱਖਣ ਲਈ ਪਹਿਲਾਂ ਆਪਣੇ ਕੁਲ ਦੇ ਕਿਸੇ ਹੋਰ ਬਾਲਗ ਨੂੰ ਪ੍ਰਬੰਧਕ ਬਣਾਓ।`,
   soleManagerUnchecked: 'ਅਸੀਂ ਇਹ ਜਾਂਚ ਨਹੀਂ ਸਕੇ ਕਿ ਤੁਹਾਡੇ ਖਾਤੇ ਨਾਲ ਕਿਸੇ ਬੱਚੇ ਦੀ ਸੰਸਕਾਰ-ਸਮਾਂ-ਰੇਖਾ ਹਟੇਗੀ ਜਾਂ ਨਹੀਂ। ਸੰਸਕਾਰ ਖੋਲ੍ਹ ਕੇ ਵੇਖੋ ਕਿ ਕੀ ਤੁਸੀਂ ਕਿਸੇ ਬੱਚੇ ਦੇ ਇਕੱਲੇ ਪ੍ਰਬੰਧਕ ਹੋ।',
   exportData: 'ਪਹਿਲਾਂ ਮੇਰਾ ਸਾਧਨਾ ਡਾਟਾ (.json) ਡਾਊਨਲੋਡ ਕਰੋ',
   keepAccount: 'ਮੇਰਾ ਖਾਤਾ ਰੱਖੋ',

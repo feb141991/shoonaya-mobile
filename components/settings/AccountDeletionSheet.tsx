@@ -335,7 +335,7 @@ export function AccountDeletionSheet({
                     <Text style={{ ...TYPE.caption, color: theme.text, flex: 1, lineHeight: 18 }}>
                       {snapshot.soleManagerDependents === null
                         ? copy.soleManagerUnchecked
-                        : copy.soleManagerDependents(soleManagerNames(snapshot.soleManagerDependents))}
+                        : copy.soleManagerDependents(soleManagerNames(snapshot.soleManagerDependents), snapshot.soleManagerDependents.length)}
                     </Text>
                   </View>
                 )}
