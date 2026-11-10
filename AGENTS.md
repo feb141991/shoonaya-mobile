@@ -486,3 +486,22 @@ Rules:
   never finished onboarding, 6 of them held a push token and received 137 pushes in 14 days, and Brahma Muhurta (opt-in by the founder's 2026-10-11 decision)
   was ON for 21 of 32 profiles, one of which looks like a choice. This is rule 19's defect, found live. Not verified on a device or simulator: the new step in
   light and dark mode, large text, or the long scroll of 17 rows; a green test suite does not show the step is usable (sections 7 and 13).
+
+### 28. A Notification Tap Is Counted Once, for the Signed-In Account, and Only With Consent
+- A tap is counted when it is **delivered** (`deliverPendingNotificationTap`'s `onDelivered`, after the navigation succeeded), never when it is merely observed.
+  A tap seen while signed out, one held past `NOTIFICATION_TAP_HOLD_MS`, an OS link, and a push sent before the backend put a `notificationKey` in it are not counted.
+- What is kept is `{ id, key, tappedAt, launchState }` in `lib/notificationTapQueue.ts`: the backend's notification key, when, and whether the tap launched the
+  app. Never a title, body, route, screen, notification type or anything typed. The type a tap has is decided by the server from its own send log; the client's
+  `data.type` is used only to avoid queueing what the server would refuse, and is never sent. The upload body is exactly six fields and never carries an account id.
+- The queue lives in user-scoped storage (`USER_SCOPED_NAMES.notificationTapQueue`), so sign-out and account switches purge it, and a tap is never filed under an
+  account that signed in while storage was being read. Never under a fixed AsyncStorage key.
+- Nothing is queued or sent unless this device's product-measurement consent is on (`isNativeAnalyticsEnabled`), and a practice-revealing or unknown type also
+  needs the practice setting. Turning either off empties the queue where it is turned off. The server decides again and its answer wins: `consentRequired` empties
+  the queue; `unmatched`, `religiousConsentRequired` and a rejected request remove that one tap; a refused sign-in, a missing route, a rate limit or a server error keep it.
+- Uploading follows section 16: after the app is ready and settled in the foreground, never at the background edge, and a tap leaves the queue only when the
+  server acknowledges it. The event id is derived from the notification response, so a response replayed after a restart is recorded once.
+- Why this rule exists: on 2026-11-07 the notification audit found nothing recorded that any notification was tapped, so no change to cadence or wording could be judged.
+  Mutation-checking the first version found the queue's size limit was enforced twice (on reading and on writing), so removing either was invisible; each now has its own test.
+- Known limits, do not assume them closed: on Android the last notification response can persist until cleared, so an old tap replayed at an ordinary launch that was
+  never recorded before could be counted when it did not just happen (the server refuses anything over a week old, and a recorded one is deduplicated). Not verified on a
+  device, on Android, in a cold start versus a running app, or in any build. The feature records nothing until the backend migration is applied AND the person has opted in.
