@@ -89,7 +89,7 @@ export const ONBOARDING_NOTIFICATION_GROUPS: readonly OnboardingNotificationGrou
     items: [
       { key: "quiz", icon: "award", settingsKey: "quiz_reminder_enabled",
         title: "Daily quiz reminders", titleHi: "दैनिक क्विज़ रिमाइंडर",
-        description: "Daily quiz challenge at 10:00 AM, plus a 6:00 PM nudge if still unfinished", descriptionHi: "सुबह 10:00 बजे दैनिक क्विज़ चुनौती, और अधूरा रहने पर शाम 6:00 बजे एक याद दिलाने वाला संदेश" },
+        description: "Daily quiz challenge at 10:00 AM", descriptionHi: "सुबह 10:00 बजे दैनिक क्विज़ चुनौती" },
       { key: "dharmVeer", icon: "star", settingsKey: "dharm_veer_reminder_enabled",
         title: "Dharm Veer stories", titleHi: "धर्म वीर कथाएं",
         description: "A nudge toward unread Dharm Veer stories", descriptionHi: "अपठित धर्म वीर कथाओं की ओर एक रिमाइंडर" },

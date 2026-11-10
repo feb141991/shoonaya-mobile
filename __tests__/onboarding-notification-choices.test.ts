@@ -62,6 +62,17 @@ describe('the catalogue of notifications shown in onboarding', () => {
     for (const item of ONBOARDING_NOTIFICATION_ITEMS) assert.ok(item.icon in glyphs, `${item.key}: ${item.icon}`);
   });
 
+  it('does not promise a 6 PM quiz follow-up: the backend no longer sends one (QUIZ_EVENING_NUDGE_ENABLED is false)', () => {
+    const quiz = ONBOARDING_NOTIFICATION_ITEMS.find((i) => i.key === 'quiz')!;
+    for (const text of [quiz.description, quiz.descriptionHi]) {
+      assert.equal(/6:00\s*PM|शाम 6|follow-?up|nudge/i.test(text), false, text);
+    }
+    const settings = read('app/settings/detail-screen.tsx');
+    assert.equal(/6:00\s*PM/.test(settings), false, 'Settings must not name a 6:00 PM quiz time');
+    assert.equal(/शाम 6:00 बजे/.test(settings), false, 'Settings (Hindi) must not name a 6:00 PM quiz time');
+    assert.equal(/one follow-up is planned/.test(settings), false);
+  });
+
   it('describes the Brahma Muhurta reminder honestly: it arrives at night', () => {
     const brahma = ONBOARDING_NOTIFICATION_ITEMS.find((i) => i.key === 'brahmaMuhurta')!;
     assert.match(brahma.description, /arrives at night/);
