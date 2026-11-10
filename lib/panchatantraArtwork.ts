@@ -100,6 +100,7 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-wedge-pulling-monkey': require('@/assets/panchatantra/wedge-pulling-monkey-1.webp'),
   'panchatantra-merchant-strong-tooth': require('@/assets/panchatantra/merchant-strong-tooth-1.webp'),
   'panchatantra-godly-and-june': require('@/assets/panchatantra/godly-and-june-1.webp'),
+  'panchatantra-jackal-at-ram-fight': require('@/assets/panchatantra/jackal-at-ram-fight-1.webp'),
 };
 
 /**
@@ -756,6 +757,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/godly-and-june-4.webp'),
     require('@/assets/panchatantra/godly-and-june-5.webp'),
     require('@/assets/panchatantra/godly-and-june-6.webp'),
+  ],
+  'panchatantra-jackal-at-ram-fight': [
+    require('@/assets/panchatantra/jackal-at-ram-fight-1.webp'),
+    require('@/assets/panchatantra/jackal-at-ram-fight-2.webp'),
+    require('@/assets/panchatantra/jackal-at-ram-fight-3.webp'),
+    require('@/assets/panchatantra/jackal-at-ram-fight-4.webp'),
+    require('@/assets/panchatantra/jackal-at-ram-fight-5.webp'),
+    require('@/assets/panchatantra/jackal-at-ram-fight-6.webp'),
   ],
 };
 
