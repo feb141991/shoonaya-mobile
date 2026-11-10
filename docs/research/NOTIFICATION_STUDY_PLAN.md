@@ -12,6 +12,7 @@ quiz messages; streak and return language; lock-screen discretion; whether the d
 1. **Consent reset.** All reminders default off and are shown one by one in onboarding (built, unmerged). The 32 existing profiles are still unchanged and
    await the founder's choice of option A, B or C. Studying people who never chose their reminders would blur every answer, so this comes first.
 2. **Tap tracking.** Today nothing records that a notification was tapped, and every in-app "read" is 0%. Without it nothing below can be measured.
+   *Status 2026-11-10: built on branches (backend `notif-tap-tracking`, Native `notif-tap-tracking`), nothing applied or shipped. It is consent-gated and so records nothing until people opt in to product usage data (0 of 32 had on 2026-11-10); that decision, and the privacy wording, are the founder's. See the backend `docs/notifications/NOTIFICATION_TAP_TRACKING.md`.*
 3. **Studies**, small first.
 
 ## Track 1: closest-domain evidence (done)

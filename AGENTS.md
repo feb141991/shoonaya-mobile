@@ -494,3 +494,22 @@ Rules:
 - Not built: resetting a non-Sikh profile's Punjabi to English. Tradition is locked after signup in Native (`app/(tabs)/profile.tsx`), so no Native screen changes it, and production had no Punjabi profile on 2026-11-10. If a path that changes tradition appears, it must reset `app_language` and `meaning_language` to English in the same write.
 - Safety-critical warnings are shown in English only (founder decision 2026-11-10), because neither Hindi nor Punjabi has had a native review. Built for the only such translated copy in Native: the account-deletion warnings and the deletion-pending notice in Settings (`REVIEWED_DELETION_LANGUAGES`, `accountDeletionCopy`, `reviewedDeletionLanguage`; adding a language there is the whole change once reviewed). Consent, Sanskāra hand-over and the date-of-birth card have no Punjabi in Native and are English only. Backend Sanskāra notice text still has Punjabi producers; the founder chose not to gate them (2026-11-10). A new safety-critical string in any language goes through the same allow-list.
 - Origin: 2026-11-10 decision to narrow languages to English and Hindi, with Punjabi for Sikh profiles. Guard: `__tests__/language-options.test.ts` (4 mutations each proven red). Not verified on a device.
+
+### 28. A Notification Tap Is Counted Once, for the Signed-In Account, and Only With Consent
+- A tap is counted when it is **delivered** (`deliverPendingNotificationTap`'s `onDelivered`, after the navigation succeeded), never when it is merely observed.
+  A tap seen while signed out, one held past `NOTIFICATION_TAP_HOLD_MS`, an OS link, and a push sent before the backend put a `notificationKey` in it are not counted.
+- What is kept is `{ id, key, tappedAt, launchState }` in `lib/notificationTapQueue.ts`: the backend's notification key, when, and whether the tap launched the
+  app. Never a title, body, route, screen, notification type or anything typed. The type a tap has is decided by the server from its own send log; the client's
+  `data.type` is used only to avoid queueing what the server would refuse, and is never sent. The upload body is exactly six fields and never carries an account id.
+- The queue lives in user-scoped storage (`USER_SCOPED_NAMES.notificationTapQueue`), so sign-out and account switches purge it, and a tap is never filed under an
+  account that signed in while storage was being read. Never under a fixed AsyncStorage key.
+- Nothing is queued or sent unless this device's product-measurement consent is on (`isNativeAnalyticsEnabled`), and a practice-revealing or unknown type also
+  needs the practice setting. Turning either off empties the queue where it is turned off. The server decides again and its answer wins: `consentRequired` empties
+  the queue; `unmatched`, `religiousConsentRequired` and a rejected request remove that one tap; a refused sign-in, a missing route, a rate limit or a server error keep it.
+- Uploading follows section 16: after the app is ready and settled in the foreground, never at the background edge, and a tap leaves the queue only when the
+  server acknowledges it. The event id is derived from the notification response, so a response replayed after a restart is recorded once.
+- Why this rule exists: on 2026-11-07 the notification audit found nothing recorded that any notification was tapped, so no change to cadence or wording could be judged.
+  Mutation-checking the first version found the queue's size limit was enforced twice (on reading and on writing), so removing either was invisible; each now has its own test.
+- Known limits, do not assume them closed: on Android the last notification response can persist until cleared, so an old tap replayed at an ordinary launch that was
+  never recorded before could be counted when it did not just happen (the server refuses anything over a week old, and a recorded one is deduplicated). Not verified on a
+  device, on Android, in a cold start versus a running app, or in any build. The feature records nothing until the backend migration is applied AND the person has opted in.

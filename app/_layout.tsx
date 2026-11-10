@@ -122,6 +122,7 @@ import {
   type StartupAuthDestination,
 } from '@/lib/startup-visibility';
 import { setAppIdentity, getAppIdentity, useAppIdentity } from '@/lib/appIdentity';
+import { flushNotificationTaps, recordDeliveredNotificationTap } from '@/lib/notificationTapTracking';
 import { initializeProductAnalytics } from '@/lib/productAnalyticsRuntime';
 import { trackAnalyticsEvent } from '@/lib/analytics';
 import { accountDeletion } from '@/lib/accountDeletion';
@@ -340,6 +341,8 @@ function RootLayout() {
     if (!startupRouteReady || deletionIdentity.kind === 'loading') return;
     const userId = deletionIdentity.kind === 'authenticated' ? deletionIdentity.userId : null;
     void initializeProductAnalytics(userId).then(() => {
+      // The consent flags are known now: report any tap queued before they were.
+      if (userId) void flushNotificationTaps();
       const currentIdentity = getAppIdentity();
       if (userId && currentIdentity.kind === 'authenticated' && currentIdentity.userId === userId && analyticsLaunchIdentityRef.current !== userId) {
         analyticsLaunchIdentityRef.current = userId;
@@ -1006,6 +1009,8 @@ function RootLayout() {
         initialForegroundFlushStarted = true;
         // Outboxes are local and acknowledged only after a confirmed response.
         void maybeUploadAuthDiagnostics();
+        // Taps not yet acknowledged (the server was unreachable, or consent was not yet read at start-up).
+        void flushNotificationTaps();
         const identity = getAppIdentity();
         if (identity.kind === 'guest') {
           void maybeUploadTelemetrySummary({ kind: 'guest' });
@@ -1122,7 +1127,7 @@ function RootLayout() {
   });
   useEffect(() => {
     if (!heldTap || !tapDeliverable) return;
-    deliverPendingNotificationTap((href) => router.push(href));
+    deliverPendingNotificationTap((href) => router.push(href), Date.now(), recordDeliveredNotificationTap);
   }, [heldTap, tapDeliverable, router]);
 
   // ── Privacy-safe app analytics ────────────────────────────────────────

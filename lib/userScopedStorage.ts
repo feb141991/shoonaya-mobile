@@ -22,6 +22,8 @@ export const USER_SCOPED_NAMES = {
   vratMode: 'vrat_mode',
   vratSankalpa: 'vrat_sankalpa',
   vratRead: 'vrat_read',
+  /** Notification taps waiting to be reported (lib/notificationTapQueue.ts). Keys only; no message text. */
+  notificationTapQueue: 'notification_tap_queue_v1',
 } as const;
 
 /**
