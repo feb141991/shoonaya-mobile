@@ -332,13 +332,13 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-flop-ear-and-dusty'), 2);
 
     // Tier 0: Manuscript folios without local art
-    assert.equal(getPanchatantraStoryVisualTier('panchatantra-weavers-wife'), 0);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-ungrateful-man'), 0);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-nonexistent'), 0);
   });
 
   await t.test('sorts stories so full scene storybooks appear first, then manuscript', () => {
     const mixed = [
-      { id: 'panchatantra-weavers-wife', title: "The Weaver's Wife" },
+      { id: 'panchatantra-ungrateful-man', title: 'The Ungrateful Man' },
       { id: 'panchatantra-monk-and-jackal', title: 'The Monk and the Jackal' },
       { id: 'panchatantra-dove-king-and-net', title: 'The Dove King and the Net' },
       { id: 'panchatantra-fiend-who-washed-his-feet', title: "The Fiend Who Washed His Feet" },
@@ -356,7 +356,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(sorted[4].id, 'panchatantra-lion-and-rabbit');
 
     // Tier 0 item must follow at index 5
-    assert.equal(sorted[5].id, 'panchatantra-weavers-wife');
+    assert.equal(sorted[5].id, 'panchatantra-ungrateful-man');
   });
 
   await t.test('katha.tsx integrates visual tier sorting and thumbnail priority for Story of the Day', () => {
@@ -976,5 +976,16 @@ test('The Jackal at the Ram-Fight story uses six paragraph-aligned offline scene
   assert.equal(hasDedicatedSceneArtwork('panchatantra-jackal-at-ram-fight'), true);
   for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
     assert.ok(getPanchatantraSceneArtwork('panchatantra-jackal-at-ram-fight', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test("The Weaver's Wife story uses six paragraph-aligned offline scenes", () => {
+  const story = getExpandedPanchatantraStory('panchatantra-weavers-wife');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-weavers-wife'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-weavers-wife'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-weavers-wife', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });
