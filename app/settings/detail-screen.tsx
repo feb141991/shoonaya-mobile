@@ -48,7 +48,8 @@ import { clearAllHomeCaches } from '@/lib/homeCache';
 import { replayHomeDiscovery } from '@/lib/homeDiscovery';
 import { resetFirstWeekGuideCue } from '@/lib/firstWeekGuideStorage';
 import { clearAllOnboardingDrafts } from '@/lib/onboardingDraft';
-import { SUPPORTED_APP_LANGUAGES, type AppLanguage } from '@/lib/language-runtime';
+import { type AppLanguage } from '@/lib/language-runtime';
+import { offeredLanguages } from '@/lib/languageOptions';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import {
   readSettingsCache,
@@ -205,7 +206,6 @@ const PUSH_STATUS_COPY: Record<AppLanguage, {
   },
 };
 
-const LANGUAGES = SUPPORTED_APP_LANGUAGES.map((key) => ({ key, label: LANGUAGE_LABELS[key] }));
 
 const THEME_OPTIONS: { key: ThemePref; label: string }[] = [
   { key: 'system', label: 'System' },
@@ -1436,7 +1436,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                     <View key={row.key} style={{ gap: 10 }}>
                       <Text style={{ ...TYPE.caption, color: theme.dim }}>{row.label}</Text>
                       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                        {LANGUAGES.map((lang) => (
+                        {offeredLanguages(profileTradition, settings[row.key]).map((key) => ({ key, label: LANGUAGE_LABELS[key] })).map((lang) => (
                           <Pill
                             key={lang.key}
                             label={lang.label}

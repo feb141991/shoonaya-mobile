@@ -481,3 +481,10 @@ Rules:
   using the screen's existing phrasing for permanent removal. Hindi and Punjabi were checked for consistency only; a native speaker has not reviewed them.
 - Origin: 2026-11-07 review. Production had 3 of 32 profiles with a date of birth, so almost every child would have met an unexplained "not found".
   Guard: `__tests__/sanskara-birth-date.test.ts` (12 mutations each proven red). Not verified on a device, in light and dark mode, or with large text.
+
+### 27. Punjabi Is Offered to Sikh Profiles Only
+- English and Hindi are offered to everyone. Settings lists Punjabi (app, meaning and transliteration language) only when the profile's tradition is Sikh, or when that row already holds Punjabi so a saved choice never disappears (`lib/languageOptions.ts`). A missing, unknown or not-yet-loaded tradition hides Punjabi. Tradition is self-declared: this scopes what is offered and is not a security boundary.
+- Only the offer is gated. The `pa` type, generated content, startup scenes, backend producers and notification text stay in place; removing them is a separate decision. Onboarding already offers English and Hindi only.
+- Not built: resetting a non-Sikh profile's Punjabi to English. Tradition is locked after signup in Native (`app/(tabs)/profile.tsx`), so no Native screen changes it, and production had no Punjabi profile on 2026-11-10. If a path that changes tradition appears, it must reset `app_language` and `meaning_language` to English in the same write.
+- Safety-critical Punjabi copy (deletion, consent, hand-over, date of birth) still awaits native review; until then it should fall back to English. Not yet built.
+- Origin: 2026-11-10 decision to narrow languages to English and Hindi, with Punjabi for Sikh profiles. Guard: `__tests__/language-options.test.ts` (4 mutations each proven red). Not verified on a device.
