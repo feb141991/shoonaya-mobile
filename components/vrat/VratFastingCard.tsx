@@ -30,7 +30,10 @@ interface VratFastingCardProps {
   observeLoading: boolean;
   onObserve: () => void;
   wantsReminders?: boolean;
-  onToggleReminders?: (enabled: boolean) => Promise<void>;
+  /** Resolves true only once the preference is actually persisted -- the
+   * card commits its optimistic toggle on true, and reverts/leaves it
+   * alone on false (sign-in-required, or a failed write). */
+  onToggleReminders?: (enabled: boolean) => Promise<boolean>;
   language?: 'en' | 'hi' | 'pa';
   isDark?: boolean;
 }
@@ -142,6 +145,15 @@ export const VratFastingCard = memo(function VratFastingCard({
     };
   }, [appIdentity, vratSlug]);
 
+  // The parent reads the real wants_vrat_reminders value asynchronously
+  // (it isn't known at this card's own mount time) and passes it down once
+  // loaded. Re-sync on every change, not just at mount -- a useState
+  // initializer only runs once, so without this the card would keep
+  // showing its initial guess even after the real value arrives.
+  useEffect(() => {
+    setRemindersEnabled(wantsReminders);
+  }, [wantsReminders]);
+
   const handleSelectMode = async (mode: FastingMode) => {
     setSelectedMode(mode);
     void Haptics.selectionAsync().catch(() => {});
@@ -163,16 +175,21 @@ export const VratFastingCard = memo(function VratFastingCard({
   };
 
   const handleToggleReminder = async () => {
+    if (!onToggleReminders || togglingReminders) return;
     const nextVal = !remindersEnabled;
-    setRemindersEnabled(nextVal);
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    if (onToggleReminders) {
-      setTogglingReminders(true);
-      try {
-        await onToggleReminders(nextVal);
-      } finally {
-        setTogglingReminders(false);
+    setTogglingReminders(true);
+    try {
+      // Commit the visible toggle only once the parent confirms the write
+      // actually persisted -- a sign-in-required block or a failed save
+      // must leave the bell showing the still-true saved state, not a
+      // flipped one that was never written.
+      const persisted = await onToggleReminders(nextVal);
+      if (persisted) {
+        setRemindersEnabled(nextVal);
       }
+    } finally {
+      setTogglingReminders(false);
     }
   };
 
@@ -247,7 +264,7 @@ export const VratFastingCard = memo(function VratFastingCard({
                 <Pressable
                   key={item.key}
                   onPress={() => handleSelectMode(item.key)}
-                  hitSlop={4}
+                  hitSlop={8}
                   style={[
                     styles.modePill,
                     {
@@ -403,6 +420,7 @@ export const VratFastingCard = memo(function VratFastingCard({
           {/* Ask Dharma Mitra Link */}
           <PressableSurface
             onPress={handleOpenAiChat}
+            hitSlop={8}
             style={[
               styles.aiMiniButton,
               {

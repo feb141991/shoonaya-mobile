@@ -198,6 +198,10 @@ export default function VratDetailScreen() {
   const [readerLanguageOverride, setReaderLanguageOverride] = useState<typeof language | null>(null);
   const readerLanguage = readerLanguageOverride ?? language;
   const [isGuest, setIsGuest] = useState(false);
+  // Default true only as a loading placeholder (matches Settings'
+  // INITIAL_SETTINGS.wants_vrat_reminders default) -- corrected below by an
+  // actual read the moment identity resolves, never assumed.
+  const [wantsVratReminders, setWantsVratReminders] = useState(true);
   const [observedToday, setObservedToday] = useState(false);
   const [observeCount, setObserveCount] = useState(0);
   const [observeLoading, setObserveLoading] = useState(false);
@@ -237,6 +241,32 @@ export default function VratDetailScreen() {
       mounted = false;
     };
   }, [appIdentity, slug]);
+
+  // Reads the real saved preference, matching Settings' own read of the
+  // same column (app/settings/detail-screen.tsx) -- this screen no longer
+  // tells someone their fasting reminders are on when they already turned
+  // them off in Settings.
+  useEffect(() => {
+    if (appIdentity.kind !== 'authenticated') return;
+    let cancelled = false;
+    supabase
+      .from('profiles')
+      .select('wants_vrat_reminders')
+      .eq('id', appIdentity.userId)
+      .single()
+      .then(
+        ({ data, error }) => {
+          if (cancelled || error || !data) return;
+          if (typeof data.wants_vrat_reminders === 'boolean') {
+            setWantsVratReminders(data.wants_vrat_reminders);
+          }
+        },
+        () => {},
+      );
+    return () => {
+      cancelled = true;
+    };
+  }, [appIdentity]);
 
   const handleMarkRead = async () => {
     if (readCompleted) {
@@ -607,21 +637,36 @@ export default function VratDetailScreen() {
       ) : null}
     </Card>
   );
-  const handleToggleReminders = async (enabled: boolean) => {
+  // Returns whether the preference actually persisted -- the card only
+  // commits its toggle on true, matching handleObserve's own
+  // confirm-then-reflect pattern just above (never flip the UI ahead of a
+  // write that might not have happened).
+  const handleToggleReminders = async (enabled: boolean): Promise<boolean> => {
+    if (isGuest) {
+      Alert.alert('Sign in required', 'Sign in to customize notification reminders.');
+      return false;
+    }
+    if (appIdentity.kind !== 'authenticated') return false;
     try {
-      if (isGuest) {
-        Alert.alert('Sign in required', 'Sign in to customize notification reminders.');
-        return;
-      }
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) return;
-      await supabase.from('profiles').update({ wants_vrat_reminders: enabled }).eq('id', userData.user.id);
-      setToast({
-        visible: true,
-        message: enabled ? '🙏 Fasting reminders enabled' : 'Fasting reminders muted',
+      const response = await apiFetch('/api/native/profile', {
+        method: 'PATCH',
+        body: JSON.stringify({ wants_vrat_reminders: enabled }),
+        expectedUserId: appIdentity.userId,
       });
+      const data = await response.json().catch(() => null);
+      if (response.ok && data?.success) {
+        setWantsVratReminders(enabled);
+        setToast({
+          visible: true,
+          message: enabled ? '🙏 Fasting reminders enabled' : 'Fasting reminders muted',
+        });
+        return true;
+      }
+      setToast({ visible: true, message: data?.error ?? 'Could not update reminder preference' });
+      return false;
     } catch {
-      // non-fatal
+      setToast({ visible: true, message: 'Could not update reminder preference' });
+      return false;
     }
   };
 
@@ -636,7 +681,7 @@ export default function VratDetailScreen() {
       observeCount={observeCount}
       observeLoading={observeLoading}
       onObserve={handleObserve}
-      wantsReminders={true}
+      wantsReminders={wantsVratReminders}
       onToggleReminders={handleToggleReminders}
       language={readerLanguage === 'hi' ? 'hi' : readerLanguage === 'pa' ? 'pa' : 'en'}
       isDark={isDark}
