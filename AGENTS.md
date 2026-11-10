@@ -488,3 +488,18 @@ Rules:
 - Not built: resetting a non-Sikh profile's Punjabi to English. Tradition is locked after signup in Native (`app/(tabs)/profile.tsx`), so no Native screen changes it, and production had no Punjabi profile on 2026-11-10. If a path that changes tradition appears, it must reset `app_language` and `meaning_language` to English in the same write.
 - Safety-critical warnings are shown in English only (founder decision 2026-11-10), because neither Hindi nor Punjabi has had a native review. Built for the only such translated copy in Native: the account-deletion warnings and the deletion-pending notice in Settings (`REVIEWED_DELETION_LANGUAGES`, `accountDeletionCopy`, `reviewedDeletionLanguage`; adding a language there is the whole change once reviewed). Consent, Sanskāra hand-over and the date-of-birth card have no Punjabi in Native and are English only. Backend Sanskāra notice text still has Punjabi producers; the founder chose not to gate them (2026-11-10). A new safety-critical string in any language goes through the same allow-list.
 - Origin: 2026-11-10 decision to narrow languages to English and Hindi, with Punjabi for Sikh profiles. Guard: `__tests__/language-options.test.ts` (4 mutations each proven red). Not verified on a device.
+
+### 29. "Hide Notification Details" Is a Setting the Server Honours, Not the Phone
+- The switch (`profiles.notification_discreet_mode`, backend migration `20261112090000`) makes the backend replace each push's title and body with a neutral line for that person
+  (`push-server.ts`). The app cannot force iOS "Show Previews" or Android lock-screen visibility, so it never tries to; do not add a client-side attempt, and do not word the switch
+  as if the app controls the phone. It applies to **new** notifications only, and the copy says so.
+- It is read on its own (`lib/discreetMode.ts`), never added to the long Settings column cascade, so a server without the column keeps every other setting readable. A failed or
+  malformed read is `load_failed`, not "off" (section 18): the switch stays disabled, because showing "off" invites a tap that overwrites a real "on". It is disabled for guests
+  and until the read succeeded.
+- It is its own row, never part of the reminder list. Every toggle in that list asks for notification permission when switched on; this one is privacy, not consent to receive
+  more, so switching it on must not ask (guarded in `__tests__/discreet-mode.test.ts`).
+- English is the reviewed text. The Hindi is an unreviewed draft (reviewers deferred by the founder, 2026-11-07).
+- Not built: per-category Android channels (the second half of founder queue item 4). A push naming an Android channel the device has not created is not displayed at all (Expo SDK 57
+  docs, read 2026-11-10); see the backend `docs/notifications/LOCK_SCREEN_DISCRETION.md`, section 6, before sending any new `channelId`.
+- Numbering: this rule, 27 on `notif-choices-off` (onboarding), 28 on `notif-tap-tracking` and `main`'s 27 (Punjabi) were written on separate branches and must be renumbered when merged.
+- Origin: founder queue item 4 (2026-11-08). Not verified on a device, in light and dark mode, with large text, or how the neutral line looks on a locked screen or watch.
