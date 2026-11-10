@@ -47,12 +47,12 @@ test('copy makes none of the claims the backend does not honour', () => {
 
 // ── Unreviewed Punjabi is not shown ────────────────────────────────────────────────────────────────────────────────────
 
-test('a person on Punjabi sees the English deletion warnings until a native speaker has reviewed the Punjabi', () => {
+test('deletion warnings are shown in English only, whatever the app language, until a native speaker reviews another language', () => {
   assert.equal(accountDeletionCopy('pa'), ACCOUNT_DELETION_COPY.en);
   assert.equal(accountDeletionCopy('en'), ACCOUNT_DELETION_COPY.en);
-  assert.equal(accountDeletionCopy('hi'), ACCOUNT_DELETION_COPY.hi);
+  assert.equal(accountDeletionCopy('hi'), ACCOUNT_DELETION_COPY.en);
   assert.equal(accountDeletionCopy(undefined), ACCOUNT_DELETION_COPY.en);
-  assert.notEqual(ACCOUNT_DELETION_COPY.pa, ACCOUNT_DELETION_COPY.en, 'the Punjabi copy is kept, only hidden');
+  assert.notEqual(ACCOUNT_DELETION_COPY.pa, ACCOUNT_DELETION_COPY.en, 'the Punjabi copy is kept, only hidden'); assert.notEqual(ACCOUNT_DELETION_COPY.hi, ACCOUNT_DELETION_COPY.en, 'the Hindi copy is kept, only hidden');
 });
 
 test('every reader of the deletion copy goes through the gate, never the table', () => {
@@ -73,6 +73,6 @@ test('the deletion-pending notice in Settings uses the same gate, so no Punjabi 
   assert.match(screen, /PUSH_STATUS_COPY\[reviewedDeletionLanguage\(language\)\]\.deletionPending/);
   assert.doesNotMatch(screen, /pushStatusCopy\.deletionPending/);
   assert.equal(reviewedDeletionLanguage('pa'), 'en');
-  assert.equal(reviewedDeletionLanguage('hi'), 'hi');
+  assert.equal(reviewedDeletionLanguage('hi'), 'en');
   assert.equal(reviewedDeletionLanguage(null), 'en');
 });

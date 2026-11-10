@@ -67,11 +67,11 @@ test('the card offers nothing unless the read says "missing", and sends only a p
 // ── The deletion warning says when and that it is permanent ────────────────────────────────────────────────────────────
 
 test('the sole-manager warning says it is permanent and waits for the 30-day grace period, in every language', () => {
-  const en = accountDeletionCopy('en').soleManagerDependents('Mira');
+  const en = ACCOUNT_DELETION_COPY.en.soleManagerDependents('Mira');
   assert.match(en, /permanently deleted/);
   assert.match(en, /30-day grace period/);
   assert.match(en, /add another adult from your Kul/);
-  const hi = accountDeletionCopy('hi').soleManagerDependents('Mira');
+  const hi = ACCOUNT_DELETION_COPY.hi.soleManagerDependents('Mira');
   assert.match(hi, /30 दिन/);
   assert.match(hi, /स्थायी रूप से/);
   const pa = ACCOUNT_DELETION_COPY.pa.soleManagerDependents('Mira');
@@ -84,14 +84,14 @@ test('the sole-manager warning says it is permanent and waits for the 30-day gra
 
 test('the sole-manager warning is plural for more than one child in every language, singular for one', () => {
   for (const lang of ['en', 'hi', 'pa'] as const) {
-    const copy = accountDeletionCopy(lang);
+    const copy = ACCOUNT_DELETION_COPY[lang];
     assert.notEqual(copy.soleManagerDependents('A, B', 2), copy.soleManagerDependents('A', 1), `${lang}: two children must not read as one`);
     assert.equal(copy.soleManagerDependents('A'), copy.soleManagerDependents('A', 1), `${lang}: one child is the default`);
   }
-  assert.match(accountDeletionCopy('en').soleManagerDependents('A, B', 2), /their timelines/);
-  assert.match(accountDeletionCopy('hi').soleManagerDependents('A, B', 2), /समयरेखाएँ/);
+  assert.match(ACCOUNT_DELETION_COPY.en.soleManagerDependents('A, B', 2), /their timelines/);
+  assert.match(ACCOUNT_DELETION_COPY.hi.soleManagerDependents('A, B', 2), /समयरेखाएँ/);
   assert.match(ACCOUNT_DELETION_COPY.pa.soleManagerDependents('A, B', 2), /ਸਮਾਂ-ਰੇਖਾਵਾਂ/);
-  assert.match(accountDeletionCopy('hi').soleManagerDependents('A', 1), /समयरेखा भी/);
+  assert.match(ACCOUNT_DELETION_COPY.hi.soleManagerDependents('A', 1), /समयरेखा भी/);
   assert.match(ACCOUNT_DELETION_COPY.pa.soleManagerDependents('A', 1), /ਸਮਾਂ-ਰੇਖਾ ਵੀ/);
 });
 
