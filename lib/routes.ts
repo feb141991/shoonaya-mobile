@@ -152,6 +152,14 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   if (pathname.startsWith('/settings/')) return path as Href;
   if (pathname.startsWith('/settings')) return '/settings' as Href;
   if (pathname === '/notifications') return path as Href;
+  // Marketing and web feature aliases
+  if (pathname === '/features/japa' || pathname.startsWith('/features/japa/')) return '/japa';
+  if (pathname === '/features/sacred-calendar' || pathname.startsWith('/features/sacred-calendar/')) return '/panchang';
+  if (pathname === '/features/daily-sadhana' || pathname.startsWith('/features/daily-sadhana/')) return '/nitya-karma';
+  if (pathname === '/features/family-lineage' || pathname.startsWith('/features/family-lineage/')) return '/kul';
+  if (pathname.startsWith('/features')) return '/(tabs)';
+  if (pathname.startsWith('/about')) return '/settings/about' as Href;
+  if (pathname === '/guest' || pathname.startsWith('/guest/')) return '/(tabs)';
 
   return fallback;
 }

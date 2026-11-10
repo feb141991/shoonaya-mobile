@@ -120,5 +120,16 @@ assertEqual('resolveNativeRoute("/mood")', resolveNativeRoute('/mood'), '/mood')
 // Unchanged neighbor, regression check.
 assertEqual('resolveNativeRoute("/nitya-karma")', resolveNativeRoute('/nitya-karma'), '/nitya-karma');
 
+// Web marketing, root, and alias routes
+assertEqual('resolveNativeRoute("/")', resolveNativeRoute('/'), '/(tabs)');
+assertEqual('resolveNativeRoute("/rashiphala")', resolveNativeRoute('/rashiphala'), '/rashiphala');
+assertEqual('resolveNativeRoute("/features/japa")', resolveNativeRoute('/features/japa'), '/japa');
+assertEqual('resolveNativeRoute("/features/sacred-calendar")', resolveNativeRoute('/features/sacred-calendar'), '/panchang');
+assertEqual('resolveNativeRoute("/features/daily-sadhana")', resolveNativeRoute('/features/daily-sadhana'), '/nitya-karma');
+assertEqual('resolveNativeRoute("/features/family-lineage")', resolveNativeRoute('/features/family-lineage'), '/kul');
+assertEqual('resolveNativeRoute("/features")', resolveNativeRoute('/features'), '/(tabs)');
+assertEqual('resolveNativeRoute("/about")', resolveNativeRoute('/about'), '/settings/about');
+assertEqual('resolveNativeRoute("/guest")', resolveNativeRoute('/guest'), '/(tabs)');
+
 console.log(allPassed ? '\nAll assertions passed.' : '\nSome assertions FAILED.');
 process.exit(allPassed ? 0 : 1);
