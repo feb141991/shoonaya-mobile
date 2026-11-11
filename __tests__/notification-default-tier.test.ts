@@ -18,6 +18,14 @@ describe('notification default tier', () => {
     assert.deepEqual(off, ['wants_brahma_muhurta_reminders']);
   });
 
+  it('writes the older Nitya column equal to the one the dispatcher reads', () => {
+    for (const dailySadhana of [true, false]) {
+      const p = getNotificationPersistencePayload({ ...DEFAULT_NOTIFICATION_CATEGORY_CHOICES, dailySadhana }) as Record<string, unknown>;
+      assert.equal(p.nitya_reminder_enabled, dailySadhana);
+      assert.equal(p.nitya_reminder_enabled, p.wants_nitya_reminders);
+    }
+  });
+
   it('Settings falls back to the same tier when a profile value is missing', () => {
     const src = fs.readFileSync(path.join(__dirname, '..', 'app', 'settings', 'detail-screen.tsx'), 'utf8');
     const block = src.slice(src.indexOf('const INITIAL_SETTINGS'), src.indexOf('app_language:', src.indexOf('const INITIAL_SETTINGS')));

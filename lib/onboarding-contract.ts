@@ -154,6 +154,9 @@ export function getNotificationPersistencePayload(
     wants_tithi_reminders: categories.festivalsAndVrats,
     wants_sankalpa_midpoint_reminders: categories.festivalsAndVrats,
     wants_nitya_reminders: categories.dailySadhana,
+    // The older column for the same reminder. The dispatcher reads wants_nitya_reminders; this one is kept equal so the
+    // account export and admin views never show a choice the person did not make (the server keeps them equal on Settings writes).
+    nitya_reminder_enabled: categories.dailySadhana,
     wants_shloka_reminders: categories.dailySadhana,
     japa_reminder_enabled: categories.dailySadhana,
     japa_reminder_time: '07:00',
