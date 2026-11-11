@@ -332,13 +332,13 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-flop-ear-and-dusty'), 2);
 
     // Tier 0: Manuscript folios without local art
-    assert.equal(getPanchatantraStoryVisualTier('panchatantra-lion-and-the-carpenter'), 0);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-plover-who-fought-the-ocean'), 0);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-nonexistent'), 0);
   });
 
   await t.test('sorts stories so full scene storybooks appear first, then manuscript', () => {
     const mixed = [
-      { id: 'panchatantra-lion-and-the-carpenter', title: 'The Lion and the Carpenter' },
+      { id: 'panchatantra-plover-who-fought-the-ocean', title: 'The Plover Who Fought the Ocean' },
       { id: 'panchatantra-monk-and-jackal', title: 'The Monk and the Jackal' },
       { id: 'panchatantra-dove-king-and-net', title: 'The Dove King and the Net' },
       { id: 'panchatantra-fiend-who-washed-his-feet', title: "The Fiend Who Washed His Feet" },
@@ -356,7 +356,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(sorted[4].id, 'panchatantra-lion-and-rabbit');
 
     // Tier 0 item must follow at index 5
-    assert.equal(sorted[5].id, 'panchatantra-lion-and-the-carpenter');
+    assert.equal(sorted[5].id, 'panchatantra-plover-who-fought-the-ocean');
   });
 
   await t.test('katha.tsx integrates visual tier sorting and thumbnail priority for Story of the Day', () => {
@@ -1031,5 +1031,16 @@ test("Ugly's Trust Abused story uses six paragraph-aligned offline scenes", () =
   assert.equal(hasDedicatedSceneArtwork('panchatantra-uglys-trust-abused'), true);
   for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
     assert.ok(getPanchatantraSceneArtwork('panchatantra-uglys-trust-abused', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('The Lion and the Carpenter story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-lion-and-the-carpenter');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-lion-and-the-carpenter'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-lion-and-the-carpenter'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-lion-and-the-carpenter', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });
