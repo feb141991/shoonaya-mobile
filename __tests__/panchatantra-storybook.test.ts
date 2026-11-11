@@ -330,15 +330,16 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-fiend-who-washed-his-feet'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-handsome-and-theodore'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-flop-ear-and-dusty'), 2);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-shrewd-old-gander'), 2);
 
     // Tier 0: Manuscript folios without local art
-    assert.equal(getPanchatantraStoryVisualTier('panchatantra-shrewd-old-gander'), 0);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-lion-and-the-ram'), 0);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-nonexistent'), 0);
   });
 
   await t.test('sorts stories so full scene storybooks appear first, then manuscript', () => {
     const mixed = [
-      { id: 'panchatantra-shrewd-old-gander', title: 'The Shrewd Old Gander' },
+      { id: 'panchatantra-lion-and-the-ram', title: 'The Lion and the Ram' },
       { id: 'panchatantra-monk-and-jackal', title: 'The Monk and the Jackal' },
       { id: 'panchatantra-dove-king-and-net', title: 'The Dove King and the Net' },
       { id: 'panchatantra-fiend-who-washed-his-feet', title: "The Fiend Who Washed His Feet" },
@@ -356,7 +357,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(sorted[4].id, 'panchatantra-lion-and-rabbit');
 
     // Tier 0 item must follow at index 5
-    assert.equal(sorted[5].id, 'panchatantra-shrewd-old-gander');
+    assert.equal(sorted[5].id, 'panchatantra-lion-and-the-ram');
   });
 
   await t.test('katha.tsx integrates visual tier sorting and thumbnail priority for Story of the Day', () => {
@@ -1053,5 +1054,16 @@ test('The Plover Who Fought the Ocean story uses six paragraph-aligned offline s
   assert.equal(hasDedicatedSceneArtwork('panchatantra-plover-who-fought-the-ocean'), true);
   for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
     assert.ok(getPanchatantraSceneArtwork('panchatantra-plover-who-fought-the-ocean', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('The Shrewd Old Gander story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-shrewd-old-gander');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-shrewd-old-gander'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-shrewd-old-gander'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-shrewd-old-gander', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });

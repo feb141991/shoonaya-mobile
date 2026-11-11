@@ -108,6 +108,7 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-uglys-trust-abused': require('@/assets/panchatantra/uglys-trust-abused-1.webp'),
   'panchatantra-lion-and-the-carpenter': require('@/assets/panchatantra/lion-and-the-carpenter-1.webp'),
   'panchatantra-plover-who-fought-the-ocean': require('@/assets/panchatantra/plover-who-fought-the-ocean-1.webp'),
+  'panchatantra-shrewd-old-gander': require('@/assets/panchatantra/shrewd-old-gander-1.webp'),
 };
 
 /**
@@ -828,6 +829,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/plover-who-fought-the-ocean-4.webp'),
     require('@/assets/panchatantra/plover-who-fought-the-ocean-5.webp'),
     require('@/assets/panchatantra/plover-who-fought-the-ocean-6.webp'),
+  ],
+  'panchatantra-shrewd-old-gander': [
+    require('@/assets/panchatantra/shrewd-old-gander-1.webp'),
+    require('@/assets/panchatantra/shrewd-old-gander-2.webp'),
+    require('@/assets/panchatantra/shrewd-old-gander-3.webp'),
+    require('@/assets/panchatantra/shrewd-old-gander-4.webp'),
+    require('@/assets/panchatantra/shrewd-old-gander-5.webp'),
+    require('@/assets/panchatantra/shrewd-old-gander-6.webp'),
   ],
 };
 
