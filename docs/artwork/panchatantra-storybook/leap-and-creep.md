@@ -29,3 +29,4 @@ through `scripts/optimize-panchatantra-art.py` at quality 80, 1376×768:
 | `leap-and-creep-6.webp` | 90 KB | 37.9 dB |
 
 Scene 1 also serves as the offline cover. No text, captions, or source claims are embedded in the artwork.
+
