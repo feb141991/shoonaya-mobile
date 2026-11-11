@@ -104,6 +104,7 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-weavers-wife': require('@/assets/panchatantra/weavers-wife-1.webp'),
   'panchatantra-ungrateful-man': require('@/assets/panchatantra/ungrateful-man-1.webp'),
   'panchatantra-leap-and-creep': require('@/assets/panchatantra/leap-and-creep-1.webp'),
+  'panchatantra-passion-and-owl': require('@/assets/panchatantra/passion-and-owl-1.webp'),
 };
 
 /**
@@ -792,6 +793,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/leap-and-creep-4.webp'),
     require('@/assets/panchatantra/leap-and-creep-5.webp'),
     require('@/assets/panchatantra/leap-and-creep-6.webp'),
+  ],
+  'panchatantra-passion-and-owl': [
+    require('@/assets/panchatantra/passion-and-owl-1.webp'),
+    require('@/assets/panchatantra/passion-and-owl-2.webp'),
+    require('@/assets/panchatantra/passion-and-owl-3.webp'),
+    require('@/assets/panchatantra/passion-and-owl-4.webp'),
+    require('@/assets/panchatantra/passion-and-owl-5.webp'),
+    require('@/assets/panchatantra/passion-and-owl-6.webp'),
   ],
 };
 

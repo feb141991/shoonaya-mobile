@@ -332,13 +332,13 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-flop-ear-and-dusty'), 2);
 
     // Tier 0: Manuscript folios without local art
-    assert.equal(getPanchatantraStoryVisualTier('panchatantra-passion-and-owl'), 0);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-uglys-trust-abused'), 0);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-nonexistent'), 0);
   });
 
   await t.test('sorts stories so full scene storybooks appear first, then manuscript', () => {
     const mixed = [
-      { id: 'panchatantra-passion-and-owl', title: 'Passion and the Owl' },
+      { id: 'panchatantra-uglys-trust-abused', title: "Ugly's Trust Abused" },
       { id: 'panchatantra-monk-and-jackal', title: 'The Monk and the Jackal' },
       { id: 'panchatantra-dove-king-and-net', title: 'The Dove King and the Net' },
       { id: 'panchatantra-fiend-who-washed-his-feet', title: "The Fiend Who Washed His Feet" },
@@ -356,7 +356,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(sorted[4].id, 'panchatantra-lion-and-rabbit');
 
     // Tier 0 item must follow at index 5
-    assert.equal(sorted[5].id, 'panchatantra-passion-and-owl');
+    assert.equal(sorted[5].id, 'panchatantra-uglys-trust-abused');
   });
 
   await t.test('katha.tsx integrates visual tier sorting and thumbnail priority for Story of the Day', () => {
@@ -1009,5 +1009,16 @@ test('Leap and Creep story uses six paragraph-aligned offline scenes', () => {
   assert.equal(hasDedicatedSceneArtwork('panchatantra-leap-and-creep'), true);
   for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
     assert.ok(getPanchatantraSceneArtwork('panchatantra-leap-and-creep', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('Passion and the Owl story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-passion-and-owl');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-passion-and-owl'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-passion-and-owl'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-passion-and-owl', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });
