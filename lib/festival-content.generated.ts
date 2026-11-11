@@ -1410,8 +1410,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
       },
       "significance": {
         "value": {
-          "en": "Holi, celebrated on the full moon (Purnima) and the following Pratipada in the month of Phalguna, is the joyous festival of colors and springtime renewal. It commemorates young Prahlada's steadfast devotion surviving the fire while Holika perished, proving the triumph of unshakeable faith over tyranny. In Braj, it commemorates the divine, pure love of Radha and Krishna through playful floral and herbal colors.",
-          "hi": "फाल्गुन मास की पूर्णिमा को होलिका दहन और अगले दिन रंगोत्सव (धुलेंडी) मनाया जाता है। यह पर्व भक्त प्रह्लाद की अनन्य प्रभु भक्ति और अहंकार रूपी होलिका के भस्म होने की स्मृति है। ब्रज में यह भगवान श्री कृष्ण और श्री राधा रानी के पावन प्रेम और वसंत ऋतु के आगमन का दिव्य उल्लास है।"
+          "en": "Holika Dahan, the Phalguna Purnima bonfire on the eve of Holi, recalls young Prahlada’s steadfast devotion surviving the fire while Holika perished — the triumph of unshakeable faith over tyranny. It is observed when Phalguna Purnima touches the local Pradosha window with no Bhadra (Vishti) in it. If Bhadra covers the Pradosha, the fallback is the Bhadra-puccha (the tail of Bhadra) or the time after Bhadra while Purnima still holds, so the bonfire can fall in the early hours after the Purnima evening. Rangwali Holi, the festival of colours, is observed separately on the following civil day.",
+          "hi": "होलिका दहन फाल्गुन पूर्णिमा की रात का अग्नि-उत्सव है, जो भक्त प्रह्लाद की अनन्य प्रभु-भक्ति और अहंकार रूपी होलिका के भस्म होने की स्मृति है। यह तब किया जाता है जब फाल्गुन पूर्णिमा स्थानीय प्रदोष काल को स्पर्श करे और उसमें भद्रा (विष्टि) न हो। यदि भद्रा प्रदोष को ढक ले तो विकल्प भद्रा-पुच्छ, या भद्रा के बाद का वह समय है जब पूर्णिमा अभी रहती हो; इसलिए दहन पूर्णिमा की संध्या के बाद तड़के भी पड़ सकता है। रंगवाली होली (धुलेंडी) अगले नागरिक दिन अलग से मनाई जाती है।"
         },
         "status": "pending_source",
         "sourceRefs": [],
@@ -1422,13 +1422,13 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
       "rituals": {
         "value": {
           "en": [
-            "Holika Dahan (Choti Holi): Lighting the sacred bonfire on Purnima night with coconut, wheat ears, and mantras",
+            "Holika Dahan (Choti Holi): Light the sacred bonfire during the local Pradosha window after confirming that Bhadra is absent or the fallback applies",
             "Dhulandi: Joyful playing with organic herbal colors (gulal), flower petals, and water",
             "Applying gentle tilak of gulal on elders' feet to seek their blessings",
             "Sharing traditional festive delicacies like Gujiya, Thandai, and Mathri"
           ],
           "hi": [
-            "होलिका दहन: पूर्णिमा की रात उपले, लकड़ी और नवान्न की बालियों के साथ पवित्र होलिका की परिक्रमा व दहन",
+            "होलिका दहन: स्थानीय प्रदोष काल में भद्रा रहित या भद्रा-पुच्छ/भद्रा-पश्चात समय पर पवित्र होलिका की परिक्रमा व दहन",
             "धुलेंडी: प्राकृतिक गुलाल, अबीर और टेसू के फूलों के रंगों से उल्लासपूर्वक होली खेलना",
             "बड़ों के चरणों में गुलाल का टीका लगाकर आशीर्वाद लेना",
             "गुझिया, ठंडाई और पारंपरिक पकवानों का आनंद लेना"
@@ -2619,8 +2619,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
       },
       "significance": {
         "value": {
-          "en": "Narasimha Jayanti, celebrated on Vaishakha Shukla Chaturdashi, marks the twilight manifestation of Lord Narasimha — the half-lion, half-human avatar of Lord Vishnu. He burst forth from a pillar at dusk to slay the demon Hiranyakashipu, fulfilling impossible celestial boons while safeguarding His five-year-old devotee Prahlada. Lord Narasimha embodies supreme cosmic protection, destruction of ego, and unwavering defense of true surrender (Sharanagati).",
-          "hi": "वैशाख मास के शुक्ल पक्ष की चतुर्दशी तिथि को संध्या काल (प्रदोष वेला) में भगवान श्री नृसिंह का प्राकट्य हुआ था। अपने अनन्य भक्त प्रह्लाद के विश्वास की रक्षा करने और अहंकारी हिरण्यकश्यप का संहार करने हेतु भगवान खंभे को चीरकर प्रकट हुए थे। यह पर्व ईश्वर की सर्वव्यापकता, शरणागति और भक्तों की हर संकट से रक्षा का जीवंत प्रमाण है।"
+          "en": "Narasimha Jayanti, observed on Vaishakha Shukla Chaturdashi, marks the twilight manifestation of Lord Narasimha — the half-lion, half-human avatar of Lord Vishnu. He burst forth from a pillar at dusk to slay the demon Hiranyakashipu, fulfilling impossible celestial boons while safeguarding His five-year-old devotee Prahlada. The observance falls on the day the Chaturdashi tithi prevails during sayahna, the final fifth of daytime ending at sunset. Lord Narasimha embodies supreme cosmic protection, destruction of ego, and unwavering defense of true surrender (Sharanagati).",
+          "hi": "वैशाख मास के शुक्ल पक्ष की चतुर्दशी तिथि को संध्या काल में भगवान श्री नृसिंह का प्राकट्य हुआ था। अपने अनन्य भक्त प्रह्लाद के विश्वास की रक्षा करने और अहंकारी हिरण्यकश्यप का संहार करने हेतु भगवान खंभे को चीरकर प्रकट हुए थे। यह पर्व उस दिन मनाया जाता है जब चतुर्दशी सायाह्न, अर्थात सूर्यास्त पर समाप्त होने वाले दिन के अंतिम पंचम भाग, में प्रबल रहे। यह पर्व ईश्वर की सर्वव्यापकता, शरणागति और भक्तों की हर संकट से रक्षा का जीवंत प्रमाण है।"
         },
         "status": "pending_source",
         "sourceRefs": [],
@@ -2632,12 +2632,12 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
         "value": {
           "en": [
             "Fast throughout the day until sunset/dusk (Narasimha manifestation timing)",
-            "Pradosh Kaal Abhishekam with milk, curd, honey, panchamrita, and cool scented waters",
+            "Sayahna Abhishekam near dusk with milk, curd, honey, panchamrita, and cool scented waters",
             "Offering red/yellow flowers, Tulsi leaves, and jaggery water (Panakam) as cooling prasad",
             "Chanting the Narasimha Kavacham and Sri Narasimha Maha-mantra"
           ],
           "hi": [
-            "दिनभर उपवास एवं संध्या समय (गोधूलि वेला) में विशेष पूजन",
+            "दिनभर उपवास एवं सायाह्न के अंतिम पंचम भाग में विशेष पूजन",
             "पंचामृत, शीतल जल और चंदन से भगवान नृसिंह का अभिषेक",
             "लाल पुष्प, तुलसी दल और शीतलता प्रदान करने वाले पनाकम (गुड़-सोंठ-इलायची जल) का भोग",
             "श्री नृसिंह कवच एवं नृसिंह महामंत्र का भावपूर्ण पाठ"
@@ -2652,12 +2652,12 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
       "dos": {
         "value": {
           "en": [
-            "Perform the main puja during twilight (Sandhyakala / sunset)",
+            "Perform the main puja during sayahna, the final fifth of daytime ending at sunset",
             "Cultivate pure humility, unshakeable faith, and fearless surrender like Prahlada",
             "Offer cooling foods like Panakam, curd rice, and fruits"
           ],
           "hi": [
-            "सूर्यास्त के समय गोधूलि वेला में मुख्य आरती और पूजन करें",
+            "सूर्यास्त पर समाप्त होने वाले दिन के अंतिम पंचम भाग, सायाह्न, में मुख्य आरती और पूजन करें",
             "प्रह्लाद के समान निष्काम भक्ति और ईश्वर के प्रति अटूट विश्वास रखें",
             "पनाकम, पंचामृत और मौसमी फलों का नैवेद्य लगाएं"
           ]
@@ -4740,6 +4740,250 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
           "value": {
             "en": "For the protection of these sons of the nation, I have sacrificed my four sons. What does it matter that four have died, when thousands of my spiritual children live on?",
             "hi": "इन देश-कौम के पुत्रों के कल्याण हेतु मैंने अपने चार पुत्र न्योछावर कर दिए। यदि चार शहीद भी हो गए तो क्या हुआ, मेरे हजारों-लाखों खालसा पुत्र आज भी जीवित हैं।"
+          },
+          "status": "pending_source",
+          "sourceRefs": [],
+          "applicability": {
+            "universal": true
+          }
+        }
+      }
+    },
+    {
+      "definitionKey": "sahibzade-elder-shaheedi-diwas",
+      "emoji": "☬",
+      "tradition": "sikh",
+      "name": {
+        "value": {
+          "en": "Elder Sahibzade Shaheedi Diwas",
+          "hi": "बड़े साहिबजादे शहीदी दिवस",
+          "pa": "ਵੱਡੇ ਸਾਹਿਬਜ਼ਾਦੇ ਸ਼ਹੀਦੀ ਦਿਹਾੜਾ"
+        },
+        "status": "pending_source",
+        "sourceRefs": [],
+        "applicability": {
+          "universal": true
+        }
+      },
+      "tagline": {
+        "value": {
+          "en": "Remembering the elder Sahibzade and the Chamkaur Sahib martyrs on 08 Poh",
+          "hi": "०८ पौष को बड़े साहिबजादों और चमकौर साहिब के शहीदों का स्मरण"
+        },
+        "status": "pending_source",
+        "sourceRefs": [],
+        "applicability": {
+          "universal": true
+        }
+      },
+      "significance": {
+        "value": {
+          "en": "This remembrance observes the sacrifice of the elder Sahibzade and the martyrs associated with Chamkaur Sahib. The SGPC sidebar places the observance on 08 Poh.",
+          "hi": "यह स्मरण बड़े साहिबजादों और चमकौर साहिब से जुड़े शहीदों के बलिदान को नमन करता है। SGPC साइडबार में यह observance ०८ पौष को दिया गया है।"
+        },
+        "status": "pending_source",
+        "sourceRefs": [],
+        "applicability": {
+          "universal": true
+        }
+      },
+      "rituals": {
+        "value": {
+          "en": [
+            "Attend or listen to Gurbani Kirtan and Ardas in remembrance",
+            "Reflect on the courage and sacrifice associated with Chamkaur Sahib",
+            "Offer seva or share langar through a Gurdwara or community"
+          ],
+          "hi": [
+            "स्मरण में गुरबाणी कीर्तन और अरदास में सम्मिलित हों",
+            "चमकौर साहिब से जुड़े साहस और बलिदान पर मनन करें",
+            "गुरुद्वारे या समुदाय में सेवा करें अथवा लंगर में सहयोग दें"
+          ]
+        },
+        "status": "pending_source",
+        "sourceRefs": [],
+        "applicability": {
+          "universal": true
+        }
+      },
+      "dos": {
+        "value": {
+          "en": [
+            "Keep the remembrance centered on humility, courage, and seva"
+          ],
+          "hi": [
+            "स्मरण को विनम्रता, साहस और सेवा की भावना से करें"
+          ]
+        },
+        "status": "pending_source",
+        "sourceRefs": [],
+        "applicability": {
+          "universal": true
+        }
+      },
+      "donts": {
+        "value": {
+          "en": [
+            "Do not turn a remembrance observance into spectacle or hostility"
+          ],
+          "hi": [
+            "स्मरण के अवसर को दिखावे या वैर-भाव का रूप न दें"
+          ]
+        },
+        "status": "pending_source",
+        "sourceRefs": [],
+        "applicability": {
+          "universal": true
+        }
+      },
+      "pujaItems": {
+        "value": {
+          "en": [
+            "A clean space for prayer",
+            "Rumalla Sahib",
+            "Karah Parshad or langar seva"
+          ],
+          "hi": [
+            "प्रार्थना के लिए स्वच्छ स्थान",
+            "रुमाला साहिब",
+            "कड़ाह प्रसाद या लंगर सेवा"
+          ]
+        },
+        "status": "pending_source",
+        "sourceRefs": [],
+        "applicability": {
+          "universal": true
+        }
+      },
+      "mantra": {
+        "sanskrit": "ੴ ਸਤਿ ਨਾਮੁ ਕਰਤਾ ਪੁਰਖੁ ਨਿਰਭਉ ਨਿਰਵੈਰੁ ਅਕਾਲ ਮੂਰਤਿ ਅਜੂਨੀ ਸੈਭੰ ਗੁਰ ਪ੍ਰਸਾਦਿ॥",
+        "transliteration": "ik ōaṅkār sat nām kartā purakh nirbhau nirvair akāl mūrat ajūnī saibhaṅg gur prasād",
+        "translation": {
+          "value": {
+            "en": "A widely established opening Sikh affirmation of the One, truth, and the timeless Creator.",
+            "hi": "एक व्यापक रूप से प्रचलित सिख उद्घोष, जो एकत्व, सत्य और कालातीत सृष्टिकर्ता का स्मरण कराता है।"
+          },
+          "status": "pending_source",
+          "sourceRefs": [],
+          "applicability": {
+            "universal": true
+          }
+        }
+      }
+    },
+    {
+      "definitionKey": "sahibzade-younger-shaheedi-diwas",
+      "emoji": "☬",
+      "tradition": "sikh",
+      "name": {
+        "value": {
+          "en": "Younger Sahibzade Shaheedi Diwas",
+          "hi": "छोटे साहिबजादे शहीदी दिवस",
+          "pa": "ਛੋਟੇ ਸਾਹਿਬਜ਼ਾਦੇ ਸ਼ਹੀਦੀ ਦਿਹਾੜਾ"
+        },
+        "status": "pending_source",
+        "sourceRefs": [],
+        "applicability": {
+          "universal": true
+        }
+      },
+      "tagline": {
+        "value": {
+          "en": "Remembering the younger Sahibzade and Mata Gujri Ji on 13 Poh",
+          "hi": "१३ पौष को छोटे साहिबजादों और माता गुजरी जी का स्मरण"
+        },
+        "status": "pending_source",
+        "sourceRefs": [],
+        "applicability": {
+          "universal": true
+        }
+      },
+      "significance": {
+        "value": {
+          "en": "This remembrance observes the sacrifice of the younger Sahibzade and Mata Gujri Ji. The SGPC sidebar places the observance on 13 Poh.",
+          "hi": "यह स्मरण छोटे साहिबजादों और माता गुजरी जी के बलिदान को नमन करता है। SGPC साइडबार में यह observance १३ पौष को दिया गया है।"
+        },
+        "status": "pending_source",
+        "sourceRefs": [],
+        "applicability": {
+          "universal": true
+        }
+      },
+      "rituals": {
+        "value": {
+          "en": [
+            "Attend or listen to Gurbani Kirtan and Ardas in remembrance",
+            "Reflect on steadfastness, compassion, and the courage to uphold faith",
+            "Offer seva or share langar through a Gurdwara or community"
+          ],
+          "hi": [
+            "स्मरण में गुरबाणी कीर्तन और अरदास में सम्मिलित हों",
+            "दृढ़ता, करुणा और धर्म पर अडिग रहने के साहस पर मनन करें",
+            "गुरुद्वारे या समुदाय में सेवा करें अथवा लंगर में सहयोग दें"
+          ]
+        },
+        "status": "pending_source",
+        "sourceRefs": [],
+        "applicability": {
+          "universal": true
+        }
+      },
+      "dos": {
+        "value": {
+          "en": [
+            "Keep the remembrance centered on humility, courage, and seva"
+          ],
+          "hi": [
+            "स्मरण को विनम्रता, साहस और सेवा की भावना से करें"
+          ]
+        },
+        "status": "pending_source",
+        "sourceRefs": [],
+        "applicability": {
+          "universal": true
+        }
+      },
+      "donts": {
+        "value": {
+          "en": [
+            "Do not turn a remembrance observance into spectacle or hostility"
+          ],
+          "hi": [
+            "स्मरण के अवसर को दिखावे या वैर-भाव का रूप न दें"
+          ]
+        },
+        "status": "pending_source",
+        "sourceRefs": [],
+        "applicability": {
+          "universal": true
+        }
+      },
+      "pujaItems": {
+        "value": {
+          "en": [
+            "A clean space for prayer",
+            "Rumalla Sahib",
+            "Karah Parshad or langar seva"
+          ],
+          "hi": [
+            "प्रार्थना के लिए स्वच्छ स्थान",
+            "रुमाला साहिब",
+            "कड़ाह प्रसाद या लंगर सेवा"
+          ]
+        },
+        "status": "pending_source",
+        "sourceRefs": [],
+        "applicability": {
+          "universal": true
+        }
+      },
+      "mantra": {
+        "sanskrit": "ੴ ਸਤਿ ਨਾਮੁ ਕਰਤਾ ਪੁਰਖੁ ਨਿਰਭਉ ਨਿਰਵੈਰੁ ਅਕਾਲ ਮੂਰਤਿ ਅਜੂਨੀ ਸੈਭੰ ਗੁਰ ਪ੍ਰਸਾਦਿ॥",
+        "transliteration": "ik ōaṅkār sat nām kartā purakh nirbhau nirvair akāl mūrat ajūnī saibhaṅg gur prasād",
+        "translation": {
+          "value": {
+            "en": "A widely established opening Sikh affirmation of the One, truth, and the timeless Creator.",
+            "hi": "एक व्यापक रूप से प्रचलित सिख उद्घोष, जो एकत्व, सत्य और कालातीत सृष्टिकर्ता का स्मरण कराता है।"
           },
           "status": "pending_source",
           "sourceRefs": [],
@@ -14723,8 +14967,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
       },
       "tagline": {
         "value": {
-          "en": "The monthly evening fast on the waning fourth tithi breaking only after sighting the moon to overcome crises",
-          "hi": "प्रत्येक मास के कृष्ण पक्ष की चतुर्थी को चंद्रोदय दर्शन के उपरांत पारण — समस्त संकटों से मुक्ति का महाव्रत"
+          "en": "A monthly Krishna Chaturthi fast, broken after local moonrise darshan and Ganesha puja",
+          "hi": "मासिक कृष्ण चतुर्थी का व्रत, स्थानीय चंद्रोदय दर्शन और गणेश पूजा के बाद पारण"
         },
         "status": "pending_source",
         "sourceRefs": [],
@@ -14734,8 +14978,8 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
       },
       "significance": {
         "value": {
-          "en": "Sankashti Chaturthi (also known as Sankat Hara Chaturthi) occurs on the fourth tithi of the waning fortnight (Krishna Paksha Chaturthi) of every Hindu month. \"Sankashti\" means \"deliverance from distress\". The fast is observed with strict discipline throughout the day until the moon rises in the night sky. Devotees offer arghya of milk and water to the rising moon god (Chandra Deva) and then break the fast by worshipping Lord Ganesha with sesame sweets (Tilkut) and modaks, seeking freedom from financial, physical, and familial crises.",
-          "hi": "प्रत्येक मास के कृष्ण पक्ष की चतुर्थी तिथि को संकष्टी चतुर्थी (संकट चौथ) कहा जाता है। \"संकष्टी\" का शाब्दिक अर्थ है — संकटों को हरने वाली। साधक दिनभर निर्जल अथवा फलाहार का व्रत रखते हैं। रात्रि में जब चंद्रमा का उदय होता है, तब चंद्र देव को दूध और जल से अर्घ्य दिया जाता है और भगवान गणेश की पूजा करके तिलकूट (तिल-गुड़) के प्रसाद से व्रत खोला जाता है। जब यह मंगलवार को पड़ती है तो इसे \"अंगारकी चतुर्थी\" कहा जाता है जिसका पुण्य अत्यंत दुर्लभ है।"
+          "en": "Sankashti Chaturthi is the Krishna Paksha Chaturthi observed each lunar month. The date is selected by the tithi present at the user's local moonrise, so the observance time depends on location. Keep the fast through the day, offer arghya after moonrise darshan, perform Ganesha puja, and then break the fast.",
+          "hi": "संकष्टी चतुर्थी हर चंद्र मास की कृष्ण पक्ष चतुर्थी को मनाई जाती है। तिथि का चयन साधक के स्थानीय चंद्रोदय पर होता है, इसलिए समय स्थान के अनुसार बदलता है। दिनभर व्रत रखें, चंद्रोदय दर्शन के बाद अर्घ्य दें, गणेश पूजा करें और फिर व्रत खोलें।"
         },
         "status": "pending_source",
         "sourceRefs": [],
@@ -14747,15 +14991,15 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
         "value": {
           "en": [
             "Day-long fast in prayerful surrender to Lord Ganesha",
-            "Evening puja of Ganesha with Durva grass, red flowers, and Tilkut (sesame-jaggery sweets)",
-            "Waiting for the exact Chandra-udaya (moonrise) time in your local city",
-            "Offering Chandrama Arghya with raw milk and water, followed by partaking of Tilkut prasad to break fast"
+            "Prepare the Ganesha puja and offerings before the local moonrise",
+            "Wait for the exact local moonrise time shown for your location",
+            "Offer Chandrama Arghya after moonrise darshan, perform Ganesha puja, then break the fast"
           ],
           "hi": [
             "दिनभर उपवास रखकर भगवान गणेश के नाम का स्मरण",
-            "सायंकाल भगवान गणेश का दूर्वा, लाल फूल और तिलकूट से विशेष पूजन",
-            "अपने नगर के सटीक चंद्रोदय समय की प्रतीक्षा करना",
-            "चंद्र देव के प्रकट होते ही लोटे में कच्चा दूध व जल भरकर अर्घ्य देना और तिलकूट खाकर व्रत खोलना"
+            "स्थानीय चंद्रोदय से पहले गणेश पूजा और प्रसाद की तैयारी करें",
+            "अपने स्थान के लिए दिखाए गए सटीक चंद्रोदय समय की प्रतीक्षा करें",
+            "चंद्रोदय दर्शन के बाद चंद्र देव को अर्घ्य दें, गणेश पूजा करें और फिर व्रत खोलें"
           ]
         },
         "status": "pending_source",
@@ -14767,12 +15011,12 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
       "dos": {
         "value": {
           "en": [
-            "Check the local moonrise timing in advance and perform Arghya with reverence",
-            "Surrender your deepest anxieties and hardships to Lord Ganesha in silent prayer"
+            "Check the local moonrise timing in advance and plan the fast-breaking ritual after it",
+            "Complete moonrise darshan, Arghya, and Ganesha puja before breaking the fast"
           ],
           "hi": [
-            "स्थानीय चंद्रोदय समय देखकर श्रद्धापूर्वक चंद्रमा को अर्घ्य दें",
-            "अपनी समस्त चिंताओं और संकटों को विघ्नहर्ता के चरणों में समर्पित करें"
+            "स्थानीय चंद्रोदय समय देखकर उसके बाद ही व्रत-पारण की तैयारी करें",
+            "चंद्र दर्शन, अर्घ्य और गणेश पूजा पूरी करके ही व्रत खोलें"
           ]
         },
         "status": "pending_source",
@@ -14784,12 +15028,12 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
       "donts": {
         "value": {
           "en": [
-            "Do not break the fast before the moon has visibly risen and Arghya has been completed",
-            "Avoid negative thoughts, anger, and disputes throughout the day"
+            "Do not break the fast before local moonrise darshan, Arghya, and Ganesha puja",
+            "Do not substitute a different city's moonrise time for your location"
           ],
           "hi": [
-            "चंद्र दर्शन और अर्घ्य से पूर्व भूलकर भी अन्न या भोजन ग्रहण न करें",
-            "क्रोध, विवाद और अशांति से दूर रहें"
+            "स्थानीय चंद्र दर्शन, अर्घ्य और गणेश पूजा से पहले व्रत न खोलें",
+            "अपने स्थान के बजाय किसी दूसरे शहर के चंद्रोदय समय से पारण न करें"
           ]
         },
         "status": "pending_source",
@@ -14801,14 +15045,14 @@ export const FESTIVAL_CONTENT_SNAPSHOT: FestivalContentSnapshot = {
       "pujaItems": {
         "value": {
           "en": [
-            "Tilkut: Roasted white or black sesame seeds pounded with pure jaggery",
+            "Optional North Indian offering: Tilkut made from roasted sesame seeds and jaggery (North Indian regional practice)",
             "Twenty-one Durva grass blades, red flowers, and orange sindoor",
-            "Brass or silver Lota with water and raw milk for Chandra Arghya, ghee lamp"
+            "Brass or silver Lota with water and raw milk for Chandra Arghya, Ganesha puja items, and a ghee lamp"
           ],
           "hi": [
-            "तिलकूट: भुने हुए तिल और गुड़ से बना पावन प्रसाद",
+            "उत्तर भारत की क्षेत्रीय परंपरा में वैकल्पिक प्रसाद: भुने हुए तिल और गुड़ से बना तिलकूट",
             "२१ दूर्वा दल, लाल पुष्प और नारंगी सिंदूर",
-            "चंद्र अर्घ्य हेतु लोटा, कच्चा दूध, जल और शुद्ध घी का दीपक"
+            "चंद्र अर्घ्य हेतु लोटा, कच्चा दूध, जल, गणेश पूजा सामग्री और शुद्ध घी का दीपक"
           ]
         },
         "status": "pending_source",
