@@ -122,7 +122,8 @@ const INITIAL_SETTINGS: SettingsState = {
   wants_family_notifications: true,
   wants_family_remembrance_reminders: true,
   family_remembrance_time: '09:00',
-  wants_brahma_muhurta_reminders: true,
+  // Brahma Muhurta is the one opt-in reminder (founder, 2026-10-11 and 2026-11-12): a missing value must read OFF, as onboarding and the database do.
+  wants_brahma_muhurta_reminders: false,
   wants_evening_reminder: true,
   wants_madhyahn_reminder: true,
   dharm_veer_reminder_enabled: true,

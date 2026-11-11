@@ -359,12 +359,12 @@ Rules:
   calendar-governance-grade: it must come from an explicit, visible, per-
   category choice during onboarding or a dismissible later prompt, never
   a blanket write baked into the persistence payload.
-- Amended 2026-11-12 (founder decision, tiered defaults): a small core tier may be ON by default -- shloka, Japa, festival, vrat and tithi
-  reminders -- but only as visible, pre-selected choices in onboarding that the person can untick, never as a silent write on "Not now" or on
-  completing onboarding without seeing them. Every other category (Brahma Muhurta, mood, sattvic, evening/midday, community, family, Dharm Veer,
-  quiz, Nitya, Sankalpa midpoint, digest) is OFF until the person chooses it. The OS push prompt still never stands in for any category.
-  Backend: migrations `20261112100000` (defaults) and `20261112110000` (Brahma opt-in reset), unapplied until approved. The Native onboarding
-  still has to render the core tier pre-selected before the database default is relied on.
+- Amended 2026-11-12 (founder decision, superseding an earlier core-tier draft): every reminder category may be ON by default EXCEPT
+  Brahma Muhurta, which stays an opt-in. The default is acceptable only because onboarding shows each category as its own visible,
+  pre-selected choice the person can untick and Settings has a toggle for each; it is never a silent write on "Not now" or on completing
+  onboarding without seeing the choices, and the OS push prompt never stands in for any category. Settings' fallback for a missing
+  profile value must read the same way (guard: `__tests__/notification-default-tier.test.ts`). Backend: migrations `20261112100000`
+  (defaults) and `20261112110000` (Brahma opt-in reset), unapplied until approved.
 - Why this rule exists: on 2026-10-26, the backend half of this same defect
   (nine reminder columns backfilled with `WHERE x = false OR x IS NULL`,
   destroying the record of real opt-outs) was recorded in the Shoonaya
