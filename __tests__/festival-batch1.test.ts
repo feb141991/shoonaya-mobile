@@ -164,8 +164,8 @@ const ALL_AUTHORED_SLUGS = [
 ];
 
 describe('Batch 1, 2, 3, 4 & 5 Festival Content & Hero Integration Suite', () => {
-  it('contains all 122 authored festival entries in snapshot', () => {
-    assert.equal(FESTIVAL_CONTENT_SNAPSHOT.festivals.length, 122);
+  it('contains all 123 authored festival entries in snapshot', () => {
+    assert.equal(FESTIVAL_CONTENT_SNAPSHOT.festivals.length, 123);
     for (const slug of ALL_HINDU_SLUGS) {
       const festival = lookupFestivalContent(slug);
       assert.ok(festival, `Expected festival content for "${slug}"`);
