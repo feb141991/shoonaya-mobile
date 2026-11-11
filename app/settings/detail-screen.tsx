@@ -143,7 +143,7 @@ const INITIAL_SETTINGS: SettingsState = {
 // than showing a wrong translation.
 const NOTIFICATION_TOGGLES: { key: keyof SettingsState; label: string; labelHi: string; subtitle: string; subtitleHi: string; disabled?: boolean; requiresAccount?: boolean; badge?: string }[] = [
   { key: 'japa_reminder_enabled', label: 'Japa practice reminder', labelHi: 'जाप अभ्यास रिमाइंडर', subtitle: 'A gentle daily reminder at your chosen time', subtitleHi: 'आपके चुने समय पर एक सरल दैनिक रिमाइंडर', requiresAccount: true },
-  { key: 'quiz_reminder_enabled', label: 'Daily quiz reminders', labelHi: 'दैनिक क्विज़ रिमाइंडर', subtitle: 'Daily quiz challenge at 10:00 AM, plus a 6:00 PM nudge if still unfinished', subtitleHi: 'सुबह 10:00 बजे दैनिक क्विज़ चुनौती, और अधूरा रहने पर शाम 6:00 बजे एक याद दिलाने वाला संदेश', requiresAccount: true },
+  { key: 'quiz_reminder_enabled', label: 'Daily quiz reminders', labelHi: 'दैनिक क्विज़ रिमाइंडर', subtitle: 'Daily quiz challenge at 10:00 AM', subtitleHi: 'सुबह 10:00 बजे दैनिक क्विज़ चुनौती', requiresAccount: true },
   { key: 'wants_shloka_reminders', label: 'Daily wisdom', labelHi: 'दैनिक ज्ञान', subtitle: 'Your daily shloka & reflection', subtitleHi: 'आपका दैनिक श्लोक व चिंतन' },
   { key: 'wants_nitya_reminders', label: 'Nitya reminders', labelHi: 'नित्य रिमाइंडर', subtitle: 'Morning sadhana nudges', subtitleHi: 'सुबह की साधना के लिए याद दिलाने वाले संदेश' },
   { key: 'wants_brahma_muhurta_reminders', label: 'Brahma Muhurta', labelHi: 'ब्रह्म मुहूर्त', subtitle: 'A pre-dawn reminder about 1½ hours before sunrise at your saved location. It arrives at night.', subtitleHi: 'आपके सहेजे गए स्थान पर सूर्योदय से लगभग 1½ घंटे पहले, तड़के का एक रिमाइंडर। यह रात में आता है।', requiresAccount: true },
@@ -1306,7 +1306,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                   {item.key === 'quiz_reminder_enabled' && !isGuest && settings.quiz_reminder_enabled ? (
                     <ReminderTimePicker
                       label="Quiz-ready reminder time"
-                      hint="Uses your profile timezone. Choose 7:00 AM–3:00 PM. If the quiz is still unfinished, one follow-up is planned for 6:00 PM; quiet hours and the daily notification limit still apply."
+                      hint="Uses your profile timezone. Choose 7:00 AM–3:00 PM; quiet hours and the daily notification limit still apply."
                       value={settings.quiz_reminder_time}
                       fallback={INITIAL_SETTINGS.quiz_reminder_time}
                       min={QUIZ_REMINDER_EARLIEST}
