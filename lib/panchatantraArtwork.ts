@@ -107,6 +107,7 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-passion-and-owl': require('@/assets/panchatantra/passion-and-owl-1.webp'),
   'panchatantra-uglys-trust-abused': require('@/assets/panchatantra/uglys-trust-abused-1.webp'),
   'panchatantra-lion-and-the-carpenter': require('@/assets/panchatantra/lion-and-the-carpenter-1.webp'),
+  'panchatantra-plover-who-fought-the-ocean': require('@/assets/panchatantra/plover-who-fought-the-ocean-1.webp'),
 };
 
 /**
@@ -819,6 +820,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/lion-and-the-carpenter-4.webp'),
     require('@/assets/panchatantra/lion-and-the-carpenter-5.webp'),
     require('@/assets/panchatantra/lion-and-the-carpenter-6.webp'),
+  ],
+  'panchatantra-plover-who-fought-the-ocean': [
+    require('@/assets/panchatantra/plover-who-fought-the-ocean-1.webp'),
+    require('@/assets/panchatantra/plover-who-fought-the-ocean-2.webp'),
+    require('@/assets/panchatantra/plover-who-fought-the-ocean-3.webp'),
+    require('@/assets/panchatantra/plover-who-fought-the-ocean-4.webp'),
+    require('@/assets/panchatantra/plover-who-fought-the-ocean-5.webp'),
+    require('@/assets/panchatantra/plover-who-fought-the-ocean-6.webp'),
   ],
 };
 
