@@ -67,6 +67,8 @@ export type SettingsFields = {
   consent_activity_personalization: boolean;
   // Optional for schema-version-2 envelopes written before product analytics consent existed.
   consent_product_analytics?: boolean;
+  // Optional: "Help improve reminders". Cached envelopes from before it existed do not carry it; it reads as off.
+  consent_notification_taps?: boolean;
 };
 
 /**

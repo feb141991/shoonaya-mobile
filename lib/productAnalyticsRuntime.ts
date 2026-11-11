@@ -3,7 +3,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiFetch } from '@/lib/api';
 import { configureNativeAnalytics, deleteNativeAnalyticsHistory, setNativeAnalyticsEnabled, setNativePracticeAnalyticsEnabled, type AnalyticsEventName } from '@/lib/analytics';
 import { APP_VERSION } from '@/lib/appVersion';
-import { clearNotificationTapQueue } from '@/lib/notificationTapTracking';
 import { Platform } from 'react-native';
 
 const consentKey = (userId: string) => `shoonaya:product_analytics_consent:${userId}`;
@@ -103,8 +102,6 @@ export async function revokePracticeAnalyticsConsent(userId: string): Promise<vo
   ++initializationGeneration;
   if (activeUserId === userId) await setNativePracticeAnalyticsEnabled(false);
   await AsyncStorage.setItem(practiceConsentKey(userId), 'false').catch(() => {});
-  // Queued taps may be about practice notifications; the queue does not remember which, so it is emptied.
-  await clearNotificationTapQueue(userId);
 }
 
 /** Immediately stop local collection when the user turns consent off, even if sync must retry. */
@@ -116,6 +113,4 @@ export async function revokeProductAnalyticsConsent(userId: string): Promise<voi
   // The deletion is explicitly bound to userId and remains safe if the active
   // account changes while local storage is being updated.
   await deleteNativeAnalyticsHistory(userId);
-  // Taps not yet reported are part of what was withdrawn.
-  await clearNotificationTapQueue(userId);
 }

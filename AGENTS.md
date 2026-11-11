@@ -503,9 +503,14 @@ Rules:
   `data.type` is used only to avoid queueing what the server would refuse, and is never sent. The upload body is exactly six fields and never carries an account id.
 - The queue lives in user-scoped storage (`USER_SCOPED_NAMES.notificationTapQueue`), so sign-out and account switches purge it, and a tap is never filed under an
   account that signed in while storage was being read. Never under a fixed AsyncStorage key.
-- Nothing is queued or sent unless this device's product-measurement consent is on (`isNativeAnalyticsEnabled`), and a practice-revealing or unknown type also
-  needs the practice setting. Turning either off empties the queue where it is turned off. The server decides again and its answer wins: `consentRequired` empties
-  the queue; `unmatched`, `religiousConsentRequired` and a rejected request remove that one tap; a refused sign-in, a missing route, a rate limit or a server error keep it.
+- Nothing is queued or sent unless the person turned on "Help improve reminders" (`profiles.consent_notification_taps`, default off;
+  `lib/notificationTapConsent.ts`). It is its own switch, never pre-selected and never inferred from "Share product usage data",
+  "Tradition-aware personalization" or any reminder choice, because practice reminders can reflect religious practice. It is offered in three
+  places only: an unticked switch at the end of the onboarding notifications step (written after the profile saves, so it can never fail
+  onboarding), Settings, and a one-time card in the notifications inbox (`components/notifications/TapConsentCard.tsx`, rules in
+  `lib/notificationTapPrompt.ts`: after a week, only while the server confirms off, "Not now" is remembered, at most twice). A failed
+  read is `unavailable`, not off: nothing is shown and this device's copy is left as it was. Turning it off closes the gate, empties the
+  queue and (backend trigger) deletes the stored taps. The server decides again on every upload and its answer wins.
 - Uploading follows section 16: after the app is ready and settled in the foreground, never at the background edge, and a tap leaves the queue only when the
   server acknowledges it. The event id is derived from the notification response, so a response replayed after a restart is recorded once.
 - Why this rule exists: on 2026-11-07 the notification audit found nothing recorded that any notification was tapped, so no change to cadence or wording could be judged.

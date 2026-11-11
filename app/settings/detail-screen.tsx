@@ -78,6 +78,8 @@ import { ReminderTimePicker } from '@/components/settings/ReminderTimePicker';
 import { accountDeletion, readDeletionReasons, useAccountDeletionStatus } from '@/lib/accountDeletion';
 import { accountDeletionCopy, reviewedDeletionLanguage } from '@/lib/accountDeletionCopy';
 import { getGreetingPick } from '@/lib/greetingPreference';
+import { applyNotificationTapConsent, readServerNotificationTapConsent } from '@/lib/notificationTapConsent';
+import { revokeNotificationTapConsent } from '@/lib/notificationTapTracking';
 import { applyPracticeAnalyticsConsent, applyProductAnalyticsConsent, revokePracticeAnalyticsConsent, revokeProductAnalyticsConsent } from '@/lib/productAnalyticsRuntime';
 import { classifyFailure, describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
 
@@ -135,6 +137,8 @@ const INITIAL_SETTINGS: SettingsState = {
   consent_religious_data: false,
   consent_activity_personalization: false,
   consent_product_analytics: false,
+  // "Help improve reminders": off until the person turns it on; never inferred from any other switch.
+  consent_notification_taps: false,
 };
 
 // labelHi/subtitleHi mirror OnboardingWelcomeScreen.tsx's label/labelHi
@@ -244,6 +248,7 @@ function toSettingsState(value: Partial<SettingsState> | null | undefined): Sett
     consent_religious_data: value?.consent_religious_data ?? INITIAL_SETTINGS.consent_religious_data,
     consent_activity_personalization: value?.consent_activity_personalization ?? INITIAL_SETTINGS.consent_activity_personalization,
     consent_product_analytics: value?.consent_product_analytics ?? INITIAL_SETTINGS.consent_product_analytics,
+    consent_notification_taps: value?.consent_notification_taps ?? INITIAL_SETTINGS.consent_notification_taps,
   };
 }
 
@@ -411,6 +416,8 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   const [familyRemembranceSchemaReady, setFamilyRemembranceSchemaReady] = useState(false);
   const [brahmaMuhurtaSchemaReady, setBrahmaMuhurtaSchemaReady] = useState(false);
   const [productAnalyticsSchemaReady, setProductAnalyticsSchemaReady] = useState(false);
+  // False until a successful read of consent_notification_taps: the switch stays unavailable rather than guessing "off".
+  const [tapConsentReady, setTapConsentReady] = useState(false);
   // wants_evening_reminder/wants_madhyahn_reminder/dharm_veer_reminder_enabled already
   // existed; wants_mood_reminders/wants_sattvic_reminders are new. All five ship in one
   // migration together, so one combined flag (not five) is enough -- AGENTS.md rule 6,
@@ -500,6 +507,10 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
           const persistedSettings = json?.persisted ?? write.fields;
           if ('consent_product_analytics' in persistedSettings) {
             await applyProductAnalyticsConsent(identity.userId, persistedSettings.consent_product_analytics === true);
+          }
+          if (!isCurrent()) return;
+          if ('consent_notification_taps' in persistedSettings) {
+            await applyNotificationTapConsent(identity.userId, persistedSettings.consent_notification_taps === true);
           }
           if (!isCurrent()) return;
           if ('consent_religious_data' in persistedSettings) {
@@ -629,6 +640,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     setFamilyRemembranceSchemaReady(false);
     setBrahmaMuhurtaSchemaReady(false);
     setProductAnalyticsSchemaReady(false);
+    setTapConsentReady(false);
     setReminderCoverageGapSchemaReady(false);
     const profileSettingsPromise = (async () => {
       const baseColumns = 'tradition, japa_reminder_enabled, japa_reminder_time, quiz_reminder_enabled, quiz_reminder_time, wants_festival_reminders, wants_vrat_reminders, wants_tithi_reminders, observance_reminder_lead_days, observance_reminder_time, wants_shloka_reminders, wants_nitya_reminders, wants_sankalpa_midpoint_reminders, wants_community_notifications, wants_family_notifications, app_language, transliteration_language, meaning_language, consent_religious_data, consent_activity_personalization';
@@ -667,10 +679,11 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       return { ...legacy, familyRemembranceSchemaReady: false, brahmaMuhurtaSchemaReady: false, productAnalyticsSchemaReady: false, reminderCoverageGapSchemaReady: false };
     })();
 
-    const [profileRes, cached, localTheme] = await Promise.all([
+    const [profileRes, cached, localTheme, tapConsent] = await Promise.all([
       profileSettingsPromise,
       readSettingsCache(identity),
       AsyncStorage.getItem(THEME_STORAGE_KEY),
+      readServerNotificationTapConsent(appIdentity.userId),
     ]);
     if (!lease.isCurrent()) return;
 
@@ -685,7 +698,8 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     setReminderCoverageGapSchemaReady(profileRes.reminderCoverageGapSchemaReady);
     const profileRow = (profileRes.data ?? null) as (Partial<SettingsState> & { tradition?: string | null }) | null;
     setProfileTradition(profileRow?.tradition || 'hindu');
-    const remote = toSettingsState(profileRow ?? INITIAL_SETTINGS);
+    setTapConsentReady(tapConsent !== 'unavailable');
+    const remote = { ...toSettingsState(profileRow ?? INITIAL_SETTINGS), consent_notification_taps: tapConsent === 'on' };
     const activePending = writeCoordinator.getPending();
     const pending = activePending ? [activePending] : (cached?.pendingOperations ?? []).filter((op) => op.status === 'pending' || op.status === 'failed');
     const merged = mergeServerWithPending(remote, pending);
@@ -700,6 +714,11 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     if (!isCurrentRefresh()) return;
     await applyPracticeAnalyticsConsent(appIdentity.userId, consent.practice);
     if (!isCurrentRefresh()) return;
+    // Only a successful read changes this device's copy; an unreadable value leaves it as it was. A withdrawal still waiting to be sent counts as off.
+    if (tapConsent !== 'unavailable') {
+      await applyNotificationTapConsent(appIdentity.userId, tapConsent === 'on' && merged.consent_notification_taps === true);
+      if (!isCurrentRefresh()) return;
+    }
     await writeCoordinator.store(pending[0] ?? null, async () => {
       if (!isCurrentRefresh()) return;
       await writeSettingsCache({
@@ -835,6 +854,9 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     }
     if (changedFields.consent_religious_data === false) {
       void revokePracticeAnalyticsConsent(identity.userId);
+    }
+    if (changedFields.consent_notification_taps === false) {
+      void revokeNotificationTapConsent(identity.userId);
     }
 
     settingsRef.current = { ...settingsRef.current, ...changedFields };
@@ -1614,6 +1636,19 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                 value={settings.consent_product_analytics === true}
                 disabled={isGuest || !productAnalyticsSchemaReady}
                 onChange={(value) => { void persistSettings({ ...settings, consent_product_analytics: value }); }}
+                theme={theme}
+              />
+              <View style={{ height: 1, backgroundColor: theme.borderSoft }} />
+              <ToggleRow
+                label="Help improve reminders"
+                subtitle={isGuest
+                  ? 'Sign in to save this choice to your account.'
+                  : tapConsentReady
+                    ? 'Optional. When on, we record when you tap a reminder we sent (which reminder, when, and your app version), linked to your account, for up to 90 days. This includes practice reminders such as japa, quiz and festivals, which can reflect your religious practice. We never record the text or what you read or wrote. Turning it off deletes these records.'
+                    : 'Available after the app and service are updated.'}
+                value={settings.consent_notification_taps === true}
+                disabled={isGuest || !tapConsentReady}
+                onChange={(value) => { void persistSettings({ ...settings, consent_notification_taps: value }); }}
                 theme={theme}
               />
               {!isGuest ? (

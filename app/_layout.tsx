@@ -124,6 +124,7 @@ import {
 import { setAppIdentity, getAppIdentity, useAppIdentity } from '@/lib/appIdentity';
 import { flushNotificationTaps, recordDeliveredNotificationTap } from '@/lib/notificationTapTracking';
 import { initializeProductAnalytics } from '@/lib/productAnalyticsRuntime';
+import { initializeNotificationTapConsent } from '@/lib/notificationTapConsent';
 import { trackAnalyticsEvent } from '@/lib/analytics';
 import { accountDeletion } from '@/lib/accountDeletion';
 import { clearAllReaderPrefs } from '@/lib/readerPrefs';
@@ -340,7 +341,7 @@ function RootLayout() {
   useEffect(() => {
     if (!startupRouteReady || deletionIdentity.kind === 'loading') return;
     const userId = deletionIdentity.kind === 'authenticated' ? deletionIdentity.userId : null;
-    void initializeProductAnalytics(userId).then(() => {
+    void Promise.all([initializeProductAnalytics(userId), initializeNotificationTapConsent(userId)]).then(() => {
       // The consent flags are known now: report any tap queued before they were.
       if (userId) void flushNotificationTaps();
       const currentIdentity = getAppIdentity();

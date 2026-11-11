@@ -505,15 +505,16 @@ test('the root layout counts a delivered tap and retries the queue with the othe
   // retried in the settled, foreground flush (AGENTS section 16), not at the background edge
   const settled = layout.slice(layout.indexOf('const scheduleFlush'), layout.indexOf('if (startupRouteReady && AppState.currentState === \'active\') scheduleFlush();'));
   assert.match(settled, /void flushNotificationTaps\(\)/);
-  assert.match(layout, /initializeProductAnalytics\(userId\)\.then\(\(\) => \{[\s\S]{0,200}flushNotificationTaps\(\)/);
+  assert.match(layout, /initializeNotificationTapConsent\(userId\)\]\)\.then\(\(\) => \{[\s\S]{0,200}flushNotificationTaps\(\)/);
 });
 
-test('turning product measurement or the practice setting off empties the queue', () => {
+test('withdrawing "Help improve reminders" empties the queue; product usage and practice settings are unrelated to it', () => {
   const runtime = read('lib/productAnalyticsRuntime.ts');
-  const practice = runtime.slice(runtime.indexOf('export async function revokePracticeAnalyticsConsent'), runtime.indexOf('export async function revokeProductAnalyticsConsent'));
-  const product = runtime.slice(runtime.indexOf('export async function revokeProductAnalyticsConsent'));
-  assert.match(practice, /clearNotificationTapQueue\(userId\)/);
-  assert.match(product, /clearNotificationTapQueue\(userId\)/);
+  assert.doesNotMatch(runtime, /clearNotificationTapQueue/, 'taps no longer depend on the product-usage or practice switches');
+  const tracking = read('lib/notificationTapTracking.ts');
+  const revoke = tracking.slice(tracking.indexOf('export async function revokeNotificationTapConsent'));
+  assert.match(revoke, /closeNotificationTapConsent\(userId\)/);
+  assert.match(revoke, /clearNotificationTapQueue\(userId\)/);
 });
 
 test('the queue is user-scoped, so sign-out and account switches purge it', () => {
@@ -524,10 +525,10 @@ test('the queue is user-scoped, so sign-out and account switches purge it', () =
   assert.doesNotMatch(runtime, /AsyncStorage/, 'never under a fixed AsyncStorage key');
 });
 
-test('the runtime reads consent from the analytics gate, uploads to one route as the signed-in account, and never at the background edge', () => {
+test('the runtime reads consent from the dedicated tap consent, uploads to one route as the signed-in account, and never at the background edge', () => {
   const runtime = read('lib/notificationTapTracking.ts');
-  assert.match(runtime, /analytics: isNativeAnalyticsEnabled\(\)/);
-  assert.match(runtime, /practice: isNativePracticeAnalyticsEnabled\(\)/);
+  assert.match(runtime, /analytics: isNotificationTapConsentEnabled\(\)/);
+  assert.doesNotMatch(runtime, /isNativeAnalyticsEnabled|isNativePracticeAnalyticsEnabled/, 'not the product-usage gate');
   assert.match(runtime, /apiFetch\(TAP_UPLOAD_PATH,[\s\S]{0,120}expectedUserId: userId/);
   assert.match(runtime, /AppState\.currentState !== 'active'/);
   assert.equal(read('lib/notificationTapQueue.ts').includes("'/api/native/notification-taps'"), true);

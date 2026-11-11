@@ -34,6 +34,7 @@ import { AI_CHAT_TIMEOUT_MS } from '@/lib/api-policy';
 import { isFetchCancelled } from '@/lib/fetch-error';
 import { supabase } from '@/lib/supabase';
 import { captureAppIdentity, getAppIdentity } from '@/lib/appIdentity';
+import { applyNotificationTapConsent, saveNotificationTapConsent } from '@/lib/notificationTapConsent';
 import { USER_SCOPED_NAMES, writeUserScoped } from '@/lib/userScopedStorage';
 import { beginSanctuaryPreparation } from '@/lib/sanctuaryPreparation';
 import { identityChanged } from '@/lib/routeOpenAttribution';
@@ -284,6 +285,9 @@ export default function OnboardingScreen() {
   // Optional email updates: off unless the person turns it on, and deliberately not kept in the onboarding
   // draft, so a resumed session never starts from a remembered "yes".
   const [marketingOptIn, setMarketingOptIn] = useState(false);
+  // "Help improve reminders": never pre-selected, never kept in the draft, and sent only after the profile is saved (it needs the
+  // newer backend column; a failure here must never fail onboarding). AGENTS.md section 28.
+  const [tapConsentOptIn, setTapConsentOptIn] = useState(false);
   const [notificationsDenied, setNotificationsDenied] = useState(false);
   const [notificationsCanAskAgain, setNotificationsCanAskAgain] = useState(true);
   const [requestingNotifications, setRequestingNotifications] = useState(false);
@@ -851,6 +855,9 @@ export default function OnboardingScreen() {
 
       if (pushEligible) {
         void registerPushToken(user.id);
+      }
+      if (tapConsentOptIn) {
+        void saveNotificationTapConsent(user.id, true).then((saved) => (saved ? applyNotificationTapConsent(user.id, true) : undefined)).catch(() => undefined);
       }
 
       await clearOnboardingDraft(user.id);
@@ -1878,6 +1885,45 @@ export default function OnboardingScreen() {
               <Switch
                 value={marketingOptIn}
                 onValueChange={setMarketingOptIn}
+                trackColor={{ true: accent }}
+                pointerEvents="none"
+                accessible={false}
+                importantForAccessibility="no-hide-descendants"
+              />
+            </Pressable>
+            <Pressable
+              onPress={() => setTapConsentOptIn((value) => !value)}
+              accessibilityRole="switch"
+              accessibilityState={{ checked: tapConsentOptIn }}
+              accessibilityLabel={translated('Help improve reminders', 'स्मरण बेहतर बनाने में मदद करें')}
+              accessibilityHint={translated('Optional. Off unless you turn it on.', 'वैकल्पिक। आप चालू न करें तो बंद रहेगा।')}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 12,
+                minHeight: 56,
+                borderRadius: RADII.xl,
+                borderWidth: 1,
+                borderColor: border,
+                backgroundColor: cardBg,
+                paddingVertical: 12,
+                paddingHorizontal: 16,
+              }}
+            >
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 14, lineHeight: isHindi ? 21 : undefined, color: text }}>
+                  {translated('Help improve reminders', 'स्मरण बेहतर बनाने में मदद करें')}
+                </Text>
+                <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 12, lineHeight: 18, color: dim }}>
+                  {translated(
+                    'Optional. Lets us see which reminders you tap (which one, when, your app version) so we can send fewer that do not help. This includes practice reminders, which can reflect your religious practice. We never record what you read or wrote. Turn it off any time in Settings and these records are deleted.',
+                    'वैकल्पिक। हम देख सकेंगे कि आप कौन-से स्मरण खोलते हैं (कौन-सा, कब, ऐप संस्करण), ताकि कम और अधिक उपयोगी स्मरण भेजें। इसमें साधना के स्मरण भी शामिल हैं, जो आपकी धार्मिक साधना दर्शा सकते हैं। आपने क्या पढ़ा या लिखा, यह कभी दर्ज नहीं होता। सेटिंग्स में कभी भी बंद करें, ये रिकॉर्ड हटा दिए जाएँगे।'
+                  )}
+                </Text>
+              </View>
+              <Switch
+                value={tapConsentOptIn}
+                onValueChange={setTapConsentOptIn}
                 trackColor={{ true: accent }}
                 pointerEvents="none"
                 accessible={false}

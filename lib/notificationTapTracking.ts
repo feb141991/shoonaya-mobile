@@ -1,9 +1,9 @@
 import { AppState, Platform } from 'react-native';
 
-import { isNativeAnalyticsEnabled, isNativePracticeAnalyticsEnabled } from '@/lib/analytics';
 import { apiFetch } from '@/lib/api';
 import { APP_VERSION } from '@/lib/appVersion';
 import { getAppIdentity } from '@/lib/appIdentity';
+import { closeNotificationTapConsent, isNotificationTapConsentEnabled } from '@/lib/notificationTapConsent';
 import type { PendingNotificationTap } from '@/lib/notificationTap';
 import {
   clearTapQueue,
@@ -20,7 +20,7 @@ import { readUserScoped, USER_SCOPED_NAMES, writeUserScoped } from '@/lib/userSc
  *
  * A tap is counted when it is DELIVERED (lib/notificationTap.ts), because only then is the person signed in and the
  * app interactive. It is queued under the signed-in account, in storage that sign-out and account switches purge, and
- * only if this device's product-measurement consent is on. It is uploaded after a short settle, never at the
+ * only if the person turned on "Help improve reminders" (separate from product usage data). It is uploaded after a short settle, never at the
  * background edge, and removed from the queue only when the server acknowledges it.
  *
  * Nothing here can make a tap, a notification or the app misbehave: every entry point swallows its own failures.
@@ -36,7 +36,9 @@ function deps(): TapQueueDeps {
   return {
     now: () => Date.now(),
     getIdentity: getAppIdentity,
-    consent: () => ({ analytics: isNativeAnalyticsEnabled(), practice: isNativePracticeAnalyticsEnabled() }),
+    // One consent covers every type: "Help improve reminders" (lib/notificationTapConsent.ts). `practice` is always true because
+    // the server no longer treats practice notifications differently; the field stays so the queue module keeps its shape.
+    consent: () => ({ analytics: isNotificationTapConsentEnabled(), practice: true }),
     readQueue: (identity) => readUserScoped(identity, USER_SCOPED_NAMES.notificationTapQueue),
     writeQueue: (identity, value) => writeUserScoped(identity, USER_SCOPED_NAMES.notificationTapQueue, value),
     post: (userId, body) => apiFetch(TAP_UPLOAD_PATH, {
@@ -74,7 +76,16 @@ export function recordDeliveredNotificationTap(tap: PendingNotificationTap): voi
   }
 }
 
-/** Deletes queued taps when the person turns product measurement (or the practice setting) off. */
+/** Deletes queued taps (the choice was withdrawn, or the account changed). */
 export function clearNotificationTapQueue(userId: string): Promise<void> {
   return runner.run(() => clearTapQueue(deps(), userId)).then(() => undefined, () => undefined);
+}
+
+/**
+ * Withdrawing "Help improve reminders": the gate closes at once, taps not yet reported are deleted here, and the server deletes
+ * the ones it already holds when the profile write lands (backend trigger purge_notification_taps_on_consent_change).
+ */
+export async function revokeNotificationTapConsent(userId: string): Promise<void> {
+  await closeNotificationTapConsent(userId);
+  await clearNotificationTapQueue(userId);
 }

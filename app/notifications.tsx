@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { TapConsentCard } from '@/components/notifications/TapConsentCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { BackButton } from '@/components/ui/BackButton';
 import { PressableSurface } from '@/components/ui/PressableSurface';
@@ -563,6 +564,8 @@ export default function NotificationsScreen() {
             <Feather name="settings" size={18} color={theme.dim} />
           </PressableSurface>
         </View>
+
+        <TapConsentCard theme={{ text: theme.text, dim: theme.dim }} />
 
         {/* Explicit failure state for the outbox -- never an indefinite
             spinner or a silently-dropped mutation past the last retry. */}
