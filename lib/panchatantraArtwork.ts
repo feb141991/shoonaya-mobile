@@ -109,6 +109,7 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-lion-and-the-carpenter': require('@/assets/panchatantra/lion-and-the-carpenter-1.webp'),
   'panchatantra-plover-who-fought-the-ocean': require('@/assets/panchatantra/plover-who-fought-the-ocean-1.webp'),
   'panchatantra-shrewd-old-gander': require('@/assets/panchatantra/shrewd-old-gander-1.webp'),
+  'panchatantra-lion-and-the-ram': require('@/assets/panchatantra/lion-and-the-ram-1.webp'),
 };
 
 /**
@@ -837,6 +838,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/shrewd-old-gander-4.webp'),
     require('@/assets/panchatantra/shrewd-old-gander-5.webp'),
     require('@/assets/panchatantra/shrewd-old-gander-6.webp'),
+  ],
+  'panchatantra-lion-and-the-ram': [
+    require('@/assets/panchatantra/lion-and-the-ram-1.webp'),
+    require('@/assets/panchatantra/lion-and-the-ram-2.webp'),
+    require('@/assets/panchatantra/lion-and-the-ram-3.webp'),
+    require('@/assets/panchatantra/lion-and-the-ram-4.webp'),
+    require('@/assets/panchatantra/lion-and-the-ram-5.webp'),
+    require('@/assets/panchatantra/lion-and-the-ram-6.webp'),
   ],
 };
 
