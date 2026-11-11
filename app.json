@@ -167,7 +167,9 @@
             { "scheme": "https", "host": "www.shoonaya.com", "pathPrefix": "/about" },
             { "scheme": "https", "host": "shoonaya.com", "pathPrefix": "/about" },
             { "scheme": "https", "host": "www.shoonaya.com", "pathPrefix": "/guest" },
-            { "scheme": "https", "host": "shoonaya.com", "pathPrefix": "/guest" }
+            { "scheme": "https", "host": "shoonaya.com", "pathPrefix": "/guest" },
+            { "scheme": "https", "host": "www.shoonaya.com", "pathPrefix": "/stories" },
+            { "scheme": "https", "host": "shoonaya.com", "pathPrefix": "/stories" }
           ],
           "category": ["BROWSABLE", "DEFAULT"]
         }

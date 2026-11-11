@@ -130,6 +130,12 @@ assertEqual('resolveNativeRoute("/features/family-lineage")', resolveNativeRoute
 assertEqual('resolveNativeRoute("/features")', resolveNativeRoute('/features'), '/(tabs)');
 assertEqual('resolveNativeRoute("/about")', resolveNativeRoute('/about'), '/settings/about');
 assertEqual('resolveNativeRoute("/guest")', resolveNativeRoute('/guest'), '/(tabs)');
+assertEqual('resolveNativeRoute("/stories")', resolveNativeRoute('/stories'), '/bhakti/katha?view=panchatantra');
+assertEqual('resolveNativeRoute("/stories/panchatantra")', resolveNativeRoute('/stories/panchatantra'), '/bhakti/katha?view=panchatantra');
+assertEqual('resolveNativeRoute("/stories/panchatantra/crane-and-crab")', resolveNativeRoute('/stories/panchatantra/crane-and-crab'), '/bhakti/katha/panchatantra-crane-and-crab');
+assertEqual('resolveNativeRoute("/stories/panchatantra/crane-and-crab/hi")', resolveNativeRoute('/stories/panchatantra/crane-and-crab/hi'), '/bhakti/katha/panchatantra-crane-and-crab');
+assertEqual('resolveNativeRoute("/stories/panchatantra/dharmabuddhi-papabuddhi")', resolveNativeRoute('/stories/panchatantra/dharmabuddhi-papabuddhi'), '/bhakti/katha/panchatantra-dharmabuddhi-papabuddhi');
+assertEqual('resolveNativeRoute("/stories/panchatantra/dharmabuddhi-papabuddhi/hi")', resolveNativeRoute('/stories/panchatantra/dharmabuddhi-papabuddhi/hi'), '/bhakti/katha/panchatantra-dharmabuddhi-papabuddhi');
 
 console.log(allPassed ? '\nAll assertions passed.' : '\nSome assertions FAILED.');
 process.exit(allPassed ? 0 : 1);
