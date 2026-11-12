@@ -22,6 +22,12 @@ export const USER_SCOPED_NAMES = {
   vratMode: 'vrat_mode',
   vratSankalpa: 'vrat_sankalpa',
   vratRead: 'vrat_read',
+  /** Notification taps waiting to be reported (lib/notificationTapQueue.ts). Keys only; no message text. */
+  notificationTapQueue: 'notification_tap_queue_v1',
+  /** This device's copy of the "Help improve reminders" choice ('true'/'false'); the server's value wins (lib/notificationTapConsent.ts). */
+  notificationTapConsent: 'notification_tap_consent_v1',
+  /** When the one-time "Help improve reminders" card may be shown and how many times it was answered "Not now" (lib/notificationTapPrompt.ts). */
+  notificationTapPrompt: 'notification_tap_prompt_v1',
 } as const;
 
 /**

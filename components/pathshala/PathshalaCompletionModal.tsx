@@ -10,7 +10,7 @@ import {
 import Feather from '@expo/vector-icons/Feather';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { COLORS, FONTS, SHADOWS, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, OVERLAYS, COLORS, FONTS, SHADOWS, themeColor } from '@/lib/constants';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 
@@ -100,7 +100,7 @@ export function PathshalaCompletionModal({
           style={[
             styles.card,
             {
-              backgroundColor: isDark ? 'rgba(24, 20, 16, 0.96)' : 'rgba(255, 252, 245, 0.98)',
+              backgroundColor: isDark ? FEATURE_COLORS.pathshalaCompletionModal.surfaceDark : FEATURE_COLORS.pathshalaCompletionModal.surfaceLight,
               borderColor: theme.premiumBorder,
               boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
             },
@@ -128,16 +128,16 @@ export function PathshalaCompletionModal({
           {/* Rewards & Milestones Badges */}
           <View style={styles.badgesRow}>
             {karmaEarned > 0 ? (
-              <View style={[styles.badge, { backgroundColor: isDark ? 'rgba(197,160,89,0.18)' : 'rgba(197,160,89,0.12)', borderColor: 'rgba(197,160,89,0.4)' }]}>
+              <View style={[styles.badge, { backgroundColor: isDark ? OVERLAYS.gold[0.18] : OVERLAYS.gold[0.12], borderColor: OVERLAYS.gold[0.4] }]}>
                 <Feather name="star" size={13} color={theme.brand} />
                 <Text style={[styles.badgeText, { color: theme.brand }]}>+{karmaEarned} Karma</Text>
               </View>
             ) : null}
 
             {dailySadhanaUpdated ? (
-              <View style={[styles.badge, { backgroundColor: isDark ? 'rgba(46,125,50,0.20)' : 'rgba(46,125,50,0.12)', borderColor: 'rgba(46,125,50,0.35)' }]}>
-                <Feather name="check" size={13} color={isDark ? '#81C784' : '#2E7D32'} />
-                <Text style={[styles.badgeText, { color: isDark ? '#81C784' : '#2E7D32' }]}>Sadhana Done</Text>
+              <View style={[styles.badge, { backgroundColor: isDark ? FEATURE_COLORS.pathshalaCompletionModal.badgeSurfaceDark : FEATURE_COLORS.pathshalaCompletionModal.badgeSurfaceLight, borderColor: FEATURE_COLORS.pathshalaCompletionModal.badgeBorder }]}>
+                <Feather name="check" size={13} color={isDark ? FEATURE_COLORS.pathshalaCompletionModal.checkTextDark : FEATURE_COLORS.pathshalaCompletionModal.checkTextLight} />
+                <Text style={[styles.badgeText, { color: isDark ? FEATURE_COLORS.pathshalaCompletionModal.checkTextDark : FEATURE_COLORS.pathshalaCompletionModal.checkTextLight }]}>Sadhana Done</Text>
               </View>
             ) : null}
 
@@ -147,7 +147,7 @@ export function PathshalaCompletionModal({
           </View>
 
           {/* Meditative Contemplation Reflection */}
-          <View style={[styles.reflectionCard, { backgroundColor: isDark ? 'rgba(18, 15, 12, 0.6)' : 'rgba(245, 239, 226, 0.6)', borderColor: theme.borderSoft }]}> 
+          <View style={[styles.reflectionCard, { backgroundColor: isDark ? FEATURE_COLORS.pathshalaCompletionModal.reflectionCardSurfaceDark : FEATURE_COLORS.pathshalaCompletionModal.reflectionCardSurfaceLight, borderColor: theme.borderSoft }]}>
             <Text style={[styles.reflectionPrompt, { color: theme.brand }]}> 
               Pause & Contemplate
             </Text>
@@ -254,7 +254,7 @@ export function PathshalaCompletionModal({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(10, 8, 6, 0.72)',
+    backgroundColor: FEATURE_COLORS.pathshalaCompletionModal.backdropSurface,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,

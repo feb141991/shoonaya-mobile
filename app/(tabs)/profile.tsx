@@ -17,7 +17,6 @@ import Feather from '@expo/vector-icons/Feather';
 import { useRouter, type Href } from 'expo-router';
 import { signOutWithPushCleanup } from '@/lib/notifications';
 import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -26,6 +25,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
+import { SADHANA_REPORT_NAME } from '@/lib/privateExportFiles';
+import { removeImagePickerCopies, sharePrivateExport } from '@/lib/privateExportFilesDevice';
 import { type AppLanguage } from '@/lib/language-runtime';
 import { type ProfileSuggestion } from '@/lib/profile-suggestions';
 import {
@@ -857,6 +858,9 @@ export default function ProfileScreen() {
       if (!isCurrent()) return;
       Alert.alert('Photo update failed', describeFailure(err, 'Could not update your profile picture. Please try again.'));
     } finally {
+      // The upload reads the picker's base64, never its file, so the cropped copy in the cache is finished with (AGENTS 25).
+      // It is removed even when the pick was abandoned, and again at sign-out.
+      removeImagePickerCopies();
       if (isCurrent()) setAvatarUploading(false);
     }
   };
@@ -1054,14 +1058,11 @@ export default function ProfileScreen() {
 </body>
 </html>`;
 
-      if (!(await Sharing.isAvailableAsync())) {
+      // The report is a personal practice record. It goes through the private-export helper so the copy lives in one cache
+      // directory and is removed at sign-out and on an account switch (AGENTS 25). Nothing is written when sharing is unavailable.
+      if (!(await sharePrivateExport(SADHANA_REPORT_NAME, html))) {
         Alert.alert('Sharing not available', 'Your device does not support saving or sharing this file.');
-        return;
       }
-
-      const targetFile = new FileSystem.File(FileSystem.Paths.cache, 'sadhana-report.html');
-      targetFile.write(html);
-      await Sharing.shareAsync(targetFile.uri);
     } catch {
       Alert.alert('Error', 'Could not generate report.');
     } finally {

@@ -21,7 +21,7 @@ import { Screen } from '@/components/ui/Screen';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
 import { fetchDharmVeerDetail, preferExpandedDharmVeer } from '@/lib/dharmVeerDetail';
-import { COLORS, FONTS, RADII } from '@/lib/constants';
+import { OVERLAYS, COLORS, FONTS, RADII } from '@/lib/constants';
 import { DHARM_VEERS, TRADITION_META, pickDharmVeerLocalizedText, pickDharmVeerQuote, type DharmVeer } from '@/lib/dharm-veer';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode } from '@/lib/guestSession';
@@ -443,7 +443,7 @@ ${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
   ];
   const readerCopy = getReaderCopy(showLocal ? localContentLanguage : 'en');
   const meta = hero ? TRADITION_META[hero.tradition] : null;
-  const accent = meta?.color.replace('0.12', isDark ? '0.2' : '0.4') ?? 'rgba(197,160,89,0.2)';
+  const accent = meta?.color.replace('0.12', isDark ? '0.2' : '0.4') ?? OVERLAYS.gold[0.2];
 
   const capabilities = useMemo(() => buildReadableCapabilities({
     original: hero?.journey ?? '',
@@ -532,7 +532,7 @@ ${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
     </View>
   );
   const trialSection = (
-    <View style={{ backgroundColor: 'rgba(197, 160, 89,0.05)', borderColor: 'rgba(197, 160, 89,0.1)', borderWidth: 1, borderRadius: 24, padding: 20, gap: 12 }}>
+    <View style={{ backgroundColor: OVERLAYS.gold[0.05], borderColor: OVERLAYS.gold[0.1], borderWidth: 1, borderRadius: 24, padding: 20, gap: 12 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <Feather name="shield" size={14} color={brand} />
         <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 2 }}>{readerCopy.trial}</Text>
@@ -588,7 +588,7 @@ ${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
     </View>
   ) : null;
   const sourcesSection = sourceText || (hero?.sourceCitations && hero.sourceCitations.length > 0) ? (
-    <View style={{ backgroundColor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', borderColor: border, borderWidth: 1, borderRadius: 20, padding: 18, gap: 10, marginTop: 8 }}>
+    <View style={{ backgroundColor: isDark ? OVERLAYS.white[0.03] : OVERLAYS.black[0.02], borderColor: border, borderWidth: 1, borderRadius: 20, padding: 18, gap: 10, marginTop: 8 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, opacity: 0.75 }}>
         <Feather name="book" size={13} color={brand} />
         <Text style={{ color: brand, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 2 }}>{readerCopy.sources}</Text>
@@ -642,7 +642,7 @@ ${sourceText ? `\n[Sources]\n${sourceText}` : ''}` : '';
         </PressableSurface>
       </View>
       {askMoreResponse ? (
-        <View style={{ marginTop: 16, padding: 16, backgroundColor: 'rgba(197,160,89,0.05)', borderRadius: 16, borderWidth: 1, borderColor: border }}>
+        <View style={{ marginTop: 16, padding: 16, backgroundColor: OVERLAYS.gold[0.05], borderRadius: 16, borderWidth: 1, borderColor: border }}>
           <Text style={{ color: text, fontFamily: FONTS.sans, fontSize: 14, lineHeight: 22 }}>{askMoreResponse}</Text>
         </View>
       ) : null}

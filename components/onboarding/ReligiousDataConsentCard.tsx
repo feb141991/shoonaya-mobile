@@ -2,11 +2,9 @@ import { type LayoutChangeEvent, Pressable, Switch, Text, View } from 'react-nat
 
 import { FONTS, MIN_TOUCH_TARGET, RADII, themeColor } from '@/lib/constants';
 import { RELIGIOUS_DATA_CONSENT_COPY } from '@/lib/religious-data-consent';
-import type { LanguageKey } from '@/lib/onboarding-contract';
 
 type Props = {
   isDark: boolean;
-  language: LanguageKey | null;
   agreed: boolean;
   onChange: (agreed: boolean) => void;
   accent: string;
@@ -18,11 +16,10 @@ type Props = {
  * onboarding switches (a labelled Pressable around a Switch, 56pt target, theme tokens): the switch is off
  * until the person turns it on, and the reason the button below stays disabled is written next to it.
  */
-export function ReligiousDataConsentCard({ isDark, language, agreed, onChange, accent, onLayout }: Props) {
+export function ReligiousDataConsentCard({ isDark, agreed, onChange, accent, onLayout }: Props) {
   const theme = themeColor(isDark);
-  const isHindi = language === 'hi';
-  const copy = RELIGIOUS_DATA_CONSENT_COPY[isHindi ? 'hi' : 'en'];
-  const bodyFont = isHindi ? FONTS.devanagari : FONTS.sans;
+  const copy = RELIGIOUS_DATA_CONSENT_COPY.en;
+  const bodyFont = FONTS.sans;
 
   return (
     <View
@@ -39,11 +36,11 @@ export function ReligiousDataConsentCard({ isDark, language, agreed, onChange, a
     >
       <Text
         accessibilityRole="header"
-        style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 15, lineHeight: isHindi ? 22 : 20, color: theme.text }}
+        style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, lineHeight: 20, color: theme.text }}
       >
         {copy.title}
       </Text>
-      <Text style={{ fontFamily: bodyFont, fontSize: 13, lineHeight: isHindi ? 21 : 19, color: theme.dim }}>{copy.body}</Text>
+      <Text style={{ fontFamily: bodyFont, fontSize: 13, lineHeight: 19, color: theme.dim }}>{copy.body}</Text>
 
       <Pressable
         onPress={() => onChange(!agreed)}
@@ -67,9 +64,9 @@ export function ReligiousDataConsentCard({ isDark, language, agreed, onChange, a
         <Text
           style={{
             flex: 1,
-            fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold,
+            fontFamily: FONTS.sansSemiBold,
             fontSize: 14,
-            lineHeight: isHindi ? 21 : 19,
+            lineHeight: 19,
             color: theme.text,
           }}
         >
@@ -86,11 +83,11 @@ export function ReligiousDataConsentCard({ isDark, language, agreed, onChange, a
       </Pressable>
 
       {!agreed ? (
-        <Text accessibilityLiveRegion="polite" style={{ fontFamily: bodyFont, fontSize: 12, lineHeight: isHindi ? 19 : 17, color: theme.text }}>
+        <Text accessibilityLiveRegion="polite" style={{ fontFamily: bodyFont, fontSize: 12, lineHeight: 17, color: theme.text }}>
           {copy.needed}
         </Text>
       ) : null}
-      <Text style={{ fontFamily: bodyFont, fontSize: 12, lineHeight: isHindi ? 19 : 17, color: theme.dim }}>{copy.footer}</Text>
+      <Text style={{ fontFamily: bodyFont, fontSize: 12, lineHeight: 17, color: theme.dim }}>{copy.footer}</Text>
     </View>
   );
 }

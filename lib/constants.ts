@@ -273,6 +273,19 @@ export const COLORS = {
   // new red/pink independently.
   like: '#F47888',
 
+  // Existing shared Native colour values, centralised from the corresponding UI.
+  black: '#000000',
+  radiantGold: '#FFD700',
+  metallicGold: '#D4AF37',
+  familyModalScrim: '#0C0A07BB',
+  deepModalScrim: 'rgba(0,0,0,0.55)',
+  traditionPortraitBg: '#0a0908',
+  chatComposerBorderDark: 'rgba(218,165,32,0.22)',
+  chatComposerBorderLight: 'rgba(218,165,32,0.32)',
+  sanskaraCompletedBg: 'rgba(76,175,80,0.12)',
+  storyParchment: '#FAF6EE',
+  goldButtonInk: '#1c1208',
+
   // Dyuta Sabha table surfaces — sampled from the approved in-game mockup
   // (ivory dice, carved sandstone octagon, woven mat). Dice stay ivory in
   // dark mode because they read as physical objects; the table darkens to
@@ -317,6 +330,23 @@ export const KATHA_VIEW_ACCENT = {
   jain: TRADITION_ACCENT.jain,
   panchatantra: TRADITION_ACCENT.all,
   heroes: '#D4643A',
+} as const;
+
+// Keep the Native token API here. Palette data lives in focused modules.
+export { OVERLAYS } from './design-tokens/overlays';
+export { JAPA_COLORS } from './design-tokens/japa-colors';
+export { FEATURE_COLORS } from './design-tokens/feature-colors';
+
+// Native gold foil, petal and stardust colours from ConfettiOverlay.
+const confettiSaffron = '#E88C35';
+const confettiAmber = '#F0A830';
+const confettiLightAmber = '#FABE5A';
+const confettiCream = '#F2EAD6';
+
+export const CONFETTI_PALETTES = {
+  goldFoil: [COLORS.radiantGold, COLORS.brandGold, confettiSaffron, confettiAmber, confettiLightAmber, '#D4926A'],
+  petal: [confettiSaffron, confettiAmber, '#D4784A', '#F472B6', '#E11D48', confettiCream],
+  stardust: ['#FFFDF0', COLORS.radiantGold, '#FFE066', confettiLightAmber, confettiCream],
 } as const;
 
 export const themeColor = (isDark: boolean) => ({

@@ -60,9 +60,6 @@ export type SettingsFields = {
   dharm_veer_reminder_enabled?: boolean;
   wants_mood_reminders?: boolean;
   wants_sattvic_reminders?: boolean;
-  // Optional: envelopes cached before this field existed do not carry it. When true, push notifications show only a
-  // neutral line on the lock screen (backend migration 20261112090000; AGENTS.md section 29).
-  notification_discreet_mode?: boolean;
   app_language: AppLanguage;
   transliteration_language: AppLanguage;
   meaning_language: AppLanguage;
@@ -70,6 +67,8 @@ export type SettingsFields = {
   consent_activity_personalization: boolean;
   // Optional for schema-version-2 envelopes written before product analytics consent existed.
   consent_product_analytics?: boolean;
+  // Optional: "Help improve reminders". Cached envelopes from before it existed do not carry it; it reads as off.
+  consent_notification_taps?: boolean;
 };
 
 /**

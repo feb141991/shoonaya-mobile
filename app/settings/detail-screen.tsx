@@ -5,7 +5,6 @@ import {
   AppState,
   Linking,
   ScrollView,
-  Switch,
   Text,
   useColorScheme,
   View,
@@ -13,11 +12,11 @@ import {
 import Feather from '@expo/vector-icons/Feather';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useFocusEffect, useRouter } from 'expo-router';
+import { NotificationDiscretionSetting } from '@/components/settings/NotificationDiscretionSetting';
+import { ToggleRow } from '@/components/settings/ToggleRow';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import * as Haptics from 'expo-haptics';
-import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { BackButton } from '@/components/ui/BackButton';
@@ -32,6 +31,8 @@ import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, OFFICIAL_EMAIL, RADII, SHADO
 import { APP_VERSION_LABEL } from '@/lib/appVersion';
 import { apiFetch } from '@/lib/api';
 import { fetchSoleManagerDependents } from '@/lib/sanskara';
+import { ACCOUNT_DATA_EXPORT_NAME } from '@/lib/privateExportFiles';
+import { sharePrivateExport } from '@/lib/privateExportFilesDevice';
 import {
   openNotificationSettings,
   registerPushToken,
@@ -75,10 +76,13 @@ import {
 } from '@/lib/heroPreference';
 import { AccountDeletionSheet, type DeletionJourneySnapshot } from '@/components/settings/AccountDeletionSheet';
 import { ReminderTimePicker } from '@/components/settings/ReminderTimePicker';
-import { DISCREET_MODE_COPY, readDiscreetMode, type DiscreetModeLoadState } from '@/lib/discreetMode';
 import { accountDeletion, readDeletionReasons, useAccountDeletionStatus } from '@/lib/accountDeletion';
 import { accountDeletionCopy, reviewedDeletionLanguage } from '@/lib/accountDeletionCopy';
 import { getGreetingPick } from '@/lib/greetingPreference';
+import { applyNotificationTapConsent, readServerNotificationTapConsent } from '@/lib/notificationTapConsent';
+import { consentContext } from '@/lib/consentContext';
+import { consentKeysIn } from '@/lib/consentWording';
+import { revokeNotificationTapConsent } from '@/lib/notificationTapTracking';
 import { applyPracticeAnalyticsConsent, applyProductAnalyticsConsent, revokePracticeAnalyticsConsent, revokeProductAnalyticsConsent } from '@/lib/productAnalyticsRuntime';
 import { classifyFailure, describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
 
@@ -123,8 +127,8 @@ const INITIAL_SETTINGS: SettingsState = {
   wants_family_notifications: true,
   wants_family_remembrance_reminders: true,
   family_remembrance_time: '09:00',
-  wants_brahma_muhurta_reminders: true,
-  notification_discreet_mode: false,
+  // Brahma Muhurta is the one opt-in reminder (founder, 2026-10-11 and 2026-11-12): a missing value must read OFF, as onboarding and the database do.
+  wants_brahma_muhurta_reminders: false,
   wants_evening_reminder: true,
   wants_madhyahn_reminder: true,
   dharm_veer_reminder_enabled: true,
@@ -136,6 +140,8 @@ const INITIAL_SETTINGS: SettingsState = {
   consent_religious_data: false,
   consent_activity_personalization: false,
   consent_product_analytics: false,
+  // "Help improve reminders": off until the person turns it on; never inferred from any other switch.
+  consent_notification_taps: false,
 };
 
 // labelHi/subtitleHi mirror OnboardingWelcomeScreen.tsx's label/labelHi
@@ -144,7 +150,7 @@ const INITIAL_SETTINGS: SettingsState = {
 // than showing a wrong translation.
 const NOTIFICATION_TOGGLES: { key: keyof SettingsState; label: string; labelHi: string; subtitle: string; subtitleHi: string; disabled?: boolean; requiresAccount?: boolean; badge?: string }[] = [
   { key: 'japa_reminder_enabled', label: 'Japa practice reminder', labelHi: 'जाप अभ्यास रिमाइंडर', subtitle: 'A gentle daily reminder at your chosen time', subtitleHi: 'आपके चुने समय पर एक सरल दैनिक रिमाइंडर', requiresAccount: true },
-  { key: 'quiz_reminder_enabled', label: 'Daily quiz reminders', labelHi: 'दैनिक क्विज़ रिमाइंडर', subtitle: 'Daily quiz challenge at 10:00 AM, plus a 6:00 PM nudge if still unfinished', subtitleHi: 'सुबह 10:00 बजे दैनिक क्विज़ चुनौती, और अधूरा रहने पर शाम 6:00 बजे एक याद दिलाने वाला संदेश', requiresAccount: true },
+  { key: 'quiz_reminder_enabled', label: 'Daily quiz reminders', labelHi: 'दैनिक क्विज़ रिमाइंडर', subtitle: 'Daily quiz challenge at 10:00 AM', subtitleHi: 'सुबह 10:00 बजे दैनिक क्विज़ चुनौती', requiresAccount: true },
   { key: 'wants_shloka_reminders', label: 'Daily wisdom', labelHi: 'दैनिक ज्ञान', subtitle: 'Your daily shloka & reflection', subtitleHi: 'आपका दैनिक श्लोक व चिंतन' },
   { key: 'wants_nitya_reminders', label: 'Nitya reminders', labelHi: 'नित्य रिमाइंडर', subtitle: 'Morning sadhana nudges', subtitleHi: 'सुबह की साधना के लिए याद दिलाने वाले संदेश' },
   { key: 'wants_brahma_muhurta_reminders', label: 'Brahma Muhurta', labelHi: 'ब्रह्म मुहूर्त', subtitle: 'A pre-dawn reminder about 1½ hours before sunrise at your saved location. It arrives at night.', subtitleHi: 'आपके सहेजे गए स्थान पर सूर्योदय से लगभग 1½ घंटे पहले, तड़के का एक रिमाइंडर। यह रात में आता है।', requiresAccount: true },
@@ -234,7 +240,6 @@ function toSettingsState(value: Partial<SettingsState> | null | undefined): Sett
     wants_family_remembrance_reminders: value?.wants_family_remembrance_reminders ?? INITIAL_SETTINGS.wants_family_remembrance_reminders,
     family_remembrance_time: value?.family_remembrance_time ?? INITIAL_SETTINGS.family_remembrance_time,
     wants_brahma_muhurta_reminders: value?.wants_brahma_muhurta_reminders ?? INITIAL_SETTINGS.wants_brahma_muhurta_reminders,
-    notification_discreet_mode: value?.notification_discreet_mode ?? INITIAL_SETTINGS.notification_discreet_mode,
     wants_evening_reminder: value?.wants_evening_reminder ?? INITIAL_SETTINGS.wants_evening_reminder,
     wants_madhyahn_reminder: value?.wants_madhyahn_reminder ?? INITIAL_SETTINGS.wants_madhyahn_reminder,
     dharm_veer_reminder_enabled: value?.dharm_veer_reminder_enabled ?? INITIAL_SETTINGS.dharm_veer_reminder_enabled,
@@ -246,6 +251,7 @@ function toSettingsState(value: Partial<SettingsState> | null | undefined): Sett
     consent_religious_data: value?.consent_religious_data ?? INITIAL_SETTINGS.consent_religious_data,
     consent_activity_personalization: value?.consent_activity_personalization ?? INITIAL_SETTINGS.consent_activity_personalization,
     consent_product_analytics: value?.consent_product_analytics ?? INITIAL_SETTINGS.consent_product_analytics,
+    consent_notification_taps: value?.consent_notification_taps ?? INITIAL_SETTINGS.consent_notification_taps,
   };
 }
 
@@ -270,50 +276,6 @@ function SettingsSection({
       <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 16 }}>
         {children}
       </Card>
-    </View>
-  );
-}
-
-function ToggleRow({
-  label,
-  subtitle,
-  value,
-  onChange,
-  theme,
-  disabled,
-  badge,
-}: {
-  label: string;
-  subtitle?: string;
-  value: boolean;
-  onChange: (next: boolean) => void;
-  theme: ReturnType<typeof themeColor>;
-  disabled?: boolean;
-  badge?: string;
-}) {
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, opacity: disabled ? 0.6 : 1 }}>
-      <View style={{ flex: 1 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Text style={{ ...TYPE.label, color: theme.text }}>{label}</Text>
-          {badge ? (
-            <View style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.premiumBorder }}>
-              <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 10, color: theme.brand, letterSpacing: 0.3 }}>{badge}</Text>
-            </View>
-          ) : null}
-        </View>
-        {subtitle ? <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 2 }}>{subtitle}</Text> : null}
-      </View>
-      <Switch
-        value={value}
-        onValueChange={onChange}
-        disabled={disabled}
-        trackColor={{ true: theme.brand }}
-        accessibilityRole="switch"
-        accessibilityLabel={label}
-        accessibilityHint={subtitle}
-        accessibilityState={{ checked: value, disabled: !!disabled }}
-      />
     </View>
   );
 }
@@ -412,9 +374,9 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
   const [settings, setSettings] = useState<SettingsState>(INITIAL_SETTINGS);
   const [familyRemembranceSchemaReady, setFamilyRemembranceSchemaReady] = useState(false);
   const [brahmaMuhurtaSchemaReady, setBrahmaMuhurtaSchemaReady] = useState(false);
-  // 'not_available': the server has no such column yet. 'load_failed': it could not be read (never shown as "off").
-  const [discreetModeState, setDiscreetModeState] = useState<DiscreetModeLoadState>('not_available');
   const [productAnalyticsSchemaReady, setProductAnalyticsSchemaReady] = useState(false);
+  // False until a successful read of consent_notification_taps: the switch stays unavailable rather than guessing "off".
+  const [tapConsentReady, setTapConsentReady] = useState(false);
   // wants_evening_reminder/wants_madhyahn_reminder/dharm_veer_reminder_enabled already
   // existed; wants_mood_reminders/wants_sattvic_reminders are new. All five ship in one
   // migration together, so one combined flag (not five) is enough -- AGENTS.md rule 6,
@@ -478,7 +440,12 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       try {
         const response = await apiFetch('/api/native/profile', {
           method: 'PATCH',
-          body: JSON.stringify(write.fields),
+          // A consent change also says which screen and wording it was made on (the consent evidence ledger).
+          body: JSON.stringify(
+            consentKeysIn(write.fields as Record<string, unknown>).length > 0
+              ? { ...write.fields, consent_context: consentContext('settings', consentKeysIn(write.fields as Record<string, unknown>)) }
+              : write.fields,
+          ),
           expectedUserId: identity.userId,
         });
         if (!isCurrent()) return;
@@ -504,6 +471,10 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
           const persistedSettings = json?.persisted ?? write.fields;
           if ('consent_product_analytics' in persistedSettings) {
             await applyProductAnalyticsConsent(identity.userId, persistedSettings.consent_product_analytics === true);
+          }
+          if (!isCurrent()) return;
+          if ('consent_notification_taps' in persistedSettings) {
+            await applyNotificationTapConsent(identity.userId, persistedSettings.consent_notification_taps === true);
           }
           if (!isCurrent()) return;
           if ('consent_religious_data' in persistedSettings) {
@@ -632,8 +603,8 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
 
     setFamilyRemembranceSchemaReady(false);
     setBrahmaMuhurtaSchemaReady(false);
-    setDiscreetModeState('not_available');
     setProductAnalyticsSchemaReady(false);
+    setTapConsentReady(false);
     setReminderCoverageGapSchemaReady(false);
     const profileSettingsPromise = (async () => {
       const baseColumns = 'tradition, japa_reminder_enabled, japa_reminder_time, quiz_reminder_enabled, quiz_reminder_time, wants_festival_reminders, wants_vrat_reminders, wants_tithi_reminders, observance_reminder_lead_days, observance_reminder_time, wants_shloka_reminders, wants_nitya_reminders, wants_sankalpa_midpoint_reminders, wants_community_notifications, wants_family_notifications, app_language, transliteration_language, meaning_language, consent_religious_data, consent_activity_personalization';
@@ -672,16 +643,11 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       return { ...legacy, familyRemembranceSchemaReady: false, brahmaMuhurtaSchemaReady: false, productAnalyticsSchemaReady: false, reminderCoverageGapSchemaReady: false };
     })();
 
-    // Read on its own so the long cascade above (older servers lacking newer columns) stays untouched, and so a server
-    // without this column keeps every other setting readable.
-    const discreetPromise = readDiscreetMode(
-      (columns) => supabase.from('profiles').select(columns).eq('id', appIdentity.userId).single(),
-    );
-    const [profileRes, cached, localTheme, discreet] = await Promise.all([
+    const [profileRes, cached, localTheme, tapConsent] = await Promise.all([
       profileSettingsPromise,
       readSettingsCache(identity),
       AsyncStorage.getItem(THEME_STORAGE_KEY),
-      discreetPromise,
+      readServerNotificationTapConsent(appIdentity.userId),
     ]);
     if (!lease.isCurrent()) return;
 
@@ -696,9 +662,8 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     setReminderCoverageGapSchemaReady(profileRes.reminderCoverageGapSchemaReady);
     const profileRow = (profileRes.data ?? null) as (Partial<SettingsState> & { tradition?: string | null }) | null;
     setProfileTradition(profileRow?.tradition || 'hindu');
-    setDiscreetModeState(discreet.state);
-    const remoteFromProfile = toSettingsState(profileRow ?? INITIAL_SETTINGS);
-    const remote = discreet.state === 'ready' ? { ...remoteFromProfile, notification_discreet_mode: discreet.value } : remoteFromProfile;
+    setTapConsentReady(tapConsent !== 'unavailable');
+    const remote = { ...toSettingsState(profileRow ?? INITIAL_SETTINGS), consent_notification_taps: tapConsent === 'on' };
     const activePending = writeCoordinator.getPending();
     const pending = activePending ? [activePending] : (cached?.pendingOperations ?? []).filter((op) => op.status === 'pending' || op.status === 'failed');
     const merged = mergeServerWithPending(remote, pending);
@@ -713,6 +678,11 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     if (!isCurrentRefresh()) return;
     await applyPracticeAnalyticsConsent(appIdentity.userId, consent.practice);
     if (!isCurrentRefresh()) return;
+    // Only a successful read changes this device's copy; an unreadable value leaves it as it was. A withdrawal still waiting to be sent counts as off.
+    if (tapConsent !== 'unavailable') {
+      await applyNotificationTapConsent(appIdentity.userId, tapConsent === 'on' && merged.consent_notification_taps === true);
+      if (!isCurrentRefresh()) return;
+    }
     await writeCoordinator.store(pending[0] ?? null, async () => {
       if (!isCurrentRefresh()) return;
       await writeSettingsCache({
@@ -849,6 +819,9 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
     if (changedFields.consent_religious_data === false) {
       void revokePracticeAnalyticsConsent(identity.userId);
     }
+    if (changedFields.consent_notification_taps === false) {
+      void revokeNotificationTapConsent(identity.userId);
+    }
 
     settingsRef.current = { ...settingsRef.current, ...changedFields };
     setSettings(settingsRef.current);
@@ -951,14 +924,11 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       if (!response.ok) throw await requestErrorFromResponse(response);
       const data = await response.text();
 
-      if (!(await Sharing.isAvailableAsync())) {
+      // The export is the person's whole account. It goes through the private-export helper so the copy lives in one cache
+      // directory and is removed at sign-out and on an account switch (AGENTS 25). Nothing is written when sharing is unavailable.
+      if (!(await sharePrivateExport(ACCOUNT_DATA_EXPORT_NAME, data))) {
         Alert.alert('Sharing not available', 'Your device does not support saving or sharing this file.');
-        return;
       }
-
-      const targetFile = new FileSystem.File(FileSystem.Paths.cache, 'shoonaya-data.json');
-      targetFile.write(data);
-      await Sharing.shareAsync(targetFile.uri);
     } catch (error) {
       Alert.alert('Could not download data', describeFailure(error, 'Could not prepare your data. Please try again.', language));
     } finally {
@@ -1319,7 +1289,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                   {item.key === 'quiz_reminder_enabled' && !isGuest && settings.quiz_reminder_enabled ? (
                     <ReminderTimePicker
                       label="Quiz-ready reminder time"
-                      hint="Uses your profile timezone. Choose 7:00 AM–3:00 PM. If the quiz is still unfinished, one follow-up is planned for 6:00 PM; quiet hours and the daily notification limit still apply."
+                      hint="Uses your profile timezone. Choose 7:00 AM–3:00 PM; quiet hours and the daily notification limit still apply."
                       value={settings.quiz_reminder_time}
                       fallback={INITIAL_SETTINGS.quiz_reminder_time}
                       min={QUIZ_REMINDER_EARLIEST}
@@ -1381,22 +1351,9 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                 theme={theme}
               />
               <View style={{ height: 1, backgroundColor: theme.borderSoft }} />
-              {/* Its own row, not part of the reminder list: switching it on must not ask for notification permission. */}
-              <ToggleRow
-                label={language === 'hi' ? DISCREET_MODE_COPY.labelHi : DISCREET_MODE_COPY.label}
-                subtitle={isGuest
-                  ? `${language === 'hi' ? DISCREET_MODE_COPY.subtitleHi : DISCREET_MODE_COPY.subtitle} ${language === 'hi' ? '(सक्रिय करने के लिए साइन इन करें)' : '(sign in to turn this on)'}`
-                  : discreetModeState === 'not_available'
-                    ? (language === 'hi' ? 'यह सुविधा सर्वर अपडेट इंस्टॉल होने के बाद उपलब्ध होगी' : 'Available once the server update is installed')
-                    : discreetModeState === 'load_failed'
-                      ? (language === 'hi' ? 'यह सेटिंग अभी लोड नहीं हो सकी। बाद में फिर कोशिश करें।' : 'This setting could not be loaded right now. Try again later.')
-                      : (language === 'hi' ? DISCREET_MODE_COPY.subtitleHi : DISCREET_MODE_COPY.subtitle)}
-                value={settings.notification_discreet_mode === true}
-                disabled={isGuest || discreetModeState !== 'ready'}
-                onChange={(value) => {
-                  if (isGuest || discreetModeState !== 'ready') return;
-                  void persistSettings({ ...settings, notification_discreet_mode: value });
-                }}
+              <NotificationDiscretionSetting
+                key={appIdentity.kind === 'authenticated' ? appIdentity.userId : appIdentity.kind}
+                language={language}
                 theme={theme}
               />
             </SettingsSection> : null}
@@ -1646,6 +1603,19 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                 value={settings.consent_product_analytics === true}
                 disabled={isGuest || !productAnalyticsSchemaReady}
                 onChange={(value) => { void persistSettings({ ...settings, consent_product_analytics: value }); }}
+                theme={theme}
+              />
+              <View style={{ height: 1, backgroundColor: theme.borderSoft }} />
+              <ToggleRow
+                label="Help improve reminders"
+                subtitle={isGuest
+                  ? 'Sign in to save this choice to your account.'
+                  : tapConsentReady
+                    ? 'Optional. When on, we record when you tap a reminder we sent (which reminder, when, and your app version), linked to your account, for up to 90 days. This includes practice reminders such as japa, quiz and festivals, which can reflect your religious practice. We never record the text or what you read or wrote. Turning it off deletes these records.'
+                    : 'Available after the app and service are updated.'}
+                value={settings.consent_notification_taps === true}
+                disabled={isGuest || !tapConsentReady}
+                onChange={(value) => { void persistSettings({ ...settings, consent_notification_taps: value }); }}
                 theme={theme}
               />
               {!isGuest ? (

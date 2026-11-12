@@ -1,50 +1,40 @@
-/**
- * "Hide notification details" (AGENTS.md section 29; backend migration 20261112090000, docs/notifications/LOCK_SCREEN_DISCRETION.md).
- *
- * When on, the backend sends only a neutral line in place of each push's title and body. This module is the Native
- * half's pure logic: how the setting is read and what the switch says. No React Native here, so it is tested exactly.
- */
-
-export type DiscreetModeLoadState = 'ready' | 'not_available' | 'load_failed';
+export const DISCRETION_READ_PATH = '/api/native/notification-discretion';
+const PROFILE_WRITE_PATH = '/api/native/profile';
 
 export type DiscreetModeRead =
   | { state: 'ready'; value: boolean }
-  | { state: 'not_available' | 'load_failed'; value?: undefined };
+  | { state: 'not_available' | 'load_failed' };
 
-/** Postgres "undefined column": the migration adding the column has not been applied on this server yet. */
-const UNDEFINED_COLUMN = '42703';
+type Request = (path: string, init?: RequestInit) => Promise<Response>;
 
-/**
- * Reads the column on its own, never as part of the long cascade of older-server fallbacks, so a server without it keeps
- * every other setting readable. Three outcomes, and none of them is a guess:
- *   ready          a real boolean came back (on or off);
- *   not_available  the column does not exist yet: the switch stays disabled and says so;
- *   load_failed    anything else, including a value that is not a boolean: the switch stays disabled. A failed read is
- *                  never presented as "off" (AGENTS.md section 18), because "off" would invite a tap that overwrites a
- *                  real "on".
- */
-export async function readDiscreetMode(
-  read: (columns: string) => PromiseLike<{ data: unknown; error: unknown }>,
-): Promise<DiscreetModeRead> {
+/** The sender and this endpoint must ship together. A database column is not a readiness signal. */
+export async function readDiscreetMode(request: Request): Promise<DiscreetModeRead> {
   try {
-    const { data, error } = await read('notification_discreet_mode');
-    if (error) {
-      return (error as { code?: string } | null)?.code === UNDEFINED_COLUMN ? { state: 'not_available' } : { state: 'load_failed' };
-    }
-    const value = (data as { notification_discreet_mode?: unknown } | null)?.notification_discreet_mode;
-    return typeof value === 'boolean' ? { state: 'ready', value } : { state: 'load_failed' };
+    const response = await request(DISCRETION_READ_PATH);
+    if (response.status === 404) return { state: 'not_available' };
+    if (!response.ok) return { state: 'load_failed' };
+    const body: { enabled?: unknown } | null = await response.json();
+    return typeof body?.enabled === 'boolean'
+      ? { state: 'ready', value: body.enabled }
+      : { state: 'load_failed' };
   } catch {
     return { state: 'load_failed' };
   }
 }
 
-/**
- * The words on the switch. English is the reviewed text. The Hindi is an unreviewed draft: no native reader has checked it,
- * and reviewers are deferred (founder, 2026-11-07).
- */
+/** A successful HTTP status is insufficient unless the server confirms this exact setting. */
+export async function saveDiscreetMode(request: Request, value: boolean): Promise<boolean> {
+  const response = await request(PROFILE_WRITE_PATH, {
+    method: 'PATCH',
+    body: JSON.stringify({ notification_discreet_mode: value }),
+  });
+  if (!response.ok) return false;
+  const body: { success?: unknown; persisted?: { notification_discreet_mode?: unknown } } | null = await response.json();
+  return body?.success === true && body.persisted?.notification_discreet_mode === value;
+}
+
 export const DISCREET_MODE_COPY = {
   label: 'Hide notification details',
-  subtitle: 'Notifications will only say that you have a new notification. The details appear when you open Shoonaya. This applies to new notifications.',
   labelHi: 'सूचनाओं का विवरण छिपाएँ',
-  subtitleHi: 'सूचना में केवल यह दिखेगा कि आपके पास एक नई सूचना है। विवरण Shoonaya खोलने पर दिखेगा। यह नई सूचनाओं पर लागू होता है।',
+  subtitle: 'New notifications will use a generic message. Open Shoonaya for the details. Security alerts keep their wording.',
 } as const;

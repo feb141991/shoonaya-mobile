@@ -22,7 +22,7 @@ import { SacredLoader } from '@/components/ui/SacredLoader';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS, KATHA_VIEW_ACCENT, RADII, TRADITION_ACCENT, TYPE, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, OVERLAYS, COLORS, FONTS, KATHA_VIEW_ACCENT, RADII, TRADITION_ACCENT, TYPE, themeColor } from '@/lib/constants';
 import { readBhaktiContentCache, writeBhaktiContentCache, bhaktiCacheKeys } from '@/lib/bhaktiContentCache';
 import panchatantraExpandedSnapshot from '@/assets/data/panchatantra-expanded-snapshot.json';
 import {
@@ -331,26 +331,26 @@ export default function KathaListScreen() {
                             contentPosition="center"
                           />
                           <LinearGradient
-                            colors={['transparent', 'rgba(0,0,0,0.85)']}
+                            colors={['transparent', OVERLAYS.black[0.85]]}
                             style={StyleSheet.absoluteFill}
                             pointerEvents="none"
                           />
-                          <View style={{ position: 'absolute', top: 12, left: 12, flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, backgroundColor: isDedicated ? 'rgba(180,83,9,0.92)' : 'rgba(0,0,0,0.65)', paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1, borderColor: isDedicated ? 'rgba(251,191,36,0.6)' : 'rgba(255,255,255,0.2)' }}>
-                            <Feather name="star" size={11} color={isDedicated ? '#FDE68A' : '#F59E0B'} />
-                            <Text style={{ ...TYPE.micro, letterSpacing: 1.2, textTransform: 'uppercase', color: '#FFFFFF', fontFamily: FONTS.sansSemiBold }}>
+                          <View style={{ position: 'absolute', top: 12, left: 12, flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, backgroundColor: isDedicated ? FEATURE_COLORS.kathaLibrary.surface : OVERLAYS.black[0.65], paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1, borderColor: isDedicated ? FEATURE_COLORS.kathaLibrary.border : OVERLAYS.white[0.2] }}>
+                            <Feather name="star" size={11} color={isDedicated ? FEATURE_COLORS.kathaLibrary.starText : COLORS.warningDark} />
+                            <Text style={{ ...TYPE.micro, letterSpacing: 1.2, textTransform: 'uppercase', color: COLORS.onMediaWhite, fontFamily: FONTS.sansSemiBold }}>
                               {isDedicated ? 'Story of the Day • 6 Scenes' : "Today's Wisdom Fable"}
                             </Text>
                           </View>
                           <View style={{ position: 'absolute', bottom: 10, left: 14, right: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                             <View style={{ flex: 1, paddingRight: 10 }}>
-                              <Text style={{ ...TYPE.cardHeading, fontSize: 18, color: '#FFFFFF', fontFamily: FONTS.serifBold }} numberOfLines={1}>{todayKatha.title}</Text>
+                              <Text style={{ ...TYPE.cardHeading, fontSize: 18, color: COLORS.onMediaWhite, fontFamily: FONTS.serifBold }} numberOfLines={1}>{todayKatha.title}</Text>
                               {todayKatha.titleHi ? (
-                                <Text style={{ ...TYPE.micro, color: '#FDE68A', fontFamily: FONTS.devanagari }}>{todayKatha.titleHi}</Text>
+                                <Text style={{ ...TYPE.micro, color: FEATURE_COLORS.kathaLibrary.starText, fontFamily: FONTS.devanagari }}>{todayKatha.titleHi}</Text>
                               ) : null}
                             </View>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: meta.accent, borderRadius: 999, paddingHorizontal: 11, paddingVertical: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 3 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: meta.accent, borderRadius: 999, paddingHorizontal: 11, paddingVertical: 6, shadowColor: COLORS.black, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 3 }}>
                               <Feather name="book-open" size={12} color={COLORS.onMediaWhite} />
-                              <Text style={{ ...TYPE.micro, color: '#FFFFFF', fontFamily: FONTS.sansSemiBold }}>Read Storybook</Text>
+                              <Text style={{ ...TYPE.micro, color: COLORS.onMediaWhite, fontFamily: FONTS.sansSemiBold }}>Read Storybook</Text>
                             </View>
                           </View>
                         </View>
@@ -490,10 +490,10 @@ function PanchatantraCard({
         style={{
           borderRadius: RADII.lg,
           borderWidth: 1,
-          borderColor: isDark ? 'rgba(197,160,89,0.25)' : 'rgba(216,138,28,0.22)',
-          backgroundColor: isDark ? '#14100C' : '#FAF6EE',
+          borderColor: isDark ? OVERLAYS.gold[0.25] : OVERLAYS.amber[0.22],
+          backgroundColor: isDark ? FEATURE_COLORS.kathaLibrary.surfaceDark : COLORS.storyParchment,
           overflow: 'hidden',
-          shadowColor: '#000',
+          shadowColor: COLORS.black,
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: isDark ? 0.35 : 0.08,
           shadowRadius: 5,
@@ -507,7 +507,7 @@ function PanchatantraCard({
             width: '100%',
             position: 'relative',
             overflow: 'hidden',
-            backgroundColor: isDark ? '#1E1610' : '#2A1810',
+            backgroundColor: isDark ? FEATURE_COLORS.kathaLibrary.surfaceDark2 : FEATURE_COLORS.kathaLibrary.surfaceLight,
           }}
         >
           {artwork ? (
@@ -528,7 +528,7 @@ function PanchatantraCard({
                 bottom: 0,
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: isDark ? '#18120C' : '#26180E',
+                backgroundColor: isDark ? FEATURE_COLORS.kathaLibrary.surfaceDark3 : FEATURE_COLORS.kathaLibrary.surfaceLight2,
                 padding: 8,
               }}
             >
@@ -538,8 +538,8 @@ function PanchatantraCard({
                   height: 48,
                   borderRadius: 24,
                   borderWidth: 1,
-                  borderColor: 'rgba(216,138,28,0.4)',
-                  backgroundColor: 'rgba(216,138,28,0.12)',
+                  borderColor: OVERLAYS.amber[0.4],
+                  backgroundColor: COLORS.brandSoftLight,
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
@@ -549,7 +549,7 @@ function PanchatantraCard({
               <Text
                 style={{
                   ...TYPE.micro,
-                  color: '#D88A1C',
+                  color: COLORS.brandGoldLight,
                   marginTop: 6,
                   letterSpacing: 1,
                   fontFamily: FONTS.devanagariBold,
@@ -562,7 +562,7 @@ function PanchatantraCard({
 
           {/* Vignette bottom gradient into card */}
           <LinearGradient
-            colors={['transparent', isDark ? 'rgba(20,16,12,0.7)' : 'rgba(250,246,238,0.7)']}
+            colors={['transparent', isDark ? FEATURE_COLORS.kathaLibrary.gradientDark : FEATURE_COLORS.kathaLibrary.gradientLight]}
             style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 24 }}
             pointerEvents="none"
           />
@@ -573,17 +573,17 @@ function PanchatantraCard({
               position: 'absolute',
               top: 7,
               left: 7,
-              backgroundColor: isDedicated ? 'rgba(180,83,9,0.9)' : 'rgba(0,0,0,0.65)',
+              backgroundColor: isDedicated ? FEATURE_COLORS.kathaLibrary.surface2 : OVERLAYS.black[0.65],
               borderRadius: RADII.pill,
               paddingHorizontal: 7,
               paddingVertical: 2.5,
               borderWidth: 1,
-              borderColor: isDedicated ? 'rgba(251,191,36,0.6)' : 'rgba(255,255,255,0.2)',
+              borderColor: isDedicated ? FEATURE_COLORS.kathaLibrary.border : OVERLAYS.white[0.2],
             }}
           >
             <Text
               style={{
-                color: '#FFFFFF',
+                color: COLORS.onMediaWhite,
                 fontSize: 9,
                 fontFamily: FONTS.sansSemiBold,
                 letterSpacing: 0.8,
@@ -602,7 +602,7 @@ function PanchatantraCard({
               ...TYPE.cardHeading,
               fontSize: 13,
               fontFamily: FONTS.serifBold,
-              color: isDark ? '#F5EBE1' : '#2A1A10',
+              color: isDark ? FEATURE_COLORS.kathaLibrary.textDark : FEATURE_COLORS.kathaLibrary.textLight,
               lineHeight: 18,
             }}
             numberOfLines={2}
@@ -614,7 +614,7 @@ function PanchatantraCard({
             <Text
               style={{
                 ...TYPE.micro,
-                color: isDark ? 'rgba(212,175,55,0.85)' : '#92400E',
+                color: isDark ? OVERLAYS.metallicGold[0.85] : FEATURE_COLORS.kathaLibrary.textLight2,
                 fontStyle: 'italic',
                 lineHeight: 14,
               }}
@@ -632,14 +632,14 @@ function PanchatantraCard({
               marginTop: 2,
               paddingTop: 6,
               borderTopWidth: 1,
-              borderTopColor: isDark ? 'rgba(197,160,89,0.15)' : 'rgba(216,138,28,0.15)',
+              borderTopColor: isDark ? OVERLAYS.gold[0.15] : OVERLAYS.amber[0.15],
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Feather name="clock" size={10} color="#C87850" />
+              <Feather name="clock" size={10} color={FEATURE_COLORS.kathaLibrary.clockText} />
               <Text style={{ ...TYPE.micro, color: theme.dim }}>{katha.durationMin} min</Text>
             </View>
-            <Feather name="arrow-right" size={12} color="#C87850" />
+            <Feather name="arrow-right" size={12} color={FEATURE_COLORS.kathaLibrary.clockText} />
           </View>
         </View>
       </View>

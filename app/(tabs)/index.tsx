@@ -52,7 +52,7 @@ import { HeroBackdropPicker } from '@/components/home/HeroBackdropPicker';
 import { HomeHeroGuide } from '@/components/home/HomeHeroGuide';
 import { useReducedMotion } from '@/components/ui/Motion';
 import { apiFetch } from '@/lib/api';
-import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, SPACING, TRADITION_ACCENT, TYPE } from '@/lib/constants';
+import { FEATURE_COLORS, OVERLAYS, API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, SPACING, TRADITION_ACCENT, TYPE } from '@/lib/constants';
 import { recordLoaderShown, type TelemetryIdentity } from '@/lib/telemetry';
 import { getGreetingPick } from '@/lib/greetingPreference';
 import { resolveHomeGreeting } from '@/lib/greetings';
@@ -743,7 +743,7 @@ function PanchangPill({
         ? (language === 'hi' ? 'सुरक्षित तिथि · रीफ़्रेश करें' : language === 'pa' ? 'ਸੰਭਾਲੀ ਮਿਤੀ · ਤਾਜ਼ਾ ਕਰੋ' : 'Saved date · Refresh')
         : calendarStatus === 'degraded'
           ? (language === 'hi' ? 'सत्यापित तिथियाँ · जांचें' : language === 'pa' ? 'ਪ੍ਰਮਾਣਿਤ ਮਿਤੀਆਂ · ਜਾਂਚ ਕਰੋ' : 'Verified dates · Check coverage')
-          : (language === 'hi' ? 'जांच नहीं हो सकी · पुनः प्रयास' : language === 'pa' ? 'ਜਾਂਚ ਨਹੀਂ ਹੋ ਸਕੀ · ਮੁੜ ਕੋਸ਼ਿਸ਼' : 'Couldn&apos;t check · Retry');
+          : (language === 'hi' ? 'जांच नहीं हो सकी · पुनः प्रयास' : language === 'pa' ? 'ਜਾਂਚ ਨਹੀਂ ਹੋ ਸਕੀ · ਮੁੜ ਕੋਸ਼ਿਸ਼' : 'Couldn’t check · Retry');
 
       return (
         <PressableSurface
@@ -1160,12 +1160,12 @@ function HomeContent() {
       : `Next: ${state.nextPractice.title} · ${state.nextPractice.suggestion}`;
   const sadhanaButtonLabel = sadhanaComplete ? "Today's Recap" : completedCount === 0 ? 'Begin' : 'Continue';
   const sadhanaCtaGradient: readonly [string, string] = isDark
-    ? ['rgba(38,28,18,0.96)', 'rgba(24,18,13,0.94)']
-    : ['rgba(255,248,234,0.96)', 'rgba(250,236,211,0.88)'];
-  const sadhanaCtaText = isDark ? 'rgba(255,246,230,0.96)' : '#3f2b1f';
-  const sadhanaCtaSubtext = isDark ? 'rgba(255,230,190,0.66)' : 'rgba(63,43,31,0.66)';
-  const sadhanaCtaMeta = isDark ? 'rgba(255,230,190,0.58)' : 'rgba(63,43,31,0.58)';
-  const sadhanaCtaIconBg = isDark ? 'rgba(197,160,89,0.16)' : 'rgba(217,178,105,0.18)';
+    ? [FEATURE_COLORS.home.sadhanaCtaGradientDarkStart, FEATURE_COLORS.home.sadhanaCtaGradientDarkEnd]
+    : [FEATURE_COLORS.home.sadhanaCtaGradientLightStart, FEATURE_COLORS.home.sadhanaCtaGradientLightEnd];
+  const sadhanaCtaText = isDark ? FEATURE_COLORS.home.sadhanaCtaTextDark : FEATURE_COLORS.home.sadhanaCtaTextLight;
+  const sadhanaCtaSubtext = isDark ? FEATURE_COLORS.home.sadhanaCtaSubtextDark : FEATURE_COLORS.home.sadhanaCtaSubtextLight;
+  const sadhanaCtaMeta = isDark ? FEATURE_COLORS.home.sadhanaCtaMetaDark : FEATURE_COLORS.home.sadhanaCtaMetaLight;
+  const sadhanaCtaIconBg = isDark ? COLORS.brandSoftDark : FEATURE_COLORS.home.sadhanaCtaIconBgLight;
 
   const dharmVeerRow = state.practices.find((row) => row.id === 'dharmveer');
   const dharmVeerDone = dharmVeerRow?.done ?? false;
@@ -1914,7 +1914,7 @@ function HomeContent() {
                   borderRadius: 10,
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: pressed ? 'rgba(197,160,89,0.32)' : COLORS.homePwaPillBg,
+                  backgroundColor: pressed ? COLORS.homeGoldPillBorder : COLORS.homePwaPillBg,
                 })}
               >
                 <Feather name="edit-2" size={10} color={heroDetailsBelow ? theme.text : COLORS.homePwaPillText} />
@@ -2205,7 +2205,7 @@ function HomeContent() {
                 borderRadius: 14,
                 paddingHorizontal: 10,
                 paddingVertical: 6,
-                shadowColor: isDark ? '#000000' : '#493514',
+                shadowColor: isDark ? COLORS.black : FEATURE_COLORS.home.shadowColorLight,
                 shadowOpacity: isDark ? 0.3 : 0.1,
                 shadowRadius: 8,
                 shadowOffset: { width: 0, height: 4 },
@@ -2390,10 +2390,10 @@ function HomeContent() {
               paddingHorizontal: 14,
               paddingVertical: 11,
               borderWidth: 1,
-              borderColor: isDark ? 'rgba(197,160,89,0.22)' : 'rgba(205,166,92,0.28)',
+              borderColor: isDark ? OVERLAYS.gold[0.22] : FEATURE_COLORS.home.pressableSurfaceBorderLight,
               boxShadow: isDark
-                ? '0 12px 28px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,240,200,0.08)'
-                : '0 12px 28px rgba(105,75,35,0.10), inset 0 1px 0 rgba(255,255,255,0.75)',
+                ? FEATURE_COLORS.home.pressableSurfaceShadowDark
+                : FEATURE_COLORS.home.pressableSurfaceShadowLight,
               gap: 9,
               overflow: 'hidden',
             }}
@@ -2419,7 +2419,7 @@ function HomeContent() {
                   name={nextPracticeRow?.id ?? 'japa'}
                   fallbackGlyph={sadhanaComplete ? 'star' : nextPracticeIcon}
                   size={20}
-                  color="#a97725"
+                  color={FEATURE_COLORS.home.sacredIconText}
                 />
               </View>
               <View style={{ flex: 1, minWidth: 0 }}>
@@ -2452,15 +2452,15 @@ function HomeContent() {
                   paddingLeft: 13,
                   paddingRight: 10,
                   paddingVertical: 7,
-                  backgroundColor: '#b6842f',
-                  boxShadow: '0 8px 18px rgba(160,112,39,0.22), inset 0 1px 0 rgba(255,255,255,0.35)',
+                  backgroundColor: FEATURE_COLORS.home.sadhanaCtaButtonSurface,
+                  boxShadow: FEATURE_COLORS.home.sadhanaCtaButtonShadow,
                 }}
               >
-                <Ionicons name="sparkles" size={12.5} color="#fff8e8" />
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12.5, lineHeight: 16, color: '#fff8e8' }}>
+                <Ionicons name="sparkles" size={12.5} color={FEATURE_COLORS.home.sadhanaCtaButtonText} />
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12.5, lineHeight: 16, color: FEATURE_COLORS.home.sadhanaCtaButtonText }}>
                   {sadhanaButtonLabel}
                 </Text>
-                <Feather name="chevron-right" size={12.5} color="#fff8e8" style={{ opacity: 0.72, marginLeft: -2 }} />
+                <Feather name="chevron-right" size={12.5} color={FEATURE_COLORS.home.sadhanaCtaButtonText} style={{ opacity: 0.72, marginLeft: -2 }} />
               </View>
             </View>
           </PressableSurface>

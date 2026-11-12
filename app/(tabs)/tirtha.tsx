@@ -31,7 +31,7 @@ import { SacredLoader } from '@/components/ui/SacredLoader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SkeletonCard } from '@/components/ui/SkeletonLoader';
 import { YatraCircuitsSection } from '@/components/tirtha/YatraCircuitsSection';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, TYPE, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, TYPE, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import { DIASPORA_TEMPLES, getCuratedNearbyTemples } from '@/lib/diaspora-temples';
 import {
@@ -1381,14 +1381,14 @@ export default function TirthaScreen() {
               <View
                 style={{
                   borderRadius: 14,
-                  backgroundColor: 'rgba(224,104,76,0.12)',
+                  backgroundColor: FEATURE_COLORS.tirtha.surface,
                   borderWidth: 1,
-                  borderColor: 'rgba(224,104,76,0.3)',
+                  borderColor: FEATURE_COLORS.tirtha.border,
                   paddingHorizontal: 12,
                   paddingVertical: 10,
                 }}
               >
-                <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: '#E0684C' }}>
+                <Text style={{ fontFamily: FONTS.sans, fontSize: 13, color: FEATURE_COLORS.tirtha.text }}>
                   {checkinError}
                 </Text>
               </View>

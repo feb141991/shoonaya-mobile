@@ -16,7 +16,7 @@ import { useRouter } from 'expo-router';
 import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
 
-import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, SPACING, TYPE, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, SPACING, TYPE, themeColor } from '@/lib/constants';
 import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { DatePickerField } from '@/components/ui/DatePickerField';
@@ -622,7 +622,7 @@ export default function SanskaraScreen() {
                     style={[
                       styles.sharedStatusBadge,
                       {
-                        backgroundColor: item.completed ? 'rgba(76, 175, 80, 0.12)' : theme.brandSoft,
+                        backgroundColor: item.completed ? COLORS.sanskaraCompletedBg : theme.brandSoft,
                         borderColor: item.completed ? COLORS.success : theme.borderSoft,
                       },
                     ]}
@@ -1218,7 +1218,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(128, 128, 128, 0.1)',
+    borderTopColor: FEATURE_COLORS.sanskara.sharedDatesRowTopBorder,
   },
   sharedDateText: {
     fontFamily: FONTS.sans,
@@ -1226,7 +1226,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    backgroundColor: COLORS.deepModalScrim,
     justifyContent: 'flex-end',
   },
   modalSheet: {

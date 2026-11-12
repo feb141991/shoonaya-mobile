@@ -117,6 +117,7 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before 
   inspect the backend working tree when a backend service or shared contract is
   in scope.
 - Preserve unrelated and parallel changes.
+- Create a Git branch only when the founder explicitly asks for one. Use a detached checkout for merge verification.
 - One scoped objective and one scoped commit per prompt.
 - Report every changed file and prove unrelated dirty files were not staged.
 - Never push, deploy, apply production migrations, trigger production
@@ -359,6 +360,12 @@ Rules:
   calendar-governance-grade: it must come from an explicit, visible, per-
   category choice during onboarding or a dismissible later prompt, never
   a blanket write baked into the persistence payload.
+- Amended 2026-11-12 (founder decision, superseding an earlier core-tier draft): every reminder category may be ON by default EXCEPT
+  Brahma Muhurta, which stays an opt-in. The default is acceptable only because onboarding shows each category as its own visible,
+  pre-selected choice the person can untick and Settings has a toggle for each; it is never a silent write on "Not now" or on completing
+  onboarding without seeing the choices, and the OS push prompt never stands in for any category. Settings' fallback for a missing
+  profile value must read the same way (guard: `__tests__/notification-default-tier.test.ts`). Backend: migrations `20261112100000`
+  (defaults) and `20261112110000` (Brahma opt-in reset), unapplied until approved.
 - Why this rule exists: on 2026-10-26, the backend half of this same defect
   (nine reminder columns backfilled with `WHERE x = false OR x IS NULL`,
   destroying the record of real opt-outs) was recorded in the Shoonaya
@@ -419,6 +426,12 @@ Rules:
   the app can ship in either order: an app without these changes opens the same section for every new URL. This applies
   equally to human and AI-agent contributors.
 
+- A subscriber to the held-tap store that throws must not drop a tap or link (2026-11-12): `notify()` in `lib/notificationTap.ts` calls each subscriber
+  in its own `try/catch` and logs the error message (never the tap's contents). Origin: Metro logged a subscriber error, with no message, from the
+  system-link handler on 2026-11-01 and 2026-11-12; five link opens in the simulator (warm, repeated, and just after load) did not reproduce it, so
+  the cause is unknown and this is containment plus diagnosis, not a root-cause fix. Guard: `__tests__/notification-tap-subscribers.test.ts` (3 tests,
+  proven red against the old `notify()`). Not verified on a device; look for the new `[notificationTap] a subscriber threw:` line if it recurs.
+
 ### 21. A Screen Calls the Route for Its Own Slice, Not the Aggregate
 - `/api/native/home-summary` is Home's aggregate (profile, calendar, observances, sadhana, sankalpa, Dharm Veer). A screen that needs one slice of it must call a route that computes only that slice, never `home-summary` with the rest discarded: whatever is slow or failing in an unrelated slice then holds this screen open, and a 503 from the aggregate becomes this screen's error. If no such route exists, add one in the backend (section 1) and keep a 404-only compatibility fallback (`lib/shlokaToday.ts`: `home-summary?skipCalendar=true`) so an over-the-air update shipped before the backend deploy still works. A fallback is for "route not deployed" (404) only; a 401, 503 or network failure is the answer and must reach the screen unchanged.
 - The Shloka screen reads today's text from `GET /api/native/shloka/today`. It deliberately has no persisted cache: the text is chosen on the server by `getDayOfYear()` (server-local day) for non-Hindu traditions but by the profile's timezone for Hindu, so a cache keyed by the device's date can show yesterday's or tomorrow's verse as today's. A correct cache needs the server to return the day it computed for (a `dayKey`) and the client to key by user, tradition, language, that `dayKey` and a content version, and to label itself stale (sections 5 and 9). Do not add one without that.
@@ -464,9 +477,42 @@ Rules:
   `delete-mine` and `export` existed in the API and the contract file but no screen called them, although the authorization contract (E7) promised an
   export before the 12-month former-manager window ends. Guard: `__tests__/sanskara-data.test.ts` (33 mutations each proven to turn a test red).
   Not verified on a device, in light and dark mode, with large text or on 3-button Android navigation, and not in any build or over-the-air update.
-- Still open, found in the same sweep (two more private files written to the cache and never removed at sign-out): Settings "Download your data"
-  writes `shoonaya-data.json` and Profile's sadhana report writes `sadhana-report.html`. The account-wide export (`/api/user/export`) also holds no
-  Sanskāra data, so this sheet is the only way to download it. This applies equally to human and AI-agent contributors.
+- Closed 2026-11-06 (found in the same sweep: two more private files written to the cache and never removed at sign-out): Settings "Download your
+  data" wrote `shoonaya-data.json` (the account-wide export) and Profile's sadhana report wrote `sadhana-report.html`, each straight into the cache root.
+  Both now go through `lib/privateExportFilesDevice.ts` (rules in `lib/privateExportFiles.ts`): one cache directory (`private-exports`), removed before
+  each new export and after a failed share, and purged at sign-out and on an account switch by `app/_layout.tsx`; the purge also removes the two files
+  an earlier build left in the cache root. Sharing availability is checked before anything is written. The file is still NOT removed when
+  `Sharing.shareAsync` resolves (same reason as above). The account-wide export (`/api/user/export`) holds no Sanskāra data, so the Sanskāra sheet is
+  the only way to download it. Any new private file in the cache goes through one of the two purged device modules; `__tests__/private-export-files.test.ts`
+  fails for any other file that references `Paths.cache` or `cacheDirectory`, and its list of allowed files (the two purged modules, the public
+  `shoonaya-dharmic-calendar.ics`, and the public read-aloud audio `tts_audio_N`) may only shrink. Guard: that test (see the rule below).
+- Closed 2026-11-06 (the two classes the first fix could not see, because the libraries write the files, not our code): the share-card images and the
+  profile photo picker's copy. `lib/share-card.ts` takes the picture with `react-native-view-shot` (`tmpfile`), which leaves it in the cache root on
+  Android (named after the caller's `fileName` plus digits, so the library's own cleanup, which only matches its default prefix, never removes it) and in
+  `tmp/ReactNative` on iOS, as a bare path rather than a `file://` uri. The name-story card and its file name carry the person's own name. The card is now
+  copied into the same purged `private-exports` directory and the original is deleted; if the copy fails the original is shared exactly as before
+  (a leftover file, never a lost share). Sharing availability is now checked before the picture is taken. `expo-image-picker` writes its crop to
+  `<cache>/ImagePicker/` on both platforms (read in its Android and iOS sources); the profile picture is uploaded from the base64 the picker returns, so
+  `pickAvatar` removes that folder in its `finally` block and the sign-out purge removes it too. Only the folder is ever removed, never a uri a pick
+  returns, because an unedited pick can be the person's own photo.
+- Rule for the next file: any library that writes its own files (`react-native-view-shot`, `expo-image-picker`, and `expo-print`, `expo-document-picker`,
+  `expo-image-manipulator`, `expo-camera`, `expo-media-library` if they are ever added) is listed in `__tests__/private-export-files.test.ts` with the
+  files that import it and how its output is purged; a new importer fails the test until it is. Every caller of `Sharing.shareAsync` is likewise
+  listed. Guard: that test (50 mutations each proven to turn it red, including reverting Settings, Profile, the layout and `lib/share-card.ts` to
+  their previous files).
+- Device evidence, iOS Simulator, 2026-11-06 (iPhone 17 Pro Max, iOS 26.5, dev client `com.shoonaya.app` 1.0.0 build 7, JavaScript from a Metro serving
+  commit df7eda1, a real account, read-only API calls, no photo upload): the data export, the sadhana report and a share card each opened the system share
+  sheet and landed in `Library/Caches/private-exports/`, each replacing the previous file (one private copy at most); the export parsed as JSON; the card
+  was 1080x1920 and not blank; `tmp/ReactNative` was empty afterwards, so the iOS bare path was accepted, the copy worked, the original was deleted and the
+  fallback did not fire. A file planted in `Caches/ImagePicker/` was removed when `pickAvatar` finished (photo access denied, so the early-return path of
+  its `finally`; a control showed the file survives until then).
+- Still not verified on any device: the sign-out and account-switch purge, and the removal of an old build's files from the cache root. Two sign-out
+  attempts on a second simulator that day were invalid, not failed: the app process was connected to a different Metro (the main checkout, which has none
+  of this code), so they exercised nothing. Before a device test, confirm the app is running the intended checkout with `lsof -nP -a -p <app pid> -iTCP`
+  (connections to the intended Metro's port); the dev menu's "Connected to" line was misleading. Also unverified: a real photo-picker crop (the folder
+  location comes from reading the library's Android and iOS sources), everything on Android (`File.copy` from the cache root or the external cache, and a
+  receiving app reading a file after the share sheet resolves) and the added copy per share card, which is unmeasured. In a dev client the purge's lazy
+  `import()` may need Metro to be reachable; a release bundle should not (not verified). This applies equally to human and AI-agent contributors.
 
 ### 26. A Hand-over Code Needs a Saved Date of Birth, and the Screen Must Say So
 - An early Sanskāra hand-over (before 18) accepts a code only from an account whose profile date of birth equals the birth date the managers
@@ -487,19 +533,108 @@ Rules:
 - Only the offer is gated. The `pa` type, generated content, startup scenes, backend producers and notification text stay in place; removing them is a separate decision. Onboarding already offers English and Hindi only.
 - Not built: resetting a non-Sikh profile's Punjabi to English. Tradition is locked after signup in Native (`app/(tabs)/profile.tsx`), so no Native screen changes it, and production had no Punjabi profile on 2026-11-10. If a path that changes tradition appears, it must reset `app_language` and `meaning_language` to English in the same write.
 - Safety-critical warnings are shown in English only (founder decision 2026-11-10), because neither Hindi nor Punjabi has had a native review. Built for the only such translated copy in Native: the account-deletion warnings and the deletion-pending notice in Settings (`REVIEWED_DELETION_LANGUAGES`, `accountDeletionCopy`, `reviewedDeletionLanguage`; adding a language there is the whole change once reviewed). Consent, Sanskāra hand-over and the date-of-birth card have no Punjabi in Native and are English only. Backend Sanskāra notice text still has Punjabi producers; the founder chose not to gate them (2026-11-10). A new safety-critical string in any language goes through the same allow-list.
+- Privacy and policy content is English only; interface text stays translated (founder decision 2026-11-12, narrowed the same day). The
+  explanation of what a consent covers is shown in English only: the religious-data consent (`lib/religious-data-consent.ts`, all of it), the
+  explanation under "Help improve reminders" (onboarding, inbox card, Settings) and under the onboarding e-mail opt-in. Their titles, labels,
+  accessibility hints, buttons and error lines are ordinary interface text and stay translated (Hindi; Punjabi for Sikh profiles where a Punjabi
+  string exists; none of these has one yet). A translation of an explanation waits for a native-speaker and counsel review, then goes through the
+  same allow-list idea as the deletion warnings. Guard: `__tests__/declaration-english-only.test.ts` fails in both directions (Hindi added to an
+  explanation, or a label or button losing its translation; each proven red). Not verified on a device.
 - Origin: 2026-11-10 decision to narrow languages to English and Hindi, with Punjabi for Sikh profiles. Guard: `__tests__/language-options.test.ts` (4 mutations each proven red). Not verified on a device.
 
-### 29. "Hide Notification Details" Is a Setting the Server Honours, Not the Phone
-- The switch (`profiles.notification_discreet_mode`, backend migration `20261112090000`) makes the backend replace each push's title and body with a neutral line for that person
-  (`push-server.ts`). The app cannot force iOS "Show Previews" or Android lock-screen visibility, so it never tries to; do not add a client-side attempt, and do not word the switch
-  as if the app controls the phone. It applies to **new** notifications only, and the copy says so.
-- It is read on its own (`lib/discreetMode.ts`), never added to the long Settings column cascade, so a server without the column keeps every other setting readable. A failed or
-  malformed read is `load_failed`, not "off" (section 18): the switch stays disabled, because showing "off" invites a tap that overwrites a real "on". It is disabled for guests
-  and until the read succeeded.
-- It is its own row, never part of the reminder list. Every toggle in that list asks for notification permission when switched on; this one is privacy, not consent to receive
-  more, so switching it on must not ask (guarded in `__tests__/discreet-mode.test.ts`).
-- English is the reviewed text. The Hindi is an unreviewed draft (reviewers deferred by the founder, 2026-11-07).
-- Not built: per-category Android channels (the second half of founder queue item 4). A push naming an Android channel the device has not created is not displayed at all (Expo SDK 57
-  docs, read 2026-11-10); see the backend `docs/notifications/LOCK_SCREEN_DISCRETION.md`, section 6, before sending any new `channelId`.
-- Numbering: this rule, 27 on `notif-choices-off` (onboarding), 28 on `notif-tap-tracking` and `main`'s 27 (Punjabi) were written on separate branches and must be renumbered when merged.
-- Origin: founder queue item 4 (2026-11-08). Not verified on a device, in light and dark mode, with large text, or how the neutral line looks on a locked screen or watch.
+### 28. A Notification Tap Is Counted Once, for the Signed-In Account, and Only With Consent
+- A tap is counted when it is **delivered** (`deliverPendingNotificationTap`'s `onDelivered`, after the navigation succeeded), never when it is merely observed.
+  A tap seen while signed out, one held past `NOTIFICATION_TAP_HOLD_MS`, an OS link, and a push sent before the backend put a `notificationKey` in it are not counted.
+- What is kept is `{ id, key, tappedAt, launchState }` in `lib/notificationTapQueue.ts`: the backend's notification key, when, and whether the tap launched the
+  app. Never a title, body, route, screen, notification type or anything typed. The type a tap has is decided by the server from its own send log; the client's
+  `data.type` is used only to avoid queueing what the server would refuse, and is never sent. The upload body is exactly six fields and never carries an account id.
+- The queue lives in user-scoped storage (`USER_SCOPED_NAMES.notificationTapQueue`), so sign-out and account switches purge it, and a tap is never filed under an
+  account that signed in while storage was being read. Never under a fixed AsyncStorage key.
+- Nothing is queued or sent unless the person turned on "Help improve reminders" (`profiles.consent_notification_taps`, default off;
+  `lib/notificationTapConsent.ts`). It is its own switch, never pre-selected and never inferred from "Share product usage data",
+  "Tradition-aware personalization" or any reminder choice, because practice reminders can reflect religious practice. It is offered in three
+  places only: an unticked switch at the end of the onboarding notifications step (written after the profile saves, so it can never fail
+  onboarding), Settings, and a one-time card in the notifications inbox (`components/notifications/TapConsentCard.tsx`, rules in
+  `lib/notificationTapPrompt.ts`: after a week, only while the server confirms off, "Not now" is remembered, at most twice). A failed
+  read is `unavailable`, not off: nothing is shown and this device's copy is left as it was. Turning it off closes the gate, empties the
+  queue and (backend trigger) deletes the stored taps. The server decides again on every upload and its answer wins.
+- Uploading follows section 16: after the app is ready and settled in the foreground, never at the background edge, and a tap leaves the queue only when the
+  server acknowledges it. The event id is derived from the notification response, so a response replayed after a restart is recorded once.
+- Why this rule exists: on 2026-11-07 the notification audit found nothing recorded that any notification was tapped, so no change to cadence or wording could be judged.
+  Mutation-checking the first version found the queue's size limit was enforced twice (on reading and on writing), so removing either was invisible; each now has its own test.
+- Known limits, do not assume them closed: on Android the last notification response can persist until cleared, so an old tap replayed at an ordinary launch that was
+  never recorded before could be counted when it did not just happen (the server refuses anything over a week old, and a recorded one is deduplicated). Not verified on a
+  device, on Android, in a cold start versus a running app, or in any build. The feature records nothing until the backend migration is applied AND the person has opted in.
+
+### 29. HTML Entities Belong in JSX Text, Not in JavaScript Strings
+- JSX decodes `&apos;`, `&amp;` and the like in text and in bare attribute strings (`title="Don&apos;t"`). It never decodes them inside a JavaScript string or a `{'...'}` expression: the characters appear literally on screen. In a JS string write the real character (`’`).
+- Origin: 2026-11-12. Home's calendar pill showed "Couldn&apos;t check · Retry" (`app/(tabs)/index.tsx`, since 2026-10-07). A sweep of `app/`, `components/` and `lib/` found no other instance. Guard: `__tests__/entity-in-js-string-guard.test.ts` (proven red with the fix reverted). Not verified on a device after the fix.
+
+### 30. A Consent Is Recorded by the Database, With the Wording the Person Saw
+- The four profile consents (`consent_religious_data`, `consent_activity_personalization`, `consent_product_analytics`, `consent_notification_taps`) are
+  recorded in the backend's append-only, hash-chained `consent_events` ledger by a trigger on `profiles`, whatever path writes them. A write says which
+  screen and wording it was made on: the API takes `consent_context`, a direct profile write carries `consent_context_in` (`lib/consentContext.ts`).
+  The app sends only a version; the checksum comes from the database's `consent_wording` registry, so a client cannot choose it.
+- Editing the explanation of a consent on screen changes what was consented to. Register the new wording as a new version in the backend registry first,
+  then bump `CONSENT_WORDING_VERSION` and the pinned checksums in `lib/consentWording.ts`. `__tests__/consent-wording.test.ts` fails if the text on screen
+  no longer hashes to its pinned value, and the backend's `consent-wording.test.ts` pins the same list: keep the two equal (section 1).
+- A new consent screen or write path must send the context, and a consent with no registered wording on that screen is simply recorded as having none.
+- Origin: 2026-11-12 privacy audit. Consents were yes/no flags with one shared, client-supplied timestamp, and no record of when each was given, which
+  wording was shown or on which screen. Backend migration `20261112140000_consent_evidence_ledger` is UNAPPLIED: until it is, the context is sent and
+  ignored. Not verified on a device. Whether proof of consent should outlive the account is a counsel decision.
+
+### 31. A Signed-Out Person May Read Mandali, and Nothing More
+- Founder decision 2026-11-12: a guest sees Mandali posts (`components/mandali/GuestMandaliFeed.tsx`, from the backend's `GET /api/mandali/public-feed`).
+  Reacting, commenting, sharing, opening a profile and the post menu show a sign-in prompt; posting, voting and RSVPs need an account, which the
+  database enforces. The guest feed carries posts, the author's public username and avatar, and counts. It never carries an account id, a Mandali id,
+  the names of people who reacted, comments, poll votes, RSVPs or member lists, and it is never stored on the device.
+- A new guest-visible Mandali surface must come from that route (or one built the same way), never from a direct table read. The database also closed
+  who-upvoted and who-RSVP'd to signed-in users (backend migration `20261112160000`, UNAPPLIED); posts and comments keep a public SELECT for this.
+- Guard: `__tests__/mandali-guest-readonly.test.ts` (three mutations proven red). Not verified on a device, in dark mode, with large text, or against the
+  deployed route.
+
+### 32. Keep Files Small Enough to Review: Line Limits With a Shrink-Only List
+- A hand-written source file under `app/`, `components/`, `hooks/` or `lib/` stays at or under **800 lines for a screen in `app/`** and **600 lines for everything else**. A
+  generated snapshot is exempt only by its `.generated.` name and is rebuilt by its generator, never edited. A content table is not exempt: it is listed like any other file,
+  and anything that splits verified spiritual content still follows section 3.
+- The files already over their limit on 2026-11-12 are listed with a ceiling equal to their size then, in `__tests__/file-size-guard.test.ts`. A ceiling only goes down. A change
+  that has to add lines to a listed file takes at least as many out in the same change. Never raise a ceiling, never add a file to the list, and never delete the guard to make a
+  change pass. The guard also fails when a listed file shrinks and its ceiling is left more than 25 lines above it (lower it, so it cannot grow back), and when a listed file
+  drops under its limit (delete the entry).
+- A new file starts under its limit, and a screen that is heading for it is split by responsibility first, not by line count: a file cut into pieces that only re-export each
+  other, or code moved into a data file to dodge the count, is not a split. Signs it is time before the limit: a component with more than about 15 `useState` calls, a
+  component declared inside another component's body (it remounts on every render), or a screen that draws, loads, saves and animates in one place.
+- How to split (the method that worked for `app/(tabs)/japa.tsx`, 4,093 lines to 1,216):
+  - Order by risk: pure display first (an animated drawing, a launcher, a ceremony overlay), then storage helpers, then the hook that loads data, last. State stays in the screen;
+    a component takes values and callbacks and draws them. A hook that loads private data keeps the identity, stale-response and cache rules of sections 5, 22, 23 and 24 in one place.
+  - Move the text verbatim by a script, not by retyping it, and change only what the move forces (imports, props, a storage call swapped for its helper). Run the typecheck with
+    `--noUnusedLocals` filtered to the files involved, and the full test suite, after every extraction, never once at the end.
+  - A test that reads a file's text is repointed to the file that now holds the code, with the same assertions, and each is proven red by removing the code it pins. A test
+    that still passes after a move can be passing on other text: the Japa ambient-sound check matched a code comment and a different button after the launcher moved out, and
+    the launcher row was unprotected until it read the launcher file.
+  - Check the screen on a device or simulator one input at a time, from a settled screenshot, taking no action that saves. Never edit, even temporarily, a file the running
+    Metro bundler is serving to a live app (see the note below).
+- Why this rule exists: on 2026-11-12 `app/(tabs)/japa.tsx` had grown to 4,093 lines (43 `useState` calls, 21 effects, a Meru crown component declared inside the screen that
+  remounted on every bead tap, 110 tests that read it as text) and splitting it took a whole session, found three tests pinned to its text and one pinned to a code comment, and
+  shipped nothing a person could see. At that point 54 hand-written files were over 600 lines and 22 were over 1,000 (`lib/dharm-veer.ts` 4,048, `app/kul.tsx` 3,699, the Mandali,
+  Home and Profile screens near 2,000 to 3,000); 48 are listed. Guard: `__tests__/file-size-guard.test.ts` (four violations each proven red on the real tree, and the
+  checker is a pure function with its own tests). Not verified on a device: Japa's extracted screens were checked in light mode on the iOS Simulator only, not on Android, in dark
+  mode or with large text.
+- Two incidents from that session, so they are not repeated: a mutation test that appended code to a file Metro was serving hot-reloaded into the running app and crashed it
+  (run mutation checks on the test file or a copy); and a chain of simulator taps on a lagging screen saved a real practice session to the signed-in account (verify each screen
+  before each tap, and never tap a control that saves on a real account without saying so).
+
+### 33. Japa Round Handoff and Timer Ownership
+- A counted round stays in the current practice until the device queue confirms its write. Keep the same completion ID and payload across local retries. Once queued, a delivery failure or unreadable response must never reopen the same beads for a new submission.
+- Only advance the session duration watermark after durable handoff. Reset it together with the clock and counters on every new practice. Before publishing completion context, recheck the original identity lease after parsing the response.
+- Cancel automatic beads when the route blurs, the app leaves the foreground, or a sheet interrupts practice. Commit the bead before starting asynchronous haptics. Automatic ceremony dismissal must not open the sign-in prompt.
+- Origin: the 2026-11-12 Japa review found lost rounds on queue-write failure, duplicate partials after an unreadable success response, and late context from a prior account. The Japa auto-advance tests exercise the production handoff, reconciliation, identity and timer helpers.
+
+### 34. Onboarding Reminders Require Individual Choices
+- Onboarding displays all 17 reminder switches individually and preserves the visible defaults in section 19. An unconfirmed or skipped step saves every reminder off. The app opens OS permission or recovery only when a reminder is selected. Legacy bundled drafts cannot opt someone in. Both Nitya columns mirror the one Nitya choice.
+- Keep reminder preferences, notification tap measurement, and optional email consent independent. Verify server-side reminder defaults and eligibility separately from the Native form.
+- Origin: the 2026-11-07 notification audit found that bundled switches could enable more reminders than the copy described. Guarded by the onboarding notification and data contract tests.
+
+### 35. A Lock-Screen Privacy Control Needs a Sender Capability
+- Enable “Hide notification details” only after an authenticated read from the endpoint that ships with push redaction. An existing profile column cannot prove that the active sender honors the preference. Keep the switch unavailable after an uncertain save until a fresh read confirms the value.
+- Origin: the 2026-11-12 branch review found the database column in production before the sender code was deployed. The old column-only readiness check could offer privacy the sender had no code to enforce. Guarded by the Native discretion contract tests and the backend Expo-payload tests.

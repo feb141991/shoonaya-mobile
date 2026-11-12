@@ -36,7 +36,7 @@ const FALLBACK_GLYPHS: Record<SacredIconName, keyof typeof Feather.glyphMap> = {
   rashiphala: 'star',
   kundali: 'compass',
 };
-import { COLORS, FONTS, SHADOWS } from '@/lib/constants';
+import { FEATURE_COLORS, COLORS, FONTS, SHADOWS } from '@/lib/constants';
 import { useSchemeOrReaderAppearance } from '@/lib/readerAppearanceContext';
 
 export type SacredLoaderProps = {
@@ -217,7 +217,7 @@ export function SacredLoader({
           style={[
             styles.iconWell,
             {
-              backgroundColor: isDark ? 'rgba(28, 24, 20, 0.85)' : 'rgba(255, 253, 248, 0.95)',
+              backgroundColor: isDark ? FEATURE_COLORS.sacredLoader.surfaceDark : FEATURE_COLORS.sacredLoader.surfaceLight,
               borderColor: theme.premiumBorder,
               boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
             },

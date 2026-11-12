@@ -13,6 +13,11 @@ import {
   computePushNotificationEligibility,
   computeFinalNotificationState,
   DEFAULT_NOTIFICATION_CATEGORY_CHOICES,
+  NO_NOTIFICATION_CATEGORY_CHOICES,
+  NOTIFICATION_CHOICE_KEYS,
+  hasAnyNotificationChoice,
+  readNotificationChoices,
+  type NotificationChoiceKey,
   type Step,
   type TraditionKey,
   type NotificationChoice,
@@ -129,6 +134,7 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
       wants_vrat_reminders: true,
       wants_tithi_reminders: true,
       wants_nitya_reminders: true,
+      nitya_reminder_enabled: true,
       wants_shloka_reminders: true,
       wants_evening_reminder: true,
       wants_madhyahn_reminder: true,
@@ -153,6 +159,7 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
       wants_vrat_reminders: false,
       wants_tithi_reminders: false,
       wants_nitya_reminders: false,
+      nitya_reminder_enabled: false,
       wants_shloka_reminders: false,
       wants_evening_reminder: false,
       wants_madhyahn_reminder: false,
@@ -168,12 +175,8 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
       wants_family_remembrance_reminders: false,
     };
 
-    const ALL_TRUE: NotificationCategoryChoices = {
-      festivalsAndVrats: true, dailySadhana: true, dailyQuiz: true, communityAndFamily: true, brahmaMuhurta: true,
-    };
-    const ALL_FALSE: NotificationCategoryChoices = {
-      festivalsAndVrats: false, dailySadhana: false, dailyQuiz: false, communityAndFamily: false, brahmaMuhurta: false,
-    };
+    const ALL_TRUE = Object.fromEntries(NOTIFICATION_CHOICE_KEYS.map((key) => [key, true])) as NotificationCategoryChoices;
+    const ALL_FALSE = Object.fromEntries(NOTIFICATION_CHOICE_KEYS.map((key) => [key, false])) as NotificationCategoryChoices;
 
     it('OS push eligibility depends only on the OS choice and live permission, never on category preference', () => {
       assert.equal(computePushNotificationEligibility('enabled', true), true);
@@ -192,53 +195,60 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
       assert.deepEqual(getNotificationPersistencePayload(ALL_FALSE), expectedAllDisabledPayload);
     });
 
-    it('default category choices enable everything except Brahma Muhurta', () => {
-      assert.deepEqual(DEFAULT_NOTIFICATION_CATEGORY_CHOICES, {
-        festivalsAndVrats: true, dailySadhana: true, dailyQuiz: true, communityAndFamily: true, brahmaMuhurta: false,
-      });
-      const payload = getNotificationPersistencePayload(DEFAULT_NOTIFICATION_CATEGORY_CHOICES);
-      assert.equal(payload.wants_brahma_muhurta_reminders, false, 'the pre-dawn, night-delivered reminder needs its own deliberate opt-in');
-      assert.equal(payload.quiz_reminder_enabled, true);
-      assert.equal(payload.wants_festival_reminders, true);
-      assert.equal(payload.wants_nitya_reminders, true);
-      assert.equal(payload.wants_family_remembrance_reminders, true);
-      // 2026-10-27 coverage-gap columns (AGENTS.md rule 6): already-live crons
-      // that had never been exposed in any UI must come up through the same
-      // default-on category as their sibling columns, not separately.
-      assert.equal(payload.wants_evening_reminder, true);
-      assert.equal(payload.wants_madhyahn_reminder, true);
-      assert.equal(payload.wants_sattvic_reminders, true);
-      assert.equal(payload.wants_mood_reminders, true);
-      assert.equal(payload.dharm_veer_reminder_enabled, true);
+    it('saves no reminders when the form is skipped or no choices are passed', () => {
+      assert.equal(NOTIFICATION_CHOICE_KEYS.length, 17);
+      assert.deepEqual(NO_NOTIFICATION_CATEGORY_CHOICES, ALL_FALSE);
+      assert.deepEqual(getNotificationPersistencePayload(NO_NOTIFICATION_CATEGORY_CHOICES), expectedAllDisabledPayload);
+      assert.deepEqual(getNotificationPersistencePayload(), expectedAllDisabledPayload);
+      assert.equal(hasAnyNotificationChoice(NO_NOTIFICATION_CATEGORY_CHOICES), false);
+      assert.equal(Object.isFrozen(NO_NOTIFICATION_CATEGORY_CHOICES), true);
     });
 
-    it('each category only writes its own flags, never bleeding into another category’s columns', () => {
-      const onlyBrahmaMuhurta = getNotificationPersistencePayload({ ...ALL_FALSE, brahmaMuhurta: true });
-      assert.equal(onlyBrahmaMuhurta.wants_brahma_muhurta_reminders, true);
-      assert.equal(onlyBrahmaMuhurta.quiz_reminder_enabled, false);
-      assert.equal(onlyBrahmaMuhurta.wants_festival_reminders, false);
-      assert.equal(onlyBrahmaMuhurta.wants_community_notifications, false);
-      assert.equal(onlyBrahmaMuhurta.japa_reminder_enabled, false);
-      assert.equal(onlyBrahmaMuhurta.wants_evening_reminder, false);
-      assert.equal(onlyBrahmaMuhurta.wants_mood_reminders, false);
-      assert.equal(onlyBrahmaMuhurta.dharm_veer_reminder_enabled, false);
+    // The profile column(s) each single notification writes, and nothing else.
+    const COLUMN_BY_KEY: Record<NotificationChoiceKey, string> = {
+      festival: 'wants_festival_reminders', vrat: 'wants_vrat_reminders', tithi: 'wants_tithi_reminders',
+      sankalpaMidpoint: 'wants_sankalpa_midpoint_reminders', shloka: 'wants_shloka_reminders', nitya: 'wants_nitya_reminders',
+      midday: 'wants_madhyahn_reminder', evening: 'wants_evening_reminder', sattvic: 'wants_sattvic_reminders',
+      japa: 'japa_reminder_enabled', mood: 'wants_mood_reminders', quiz: 'quiz_reminder_enabled',
+      dharmVeer: 'dharm_veer_reminder_enabled', community: 'wants_community_notifications', family: 'wants_family_notifications',
+      familyRemembrance: 'wants_family_remembrance_reminders', brahmaMuhurta: 'wants_brahma_muhurta_reminders',
+    };
 
-      const onlyDailyQuiz = getNotificationPersistencePayload({ ...ALL_FALSE, dailyQuiz: true });
-      assert.equal(onlyDailyQuiz.quiz_reminder_enabled, true);
-      assert.equal(onlyDailyQuiz.dharm_veer_reminder_enabled, true, 'Dharm Veer rides the same learning-engagement cron as the quiz reminder');
-      assert.equal(onlyDailyQuiz.wants_brahma_muhurta_reminders, false);
-      assert.equal(onlyDailyQuiz.wants_shloka_reminders, false);
-      assert.equal(onlyDailyQuiz.wants_evening_reminder, false);
-      assert.equal(onlyDailyQuiz.wants_mood_reminders, false);
+    it('each notification writes only its own flag: no switch turns another one on', () => {
+      const booleanColumns = Object.values(COLUMN_BY_KEY);
+      assert.equal(new Set(booleanColumns).size, booleanColumns.length, 'one distinct column per notification');
+      for (const key of NOTIFICATION_CHOICE_KEYS) {
+        const payload = getNotificationPersistencePayload({ ...ALL_FALSE, [key]: true }) as Record<string, unknown>;
+        for (const [other, column] of Object.entries(COLUMN_BY_KEY)) {
+          assert.equal(payload[column], other === key, `${key} on: ${column} should be ${other === key}`);
+        }
+      }
+    });
 
-      const onlyDailySadhana = getNotificationPersistencePayload({ ...ALL_FALSE, dailySadhana: true });
-      assert.equal(onlyDailySadhana.wants_nitya_reminders, true);
-      assert.equal(onlyDailySadhana.wants_evening_reminder, true, 'evening Sandhya is the same daily-practice bucket as Nitya/shloka/japa');
-      assert.equal(onlyDailySadhana.wants_madhyahn_reminder, true);
-      assert.equal(onlyDailySadhana.wants_sattvic_reminders, true);
-      assert.equal(onlyDailySadhana.wants_mood_reminders, true);
-      assert.equal(onlyDailySadhana.dharm_veer_reminder_enabled, false, 'Dharm Veer belongs to the quiz/learning category, not Sadhana');
-      assert.equal(onlyDailySadhana.quiz_reminder_enabled, false);
+    it('Dharm Veer and the quiz are separate choices now (they used to share one switch)', () => {
+      const onlyQuiz = getNotificationPersistencePayload({ ...ALL_FALSE, quiz: true });
+      assert.equal(onlyQuiz.quiz_reminder_enabled, true);
+      assert.equal(onlyQuiz.dharm_veer_reminder_enabled, false);
+      const onlyDharmVeer = getNotificationPersistencePayload({ ...ALL_FALSE, dharmVeer: true });
+      assert.equal(onlyDharmVeer.dharm_veer_reminder_enabled, true);
+      assert.equal(onlyDharmVeer.quiz_reminder_enabled, false);
+    });
+
+    it('only a real true switches anything on (no truthy value can opt in)', () => {
+      for (const value of [1, 'true', 'yes', {}, [], null, undefined] as unknown[]) {
+        const payload = getNotificationPersistencePayload({ ...ALL_FALSE, shloka: value as boolean });
+        assert.equal(payload.wants_shloka_reminders, false, JSON.stringify(value));
+      }
+    });
+
+    it('draft restore keeps only known switches with real booleans and ignores the old bundled keys', () => {
+      assert.deepEqual(readNotificationChoices(undefined), ALL_FALSE);
+      assert.deepEqual(readNotificationChoices(null), ALL_FALSE);
+      assert.deepEqual(readNotificationChoices([true, true]), ALL_FALSE);
+      assert.deepEqual(readNotificationChoices({ festivalsAndVrats: true, dailySadhana: true, dailyQuiz: true, communityAndFamily: true }), ALL_FALSE,
+        'a draft from the bundled build must not switch anything on');
+      assert.deepEqual(readNotificationChoices({ shloka: true, mood: 'true', quiz: 1, madeUp: true, vrat: false }), { ...ALL_FALSE, shloka: true });
+      assert.equal(readNotificationChoices({ brahmaMuhurta: true }).brahmaMuhurta, true);
     });
 
     it('builds full profile payload reflecting final notification decision', () => {
@@ -255,9 +265,7 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
         calendarProfile: 'north_indian_purnimanta',
         calendarScope: 'all_observances',
         goals: ['peace'],
-        notificationCategories: {
-          festivalsAndVrats: true, dailySadhana: true, dailyQuiz: true, communityAndFamily: true, brahmaMuhurta: true,
-        },
+        notificationCategories: ALL_TRUE,
         religiousDataConsent: true,
         consentRecordedAt: '2026-10-15T08:00:00.000Z',
       });
@@ -735,9 +743,7 @@ describe('4. Marketing email consent from onboarding', () => {
     religiousDataConsent: false,
     consentRecordedAt: '2026-10-15T08:00:00.000Z',
   };
-  const ALL_CATEGORIES_FALSE: NotificationCategoryChoices = {
-    festivalsAndVrats: false, dailySadhana: false, dailyQuiz: false, communityAndFamily: false, brahmaMuhurta: false,
-  };
+  const ALL_CATEGORIES_FALSE: NotificationCategoryChoices = NO_NOTIFICATION_CATEGORY_CHOICES;
   const MARKETING_KEYS = ['marketing_consent', 'email_newsletter', 'consent_updated_at'];
 
   it('opting in sets both columns the campaign audience reads, and stamps the consent time', () => {
@@ -769,7 +775,7 @@ describe('4. Marketing email consent from onboarding', () => {
   });
 
   it('turning reminders on does not turn marketing email on (they are separate choices)', () => {
-    const payload = buildOnboardingProfilePayload({ ...base, notificationCategories: DEFAULT_NOTIFICATION_CATEGORY_CHOICES });
+    const payload = buildOnboardingProfilePayload({ ...base, notificationCategories: { ...DEFAULT_NOTIFICATION_CATEGORY_CHOICES, festival: true, shloka: true } });
     assert.equal(payload.wants_festival_reminders, true);
     assert.equal('marketing_consent' in payload, false);
   });

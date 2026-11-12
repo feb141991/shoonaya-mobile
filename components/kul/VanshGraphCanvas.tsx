@@ -589,7 +589,7 @@ const styles = StyleSheet.create({
   },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: '#0C0A07BB',
+    backgroundColor: COLORS.familyModalScrim,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,

@@ -74,6 +74,35 @@ test('buildSacredDaysDeck creates one deterministic, bounded Home deck', async (
     assert.deepEqual(items.map((item) => item.daysLeft), [0]);
   });
 
+  await t.test('does not hide a future standalone child before the series renders it', () => {
+    const seriesWithFutureChild = activeSeries({
+      children: [
+        ...activeSeries().children,
+        {
+          occurrenceId: 'occ-bhai-dooj',
+          slug: 'bhai-dooj',
+          civilDate: '2026-11-10',
+          sequence: 5,
+          title: 'Bhai Dooj',
+          routeKind: 'festival',
+          routeSlug: 'bhai-dooj',
+          status: 'resolved',
+          diagnostics: [],
+          sourceRefs: [],
+        },
+      ],
+    });
+
+    const items = buildSacredDaysDeck({
+      observances: [observance('Bhai Dooj', 2, 'bhai-dooj')],
+      series: [seriesWithFutureChild],
+      spiritualDate,
+      windowDays: HOME_SACRED_DAYS_WINDOW,
+    });
+
+    assert.equal(items.some((item) => item.type === 'observance' && item.entry.routeSlug === 'bhai-dooj'), true);
+  });
+
   await t.test('deduplicates Pitru Paksha day 4 when standalone observance uses series route_slug', () => {
     const pitruSeries: ObservanceSeries = {
       seriesKey: 'pitru-paksha:hindu:2026',

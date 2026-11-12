@@ -40,13 +40,14 @@ import { PostOptionsSheet } from '@/components/mandali/PostOptionsSheet';
 import { NotificationTargetSheet } from '@/components/mandali/NotificationTargetSheet';
 import { mandaliNotificationTarget } from '@/lib/notificationDestination';
 import { ConnectionRequestsSheet } from '@/components/mandali/ConnectionRequestsSheet';
+import { GuestMandaliFeed } from '@/components/mandali/GuestMandaliFeed';
 import { PostReactionButton } from '@/components/mandali/PostReactionButton';
 import { PostReactorsSheet } from '@/components/mandali/PostReactorsSheet';
 import { PostReactionSummaryBar } from '@/components/mandali/PostReactionSummaryBar';
 import { type PostReactionSummary, fetchPostReactionSummaries } from '@/lib/mandaliReactions';
 import { MandaliPollCard } from '@/components/mandali/MandaliPollCard';
 import { FestivalQuizMandaliStat } from '@/components/mandali/FestivalQuizMandaliStat';
-import { COLORS, FONTS, SHADOWS, TYPE } from '@/lib/constants';
+import { FEATURE_COLORS, COLORS, FONTS, SHADOWS, TYPE } from '@/lib/constants';
 import { apiFetch, isFetchCancelled } from '@/lib/api';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
@@ -166,17 +167,17 @@ type MandaliFeedItem =
 type MandaliSection = 'feed' | 'events' | 'people';
 
 const POST_TYPE_META: Record<MandaliPostType, { label: string; icon: keyof typeof Feather.glyphMap; color: string }> = {
-  update: { label: 'Update', icon: 'message-circle', color: '#4C8BF5' },
-  question: { label: 'Question', icon: 'help-circle', color: '#8C64C8' },
-  announcement: { label: 'Announcement', icon: 'volume-2', color: '#E0684C' },
-  event: { label: 'Event', icon: 'calendar', color: '#34A853' },
+  update: { label: 'Update', icon: 'message-circle', color: FEATURE_COLORS.mandali.updateAccent },
+  question: { label: 'Question', icon: 'help-circle', color: FEATURE_COLORS.mandali.questionAccent },
+  announcement: { label: 'Announcement', icon: 'volume-2', color: FEATURE_COLORS.mandali.announcementAccent },
+  event: { label: 'Event', icon: 'calendar', color: FEATURE_COLORS.mandali.eventAccent },
 };
 
 // Filter picker options — mirrors POST_TYPE_META plus the "All" case, each
 // with its own color so the Facebook-reaction-style popup reads as a set of
 // distinct choices rather than a single-tone list.
 const FILTER_OPTIONS: Array<{ value: MandaliPostType | 'all'; label: string; icon: keyof typeof Feather.glyphMap; color: string }> = [
-  { value: 'all', label: 'All', icon: 'grid', color: '#C5A059' },
+  { value: 'all', label: 'All', icon: 'grid', color: COLORS.brandGold },
   { value: 'update', label: 'Updates', icon: POST_TYPE_META.update.icon, color: POST_TYPE_META.update.color },
   { value: 'event', label: 'Events', icon: POST_TYPE_META.event.icon, color: POST_TYPE_META.event.color },
   { value: 'question', label: 'Questions', icon: POST_TYPE_META.question.icon, color: POST_TYPE_META.question.color },
@@ -2717,21 +2718,14 @@ function MandaliScreen() {
   }
 
   if (isGuest) {
+    // A signed-out person reads Mandali; anything that needs an account asks them to sign in (founder decision 2026-11-12).
     return (
-      <Screen style={{ backgroundColor: theme.bg }}>
-        <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 16 }}>
-          <EmptyState
-            icon="users"
-            title="Join Mandali"
-            subtitle="Mandali is a sacred community space for registered seekers. Sign in to join Mandali, share posts, and connect with other seekers."
-            ctaLabel="Sign In"
-            onCta={async () => {
-              await setGuestMode(false);
-              router.replace('/(auth)/login');
-            }}
-          />
-        </View>
-      </Screen>
+      <GuestMandaliFeed
+        onSignIn={async () => {
+          await setGuestMode(false);
+          router.replace('/(auth)/login');
+        }}
+      />
     );
   }
 

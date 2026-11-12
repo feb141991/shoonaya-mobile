@@ -65,6 +65,7 @@ test('Android verifies only supported public Shoonaya route families', () => {
     '/features',
     '/about',
     '/guest',
+    '/stories',
   ];
 
   for (const host of ['www.shoonaya.com', 'shoonaya.com']) {

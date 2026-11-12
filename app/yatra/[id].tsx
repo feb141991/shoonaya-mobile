@@ -18,7 +18,7 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { YatraGraphCanvas } from '@/components/tirtha/YatraGraphCanvas';
 import { VirtualSanctumModal } from '@/components/tirtha/VirtualSanctumModal';
 import { getYatraById, TempleSanctumNode } from '@/lib/yatra-data';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, themeColor } from '@/lib/constants';
 
 export default function YatraDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -81,7 +81,7 @@ export default function YatraDetailScreen() {
           <Pressable
             onPress={handleShare}
             hitSlop={12}
-            style={[styles.actionIconBtn, { backgroundColor: isDark ? '#1F2937' : '#F3F4F6' }]}
+            style={[styles.actionIconBtn, { backgroundColor: isDark ? FEATURE_COLORS.yatraDetail.actionIconBtnSurfaceDark : FEATURE_COLORS.yatraDetail.actionIconBtnSurfaceLight }]}
             accessibilityLabel="Share Yatra Circuit"
           >
             <Feather name="share-2" size={17} color={theme.text} />
@@ -89,9 +89,9 @@ export default function YatraDetailScreen() {
         </View>
 
         {/* Informational Guidance Banner */}
-        <View style={[styles.infoBanner, { backgroundColor: isDark ? '#1E293B' : '#FEF3C7', borderColor: theme.borderSoft }]}>
+        <View style={[styles.infoBanner, { backgroundColor: isDark ? FEATURE_COLORS.yatraDetail.infoBannerSurfaceDark : FEATURE_COLORS.yatraDetail.infoBannerSurfaceLight, borderColor: theme.borderSoft }]}>
           <Feather name="compass" size={14} color={theme.brand} style={styles.infoIcon} />
-          <Text style={[styles.infoText, { color: isDark ? '#FDE68A' : '#92400E' }]}>
+          <Text style={[styles.infoText, { color: isDark ? FEATURE_COLORS.yatraDetail.infoTextDark : FEATURE_COLORS.yatraDetail.infoTextLight }]}>
             Pinch to zoom and drag to explore pilgrimage routes. Tap any sacred temple for virtual darshan, diya lighting, and stotras.
           </Text>
         </View>

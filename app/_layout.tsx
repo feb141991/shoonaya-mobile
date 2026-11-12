@@ -2,7 +2,6 @@ import 'react-native-url-polyfill/auto';
 import 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import '../global.css';
-
 import { useEffect, useState, useCallback, useRef, useSyncExternalStore } from 'react';
 import { Alert, AppState, LogBox, Platform, Settings, View } from 'react-native';
 
@@ -48,6 +47,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { RouteTransition } from '@/components/ui/Motion';
 import { ContextualStartupScene } from '@/components/startup/ContextualStartupScene';
+import { FEATURE_COLORS } from '@/lib/constants';
 import { selectStartupScene } from '@/lib/startup-scenes/selector';
 import {
   getStartupPreferences,
@@ -60,6 +60,7 @@ import { StartupLifecycleController } from '@/lib/startup-scenes/lifecycle';
 import type { AppLanguage, StartupPreferences, StartupScene } from '@/lib/startup-scenes/types';
 import { trackScreenView } from '@/lib/analytics';
 import { clearSanskaraCache, purgeSanskaraExportFiles } from '@/lib/sanskara';
+import { purgePrivateExportFiles } from '@/lib/privateExportFiles';
 import { apiFetch, setApiAccessTokenFromSession } from '@/lib/api';
 import { markAuthReady } from '@/lib/authReadyGate';
 import { exchangeOAuthUrlIfPresent } from '@/lib/authRedirect';
@@ -122,7 +123,9 @@ import {
   type StartupAuthDestination,
 } from '@/lib/startup-visibility';
 import { setAppIdentity, getAppIdentity, useAppIdentity } from '@/lib/appIdentity';
+import { flushNotificationTaps, recordDeliveredNotificationTap } from '@/lib/notificationTapTracking';
 import { initializeProductAnalytics } from '@/lib/productAnalyticsRuntime';
+import { initializeNotificationTapConsent } from '@/lib/notificationTapConsent';
 import { trackAnalyticsEvent } from '@/lib/analytics';
 import { accountDeletion } from '@/lib/accountDeletion';
 import { clearAllReaderPrefs } from '@/lib/readerPrefs';
@@ -339,7 +342,9 @@ function RootLayout() {
   useEffect(() => {
     if (!startupRouteReady || deletionIdentity.kind === 'loading') return;
     const userId = deletionIdentity.kind === 'authenticated' ? deletionIdentity.userId : null;
-    void initializeProductAnalytics(userId).then(() => {
+    void Promise.all([initializeProductAnalytics(userId), initializeNotificationTapConsent(userId)]).then(() => {
+      // The consent flags are known now: report any tap queued before they were.
+      if (userId) void flushNotificationTaps();
       const currentIdentity = getAppIdentity();
       if (userId && currentIdentity.kind === 'authenticated' && currentIdentity.userId === userId && analyticsLaunchIdentityRef.current !== userId) {
         analyticsLaunchIdentityRef.current = userId;
@@ -603,6 +608,8 @@ function RootLayout() {
         void clearAllUserScopedStorage();
         // A downloaded Sanskāra copy holds private notes in the cache directory; it never outlives the account that made it.
         purgeSanskaraExportFiles();
+        // The account data export and the sadhana report are private files in the same cache; neither outlives the account either.
+        purgePrivateExportFiles();
         void clearProfileCache({ kind: 'authenticated', userId: previousRouteKey });
       }
       void getOrReadHomeCache({ kind: 'authenticated', userId: session.user.id });
@@ -1006,6 +1013,8 @@ function RootLayout() {
         initialForegroundFlushStarted = true;
         // Outboxes are local and acknowledged only after a confirmed response.
         void maybeUploadAuthDiagnostics();
+        // Taps not yet acknowledged (the server was unreachable, or consent was not yet read at start-up).
+        void flushNotificationTaps();
         const identity = getAppIdentity();
         if (identity.kind === 'guest') {
           void maybeUploadTelemetrySummary({ kind: 'guest' });
@@ -1122,7 +1131,7 @@ function RootLayout() {
   });
   useEffect(() => {
     if (!heldTap || !tapDeliverable) return;
-    deliverPendingNotificationTap((href) => router.push(href));
+    deliverPendingNotificationTap((href) => router.push(href), Date.now(), recordDeliveredNotificationTap);
   }, [heldTap, tapDeliverable, router]);
 
   // ── Privacy-safe app analytics ────────────────────────────────────────
@@ -1236,6 +1245,7 @@ function RootLayout() {
         // Private family and religious records are held in memory for a minute; sign-out ends that (AGENTS 5).
         clearSanskaraCache();
         purgeSanskaraExportFiles();
+        purgePrivateExportFiles();
       }
       // Keep the auth callback synchronous. routeForSession can perform API
       // work (including a token refresh during profile repair); running that
@@ -1274,11 +1284,11 @@ function RootLayout() {
   return (
     <AppProviders>
       <StatusBar style={showStartupScene ? "light" : "dark"} />
-      <View style={{ flex: 1, backgroundColor: '#FDF6E3' }}>
+      <View style={{ flex: 1, backgroundColor: FEATURE_COLORS.startup.splashSurface }}>
         {showStartupFallback ? (
           <View
             testID="startup-opaque-fallback"
-            style={[StyleSheet.absoluteFill, { backgroundColor: '#FDF6E3' }]}
+            style={[StyleSheet.absoluteFill, { backgroundColor: FEATURE_COLORS.startup.splashSurface }]}
           />
         ) : null}
         <RouteTransition>
@@ -1306,7 +1316,7 @@ function RootLayout() {
           <View
             style={[
               StyleSheet.absoluteFill,
-              { backgroundColor: '#FDF6E3', zIndex: 10000, justifyContent: 'center' },
+              { backgroundColor: FEATURE_COLORS.startup.splashSurface, zIndex: 10000, justifyContent: 'center' },
             ]}
           >
             <EmptyState

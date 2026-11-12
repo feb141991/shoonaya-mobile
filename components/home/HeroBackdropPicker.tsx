@@ -337,10 +337,10 @@ export function HeroBackdropPicker({
                             bottom: 0,
                             paddingHorizontal: 6,
                             paddingVertical: 4,
-                            backgroundColor: 'rgba(0,0,0,0.45)',
+                            backgroundColor: COLORS.celebrationScrim,
                           }}
                         >
-                          <Text style={{ ...TYPE.heroPickerMicro, color: '#fff' }} numberOfLines={1}>
+                          <Text style={{ ...TYPE.heroPickerMicro, color: COLORS.onMediaWhite }} numberOfLines={1}>
                             {item.label}
                           </Text>
                         </View>

@@ -17,7 +17,7 @@ import { SacredLoader } from '@/components/ui/SacredLoader';
 import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { apiFetch } from '@/lib/api';
 import { describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, SPACING, TYPE, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, SPACING, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { RASHI_LIST, RASHI_MAP } from '@/lib/jyotish';
 import { useAppIdentity } from '@/lib/appIdentity';
@@ -293,7 +293,7 @@ export default function RashiphalaScreen() {
                 styles.langBtn,
                 {
                   borderColor: theme.premiumBorder,
-                  backgroundColor: activeLang === 'hi' ? (isDark ? 'rgba(217, 119, 6, 0.2)' : 'rgba(254, 226, 226, 0.95)') : theme.card,
+                  backgroundColor: activeLang === 'hi' ? (isDark ? FEATURE_COLORS.rashiphala.pressableSurfaceDark : FEATURE_COLORS.rashiphala.pressableSurfaceLight) : theme.card,
                 },
               ]}
             >
@@ -301,7 +301,7 @@ export default function RashiphalaScreen() {
                 style={[
                   styles.langBtnText,
                   {
-                    color: activeLang === 'hi' ? (isDark ? '#F59E0B' : '#991B1B') : theme.dim,
+                    color: activeLang === 'hi' ? (isDark ? COLORS.warningDark : FEATURE_COLORS.rashiphala.textLight) : theme.dim,
                     fontWeight: activeLang === 'hi' ? '700' : '600',
                   },
                 ]}

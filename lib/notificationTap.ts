@@ -57,7 +57,30 @@ export function routeForNotificationTap(data: TapData | null | undefined): Href 
 
 // ── Held tap ────────────────────────────────────────────────────────────────
 
-export type PendingNotificationTap = { href: Href; key: string; receivedAt: number };
+/** `cold_start`: the tap launched the app. `running`: the app was already open (foreground or background). */
+export type NotificationTapLaunchState = 'cold_start' | 'running';
+
+export type PendingNotificationTap = {
+  href: Href;
+  key: string;
+  receivedAt: number;
+  /**
+   * The backend's key for the push that was tapped (`data.notificationKey`), or null for anything that is not one of
+   * our pushes (an OS link, an old push sent before the key existed). Only used to tell the server WHICH notification
+   * was tapped; the server re-checks it against its own send log.
+   */
+  notificationKey: string | null;
+  /** The push's `data.type`, used only to avoid queueing what the server would refuse. Never sent. */
+  notificationType: string | null;
+  launchState: NotificationTapLaunchState;
+};
+
+const NOTIFICATION_KEY_MAX = 200;
+
+function boundedString(value: unknown, max: number, pattern?: RegExp): string | null {
+  if (typeof value !== 'string' || value.length < 1 || value.length > max) return null;
+  return pattern && !pattern.test(value) ? null : value;
+}
 
 const HANDLED_KEYS_LIMIT = 30;
 let pending: PendingNotificationTap | null = null;
@@ -65,15 +88,39 @@ let handledKeys: string[] = [];
 const acknowledgements = new Map<string, () => void>();
 const listeners = new Set<() => void>();
 
+/**
+ * Calls every subscriber. One that throws must not stop the others or make `enqueueNotificationTap` throw: that call is
+ * made from the operating-system link handler, so a throw there drops the tap or link (the destination is already held in
+ * `pending`, so the next render still sees it). The error is logged with its message so a repeat can be diagnosed; the
+ * first occurrence (2026-11-12) arrived with a code frame and no message. Nothing from the tap itself is logged.
+ */
 function notify() {
-  for (const listener of listeners) listener();
+  for (const listener of Array.from(listeners)) {
+    try {
+      listener();
+    } catch (error) {
+      console.error('[notificationTap] a subscriber threw:', error instanceof Error ? `${error.name}: ${error.message}` : String(error));
+    }
+  }
 }
 
 /** Holds a tap for delivery. The same response (same key) is accepted once per session. */
-export function enqueueNotificationTap(key: string, data: TapData | null | undefined, now: number = Date.now()): boolean {
+export function enqueueNotificationTap(
+  key: string,
+  data: TapData | null | undefined,
+  now: number = Date.now(),
+  launchState: NotificationTapLaunchState = 'running',
+): boolean {
   if (handledKeys.includes(key)) return false;
   handledKeys = [...handledKeys, key].slice(-HANDLED_KEYS_LIMIT);
-  pending = { href: routeForNotificationTap(data), key, receivedAt: now };
+  pending = {
+    href: routeForNotificationTap(data),
+    key,
+    receivedAt: now,
+    notificationKey: boundedString(data?.notificationKey, NOTIFICATION_KEY_MAX),
+    notificationType: boundedString(data?.type, 64, /^[a-z0-9_]+$/),
+    launchState,
+  };
   notify();
   return true;
 }
@@ -87,11 +134,26 @@ function acknowledge(key: string) {
   acknowledgements.delete(key);
 }
 
-/** Navigate before consuming. A thrown router call leaves the intent available for retry. */
-export function deliverPendingNotificationTap(navigate: (href: Href) => void, now = Date.now()): boolean {
+/**
+ * Navigate before consuming. A thrown router call leaves the intent available for retry.
+ *
+ * `onDelivered` runs only for a tap that was actually navigated (not one that went stale while held), after the
+ * navigation succeeded, and can never break it: a throwing observer is ignored. This is where a tap is counted: the
+ * person is signed in and the app is interactive by the time we get here.
+ */
+export function deliverPendingNotificationTap(
+  navigate: (href: Href) => void,
+  now = Date.now(),
+  onDelivered?: (tap: PendingNotificationTap) => void,
+): boolean {
   const current = pending;
   if (!current) return false;
-  if (now - current.receivedAt <= NOTIFICATION_TAP_HOLD_MS) navigate(current.href);
+  if (now - current.receivedAt <= NOTIFICATION_TAP_HOLD_MS) {
+    navigate(current.href);
+    try { onDelivered?.(current); } catch {
+      // Measurement must never interrupt navigation.
+    }
+  }
   // A synchronous navigation subscriber may enqueue a newer intent; never discard it.
   if (pending?.key === current.key) pending = null;
   acknowledge(current.key);
@@ -158,7 +220,7 @@ function responseKey(response: TapResponse): string {
 
 /** Listen first, then inspect the launch response; both paths share deduplication and acknowledgement. */
 export function observeNotificationResponses(source: ResponseSource): () => void {
-  const accept = (response: TapResponse | null | undefined) => {
+  const accept = (response: TapResponse | null | undefined, launchState: NotificationTapLaunchState) => {
     if (!response || response.actionIdentifier !== DEFAULT_TAP_ACTION) return;
     const key = responseKey(response);
     const clearMatchingResponse = () => {
@@ -178,10 +240,12 @@ export function observeNotificationResponses(source: ResponseSource): () => void
       acknowledge(pending.key);
     }
     acknowledgements.set(key, clearMatchingResponse);
-    enqueueNotificationTap(key, response.notification.request.content.data);
+    enqueueNotificationTap(key, response.notification.request.content.data, Date.now(), launchState);
   };
-  const subscription = source.addNotificationResponseReceivedListener(accept);
-  try { accept(source.getLastNotificationResponse()); } catch {
+  // A tap delivered to the listener happened while the app was running; the one read from getLastNotificationResponse
+  // below is the tap that launched it (expo-notifications never replays that one to a listener registered later).
+  const subscription = source.addNotificationResponseReceivedListener((response) => accept(response, 'running'));
+  try { accept(source.getLastNotificationResponse(), 'cold_start'); } catch {
     // A platform read failure must not stop live taps from working.
   }
   return () => subscription.remove();

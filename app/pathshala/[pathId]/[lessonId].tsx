@@ -22,7 +22,7 @@ import { ConfettiOverlay } from '@/components/ui/ConfettiOverlay';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS, READER_PAPER } from '@/lib/constants';
+import { FEATURE_COLORS, OVERLAYS, COLORS, FONTS, READER_PAPER } from '@/lib/constants';
 import type { PathshalaPath } from '@/lib/pathshala-types';
 import { supabase } from '@/lib/supabase';
 import { isGuestMode } from '@/lib/guestSession';
@@ -933,7 +933,7 @@ function LessonReaderContent() {
                             height: 7,
                             width: isActive ? 28 : 8,
                             borderRadius: 4,
-                            backgroundColor: isActive ? brand : isRead ? 'rgba(197,160,89,0.45)' : border,
+                            backgroundColor: isActive ? brand : isRead ? OVERLAYS.gold[0.45] : border,
                           }}
                         />
                       );
@@ -978,8 +978,8 @@ function LessonReaderContent() {
                 style={{
                   borderRadius: 20,
                   borderWidth: 1,
-                  borderColor: isDark ? 'rgba(197,160,89,0.2)' : '#DEC89A',
-                  backgroundColor: isDark ? 'rgba(197,160,89,0.08)' : '#FFF4E0',
+                  borderColor: isDark ? OVERLAYS.gold[0.2] : FEATURE_COLORS.pathshalaLesson.borderLight,
+                  backgroundColor: isDark ? OVERLAYS.gold[0.08] : FEATURE_COLORS.pathshalaLesson.surfaceLight,
                   paddingVertical: 16,
                   paddingHorizontal: 20,
                   alignItems: 'center',
@@ -1002,7 +1002,7 @@ function LessonReaderContent() {
                     fontFamily: FONTS.sans,
                     fontSize: 15,
                     lineHeight: 24,
-                    color: isDark ? 'rgba(240,220,180,0.85)' : '#7A5C3A',
+                    color: isDark ? FEATURE_COLORS.pathshalaLesson.textDark : FEATURE_COLORS.pathshalaLesson.textLight,
                     fontStyle: 'italic',
                     textAlign: 'center',
                   }}
@@ -1075,7 +1075,7 @@ function LessonReaderContent() {
                   paddingHorizontal: 18,
                   paddingVertical: 14,
                   gap: 12,
-                  backgroundColor: explainExpanded ? (isDark ? 'rgba(197,160,89,0.1)' : '#FFF4E0') : cardBg,
+                  backgroundColor: explainExpanded ? (isDark ? OVERLAYS.gold[0.1] : FEATURE_COLORS.pathshalaLesson.surfaceLight) : cardBg,
                 }}
               >
                 <Feather name="zap" size={16} color={brand} />
@@ -1112,7 +1112,7 @@ function LessonReaderContent() {
                           paddingHorizontal: 14,
                           paddingVertical: 8,
                           borderRadius: 12,
-                          backgroundColor: isDark ? 'rgba(197,160,89,0.18)' : '#F2D9A8',
+                          backgroundColor: isDark ? OVERLAYS.gold[0.18] : FEATURE_COLORS.pathshalaLesson.pressableSurfaceLight,
                         }}
                       >
                         <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: brand }}>
@@ -1155,7 +1155,7 @@ function LessonReaderContent() {
                           style={{
                             borderRadius: 16,
                             padding: 14,
-                            backgroundColor: isDark ? 'rgba(197,160,89,0.12)' : '#FFF4E0',
+                            backgroundColor: isDark ? OVERLAYS.gold[0.12] : FEATURE_COLORS.pathshalaLesson.surfaceLight,
                             borderWidth: 1,
                             borderColor: border,
                             gap: 4,
@@ -1220,7 +1220,7 @@ function LessonReaderContent() {
                           borderRadius: 22,
                           alignItems: 'center',
                           justifyContent: 'center',
-                          backgroundColor: isCurrent ? brand : isDone ? (isDark ? 'rgba(197,160,89,0.18)' : '#F2D9A8') : cardBg,
+                          backgroundColor: isCurrent ? brand : isDone ? (isDark ? OVERLAYS.gold[0.18] : FEATURE_COLORS.pathshalaLesson.pressableSurfaceLight) : cardBg,
                           borderWidth: 1,
                           borderColor: isCurrent ? brand : isDone ? brand : border,
                         }}
@@ -1299,7 +1299,7 @@ function LessonReaderContent() {
         paddingHorizontal: 20,
         paddingTop: 12,
         paddingBottom: Math.max(insets.bottom, 12) + 6,
-        shadowColor: '#000',
+        shadowColor: COLORS.black,
         shadowOffset: { width: 0, height: -3 },
         shadowOpacity: isDark ? 0.35 : 0.08,
         shadowRadius: 10,

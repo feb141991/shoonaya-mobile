@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, Easing, useWindowDimensions, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
-import { COLORS } from '@/lib/constants';
+import { CONFETTI_PALETTES, OVERLAYS, COLORS } from '@/lib/constants';
 
 export type ConfettiKind = 'cannon' | 'petal' | 'stardust';
 export type ConfettiShape =
@@ -49,25 +49,6 @@ type ConfettiOverlayProps = {
   density?: 'soft' | 'full' | 'burst';
 };
 
-// Canonical Sacred Confetti Palette (strictly preserves PWA parity colors for tests)
-const SACRED_COLORS = [
-  '#E88C35', // saffron
-  '#C5A059', // gold
-  '#F0A830', // amber
-  '#D4784A', // terracotta
-  '#F2EAD6', // cream
-  '#D4926A', // rose-gold
-  '#FABE5A', // light amber
-  '#FFD700', // radiant 24k gold
-  '#F472B6', // sacred lotus pink
-  '#E11D48', // lotus crimson
-  '#FFFDF0', // jasmine ivory
-];
-
-const GOLD_FOIL_COLORS = ['#FFD700', '#C5A059', '#E88C35', '#F0A830', '#FABE5A', '#D4926A'];
-const PETAL_COLORS = ['#E88C35', '#F0A830', '#D4784A', '#F472B6', '#E11D48', '#F2EAD6'];
-const STARDUST_COLORS = ['#FFFDF0', '#FFD700', '#FFE066', '#FABE5A', '#F2EAD6'];
-
 const SHAPES: ConfettiShape[] = [
   'ribbon',
   'streamer',
@@ -104,7 +85,7 @@ function buildParticles(count: number, density: NonNullable<ConfettiOverlayProps
       const side: 'left' | 'right' = seed % 2 === 0 ? 'left' : 'right';
       const shapeChoice = seed % 3;
       const shape: ConfettiShape = shapeChoice === 0 ? 'ribbon' : shapeChoice === 1 ? 'streamer' : 'foil_square';
-      const color = GOLD_FOIL_COLORS[index % GOLD_FOIL_COLORS.length];
+      const color = CONFETTI_PALETTES.goldFoil[index % CONFETTI_PALETTES.goldFoil.length];
       const widthSize = shape === 'streamer' ? 4.5 : shape === 'ribbon' ? 7 : 8.5;
       const heightSize = shape === 'streamer' ? 22 + (seed % 8) : shape === 'ribbon' ? 15 + (seed % 6) : 8.5;
 
@@ -135,7 +116,7 @@ function buildParticles(count: number, density: NonNullable<ConfettiOverlayProps
     if (kind === 'petal') {
       // ── Stream 2: Pushpa Vrishti (Sacred Marigold & Lotus Petals) ──────────
       const shape: ConfettiShape = seed % 2 === 0 ? 'marigold_petal' : 'lotus_petal';
-      const color = PETAL_COLORS[index % PETAL_COLORS.length];
+      const color = CONFETTI_PALETTES.petal[index % CONFETTI_PALETTES.petal.length];
       const widthSize = shape === 'marigold_petal' ? 12 : 10;
       const heightSize = shape === 'marigold_petal' ? 16 : 18;
 
@@ -165,7 +146,7 @@ function buildParticles(count: number, density: NonNullable<ConfettiOverlayProps
     // ── Stream 3: Nakshatra Stardust (Celestial 4-Point Stars & Shimmering Bindus) ──
     const shapeChoice = seed % 3;
     const shape: ConfettiShape = shapeChoice === 0 ? 'star' : shapeChoice === 1 ? 'bindu' : 'diamond';
-    const color = STARDUST_COLORS[index % STARDUST_COLORS.length];
+    const color = CONFETTI_PALETTES.stardust[index % CONFETTI_PALETTES.stardust.length];
     const widthSize = shape === 'star' ? 14 : shape === 'bindu' ? 5.5 : 7.5;
     const heightSize = widthSize;
     const angle = ((seed * 47) % 360) * (Math.PI / 180);
@@ -260,7 +241,7 @@ function ConfettiPiece({
           backgroundColor: particle.color,
           borderRadius: particle.shape === 'streamer' ? 1.5 : 2,
           borderWidth: 0.5,
-          borderColor: 'rgba(255,255,255,0.42)',
+          borderColor: OVERLAYS.white[0.42],
           opacity,
           transform: [
             { perspective: 600 },
@@ -430,7 +411,7 @@ function ConfettiPiece({
         borderRadius: particle.widthSize / 2,
         backgroundColor: particle.color,
         borderWidth: 0.6,
-        borderColor: '#FFFFFF',
+        borderColor: COLORS.onMediaWhite,
         opacity,
         transform: [{ translateX }, { translateY }, { scale }],
       }}

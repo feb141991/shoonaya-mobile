@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, COLORS, FONTS, MIN_TOUCH_TARGET, themeColor } from '@/lib/constants';
 
 interface FeatherweightSheetProps {
   onEnterJapa: () => void;
@@ -33,8 +33,8 @@ export function FeatherweightSheet({
           styles.drawerCard,
           {
             backgroundColor: isDark
-              ? 'rgba(20, 18, 16, 0.78)'
-              : 'rgba(255, 253, 249, 0.88)',
+              ? FEATURE_COLORS.featherweightSheet.surfaceDark
+              : FEATURE_COLORS.featherweightSheet.surfaceLight,
             borderColor: theme.borderSoft,
           },
         ]}
@@ -81,8 +81,8 @@ export function FeatherweightSheet({
             styles.subRouteItem,
             {
               backgroundColor: isDark
-                ? 'rgba(20, 18, 16, 0.60)'
-                : 'rgba(255, 253, 249, 0.70)',
+                ? FEATURE_COLORS.featherweightSheet.pressableSurfaceDark
+                : FEATURE_COLORS.featherweightSheet.pressableSurfaceLight,
               borderColor: theme.borderSoft,
             },
           ]}
@@ -110,8 +110,8 @@ export function FeatherweightSheet({
             styles.subRouteItem,
             {
               backgroundColor: isDark
-                ? 'rgba(20, 18, 16, 0.60)'
-                : 'rgba(255, 253, 249, 0.70)',
+                ? FEATURE_COLORS.featherweightSheet.pressableSurfaceDark
+                : FEATURE_COLORS.featherweightSheet.pressableSurfaceLight,
               borderColor: theme.borderSoft,
             },
           ]}
@@ -139,8 +139,8 @@ export function FeatherweightSheet({
             styles.subRouteItem,
             {
               backgroundColor: isDark
-                ? 'rgba(20, 18, 16, 0.60)'
-                : 'rgba(255, 253, 249, 0.70)',
+                ? FEATURE_COLORS.featherweightSheet.pressableSurfaceDark
+                : FEATURE_COLORS.featherweightSheet.pressableSurfaceLight,
               borderColor: theme.borderSoft,
             },
           ]}
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 3,
     borderRadius: 1.5,
-    backgroundColor: 'rgba(128, 128, 128, 0.25)',
+    backgroundColor: FEATURE_COLORS.featherweightSheet.sheetHandleSurface,
     alignSelf: 'center',
     marginBottom: 12,
   },

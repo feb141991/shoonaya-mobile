@@ -295,13 +295,17 @@ test('device file module: one cache directory, removed whole, nothing in the doc
   assert.doesNotMatch(device, /AsyncStorage/);
 });
 
-test('device file module adds no native module: both modules are already imported by Settings', () => {
+test('device file module adds no native module: both modules are already reached by Settings', () => {
   const device = source('lib/sanskaraExportDevice.ts');
   const settings = source('app/settings/detail-screen.tsx');
+  // Settings ("Download your data") shipped with expo-file-system and expo-sharing. Since the private-export helper it reaches
+  // both through lib/privateExportFilesDevice.ts, which imports exactly the same two modules (private-export-files.test.ts).
   assert.match(device, /from 'expo-file-system'/);
   assert.match(device, /from 'expo-sharing'/);
-  assert.match(settings, /from 'expo-file-system'/);
-  assert.match(settings, /from 'expo-sharing'/);
+  assert.match(settings, /from '@\/lib\/privateExportFilesDevice'/);
+  const privateDevice = source('lib/privateExportFilesDevice.ts');
+  assert.match(privateDevice, /from 'expo-file-system'/);
+  assert.match(privateDevice, /from 'expo-sharing'/);
 });
 
 // ── The sheet and where it is mounted ──────────────────────────────────────────────────────────────────────────────────
@@ -407,6 +411,9 @@ test('layout: a downloaded copy is removed at sign-out and on an account switch'
   assert.match(layout, /import \{ clearSanskaraCache, purgeSanskaraExportFiles \} from '@\/lib\/sanskara';/);
   const signedOut = /if \(event === 'SIGNED_OUT'\) \{[\s\S]*?\n      \}/.exec(layout)?.[0] ?? '';
   assert.match(signedOut, /purgeSanskaraExportFiles\(\)/);
-  const switchBlock = /void clearAllUserScopedStorage\(\);[\s\S]{0,400}?\n      \}/.exec(layout)?.[0] ?? '';
+  // Anchored on the account-switch condition itself, not on a character window after another call: a window breaks whenever a
+  // neighbouring purge adds a line (it matched a different block when the private-export purge was added, 2026-11-06).
+  const switchBlock = /if \(previousRouteKey && previousRouteKey !== session\.user\.id\) \{[\s\S]*?\n      \}/.exec(layout)?.[0] ?? '';
+  assert.match(switchBlock, /clearAllUserScopedStorage\(\)/, 'the block found is the account switch');
   assert.match(switchBlock, /purgeSanskaraExportFiles\(\)/);
 });

@@ -25,9 +25,7 @@ pass fixed vs. deferred. This is Prompt 7 of the native migration series.
 | Category | Finding | Count | Verdict |
 |---|---|---|---|
 | Bare `COLORS.brandGold` | Non-theme-aware gold references; the design system already exposes `brandGoldLight`/`brandGoldDark` for correct dark-mode contrast, but 30 files still reference the flat constant directly. | 200 occurrences / 30 files | Real debt, deferred (see below) |
-| Raw `rgba(...)` in UI chrome | Untokenized literals outside `lib/constants.ts`'s own token definitions and outside legitimate data files. | 9 occurrences / 6 files | Real debt, deferred (already flagged once before, in `lib/constants.ts`'s own comments) |
-| Raw hex outside `constants.ts` | `#RRGGBB`/`#RGB` literals not in the token file. | 21 raw regex hits, but 19 are legitimate content data (mala bead/thread colors in `lib/mala-skins.ts`, hero-poster gradient stops in `lib/dharm-veer.ts`) and 2 are code comments in `index.tsx`, not style literals. | Not debt — false positives / content data, correctly excluded |
-| `backgroundColor:'#..'` / `color:'#..'` / `borderColor:'#..'` inline literals | Direct hex string literals passed to style props (would bypass tokens entirely). | 0 | Clean |
+| Raw hex and RGB strings in `app/` and `components/` | 955 literals across 70 files, including gradients, SVG stops, and box shadows, moved to shared or feature colour tokens in `lib/constants.ts`. | 0 in the audited checkout | Guarded by `__tests__/native-color-tokens.test.ts`. |
 | `TouchableOpacity` | Legacy RN touchable instead of the app's `Pressable` convention. | 0 | Clean |
 | `elevation:` | Legacy Android-only shadow prop instead of the app's `boxShadow` convention. | 0 | Clean |
 | `as any` | Type-safety escape hatches. | 0 | Clean |
@@ -36,20 +34,11 @@ pass fixed vs. deferred. This is Prompt 7 of the native migration series.
 | Typography scale usage | Not separately re-audited this pass (already covered by task #74's full typography audit, which is why `TYPE.*` already exists and is in active use in `index.tsx`). | — | Already addressed in an earlier pass |
 | Relic art that was JPEG-named-`.png` with a baked-in checkerboard | **Resolved 2026-10-08.** `assets/relics/{chakra,dharma-wheel,diya-bronze,halo,khanda,khanda-gold,mala,trishula-gold}.png` were 1024px JPEGs with no alpha: they broke the Android release build (AAPT2) and drew a grey checker tile behind the relic. They are now real 256px transparent PNGs cut out with `scripts/relic-cutout/` and framed like the other relics (88% fill). `aapt2 compile` rejects the old bytes and accepts the new. The original generator export (with true alpha) was not available, so the cut-outs are derived from the flattened JPEGs; the generation tool, prompt and rights status of the original art are still unrecorded. | 0 files (was 8) | Done. Guarded by `npm run check:assets` and the shrink-only (now empty) `KNOWN_BROKEN` list in `__tests__/asset-formats.test.ts`; see AGENTS.md section 11. |
 
-Raw rgba(...) file-by-file (the real, actionable 9):
-
-- `app/(tabs)/japa.tsx:483` — `rgba(0,0,0,0.28)` (bottom-sheet scrim)
-- `app/(tabs)/japa.tsx:578` — `rgba(0,0,0,0.18)`
-- `app/(tabs)/profile.tsx:460` — `rgba(0,0,0,0.35)` (bottom-sheet scrim)
-- `app/(tabs)/tirtha.tsx:532` — `rgba(0,0,0,0.28)` (bottom-sheet scrim)
-- `app/kosh.tsx:389` — `rgba(0,0,0,0.28)` (bottom-sheet scrim)
-- `app/nitya-karma.tsx:240,285` — gold-tinted panel backgrounds
-- `app/sankalpa.tsx:291,380` — gold-tinted panel backgrounds
-
-The four bottom-sheet scrims are the same debt `lib/constants.ts` already
-flags in its own comments (a `celebrationScrim` token exists for one specific
-use, but the general-purpose scrim value was never extracted into a shared
-token, so each sheet re-types the literal).
+Import colours through `lib/constants.ts`. It exposes shared tokens, overlay
+strengths and feature palettes. The colour migration preserves the previous swatches and alpha values, including
+fixed dark surfaces and media treatments. The guard scans TS, TSX, JS and JSX
+under `app/` and `components/` for executable string literals and ignores comments.
+The separate flat-gold audit below is historical and concerns theme selection.
 
 `COLORS.brandGold` file list (30 files, 200 occurrences): `app/ai-chat.tsx`,
 `app/quiz.tsx`, `app/pathshala/[pathId].tsx`, `app/auth/callback.tsx`,

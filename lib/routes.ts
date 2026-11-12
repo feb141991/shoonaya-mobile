@@ -160,6 +160,16 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   if (pathname.startsWith('/features')) return '/(tabs)';
   if (pathname.startsWith('/about')) return '/settings/about' as Href;
   if (pathname === '/guest' || pathname.startsWith('/guest/')) return '/(tabs)';
+  // Stories and Panchatantra tales
+  if (pathname.startsWith('/stories/panchatantra/')) {
+    const rawSlug = pathname.slice('/stories/panchatantra/'.length).replace(/\/hi\/?$/, '').replace(/\/$/, '');
+    if (rawSlug) {
+      const id = rawSlug.startsWith('panchatantra-') ? rawSlug : `panchatantra-${rawSlug}`;
+      return `/bhakti/katha/${id}` as Href;
+    }
+    return '/bhakti/katha?view=panchatantra' as Href;
+  }
+  if (pathname.startsWith('/stories')) return '/bhakti/katha?view=panchatantra' as Href;
 
   return fallback;
 }

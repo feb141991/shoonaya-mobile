@@ -47,8 +47,20 @@ describe('Japa sound & bottom nav visibility contract', () => {
     // useFocusEffect cleanup stops audio and resets nav bar
     assert.match(japaFile, /void audio\.stop\(\);/);
 
-    // Launcher offers ambient sound setup
-    assert.match(japaFile, /Ambient sound/);
-    assert.match(japaFile, /onPress=\{?\(\)\s*=>\s*setSoundSheetOpen\(true\)\}?/);
+    // The practice screen's Sound pill opens the sound sheet: the button lives
+    // in JapaPracticeScreen and the screen wires it to the sound sheet.
+    const practiceFile = fs.readFileSync(path.join(__dirname, '../components/japa/JapaPracticeScreen.tsx'), 'utf8');
+    assert.match(practiceFile, /onPress=\{onOpenSound\}/);
+    assert.match(japaFile, /<JapaPracticeScreen[\s\S]*?onOpenSound=\{\(\) => setSoundSheetOpen\(true\)\}/);
+
+    // Launcher offers ambient sound setup: the row lives in the launcher
+    // component and the screen wires it to the sound sheet. (These were once
+    // a single check of japa.tsx; "Ambient sound" also appears in a comment
+    // there, so it must be read from the launcher itself.)
+    const launcherFile = fs.readFileSync(path.join(__dirname, '../components/japa/JapaLauncherScreen.tsx'), 'utf8');
+    assert.match(launcherFile, />\s*Ambient sound\s*</);
+    assert.match(launcherFile, /accessibilityLabel=\{`Ambient sound\./);
+    assert.match(launcherFile, /onPress=\{onOpenSound\}/);
+    assert.match(japaFile, /onOpenSound=\{\(\) => setSoundSheetOpen\(true\)\}/);
   });
 });

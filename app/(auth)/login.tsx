@@ -32,7 +32,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { exchangeOAuthUrlIfPresent, getOAuthRedirectUri, waitForStoredSession } from '@/lib/authRedirect';
 import { transmitAppleAuthorizationCode } from '@/lib/appleAuthToken';
-import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, SOCIAL_LINKS, TYPE, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, SOCIAL_LINKS, TYPE, themeColor } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import {
   classifySignInErrorMessage,
@@ -161,8 +161,8 @@ function GoogleAuthButton({
 }) {
   const theme = themeColor(isDark);
   const borderSoft = isDark ? COLORS.homeBorderSoftDark : COLORS.borderLight;
-  const bgColor = isDark ? COLORS.cardBgDark : '#FFFFFF';
-  const textColor = isDark ? theme.text : '#1F2937';
+  const bgColor = isDark ? COLORS.cardBgDark : COLORS.onMediaWhite;
+  const textColor = isDark ? theme.text : FEATURE_COLORS.login.textColorLight;
 
   return (
     <View
@@ -231,10 +231,10 @@ function AppleAuthButton({
   loading?: boolean;
   isDark: boolean;
 }) {
-  const borderSoft = isDark ? '#FFFFFF' : '#000000';
-  const bgColor = isDark ? '#FFFFFF' : '#000000';
-  const textColor = isDark ? '#000000' : '#FFFFFF';
-  const iconColor = isDark ? '#000000' : '#FFFFFF';
+  const borderSoft = isDark ? COLORS.onMediaWhite : COLORS.black;
+  const bgColor = isDark ? COLORS.onMediaWhite : COLORS.black;
+  const textColor = isDark ? COLORS.black : COLORS.onMediaWhite;
+  const iconColor = isDark ? COLORS.black : COLORS.onMediaWhite;
 
   return (
     <View

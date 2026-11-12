@@ -40,10 +40,10 @@ describe('onboarding marketing email switch', () => {
     assert.ok(minHeight >= 44, `minHeight ${minHeight}`);
   });
 
-  it('is offered in both supported languages and says it is optional and can be unsubscribed', () => {
+  it('has a translated title, and an English-only explanation that says it is optional and can be unsubscribed (AGENTS.md section 27)', () => {
     assert.match(source, /'Occasional email from Shoonaya', 'Shoonaya से कभी-कभार ईमेल'/);
     assert.match(source, /Optional, and you can unsubscribe at any time/);
-    assert.match(source, /वैकल्पिक, और आप कभी भी सदस्यता छोड़ सकते हैं/);
+    assert.doesNotMatch(source, /वैकल्पिक, और आप कभी भी सदस्यता छोड़ सकते हैं/);
   });
 
   it('does not change the reminder permission flow: the choice is not read when asking for notifications', () => {

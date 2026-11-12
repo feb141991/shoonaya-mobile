@@ -330,15 +330,18 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-fiend-who-washed-his-feet'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-handsome-and-theodore'), 2);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-flop-ear-and-dusty'), 2);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-shrewd-old-gander'), 2);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-lion-and-the-ram'), 2);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-smart-the-jackal'), 2);
 
     // Tier 0: Manuscript folios without local art
-    assert.equal(getPanchatantraStoryVisualTier('panchatantra-ungrateful-man'), 0);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-monk-who-left-his-body-behind'), 0);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-nonexistent'), 0);
   });
 
   await t.test('sorts stories so full scene storybooks appear first, then manuscript', () => {
     const mixed = [
-      { id: 'panchatantra-ungrateful-man', title: 'The Ungrateful Man' },
+      { id: 'panchatantra-monk-who-left-his-body-behind', title: 'The Monk Who Left His Body Behind' },
       { id: 'panchatantra-monk-and-jackal', title: 'The Monk and the Jackal' },
       { id: 'panchatantra-dove-king-and-net', title: 'The Dove King and the Net' },
       { id: 'panchatantra-fiend-who-washed-his-feet', title: "The Fiend Who Washed His Feet" },
@@ -356,7 +359,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(sorted[4].id, 'panchatantra-lion-and-rabbit');
 
     // Tier 0 item must follow at index 5
-    assert.equal(sorted[5].id, 'panchatantra-ungrateful-man');
+    assert.equal(sorted[5].id, 'panchatantra-monk-who-left-his-body-behind');
   });
 
   await t.test('katha.tsx integrates visual tier sorting and thumbnail priority for Story of the Day', () => {
@@ -987,5 +990,104 @@ test("The Weaver's Wife story uses six paragraph-aligned offline scenes", () => 
   assert.equal(hasDedicatedSceneArtwork('panchatantra-weavers-wife'), true);
   for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
     assert.ok(getPanchatantraSceneArtwork('panchatantra-weavers-wife', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('The Ungrateful Man story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-ungrateful-man');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-ungrateful-man'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-ungrateful-man'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-ungrateful-man', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('Leap and Creep story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-leap-and-creep');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-leap-and-creep'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-leap-and-creep'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-leap-and-creep', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('Passion and the Owl story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-passion-and-owl');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-passion-and-owl'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-passion-and-owl'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-passion-and-owl', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test("Ugly's Trust Abused story uses six paragraph-aligned offline scenes", () => {
+  const story = getExpandedPanchatantraStory('panchatantra-uglys-trust-abused');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-uglys-trust-abused'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-uglys-trust-abused'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-uglys-trust-abused', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('The Lion and the Carpenter story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-lion-and-the-carpenter');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-lion-and-the-carpenter'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-lion-and-the-carpenter'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-lion-and-the-carpenter', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('The Plover Who Fought the Ocean story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-plover-who-fought-the-ocean');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-plover-who-fought-the-ocean'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-plover-who-fought-the-ocean'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-plover-who-fought-the-ocean', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('The Shrewd Old Gander story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-shrewd-old-gander');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-shrewd-old-gander'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-shrewd-old-gander'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-shrewd-old-gander', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('The Lion and the Ram story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-lion-and-the-ram');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-lion-and-the-ram'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-lion-and-the-ram'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-lion-and-the-ram', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('Smart, the Jackal story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-smart-the-jackal');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-smart-the-jackal'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-smart-the-jackal'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-smart-the-jackal', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });
