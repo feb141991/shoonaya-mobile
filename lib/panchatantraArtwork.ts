@@ -110,6 +110,7 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-plover-who-fought-the-ocean': require('@/assets/panchatantra/plover-who-fought-the-ocean-1.webp'),
   'panchatantra-shrewd-old-gander': require('@/assets/panchatantra/shrewd-old-gander-1.webp'),
   'panchatantra-lion-and-the-ram': require('@/assets/panchatantra/lion-and-the-ram-1.webp'),
+  'panchatantra-smart-the-jackal': require('@/assets/panchatantra/smart-the-jackal-1.webp'),
 };
 
 /**
@@ -846,6 +847,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/lion-and-the-ram-4.webp'),
     require('@/assets/panchatantra/lion-and-the-ram-5.webp'),
     require('@/assets/panchatantra/lion-and-the-ram-6.webp'),
+  ],
+  'panchatantra-smart-the-jackal': [
+    require('@/assets/panchatantra/smart-the-jackal-1.webp'),
+    require('@/assets/panchatantra/smart-the-jackal-2.webp'),
+    require('@/assets/panchatantra/smart-the-jackal-3.webp'),
+    require('@/assets/panchatantra/smart-the-jackal-4.webp'),
+    require('@/assets/panchatantra/smart-the-jackal-5.webp'),
+    require('@/assets/panchatantra/smart-the-jackal-6.webp'),
   ],
 };
 
