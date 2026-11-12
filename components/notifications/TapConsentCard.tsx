@@ -78,7 +78,7 @@ export function TapConsentCard({ theme }: { theme: Theme }) {
     if (!state || !userId || busy) return;
     setBusy(true);
     setFailed(false);
-    const saved = await saveNotificationTapConsent(userId, true);
+    const saved = await saveNotificationTapConsent(userId, true, 'inbox_card');
     if (saved) {
       await applyNotificationTapConsent(userId, true);
       const next = afterYes(state, Date.now());

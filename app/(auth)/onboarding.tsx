@@ -35,6 +35,7 @@ import { isFetchCancelled } from '@/lib/fetch-error';
 import { supabase } from '@/lib/supabase';
 import { captureAppIdentity, getAppIdentity } from '@/lib/appIdentity';
 import { applyNotificationTapConsent, saveNotificationTapConsent } from '@/lib/notificationTapConsent';
+import { withConsentContext } from '@/lib/consentContext';
 import { USER_SCOPED_NAMES, writeUserScoped } from '@/lib/userScopedStorage';
 import { beginSanctuaryPreparation } from '@/lib/sanctuaryPreparation';
 import { identityChanged } from '@/lib/routeOpenAttribution';
@@ -487,7 +488,7 @@ export default function OnboardingScreen() {
 
       const { data: updated, error: updateError } = await supabase
         .from('profiles')
-        .update(payload)
+        .update(withConsentContext(payload, 'onboarding'))
         .eq('id', uid)
         .select('id')
         .maybeSingle();
@@ -499,7 +500,7 @@ export default function OnboardingScreen() {
       if (!updated && !updateError) {
         const fallbackUsername = `user_${uid.replace(/-/g, '').slice(0, 12)}`;
         const { error: upsertError } = await supabase.from('profiles').upsert(
-          { id: uid, username: fallbackUsername, ...payload },
+          { id: uid, username: fallbackUsername, ...withConsentContext(payload, 'onboarding') },
           { onConflict: 'id' }
         );
         if (upsertError) {
@@ -821,9 +822,10 @@ export default function OnboardingScreen() {
         location: capturedLocation,
       });
 
+      const consentedProfilePayload = withConsentContext(profilePayload, 'onboarding');
       const { data: updatedProfile, error } = await supabase
         .from('profiles')
-        .update(profilePayload)
+        .update(consentedProfilePayload)
         .eq('id', user.id)
         .select('id')
         .maybeSingle();
@@ -835,7 +837,7 @@ export default function OnboardingScreen() {
           {
             id: user.id,
             username: fallbackUsername,
-            ...profilePayload,
+            ...consentedProfilePayload,
           },
           { onConflict: 'id' }
         );
@@ -857,7 +859,7 @@ export default function OnboardingScreen() {
         void registerPushToken(user.id);
       }
       if (tapConsentOptIn) {
-        void saveNotificationTapConsent(user.id, true).then((saved) => (saved ? applyNotificationTapConsent(user.id, true) : undefined)).catch(() => undefined);
+        void saveNotificationTapConsent(user.id, true, 'onboarding').then((saved) => (saved ? applyNotificationTapConsent(user.id, true) : undefined)).catch(() => undefined);
       }
 
       await clearOnboardingDraft(user.id);

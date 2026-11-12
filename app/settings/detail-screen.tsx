@@ -79,6 +79,8 @@ import { accountDeletion, readDeletionReasons, useAccountDeletionStatus } from '
 import { accountDeletionCopy, reviewedDeletionLanguage } from '@/lib/accountDeletionCopy';
 import { getGreetingPick } from '@/lib/greetingPreference';
 import { applyNotificationTapConsent, readServerNotificationTapConsent } from '@/lib/notificationTapConsent';
+import { consentContext } from '@/lib/consentContext';
+import { consentKeysIn } from '@/lib/consentWording';
 import { revokeNotificationTapConsent } from '@/lib/notificationTapTracking';
 import { applyPracticeAnalyticsConsent, applyProductAnalyticsConsent, revokePracticeAnalyticsConsent, revokeProductAnalyticsConsent } from '@/lib/productAnalyticsRuntime';
 import { classifyFailure, describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
@@ -481,7 +483,12 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       try {
         const response = await apiFetch('/api/native/profile', {
           method: 'PATCH',
-          body: JSON.stringify(write.fields),
+          // A consent change also says which screen and wording it was made on (the consent evidence ledger).
+          body: JSON.stringify(
+            consentKeysIn(write.fields as Record<string, unknown>).length > 0
+              ? { ...write.fields, consent_context: consentContext('settings', consentKeysIn(write.fields as Record<string, unknown>)) }
+              : write.fields,
+          ),
           expectedUserId: identity.userId,
         });
         if (!isCurrent()) return;

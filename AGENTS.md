@@ -568,3 +568,16 @@ Rules:
 ### 29. HTML Entities Belong in JSX Text, Not in JavaScript Strings
 - JSX decodes `&apos;`, `&amp;` and the like in text and in bare attribute strings (`title="Don&apos;t"`). It never decodes them inside a JavaScript string or a `{'...'}` expression: the characters appear literally on screen. In a JS string write the real character (`’`).
 - Origin: 2026-11-12. Home's calendar pill showed "Couldn&apos;t check · Retry" (`app/(tabs)/index.tsx`, since 2026-10-07). A sweep of `app/`, `components/` and `lib/` found no other instance. Guard: `__tests__/entity-in-js-string-guard.test.ts` (proven red with the fix reverted). Not verified on a device after the fix.
+
+### 30. A Consent Is Recorded by the Database, With the Wording the Person Saw
+- The four profile consents (`consent_religious_data`, `consent_activity_personalization`, `consent_product_analytics`, `consent_notification_taps`) are
+  recorded in the backend's append-only, hash-chained `consent_events` ledger by a trigger on `profiles`, whatever path writes them. A write says which
+  screen and wording it was made on: the API takes `consent_context`, a direct profile write carries `consent_context_in` (`lib/consentContext.ts`).
+  The app sends only a version; the checksum comes from the database's `consent_wording` registry, so a client cannot choose it.
+- Editing the explanation of a consent on screen changes what was consented to. Register the new wording as a new version in the backend registry first,
+  then bump `CONSENT_WORDING_VERSION` and the pinned checksums in `lib/consentWording.ts`. `__tests__/consent-wording.test.ts` fails if the text on screen
+  no longer hashes to its pinned value, and the backend's `consent-wording.test.ts` pins the same list: keep the two equal (section 1).
+- A new consent screen or write path must send the context, and a consent with no registered wording on that screen is simply recorded as having none.
+- Origin: 2026-11-12 privacy audit. Consents were yes/no flags with one shared, client-supplied timestamp, and no record of when each was given, which
+  wording was shown or on which screen. Backend migration `20261112140000_consent_evidence_ledger` is UNAPPLIED: until it is, the context is sent and
+  ignored. Not verified on a device. Whether proof of consent should outlive the account is a counsel decision.

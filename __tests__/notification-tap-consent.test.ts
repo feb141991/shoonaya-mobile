@@ -90,7 +90,7 @@ test('Settings: a switch that is off by default, hidden until a successful read,
 test('onboarding: unticked, not kept in the draft, written only after the profile saved, and a failure cannot fail onboarding', () => {
   const src = read('app/(auth)/onboarding.tsx');
   assert.match(src, /const \[tapConsentOptIn, setTapConsentOptIn\] = useState\(false\)/);
-  assert.match(src, /if \(tapConsentOptIn\) \{\s*void saveNotificationTapConsent\(user\.id, true\)/);
+  assert.match(src, /if \(tapConsentOptIn\) \{\s*void saveNotificationTapConsent\(user\.id, true, 'onboarding'\)/);
   assert.match(src, /\.catch\(\(\) => undefined\)/);
   assert.doesNotMatch(read('lib/onboarding-contract.ts'), /consent_notification_taps/, 'never part of the profile payload that can fail the save');
   assert.doesNotMatch(read('lib/onboardingDraft.ts'), /tapConsent/, 'a resumed draft never starts from a remembered yes');
@@ -102,7 +102,7 @@ test('the card lives in the notifications inbox, not on Home, and nothing is cho
     try { assert.doesNotMatch(read(file), /TapConsentCard/); } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
   }
   const card = read('components/notifications/TapConsentCard.tsx');
-  assert.match(card, /saveNotificationTapConsent\(userId, true\)/);
+  assert.match(card, /saveNotificationTapConsent\(userId, true, 'inbox_card'\)/);
   assert.match(card, /label=\{t\('Not now'/);
   assert.match(card, /label=\{t\('Yes, help'/);
   assert.equal((card.match(/saveNotificationTapConsent\(/g) ?? []).length, 1, 'only the Yes button writes consent');

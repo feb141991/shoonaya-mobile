@@ -1,3 +1,5 @@
+import { consentContext } from '@/lib/consentContext';
+import type { ConsentSurface } from '@/lib/consentWording';
 import { apiFetch } from '@/lib/api';
 import { getAppIdentity, isSameAppIdentity, type AppIdentity } from '@/lib/appIdentity';
 import { supabase } from '@/lib/supabase';
@@ -72,12 +74,12 @@ export async function readServerNotificationTapConsent(userId: string): Promise<
 }
 
 /** Writes the choice through the profile route. True only when the server confirms it. */
-export async function saveNotificationTapConsent(userId: string, value: boolean): Promise<boolean> {
+export async function saveNotificationTapConsent(userId: string, value: boolean, surface: ConsentSurface): Promise<boolean> {
   try {
     const response = await apiFetch('/api/native/profile', {
       method: 'PATCH',
       expectedUserId: userId,
-      body: JSON.stringify({ consent_notification_taps: value }),
+      body: JSON.stringify({ consent_notification_taps: value, consent_context: consentContext(surface, ['notification_taps']) }),
     });
     if (!response.ok) return false;
     return isSameAppIdentity(authenticated(userId), getAppIdentity());
