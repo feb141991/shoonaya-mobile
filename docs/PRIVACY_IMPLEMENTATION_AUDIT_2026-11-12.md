@@ -66,3 +66,32 @@ Sources: Native repo `shoonaya-mobile` (HEAD `02b3e9b`), backend repo `Shoonaya`
 3. Re-run the deletion foreign-key audit and add a guard test (gap 3).
 4. Fix the policy text and the privacy manifest (gaps 5 to 7).
 5. Remove `expo-insights` and the legacy table (gaps 8 and 9).
+
+## 5. Status after the follow-up work (2026-11-12, later the same day)
+
+Everything below is committed, none of it is pushed, and every database change is **unapplied**. Backend commits `76c95eb` to `f06bc68`,
+Native `dbb3b4c` to `74e540e`.
+
+| Gap | Status |
+|---|---|
+| 1 Children | Not built. A decision is needed (suggestion given in chat). The only sign-up message is `AgeGuidanceNotice` on the date-of-birth step: informational, no acknowledgement, no record, no change in behaviour for a minor. |
+| 2 Export | Built (`726a457`): 72 more tables, paged, secrets redacted, `export_notes` lists what is left out and any table not read in full; a guard test forces every new user table to be exported or excluded with a reason. Not deployed. After the consent ledger is applied, add `consent_events` to the registry. |
+| 3 Deletion | Migration `20261112130000` written and tested on scratch (unapplied): fixes the blocking foreign key on `kul_family_link_invitations`, the dangling `pathshala_study_circles.created_by`, push-token events that kept device tokens, missing 90-day retention on three notification logs, and orphaned family circles. `scripts/audit/account-deletion-foreign-keys.sql` reruns the check. **Still a decision:** content kept after its author leaves (thread messages, family records, place media and notes, Sanskara records, 9 Tirtha places). |
+| 4 Proof of consent | Built (`f06bc68`, `74e540e`): append-only hash-chained ledger written by a trigger on every change, wording registry with SHA-256, context sent by every Native write path, cross-repo pinned checksums. Migration `20261112140000` unapplied. Existing consents will show as `before_ledger`. **Still a decision:** whether proof of consent outlives the account. |
+| 5 Policy omissions | Done (`7d63dcf`), not deployed: AdSense and every processor named with what it receives, storage in Ireland, advertising choice explained. |
+| 6 Contact | Prince Sharma named as Grievance Officer and data-protection contact. **Open for counsel:** a postal address, and whether an EU/UK representative under GDPR Article 27 must be named, which must be a person or company established in the UK or EU. |
+| 7 iOS manifest | Done (`a5d3744`); needs a native iOS build, and the App Store Connect label must agree. |
+| 8 `expo-insights` | Removed (`dbb3b4c`). |
+| 9 `device_tokens` | Migration `20261112120000` written and tested on scratch (unapplied). |
+
+### New findings from the live checks
+
+- **Mandali posts are readable by anyone with the app's public key.** The select policies on `posts`, `post_comments`, `forum_threads`,
+  `forum_replies`, `post_upvotes`, `comment_upvotes` and `event_rsvps` are `USING (true)` for everyone, including signed-out callers. On
+  2026-11-12 the public key could count 44 posts and 7 post upvotes (with user ids). Private tables (journal, mood, notifications, profiles,
+  Kutumb members) were correctly closed. The app's membership, block and hidden-content rules are enforced in API routes, not by these policies.
+  Needs a decision on who may read a post, then a migration after auditing every reader.
+- **Auth:** leaked-password protection is disabled (Supabase Auth setting).
+- **Advisor:** 56 `SECURITY DEFINER` functions are executable by signed-in users; the ones I read derive the user from `auth.uid()`.
+  `st_estimatedextent` (PostGIS) is executable by anonymous callers. `pgtap` and its views sit in `public`.
+- **Generated types were stale** (missing `notification_taps`); regenerated in `f44d8c0`.
