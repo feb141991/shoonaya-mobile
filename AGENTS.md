@@ -487,8 +487,16 @@ Rules:
   files that import it and how its output is purged; a new importer fails the test until it is. Every caller of `Sharing.shareAsync` is likewise
   listed. Guard: that test (50 mutations each proven to turn it red, including reverting Settings, Profile, the layout and `lib/share-card.ts` to
   their previous files).
-- Not verified on a device (and not exercised on any platform, only by unit tests with fake file systems and by reading the library sources): that the
-  share sheet still opens for the data export, the sadhana report and a share card on iOS and Android; that `File.copy` accepts the iOS bare path once
-  prefixed with `file://` and a cache-root source on Android (if not, the fallback shares the original, so a card still shares but is not purged);
-  that an old build's copy is removed on the first sign-out after the update; and that a share started on Android still reads the file after the app
-  moves on. Not measured: the added copy per share card. This applies equally to human and AI-agent contributors.
+- Device evidence, iOS Simulator, 2026-11-06 (iPhone 17 Pro Max, iOS 26.5, dev client `com.shoonaya.app` 1.0.0 build 7, JavaScript from a Metro serving
+  commit df7eda1, a real account, read-only API calls, no photo upload): the data export, the sadhana report and a share card each opened the system share
+  sheet and landed in `Library/Caches/private-exports/`, each replacing the previous file (one private copy at most); the export parsed as JSON; the card
+  was 1080x1920 and not blank; `tmp/ReactNative` was empty afterwards, so the iOS bare path was accepted, the copy worked, the original was deleted and the
+  fallback did not fire. A file planted in `Caches/ImagePicker/` was removed when `pickAvatar` finished (photo access denied, so the early-return path of
+  its `finally`; a control showed the file survives until then).
+- Still not verified on any device: the sign-out and account-switch purge, and the removal of an old build's files from the cache root. Two sign-out
+  attempts on a second simulator that day were invalid, not failed: the app process was connected to a different Metro (the main checkout, which has none
+  of this code), so they exercised nothing. Before a device test, confirm the app is running the intended checkout with `lsof -nP -a -p <app pid> -iTCP`
+  (connections to the intended Metro's port); the dev menu's "Connected to" line was misleading. Also unverified: a real photo-picker crop (the folder
+  location comes from reading the library's Android and iOS sources), everything on Android (`File.copy` from the cache root or the external cache, and a
+  receiving app reading a file after the share sheet resolves) and the added copy per share card, which is unmeasured. In a dev client the purge's lazy
+  `import()` may need Metro to be reachable; a release bundle should not (not verified). This applies equally to human and AI-agent contributors.
