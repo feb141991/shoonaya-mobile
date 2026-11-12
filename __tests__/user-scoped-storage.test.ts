@@ -181,7 +181,6 @@ describe('no private value is stored without an owner', () => {
     'app/dharm-veer.tsx': 'guest-only daily flag; history moved to userScopedStorage',
     'app/dharm-veer/[id].tsx': 'daily flag keyed by user id (guest: guest-only)',
     'app/pathshala/[pathId]/[lessonId].tsx': 'font size preference',
-    'app/(tabs)/japa.tsx': 'mala, scene, sound, target rounds, selected mantra preferences; guest-only lifetime count',
     'components/reader/ReaderIntro.tsx': 'reader intro seen flag',
     'components/reader/ReaderShell.tsx': 'reader intro seen flag',
     'components/home/FirstWeekGuide.tsx': 'keys from getFirstWeekGuideKeys(identity)',
