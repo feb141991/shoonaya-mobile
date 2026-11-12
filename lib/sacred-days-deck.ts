@@ -103,15 +103,6 @@ export function buildSacredDaysDeck({
       if (rootKey) representedSeriesSlugs.add(rootKey);
     }
 
-    for (const candidateChild of candidate.children) {
-      if (candidateChild.slug) {
-        representedSeriesSlugs.add(candidateChild.slug.trim().toLocaleLowerCase());
-      }
-      if (candidateChild.routeSlug) {
-        representedSeriesSlugs.add(candidateChild.routeSlug.trim().toLocaleLowerCase());
-      }
-    }
-
     for (const child of children) {
       const targetDate = child.civilDate ?? candidate.startDate;
       const daysLeft = targetDate
