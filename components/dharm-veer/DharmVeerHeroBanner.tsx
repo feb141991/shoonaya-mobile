@@ -4,7 +4,7 @@ import { useSchemeOrReaderAppearance } from '@/lib/readerAppearanceContext';
 import { withAlpha } from '@/lib/readerAppearance';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { COLORS, FONTS } from '@/lib/constants';
+import { FEATURE_COLORS, OVERLAYS, COLORS, FONTS } from '@/lib/constants';
 import { type DharmVeer } from '@/lib/dharm-veer';
 import { getDharmVeerArtworkSource } from '@/lib/dharm-veer-artwork';
 
@@ -55,14 +55,14 @@ export function DharmVeerHeroBanner({
 
           {/* Top subtle vignette */}
           <LinearGradient
-            colors={['rgba(0,0,0,0.45)', 'rgba(0,0,0,0)']}
+            colors={[COLORS.celebrationScrim, OVERLAYS.black[0]]}
             style={styles.topVignette}
             pointerEvents="none"
           />
 
           {/* Bottom Gradient Fade into Page Surface */}
           <LinearGradient
-            colors={['rgba(0,0,0,0)', withAlpha(surfaceBg, 0.7), surfaceBg]}
+            colors={[OVERLAYS.black[0], withAlpha(surfaceBg, 0.7), surfaceBg]}
             locations={[0, 0.65, 1]}
             style={styles.bottomGradient}
             pointerEvents="none"
@@ -71,12 +71,12 @@ export function DharmVeerHeroBanner({
           {/* Floating Era & Region Badges */}
           <View style={styles.floatingBadgesRow}>
             {era ? (
-              <View style={[styles.badge, { borderColor: isDark ? 'rgba(197,160,89,0.35)' : 'rgba(197,160,89,0.5)' }]}>
+              <View style={[styles.badge, { borderColor: isDark ? OVERLAYS.gold[0.35] : OVERLAYS.gold[0.5] }]}>
                 <Text style={[styles.badgeText, { color: goldColor }]}>{era}</Text>
               </View>
             ) : null}
             {region ? (
-              <View style={[styles.badge, { borderColor: isDark ? 'rgba(197,160,89,0.35)' : 'rgba(197,160,89,0.5)' }]}>
+              <View style={[styles.badge, { borderColor: isDark ? OVERLAYS.gold[0.35] : OVERLAYS.gold[0.5] }]}>
                 <Text style={[styles.badgeText, { color: goldColor }]}>{region}</Text>
               </View>
             ) : null}
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     overflow: 'hidden',
     position: 'relative',
-    backgroundColor: '#0a0908',
+    backgroundColor: COLORS.traditionPortraitBg,
   },
   image: {
     width: '100%',
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   badge: {
-    backgroundColor: 'rgba(20, 18, 16, 0.75)',
+    backgroundColor: FEATURE_COLORS.dharmVeerHeroBanner.badgeSurface,
     borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 5,

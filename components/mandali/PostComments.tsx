@@ -3,7 +3,7 @@ import { ActivityIndicator, ScrollView, Text, TextInput, View } from 'react-nati
 import Feather from '@expo/vector-icons/Feather';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { COLORS, FONTS, RADII } from '@/lib/constants';
+import { OVERLAYS, COLORS, FONTS, RADII } from '@/lib/constants';
 import type { CommentRow, ReactionType } from '@/lib/mandali';
 import { CommentReactionButton } from '@/components/mandali/CommentReactionButton';
 import { CommentReactorsSheet } from '@/components/mandali/CommentReactorsSheet';
@@ -137,9 +137,9 @@ function CommentItem({
               paddingHorizontal: 7,
               paddingVertical: 2,
               borderRadius: RADII.pill,
-              backgroundColor: 'rgba(197, 160, 89, 0.14)',
+              backgroundColor: OVERLAYS.gold[0.14],
               borderWidth: 1,
-              borderColor: 'rgba(197, 160, 89, 0.35)',
+              borderColor: OVERLAYS.gold[0.35],
               marginBottom: 3,
             }}
           >
@@ -361,7 +361,7 @@ export function PostComments({
   dim,
   cardBg = COLORS.cardBgLight,
   border,
-  scrimColor = 'rgba(0,0,0,0.4)',
+  scrimColor = OVERLAYS.black[0.4],
   brand,
   postAuthorId,
   onToggleHighlightComment,

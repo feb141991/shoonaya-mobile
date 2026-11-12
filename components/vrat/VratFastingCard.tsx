@@ -14,7 +14,7 @@ import * as Haptics from 'expo-haptics';
 
 import { useAppIdentity } from '@/lib/appIdentity';
 import { readUserScoped, USER_SCOPED_NAMES, writeUserScoped } from '@/lib/userScopedStorage';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, OVERLAYS, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, themeColor } from '@/lib/constants';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 
 export type FastingMode = 'nirjala' | 'phalahar' | 'ekbhukta' | 'sankalpa';
@@ -219,8 +219,8 @@ export const VratFastingCard = memo(function VratFastingCard({
       style={[
         styles.container,
         {
-          backgroundColor: isDark ? 'rgba(28, 22, 16, 0.88)' : 'rgba(255, 252, 246, 0.95)',
-          borderColor: isDark ? 'rgba(212, 175, 55, 0.22)' : 'rgba(180, 130, 40, 0.18)',
+          backgroundColor: isDark ? FEATURE_COLORS.vratFastingCard.surfaceDark : FEATURE_COLORS.vratFastingCard.surfaceLight,
+          borderColor: isDark ? OVERLAYS.metallicGold[0.22] : FEATURE_COLORS.vratFastingCard.borderLight,
         },
       ]}
     >
@@ -238,7 +238,7 @@ export const VratFastingCard = memo(function VratFastingCard({
         </View>
 
         {occurrenceDate ? (
-          <View style={[styles.datePill, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }]}>
+          <View style={[styles.datePill, { backgroundColor: isDark ? OVERLAYS.white[0.06] : OVERLAYS.black[0.04] }]}>
             <Feather name="calendar" size={11} color={theme.dim} />
             <Text style={[styles.dateText, { color: theme.dim }]} numberOfLines={1}>
               {occurrenceDate}
@@ -270,16 +270,16 @@ export const VratFastingCard = memo(function VratFastingCard({
                     {
                       backgroundColor: isSelected
                         ? isDark
-                          ? 'rgba(212, 175, 55, 0.2)'
-                          : 'rgba(180, 130, 40, 0.14)'
+                          ? OVERLAYS.metallicGold[0.2]
+                          : FEATURE_COLORS.vratFastingCard.surfaceLight2
                         : isDark
-                        ? 'rgba(255, 255, 255, 0.04)'
-                        : 'rgba(0, 0, 0, 0.03)',
+                        ? OVERLAYS.white[0.04]
+                        : OVERLAYS.black[0.03],
                       borderColor: isSelected
                         ? theme.brand
                         : isDark
-                        ? 'rgba(255, 255, 255, 0.08)'
-                        : 'rgba(0, 0, 0, 0.06)',
+                        ? OVERLAYS.white[0.08]
+                        : OVERLAYS.black[0.06],
                     },
                   ]}
                 >
@@ -351,8 +351,8 @@ export const VratFastingCard = memo(function VratFastingCard({
               {
                 backgroundColor: sankalpaCommitted
                   ? isDark
-                    ? 'rgba(212, 175, 55, 0.15)'
-                    : 'rgba(180, 130, 40, 0.12)'
+                    ? OVERLAYS.metallicGold[0.15]
+                    : FEATURE_COLORS.vratFastingCard.pressableSurfaceLight
                   : theme.brand,
                 borderColor: sankalpaCommitted ? theme.brand : 'transparent',
                 borderWidth: sankalpaCommitted ? 1 : 0,
@@ -379,7 +379,7 @@ export const VratFastingCard = memo(function VratFastingCard({
         style={[
           styles.footerRow,
           {
-            borderTopColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)',
+            borderTopColor: isDark ? OVERLAYS.white[0.08] : OVERLAYS.black[0.06],
           },
         ]}
       >
@@ -424,8 +424,8 @@ export const VratFastingCard = memo(function VratFastingCard({
             style={[
               styles.aiMiniButton,
               {
-                backgroundColor: isDark ? 'rgba(212, 175, 55, 0.1)' : 'rgba(180, 130, 40, 0.08)',
-                borderColor: isDark ? 'rgba(212, 175, 55, 0.22)' : 'rgba(180, 130, 40, 0.16)',
+                backgroundColor: isDark ? OVERLAYS.metallicGold[0.1] : FEATURE_COLORS.vratFastingCard.pressableSurfaceLight2,
+                borderColor: isDark ? OVERLAYS.metallicGold[0.22] : FEATURE_COLORS.vratFastingCard.pressableSurfaceBorderLight,
               },
             ]}
           >
@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 14,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 6,

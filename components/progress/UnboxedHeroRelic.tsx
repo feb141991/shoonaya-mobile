@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
-import { FONTS, themeColor } from '@/lib/constants';
+import { COLORS, OVERLAYS, FONTS, themeColor } from '@/lib/constants';
 
 interface UnboxedHeroRelicProps {
   streak: number;
@@ -22,8 +22,8 @@ export function UnboxedHeroRelic({ streak, userName, isDark, theme }: UnboxedHer
             styles.ambientHalo,
             {
               backgroundColor: isDark
-                ? 'rgba(197, 160, 89, 0.14)'
-                : 'rgba(216, 138, 28, 0.12)',
+                ? OVERLAYS.gold[0.14]
+                : COLORS.brandSoftLight,
             },
           ]}
         />

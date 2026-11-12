@@ -25,7 +25,7 @@ import * as Haptics from "expo-haptics";
 
 import { PressableSurface } from "@/components/ui/PressableSurface";
 import {
-  COLORS,
+  COLORS, FEATURE_COLORS, OVERLAYS,
   FONTS,
   RADII,
   SHADOWS,
@@ -367,8 +367,8 @@ export function PanchatantraStorybookView({
       >
         <LinearGradient
           colors={[
-            "rgba(0,0,0,0.85)",
-            "rgba(0,0,0,0.5)",
+            OVERLAYS.black[0.85],
+            OVERLAYS.black[0.5],
             "transparent",
           ]}
           style={StyleSheet.absoluteFill}
@@ -403,7 +403,7 @@ export function PanchatantraStorybookView({
         <View style={styles.topCenterInfo}>
           <Text
             numberOfLines={1}
-            style={[styles.topStoryTitle, { color: "#FFFFFF", fontFamily: headingFontFamily }]}
+            style={[styles.topStoryTitle, { color: COLORS.onMediaWhite, fontFamily: headingFontFamily }]}
           >
             {title}
           </Text>
@@ -661,8 +661,8 @@ export function PanchatantraStorybookView({
                     {!isMultiScene && isFinalPage ? (
                       <LinearGradient
                         colors={[
-                          "rgba(212,175,55,0.06)",
-                          "rgba(212,175,55,0.18)",
+                          OVERLAYS.metallicGold[0.06],
+                          OVERLAYS.metallicGold[0.18],
                           "transparent",
                         ]}
                         style={StyleSheet.absoluteFill}
@@ -687,23 +687,23 @@ export function PanchatantraStorybookView({
                     style={[
                       styles.folioBookplate,
                       {
-                        backgroundColor: isDark ? "#17120D" : "#241810",
+                        backgroundColor: isDark ? FEATURE_COLORS.panchatantraStorybookView.surfaceDark : FEATURE_COLORS.panchatantraStorybookView.surfaceLight,
                       },
                     ]}
                   >
                     <View style={styles.folioInnerBorder}>
                       {/* Ornate Corner Filigree on Folio */}
                       <View style={[styles.cornerFiligree, styles.folioCornerTL]}>
-                        <Text style={[styles.filigreeSymbol, { color: "rgba(216,138,28,0.55)" }]}>❦</Text>
+                        <Text style={[styles.filigreeSymbol, { color: OVERLAYS.amber[0.55] }]}>❦</Text>
                       </View>
                       <View style={[styles.cornerFiligree, styles.folioCornerTR]}>
-                        <Text style={[styles.filigreeSymbol, { color: "rgba(216,138,28,0.55)" }]}>❦</Text>
+                        <Text style={[styles.filigreeSymbol, { color: OVERLAYS.amber[0.55] }]}>❦</Text>
                       </View>
                       <View style={[styles.cornerFiligree, styles.folioCornerBL]}>
-                        <Text style={[styles.filigreeSymbol, { color: "rgba(216,138,28,0.55)" }]}>❦</Text>
+                        <Text style={[styles.filigreeSymbol, { color: OVERLAYS.amber[0.55] }]}>❦</Text>
                       </View>
                       <View style={[styles.cornerFiligree, styles.folioCornerBR]}>
-                        <Text style={[styles.filigreeSymbol, { color: "rgba(216,138,28,0.55)" }]}>❦</Text>
+                        <Text style={[styles.filigreeSymbol, { color: OVERLAYS.amber[0.55] }]}>❦</Text>
                       </View>
 
                       <View style={styles.folioHeader}>
@@ -760,8 +760,8 @@ export function PanchatantraStorybookView({
                     style={[
                       styles.fontScalerPill,
                       {
-                        backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
-                        borderColor: isDark ? "rgba(197,160,89,0.3)" : "rgba(200,160,110,0.3)",
+                        backgroundColor: isDark ? OVERLAYS.white[0.08] : OVERLAYS.black[0.05],
+                        borderColor: isDark ? OVERLAYS.gold[0.3] : FEATURE_COLORS.panchatantraStorybookView.borderLight,
                       },
                     ]}
                   >
@@ -780,7 +780,7 @@ export function PanchatantraStorybookView({
                     <View
                       style={[
                         styles.fontScaleDivider,
-                        { backgroundColor: isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)" },
+                        { backgroundColor: isDark ? OVERLAYS.white[0.15] : OVERLAYS.black[0.12] },
                       ]}
                     />
 
@@ -793,7 +793,7 @@ export function PanchatantraStorybookView({
                     <View
                       style={[
                         styles.fontScaleDivider,
-                        { backgroundColor: isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)" },
+                        { backgroundColor: isDark ? OVERLAYS.white[0.15] : OVERLAYS.black[0.12] },
                       ]}
                     />
 
@@ -1227,7 +1227,7 @@ const styles = StyleSheet.create({
     borderRadius: RADII.pill,
   },
   langSegmentActive: {
-    shadowColor: "#000",
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
@@ -1265,7 +1265,7 @@ const styles = StyleSheet.create({
   folioCornerBL: { bottom: 8, left: 8 },
   folioCornerBR: { bottom: 8, right: 8 },
   filigreeSymbol: {
-    color: "rgba(216,138,28,0.75)",
+    color: OVERLAYS.amber[0.75],
     fontSize: 14,
   },
   imageSceneBadge: {
@@ -1273,15 +1273,15 @@ const styles = StyleSheet.create({
     bottom: 12,
     left: 14,
     zIndex: 10,
-    backgroundColor: "rgba(0,0,0,0.55)",
+    backgroundColor: COLORS.deepModalScrim,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: RADII.pill,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
+    borderColor: OVERLAYS.white[0.2],
   },
   imageSceneBadgeText: {
-    color: "#FFFFFF",
+    color: COLORS.onMediaWhite,
     fontSize: 10,
     letterSpacing: 1,
     fontFamily: FONTS.sansSemiBold,
@@ -1296,7 +1296,7 @@ const styles = StyleSheet.create({
   folioInnerBorder: {
     flex: 1,
     borderWidth: 1,
-    borderColor: "rgba(216,138,28,0.35)",
+    borderColor: OVERLAYS.amber[0.35],
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
@@ -1309,11 +1309,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   folioHeaderSymbol: {
-    color: "#D88A1C",
+    color: COLORS.brandGoldLight,
     fontSize: 10,
   },
   folioHeaderText: {
-    color: "#D88A1C",
+    color: COLORS.brandGoldLight,
     fontSize: 12,
     letterSpacing: 1,
   },
@@ -1322,8 +1322,8 @@ const styles = StyleSheet.create({
     height: 72,
     borderRadius: 36,
     borderWidth: 1.5,
-    borderColor: "rgba(216,138,28,0.5)",
-    backgroundColor: "rgba(216,138,28,0.14)",
+    borderColor: OVERLAYS.amber[0.5],
+    backgroundColor: OVERLAYS.amber[0.14],
     alignItems: "center",
     justifyContent: "center",
     marginVertical: 10,
@@ -1332,7 +1332,7 @@ const styles = StyleSheet.create({
     fontSize: 36,
   },
   folioTitle: {
-    color: "#FAF6EE",
+    color: COLORS.storyParchment,
     fontSize: 18,
     textAlign: "center",
     lineHeight: 24,
@@ -1344,12 +1344,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: RADII.pill,
-    backgroundColor: "rgba(216,138,28,0.14)",
+    backgroundColor: OVERLAYS.amber[0.14],
     borderWidth: 1,
-    borderColor: "rgba(216,138,28,0.25)",
+    borderColor: OVERLAYS.amber[0.25],
   },
   folioSubtext: {
-    color: "#D88A1C",
+    color: COLORS.brandGoldLight,
     fontSize: 9.5,
     letterSpacing: 1.2,
   },

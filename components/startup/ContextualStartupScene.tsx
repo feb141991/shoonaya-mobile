@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { AppLanguage, SacredTimePeriod, StartupScene } from '@/lib/startup-scenes/types';
 import { getStartupGreeting, resolveSacredTimePeriod } from '@/lib/startup-scenes/selector';
-import { COLORS, FONTS } from '@/lib/constants';
+import { FEATURE_COLORS, OVERLAYS, COLORS, FONTS } from '@/lib/constants';
 
 interface ContextualStartupSceneProps {
   scene: StartupScene;
@@ -31,10 +31,10 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
  * Enhances contrast, depth, and sacred mood without requiring heavy bitmap duplicates.
  */
 const TIME_WASH_GRADIENTS: Record<SacredTimePeriod, [string, string, string]> = {
-  early_morning: ['rgba(20, 12, 6, 0.45)', 'rgba(65, 38, 12, 0.22)', 'rgba(18, 10, 5, 0.85)'],
-  daytime: ['rgba(25, 20, 15, 0.40)', 'rgba(0, 0, 0, 0.15)', 'rgba(25, 18, 12, 0.82)'],
-  evening: ['rgba(28, 14, 8, 0.52)', 'rgba(90, 36, 16, 0.28)', 'rgba(20, 8, 5, 0.90)'],
-  night: ['rgba(8, 8, 14, 0.62)', 'rgba(14, 16, 28, 0.35)', 'rgba(6, 6, 12, 0.92)'],
+  early_morning: [FEATURE_COLORS.contextualStartupScene.timeWashGradientsEarlyMorningStart, FEATURE_COLORS.contextualStartupScene.timeWashGradientsEarlyMorningMiddle, FEATURE_COLORS.contextualStartupScene.timeWashGradientsEarlyMorningEnd],
+  daytime: [FEATURE_COLORS.contextualStartupScene.timeWashGradientsDaytimeStart, OVERLAYS.black[0.15], FEATURE_COLORS.contextualStartupScene.timeWashGradientsDaytimeEnd],
+  evening: [FEATURE_COLORS.contextualStartupScene.timeWashGradientsEveningStart, FEATURE_COLORS.contextualStartupScene.timeWashGradientsEveningMiddle, FEATURE_COLORS.contextualStartupScene.timeWashGradientsEveningEnd],
+  night: [FEATURE_COLORS.contextualStartupScene.timeWashGradientsNightStart, FEATURE_COLORS.contextualStartupScene.timeWashGradientsNightMiddle, FEATURE_COLORS.contextualStartupScene.timeWashGradientsNightEnd],
 };
 
 export const ContextualStartupScene: React.FC<ContextualStartupSceneProps> = ({
@@ -112,10 +112,10 @@ export const ContextualStartupScene: React.FC<ContextualStartupSceneProps> = ({
   });
 
   const isLightText = scene.textTreatment !== 'dark';
-  const textColor = isLightText ? '#FFFDF9' : '#2C2420';
-  const subtextColor = isLightText ? 'rgba(255, 253, 249, 0.82)' : 'rgba(44, 36, 32, 0.80)';
-  const chipBg = isLightText ? 'rgba(255, 255, 255, 0.14)' : 'rgba(0, 0, 0, 0.08)';
-  const chipBorder = isLightText ? 'rgba(255, 255, 255, 0.24)' : 'rgba(0, 0, 0, 0.15)';
+  const textColor = isLightText ? COLORS.cardBgLight : FEATURE_COLORS.contextualStartupScene.onLightText;
+  const subtextColor = isLightText ? FEATURE_COLORS.contextualStartupScene.onDarkSubtext : FEATURE_COLORS.contextualStartupScene.onLightSubtext;
+  const chipBg = isLightText ? OVERLAYS.white[0.14] : OVERLAYS.black[0.08];
+  const chipBorder = isLightText ? OVERLAYS.white[0.24] : OVERLAYS.black[0.15];
 
   const accessibilityText = scene.accessibilityLabel[language] || scene.accessibilityLabel.en;
 
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#FFFDF9',
+    backgroundColor: COLORS.cardBgLight,
   },
   bottomContent: {
     paddingHorizontal: 32,

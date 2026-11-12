@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 
 import { Card } from '@/components/ui/Card';
-import { COLORS, FONTS, TYPE, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, COLORS, FONTS, TYPE, themeColor } from '@/lib/constants';
 
 interface TimingConfidenceCardProps {
   timeUnknown: boolean;
@@ -26,8 +26,8 @@ export function TimingConfidenceCard({
         style={[
           styles.container,
           {
-            backgroundColor: isDark ? 'rgba(50, 35, 15, 0.4)' : 'rgba(255, 248, 235, 0.95)',
-            borderColor: isDark ? 'rgba(245, 158, 11, 0.35)' : 'rgba(217, 119, 6, 0.35)',
+            backgroundColor: isDark ? FEATURE_COLORS.timingConfidenceCard.cardSurfaceDark : FEATURE_COLORS.timingConfidenceCard.cardSurfaceLight,
+            borderColor: isDark ? FEATURE_COLORS.timingConfidenceCard.cardBorderDark : FEATURE_COLORS.timingConfidenceCard.cardBorderLight,
           },
         ]}
       >
@@ -36,20 +36,20 @@ export function TimingConfidenceCard({
             style={[
               styles.badge,
               {
-                backgroundColor: isDark ? 'rgba(245, 158, 11, 0.2)' : 'rgba(254, 243, 199, 1)',
-                borderColor: isDark ? 'rgba(245, 158, 11, 0.4)' : 'rgba(245, 158, 11, 0.6)',
+                backgroundColor: isDark ? FEATURE_COLORS.timingConfidenceCard.surfaceDark : FEATURE_COLORS.timingConfidenceCard.surfaceLight,
+                borderColor: isDark ? FEATURE_COLORS.timingConfidenceCard.borderDark : FEATURE_COLORS.timingConfidenceCard.borderLight,
               },
             ]}
           >
             <Feather
               name="alert-circle"
               size={13}
-              color={isDark ? '#FBBF24' : '#D97706'}
+              color={isDark ? FEATURE_COLORS.timingConfidenceCard.alertCircleTextDark : COLORS.warningLight}
             />
             <Text
               style={[
                 styles.badgeText,
-                { color: isDark ? '#FBBF24' : '#B45309' },
+                { color: isDark ? FEATURE_COLORS.timingConfidenceCard.alertCircleTextDark : FEATURE_COLORS.timingConfidenceCard.textLight },
               ]}
             >
               Timing Confidence: Partial
@@ -77,8 +77,8 @@ export function TimingConfidenceCard({
       style={[
         styles.container,
         {
-          backgroundColor: isDark ? 'rgba(20, 35, 25, 0.35)' : 'rgba(240, 253, 244, 0.95)',
-          borderColor: isDark ? 'rgba(16, 185, 129, 0.3)' : 'rgba(16, 185, 129, 0.35)',
+          backgroundColor: isDark ? FEATURE_COLORS.timingConfidenceCard.cardSurfaceDark2 : FEATURE_COLORS.timingConfidenceCard.cardSurfaceLight2,
+          borderColor: isDark ? FEATURE_COLORS.timingConfidenceCard.cardBorderDark2 : FEATURE_COLORS.timingConfidenceCard.cardBorderLight2,
         },
       ]}
     >
@@ -87,20 +87,20 @@ export function TimingConfidenceCard({
           style={[
             styles.badge,
             {
-              backgroundColor: isDark ? 'rgba(16, 185, 129, 0.18)' : 'rgba(220, 252, 231, 1)',
-              borderColor: isDark ? 'rgba(16, 185, 129, 0.4)' : 'rgba(16, 185, 129, 0.6)',
+              backgroundColor: isDark ? FEATURE_COLORS.timingConfidenceCard.surfaceDark2 : FEATURE_COLORS.timingConfidenceCard.surfaceLight2,
+              borderColor: isDark ? FEATURE_COLORS.timingConfidenceCard.borderDark2 : FEATURE_COLORS.timingConfidenceCard.borderLight2,
             },
           ]}
         >
           <Feather
             name="check-circle"
             size={13}
-            color={isDark ? '#34D399' : '#059669'}
+            color={isDark ? FEATURE_COLORS.timingConfidenceCard.checkCircleTextDark : FEATURE_COLORS.timingConfidenceCard.checkCircleTextLight}
           />
           <Text
             style={[
               styles.badgeText,
-              { color: isDark ? '#34D399' : '#047857' },
+              { color: isDark ? FEATURE_COLORS.timingConfidenceCard.checkCircleTextDark : FEATURE_COLORS.timingConfidenceCard.textLight2 },
             ]}
           >
             Timing Confidence: High

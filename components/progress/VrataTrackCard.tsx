@@ -10,7 +10,7 @@ import Feather from '@expo/vector-icons/Feather';
 import { useRouter, type Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 
-import { FONTS, RADII, themeColor } from '@/lib/constants';
+import { COLORS, FEATURE_COLORS, OVERLAYS, FONTS, RADII, themeColor } from '@/lib/constants';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 
 type Theme = ReturnType<typeof themeColor>;
@@ -62,8 +62,8 @@ export const VrataTrackCard = memo(function VrataTrackCard({
       style={[
         styles.container,
         {
-          backgroundColor: isDark ? 'rgba(28, 22, 16, 0.65)' : 'rgba(255, 252, 246, 0.88)',
-          borderColor: isDark ? 'rgba(212, 175, 55, 0.22)' : 'rgba(180, 130, 40, 0.18)',
+          backgroundColor: isDark ? FEATURE_COLORS.vrataTrackCard.surfaceDark : FEATURE_COLORS.vrataTrackCard.surfaceLight,
+          borderColor: isDark ? OVERLAYS.metallicGold[0.22] : FEATURE_COLORS.vrataTrackCard.borderLight,
         },
       ]}
     >
@@ -91,8 +91,8 @@ export const VrataTrackCard = memo(function VrataTrackCard({
           style={[
             styles.shieldPill,
             {
-              backgroundColor: isDark ? 'rgba(212, 175, 55, 0.12)' : 'rgba(180, 130, 40, 0.08)',
-              borderColor: isDark ? 'rgba(212, 175, 55, 0.28)' : 'rgba(180, 130, 40, 0.2)',
+              backgroundColor: isDark ? OVERLAYS.metallicGold[0.12] : FEATURE_COLORS.vrataTrackCard.surfaceLight2,
+              borderColor: isDark ? OVERLAYS.metallicGold[0.28] : FEATURE_COLORS.vrataTrackCard.borderLight2,
             },
           ]}
         >
@@ -115,7 +115,7 @@ export const VrataTrackCard = memo(function VrataTrackCard({
           </Text>
         </View>
 
-        <View style={[styles.metricDivider, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
+        <View style={[styles.metricDivider, { backgroundColor: isDark ? OVERLAYS.white[0.08] : OVERLAYS.black[0.06] }]} />
 
         <View style={styles.metricItem}>
           <Text style={[styles.metricNumeral, { color: theme.brand }]}>
@@ -126,7 +126,7 @@ export const VrataTrackCard = memo(function VrataTrackCard({
           </Text>
         </View>
 
-        <View style={[styles.metricDivider, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
+        <View style={[styles.metricDivider, { backgroundColor: isDark ? OVERLAYS.white[0.08] : OVERLAYS.black[0.06] }]} />
 
         <View style={styles.metricItem}>
           <Text style={[styles.metricNumeral, { color: theme.text }]}>
@@ -144,7 +144,7 @@ export const VrataTrackCard = memo(function VrataTrackCard({
           <View
             style={[
               styles.progressBarTrack,
-              { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)' },
+              { backgroundColor: isDark ? OVERLAYS.white[0.06] : OVERLAYS.black[0.05] },
             ]}
           >
             <View
@@ -174,8 +174,8 @@ export const VrataTrackCard = memo(function VrataTrackCard({
         style={[
           styles.actionButton,
           {
-            backgroundColor: isDark ? 'rgba(212, 175, 55, 0.12)' : 'rgba(180, 130, 40, 0.08)',
-            borderColor: isDark ? 'rgba(212, 175, 55, 0.22)' : 'rgba(180, 130, 40, 0.16)',
+            backgroundColor: isDark ? OVERLAYS.metallicGold[0.12] : FEATURE_COLORS.vrataTrackCard.surfaceLight2,
+            borderColor: isDark ? OVERLAYS.metallicGold[0.22] : FEATURE_COLORS.vrataTrackCard.pressableSurfaceBorderLight,
           },
         ]}
       >
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     padding: 16,
-    shadowColor: '#000',
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 10,

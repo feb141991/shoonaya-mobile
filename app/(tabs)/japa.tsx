@@ -49,7 +49,7 @@ import {
 import { attemptAndReconcilePendingCompletion, parsePendingCompletionMantra } from '@/lib/japaCompletionReconciliation';
 import { recordMutationRetryOutcome, recordRefreshFailure, recordRouteOpen, recordServerTiming, parseServerTimingHeader } from '@/lib/telemetry';
 import { trackAnalyticsEvent } from '@/lib/analytics';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, OVERLAYS, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { getMalaSkin, MALA_SKINS } from '@/lib/mala-skins';
 import { NAV_BAR_CLEARANCE, setBottomNavHidden } from '@/lib/nav-bar';
 import { navScrollHandler } from '@/lib/navScrollBus';
@@ -494,7 +494,7 @@ function FlameFlicker() {
         width: 140,
         height: 140,
         borderRadius: 70,
-        backgroundColor: 'rgba(255,150,60,0.35)',
+        backgroundColor: FEATURE_COLORS.japa.animatedViewSurface,
         opacity,
         transform: [{ scale }],
       }}
@@ -611,7 +611,7 @@ function ShootingStar({ delaySeed }: { delaySeed: number }) {
         width: 46,
         height: 1.6,
         borderRadius: 1,
-        backgroundColor: 'rgba(255,255,255,0.9)',
+        backgroundColor: OVERLAYS.white[0.9],
         opacity,
         transform: [{ rotate: '24deg' }, { translateX }, { translateY }],
       }}
@@ -623,12 +623,12 @@ const SCENE_PARTICLES: Record<
   JapaSceneId,
   { count: number; color: string; minSize: number; maxSize: number; motion: ParticleMotion; minDuration: number; maxDuration: number }
 > = {
-  midnight: { count: 20, color: 'rgba(255,255,255,0.9)', minSize: 1.8, maxSize: 3.8, motion: 'twinkle', minDuration: 2200, maxDuration: 4200 },
-  himalayan: { count: 14, color: 'rgba(255,222,175,0.9)', minSize: 2.2, maxSize: 4.2, motion: 'twinkle', minDuration: 2800, maxDuration: 4600 },
-  temple: { count: 13, color: 'rgba(255,176,102,0.95)', minSize: 2.4, maxSize: 4.4, motion: 'drift-up', minDuration: 3200, maxDuration: 5200 },
-  river: { count: 14, color: 'rgba(190,225,255,0.82)', minSize: 2, maxSize: 3.8, motion: 'wave', minDuration: 2600, maxDuration: 4600 },
-  forest: { count: 16, color: 'rgba(198,230,180,0.9)', minSize: 2.2, maxSize: 4.6, motion: 'drift-up', minDuration: 4200, maxDuration: 7200 },
-  cosmos: { count: 30, color: 'rgba(255,255,255,0.95)', minSize: 1.3, maxSize: 3.2, motion: 'twinkle', minDuration: 1800, maxDuration: 3600 },
+  midnight: { count: 20, color: OVERLAYS.white[0.9], minSize: 1.8, maxSize: 3.8, motion: 'twinkle', minDuration: 2200, maxDuration: 4200 },
+  himalayan: { count: 14, color: FEATURE_COLORS.japa.himalayanParticle, minSize: 2.2, maxSize: 4.2, motion: 'twinkle', minDuration: 2800, maxDuration: 4600 },
+  temple: { count: 13, color: FEATURE_COLORS.japa.templeParticle, minSize: 2.4, maxSize: 4.4, motion: 'drift-up', minDuration: 3200, maxDuration: 5200 },
+  river: { count: 14, color: FEATURE_COLORS.japa.riverParticle, minSize: 2, maxSize: 3.8, motion: 'wave', minDuration: 2600, maxDuration: 4600 },
+  forest: { count: 16, color: FEATURE_COLORS.japa.forestParticle, minSize: 2.2, maxSize: 4.6, motion: 'drift-up', minDuration: 4200, maxDuration: 7200 },
+  cosmos: { count: 30, color: OVERLAYS.white[0.95], minSize: 1.3, maxSize: 3.2, motion: 'twinkle', minDuration: 1800, maxDuration: 3600 },
 };
 
 function SceneImagePlate({ sceneId }: { sceneId: JapaSceneId }) {
@@ -657,7 +657,7 @@ function SceneReadabilityWash({ isDark }: { isDark: boolean }) {
           height: 258,
           marginLeft: -129,
           borderRadius: 129,
-          backgroundColor: isDark ? 'rgba(8,6,4,0.08)' : 'rgba(255,253,248,0.12)',
+          backgroundColor: isDark ? FEATURE_COLORS.japa.surfaceDark : FEATURE_COLORS.japa.surfaceLight,
         }}
       />
       <View
@@ -667,13 +667,13 @@ function SceneReadabilityWash({ isDark }: { isDark: boolean }) {
           left: -30,
           right: -30,
           height: 260,
-          backgroundColor: isDark ? 'rgba(0,0,0,0.22)' : 'rgba(45,31,14,0.12)',
+          backgroundColor: isDark ? OVERLAYS.black[0.22] : FEATURE_COLORS.japa.surfaceLight2,
         }}
       />
       <LinearGradient
         colors={isDark
-          ? ['rgba(0,0,0,0.22)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.30)']
-          : ['rgba(255,253,248,0.40)', 'rgba(255,253,248,0)', 'rgba(45,31,14,0.16)']}
+          ? [OVERLAYS.black[0.22], OVERLAYS.black[0], OVERLAYS.black[0.3]]
+          : [FEATURE_COLORS.japa.gradientLightStart, FEATURE_COLORS.japa.gradientLightMiddle, FEATURE_COLORS.japa.gradientLightEnd]}
         style={{ position: 'absolute', inset: 0 }}
       />
     </View>
@@ -704,12 +704,12 @@ function SceneBackdrop({ sceneId }: { sceneId: JapaSceneId }) {
         <BackgroundParticle key={p.seed} seed={p.seed} color={particleConfig.color} size={p.size} motion={particleConfig.motion} duration={p.duration} />
       ))}
       {sceneId === 'temple' ? <FlameFlicker /> : null}
-      {sceneId === 'himalayan' ? <DawnSweep color="rgba(255,214,150,0.5)" /> : null}
+      {sceneId === 'himalayan' ? <DawnSweep color={FEATURE_COLORS.japa.dawnSweepText} /> : null}
       {sceneId === 'river' ? (
         <>
-          <WaveBand topPct={30} color="rgba(190,225,255,0.5)" seed={31} />
-          <WaveBand topPct={52} color="rgba(190,225,255,0.4)" seed={37} />
-          <WaveBand topPct={74} color="rgba(190,225,255,0.3)" seed={41} />
+          <WaveBand topPct={30} color={FEATURE_COLORS.japa.riverWaveForeground} seed={31} />
+          <WaveBand topPct={52} color={FEATURE_COLORS.japa.riverWaveMiddle} seed={37} />
+          <WaveBand topPct={74} color={FEATURE_COLORS.japa.riverWaveBackground} seed={41} />
         </>
       ) : null}
       {sceneId === 'cosmos' ? (
@@ -1630,15 +1630,15 @@ export default function JapaScreen() {
   }, []);
 
   const NAVARATNA_GEMS = [
-    { id: 'ruby', name: 'Manikya', color: '#E11D48', dark: '#881337', light: '#FDA4AF', rim: '#FFD700' },
-    { id: 'pearl', name: 'Mukta', color: '#F8FAFC', dark: '#94A3B8', light: '#FFFFFF', rim: '#E2E8F0' },
-    { id: 'coral', name: 'Moonga', color: '#F97316', dark: '#9A3412', light: '#FED7AA', rim: '#FFD700' },
-    { id: 'emerald', name: 'Marakata', color: '#10B981', dark: '#064E3B', light: '#A7F3D0', rim: '#FFD700' },
-    { id: 'topaz', name: 'Pukhraj', color: '#FBBF24', dark: '#B45309', light: '#FEF08A', rim: '#FFD700' },
-    { id: 'diamond', name: 'Heera', color: '#E0F2FE', dark: '#0284C7', light: '#FFFFFF', rim: '#BAE6FD' },
-    { id: 'sapphire', name: 'Neelam', color: '#2563EB', dark: '#1E3A8A', light: '#BFDBFE', rim: '#FFD700' },
-    { id: 'hessonite', name: 'Gomed', color: '#D97706', dark: '#78350F', light: '#FDE68A', rim: '#FFD700' },
-    { id: 'catseye', name: 'Vaidurya', color: '#84CC16', dark: '#365314', light: '#D9F99D', rim: '#FFD700' },
+    { id: 'ruby', name: 'Manikya', color: FEATURE_COLORS.japa.rubyGem, dark: FEATURE_COLORS.japa.rubyDark, light: FEATURE_COLORS.japa.rubyLight, rim: COLORS.radiantGold },
+    { id: 'pearl', name: 'Mukta', color: FEATURE_COLORS.japa.pearlGem, dark: FEATURE_COLORS.japa.pearlDark, light: COLORS.onMediaWhite, rim: FEATURE_COLORS.japa.pearlRim },
+    { id: 'coral', name: 'Moonga', color: FEATURE_COLORS.japa.coralGem, dark: FEATURE_COLORS.japa.coralDark, light: FEATURE_COLORS.japa.coralLight, rim: COLORS.radiantGold },
+    { id: 'emerald', name: 'Marakata', color: FEATURE_COLORS.japa.emeraldGem, dark: FEATURE_COLORS.japa.emeraldDark, light: FEATURE_COLORS.japa.emeraldLight, rim: COLORS.radiantGold },
+    { id: 'topaz', name: 'Pukhraj', color: FEATURE_COLORS.japa.topazGem, dark: FEATURE_COLORS.japa.topazDark, light: FEATURE_COLORS.japa.topazLight, rim: COLORS.radiantGold },
+    { id: 'diamond', name: 'Heera', color: FEATURE_COLORS.japa.diamondGem, dark: FEATURE_COLORS.japa.diamondDark, light: COLORS.onMediaWhite, rim: FEATURE_COLORS.japa.diamondRim },
+    { id: 'sapphire', name: 'Neelam', color: FEATURE_COLORS.japa.sapphireGem, dark: FEATURE_COLORS.japa.sapphireDark, light: FEATURE_COLORS.japa.sapphireLight, rim: COLORS.radiantGold },
+    { id: 'hessonite', name: 'Gomed', color: COLORS.warningLight, dark: FEATURE_COLORS.japa.hessoniteDark, light: FEATURE_COLORS.japa.hessoniteLight, rim: COLORS.radiantGold },
+    { id: 'catseye', name: 'Vaidurya', color: FEATURE_COLORS.japa.catseyeGem, dark: FEATURE_COLORS.japa.catseyeDark, light: FEATURE_COLORS.japa.catseyeLight, rim: COLORS.radiantGold },
   ] as const;
 
   function MeruCrownApex({
@@ -1675,7 +1675,7 @@ export default function JapaScreen() {
             y1={ray.y1}
             x2={ray.x2}
             y2={ray.y2}
-            stroke="#FFD700"
+            stroke={COLORS.radiantGold}
             strokeWidth={i % 2 === 0 ? 2 : 1.2}
             strokeOpacity={i % 2 === 0 ? 0.9 : 0.6}
             strokeLinecap="round"
@@ -1686,7 +1686,7 @@ export default function JapaScreen() {
         <Circle cx={cx} cy={cy} r={r + 8} fill={glowColor} opacity={0.42} />
 
         {/* Drop shadow */}
-        <Circle cx={cx + 2} cy={cy + 3} r={r} fill="rgba(120,53,15,0.45)" />
+        <Circle cx={cx + 2} cy={cy + 3} r={r} fill={FEATURE_COLORS.japa.fill} />
 
         {/* 3D Filigree Meru Sphere */}
         <Circle
@@ -1694,7 +1694,7 @@ export default function JapaScreen() {
           cy={cy}
           r={r}
           fill="url(#grad-meru-gold)"
-          stroke="#FFE58F"
+          stroke={FEATURE_COLORS.japa.stroke}
           strokeWidth={1.6}
         />
 
@@ -1704,7 +1704,7 @@ export default function JapaScreen() {
           cy={cy}
           r={r * 0.72}
           fill="none"
-          stroke="#FFF8DC"
+          stroke={FEATURE_COLORS.japa.stroke2}
           strokeWidth={0.9}
           strokeDasharray="3,2"
           opacity={0.88}
@@ -1714,7 +1714,7 @@ export default function JapaScreen() {
           cy={cy}
           r={r * 0.44}
           fill="none"
-          stroke="#FFF8DC"
+          stroke={FEATURE_COLORS.japa.stroke2}
           strokeWidth={0.8}
           opacity={0.92}
         />
@@ -1723,25 +1723,25 @@ export default function JapaScreen() {
         <Path
           d={`M ${cx - r * 0.6} ${cy} Q ${cx} ${cy - r * 0.6} ${cx + r * 0.6} ${cy} Q ${cx} ${cy + r * 0.6} ${cx - r * 0.6} ${cy}`}
           fill="none"
-          stroke="#FFF8DC"
+          stroke={FEATURE_COLORS.japa.stroke2}
           strokeWidth={0.8}
           opacity={0.75}
         />
         <Path
           d={`M ${cx} ${cy - r * 0.6} Q ${cx - r * 0.6} ${cy} ${cx} ${cy + r * 0.6} Q ${cx + r * 0.6} ${cy} ${cx} ${cy - r * 0.6}`}
           fill="none"
-          stroke="#FFF8DC"
+          stroke={FEATURE_COLORS.japa.stroke2}
           strokeWidth={0.8}
           opacity={0.75}
         />
 
         {/* Top Bindu & Crown Specular Sparkle */}
-        <Circle cx={cx - r * 0.3} cy={cy - r * 0.32} r={r * 0.24} fill="#FFFFFF" opacity={0.95} />
-        <Circle cx={cx} cy={cy} r={2.8} fill="#FFFFFF" stroke="#D97706" strokeWidth={0.8} />
+        <Circle cx={cx - r * 0.3} cy={cy - r * 0.32} r={r * 0.24} fill={COLORS.onMediaWhite} opacity={0.95} />
+        <Circle cx={cx} cy={cy} r={2.8} fill={COLORS.onMediaWhite} stroke={COLORS.warningLight} strokeWidth={0.8} />
 
         {/* Left/Right Thread Connectors */}
-        <Circle cx={cx - r - 2} cy={cy} r={3.2} fill={threadColor} stroke="#FFD700" strokeWidth={0.8} />
-        <Circle cx={cx + r + 2} cy={cy} r={3.2} fill={threadColor} stroke="#FFD700" strokeWidth={0.8} />
+        <Circle cx={cx - r - 2} cy={cy} r={3.2} fill={threadColor} stroke={COLORS.radiantGold} strokeWidth={0.8} />
+        <Circle cx={cx + r + 2} cy={cy} r={3.2} fill={threadColor} stroke={COLORS.radiantGold} strokeWidth={0.8} />
       </G>
     );
   }
@@ -1764,30 +1764,30 @@ export default function JapaScreen() {
         return (
           <Fragment key={`bead-${index}`}>
             {isCurrent || isDone ? (
-              <Circle cx={x} cy={y} r={r + 2.5} fill="rgba(186,230,253,0.32)" />
+              <Circle cx={x} cy={y} r={r + 2.5} fill={FEATURE_COLORS.japa.fill2} />
             ) : null}
             {/* Ambient drop shadow for 3D sphere elevation */}
-            <Circle cx={x + r * 0.22} cy={y + r * 0.26} r={r} fill="rgba(15,23,42,0.55)" />
+            <Circle cx={x + r * 0.22} cy={y + r * 0.26} r={r} fill={FEATURE_COLORS.japa.fill3} />
             <Circle
               cx={x}
               cy={y}
               r={r}
               fill={`url(#${gradientId})`}
-              stroke={isCurrent ? '#38BDF8' : isDone ? 'rgba(255,255,255,0.9)' : 'rgba(186,230,253,0.75)'}
+              stroke={isCurrent ? FEATURE_COLORS.japa.stroke3 : isDone ? OVERLAYS.white[0.9] : FEATURE_COLORS.japa.stroke4}
               strokeWidth={isCurrent ? 1.6 : 0.8}
             />
             {/* Prismatic facet reflections */}
             <Path
               d={`M ${x - r * 0.42} ${y} L ${x} ${y - r * 0.42} L ${x + r * 0.42} ${y} L ${x} ${y + r * 0.42} Z`}
               fill="none"
-              stroke="#FFFFFF"
+              stroke={COLORS.onMediaWhite}
               strokeWidth={0.65}
               opacity={isDone || isCurrent ? 0.8 : 0.45}
             />
             {/* Specular pinpoint gleam */}
-            <Circle cx={x - r * 0.32} cy={y - r * 0.34} r={Math.max(1.0, r * 0.28)} fill="#FFFFFF" opacity={0.95} />
+            <Circle cx={x - r * 0.32} cy={y - r * 0.34} r={Math.max(1.0, r * 0.28)} fill={COLORS.onMediaWhite} opacity={0.95} />
             {/* Internal crystal refraction bounce */}
-            <Ellipse cx={x + r * 0.22} cy={y + r * 0.24} rx={r * 0.24} ry={r * 0.12} fill="#E0F2FE" opacity={0.55} />
+            <Ellipse cx={x + r * 0.22} cy={y + r * 0.24} rx={r * 0.24} ry={r * 0.12} fill={FEATURE_COLORS.japa.diamondGem} opacity={0.55} />
           </Fragment>
         );
       }
@@ -1799,29 +1799,29 @@ export default function JapaScreen() {
         return (
           <Fragment key={`bead-${index}`}>
             {isCurrent || isDone ? (
-              <Circle cx={x} cy={y} r={r + 2.2} fill="rgba(245,225,160,0.38)" />
+              <Circle cx={x} cy={y} r={r + 2.2} fill={FEATURE_COLORS.japa.fill4} />
             ) : null}
             {/* Ambient warm drop shadow */}
-            <Circle cx={x + r * 0.2} cy={y + r * 0.24} r={r} fill="rgba(69,26,3,0.55)" />
+            <Circle cx={x + r * 0.2} cy={y + r * 0.24} r={r} fill={FEATURE_COLORS.japa.fill5} />
             <Circle
               cx={x}
               cy={y}
               r={r}
               fill={`url(#${gradientId})`}
-              stroke={isCurrent ? '#F59E0B' : isDone ? '#D4AF37' : 'rgba(180,140,60,0.7)'}
+              stroke={isCurrent ? COLORS.warningDark : isDone ? COLORS.metallicGold : FEATURE_COLORS.japa.stroke5}
               strokeWidth={isCurrent ? 1.6 : 0.8}
             />
             {/* Sacred seed striation curve */}
             <Path
               d={`M ${x} ${y - r * 0.7} Q ${x + r * 0.35} ${y} ${x} ${y + r * 0.7}`}
               fill="none"
-              stroke="#D4AF37"
+              stroke={COLORS.metallicGold}
               strokeWidth={0.65}
               opacity={0.5}
             />
             {/* Specular glint */}
-            <Circle cx={x - r * 0.3} cy={y - r * 0.32} r={Math.max(1.0, r * 0.26)} fill="#FFFFFF" opacity={0.9} />
-            <Ellipse cx={x + r * 0.2} cy={y + r * 0.22} rx={r * 0.26} ry={r * 0.13} fill="#FEF08A" opacity={0.45} />
+            <Circle cx={x - r * 0.3} cy={y - r * 0.32} r={Math.max(1.0, r * 0.26)} fill={COLORS.onMediaWhite} opacity={0.9} />
+            <Ellipse cx={x + r * 0.2} cy={y + r * 0.22} rx={r * 0.26} ry={r * 0.13} fill={FEATURE_COLORS.japa.topazLight} opacity={0.45} />
           </Fragment>
         );
       }
@@ -1837,13 +1837,13 @@ export default function JapaScreen() {
               <Circle cx={x} cy={y} r={r + 2.4} fill={gem.light} opacity={0.36} />
             ) : null}
             {/* Deep drop shadow */}
-            <Circle cx={x + r * 0.2} cy={y + r * 0.24} r={r} fill="rgba(0,0,0,0.55)" />
+            <Circle cx={x + r * 0.2} cy={y + r * 0.24} r={r} fill={COLORS.deepModalScrim} />
             <Circle
               cx={x}
               cy={y}
               r={r}
               fill={`url(#${gradientId})`}
-              stroke={isCurrent ? '#FFFFFF' : '#FFD700'}
+              stroke={isCurrent ? COLORS.onMediaWhite : COLORS.radiantGold}
               strokeWidth={isCurrent ? 1.6 : 0.9}
               opacity={isDone || isCurrent ? 1 : 0.72}
             />
@@ -1851,11 +1851,11 @@ export default function JapaScreen() {
             <Path
               d={`M ${x - r * 0.42} ${y} L ${x} ${y - r * 0.42} L ${x + r * 0.42} ${y} L ${x} ${y + r * 0.42} Z`}
               fill="none"
-              stroke="rgba(255,255,255,0.75)"
+              stroke={OVERLAYS.white[0.75]}
               strokeWidth={0.6}
               opacity={isDone || isCurrent ? 0.85 : 0.5}
             />
-            <Circle cx={x - r * 0.32} cy={y - r * 0.34} r={Math.max(1.0, r * 0.26)} fill="#FFFFFF" opacity={0.95} />
+            <Circle cx={x - r * 0.32} cy={y - r * 0.34} r={Math.max(1.0, r * 0.26)} fill={COLORS.onMediaWhite} opacity={0.95} />
           </Fragment>
         );
       }
@@ -1873,7 +1873,7 @@ export default function JapaScreen() {
             cx={x + r * 0.2}
             cy={y + r * 0.24}
             r={r}
-            fill="rgba(0,0,0,0.55)"
+            fill={COLORS.deepModalScrim}
             opacity={shadowOpacity}
           />
           <Circle
@@ -1931,13 +1931,13 @@ export default function JapaScreen() {
         <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="0.75" />
         <Stop offset="30%" stopColor={malaSkin.beadColor} stopOpacity="0.85" />
         <Stop offset="75%" stopColor={malaSkin.beadBorder} stopOpacity="0.95" />
-        <Stop offset="100%" stopColor="rgba(0,0,0,0.6)" stopOpacity="0.8" />
+        <Stop offset="100%" stopColor={OVERLAYS.black[0.6]} stopOpacity="0.8" />
       </RadialGradient>
       <RadialGradient id="grad-done" cx="28%" cy="24%" r="78%">
         <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="0.95" />
         <Stop offset="28%" stopColor={malaSkin.beadColor} stopOpacity="1" />
         <Stop offset="72%" stopColor={malaSkin.beadBorder} stopOpacity="1" />
-        <Stop offset="100%" stopColor="rgba(0,0,0,0.5)" stopOpacity="0.7" />
+        <Stop offset="100%" stopColor={OVERLAYS.black[0.5]} stopOpacity="0.7" />
       </RadialGradient>
       <RadialGradient id="grad-active" cx="28%" cy="24%" r="78%">
         <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="1" />
@@ -1949,72 +1949,72 @@ export default function JapaScreen() {
         <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="0.95" />
         <Stop offset="30%" stopColor={malaSkin.threadColor} stopOpacity="1" />
         <Stop offset="75%" stopColor={malaSkin.beadBorder} stopOpacity="1" />
-        <Stop offset="100%" stopColor="rgba(0,0,0,0.6)" stopOpacity="0.8" />
+        <Stop offset="100%" stopColor={OVERLAYS.black[0.6]} stopOpacity="0.8" />
       </RadialGradient>
 
       {/* Radiant Meru Crown 3D Gold */}
       <RadialGradient id="grad-meru-gold" cx="26%" cy="22%" r="80%">
-        <Stop offset="0%" stopColor="#FFFDF0" stopOpacity="1" />
-        <Stop offset="22%" stopColor="#FFE066" stopOpacity="1" />
-        <Stop offset="50%" stopColor="#F59E0B" stopOpacity="1" />
-        <Stop offset="82%" stopColor="#D97706" stopOpacity="1" />
-        <Stop offset="100%" stopColor="#78350F" stopOpacity="1" />
+        <Stop offset="0%" stopColor={FEATURE_COLORS.japa.gradMeruGoldStop0} stopOpacity="1" />
+        <Stop offset="22%" stopColor={FEATURE_COLORS.japa.gradMeruGoldStop22} stopOpacity="1" />
+        <Stop offset="50%" stopColor={COLORS.warningDark} stopOpacity="1" />
+        <Stop offset="82%" stopColor={COLORS.warningLight} stopOpacity="1" />
+        <Stop offset="100%" stopColor={FEATURE_COLORS.japa.hessoniteDark} stopOpacity="1" />
       </RadialGradient>
 
       {/* 3D Tactile Sphatik Crystal Gradients */}
       <RadialGradient id="grad-sphatik-inactive" cx="26%" cy="22%" r="82%">
-        <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.95" />
-        <Stop offset="24%" stopColor="#F0F9FF" stopOpacity="0.85" />
-        <Stop offset="60%" stopColor="#BAE6FD" stopOpacity="0.75" />
-        <Stop offset="85%" stopColor="#7DD3FC" stopOpacity="0.85" />
-        <Stop offset="100%" stopColor="#0369A1" stopOpacity="0.75" />
+        <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="0.95" />
+        <Stop offset="24%" stopColor={FEATURE_COLORS.japa.gradSphatikInactiveStop24} stopOpacity="0.85" />
+        <Stop offset="60%" stopColor={FEATURE_COLORS.japa.diamondRim} stopOpacity="0.75" />
+        <Stop offset="85%" stopColor={FEATURE_COLORS.japa.gradSphatikInactiveStop85} stopOpacity="0.85" />
+        <Stop offset="100%" stopColor={FEATURE_COLORS.japa.gradSphatikInactiveStop100} stopOpacity="0.75" />
       </RadialGradient>
       <RadialGradient id="grad-sphatik-done" cx="26%" cy="22%" r="82%">
-        <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="1" />
-        <Stop offset="22%" stopColor="#F0F9FF" stopOpacity="0.95" />
-        <Stop offset="55%" stopColor="#BAE6FD" stopOpacity="0.9" />
-        <Stop offset="82%" stopColor="#38BDF8" stopOpacity="0.95" />
-        <Stop offset="100%" stopColor="#0284C7" stopOpacity="1" />
+        <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="1" />
+        <Stop offset="22%" stopColor={FEATURE_COLORS.japa.gradSphatikInactiveStop24} stopOpacity="0.95" />
+        <Stop offset="55%" stopColor={FEATURE_COLORS.japa.diamondRim} stopOpacity="0.9" />
+        <Stop offset="82%" stopColor={FEATURE_COLORS.japa.stroke3} stopOpacity="0.95" />
+        <Stop offset="100%" stopColor={FEATURE_COLORS.japa.diamondDark} stopOpacity="1" />
       </RadialGradient>
       <RadialGradient id="grad-sphatik-active" cx="26%" cy="22%" r="82%">
-        <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="1" />
-        <Stop offset="20%" stopColor="#E0F2FE" stopOpacity="1" />
-        <Stop offset="52%" stopColor="#38BDF8" stopOpacity="1" />
-        <Stop offset="85%" stopColor="#0284C7" stopOpacity="1" />
-        <Stop offset="100%" stopColor="#075985" stopOpacity="1" />
+        <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="1" />
+        <Stop offset="20%" stopColor={FEATURE_COLORS.japa.diamondGem} stopOpacity="1" />
+        <Stop offset="52%" stopColor={FEATURE_COLORS.japa.stroke3} stopOpacity="1" />
+        <Stop offset="85%" stopColor={FEATURE_COLORS.japa.diamondDark} stopOpacity="1" />
+        <Stop offset="100%" stopColor={FEATURE_COLORS.japa.gradSphatikActiveStop100} stopOpacity="1" />
       </RadialGradient>
 
       {/* 3D Tactile Vaijayanti Seed Gradients */}
       <RadialGradient id="grad-vaijayanti-inactive" cx="28%" cy="24%" r="78%">
-        <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.9" />
-        <Stop offset="26%" stopColor="#FEF9C3" stopOpacity="0.9" />
-        <Stop offset="60%" stopColor="#FDE68A" stopOpacity="0.9" />
-        <Stop offset="85%" stopColor="#D4AF37" stopOpacity="0.95" />
-        <Stop offset="100%" stopColor="#78350F" stopOpacity="0.8" />
+        <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="0.9" />
+        <Stop offset="26%" stopColor={FEATURE_COLORS.japa.gradVaijayantiInactiveStop26} stopOpacity="0.9" />
+        <Stop offset="60%" stopColor={FEATURE_COLORS.japa.hessoniteLight} stopOpacity="0.9" />
+        <Stop offset="85%" stopColor={COLORS.metallicGold} stopOpacity="0.95" />
+        <Stop offset="100%" stopColor={FEATURE_COLORS.japa.hessoniteDark} stopOpacity="0.8" />
       </RadialGradient>
       <RadialGradient id="grad-vaijayanti-done" cx="28%" cy="24%" r="78%">
-        <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="1" />
-        <Stop offset="24%" stopColor="#FEF9C3" stopOpacity="1" />
-        <Stop offset="58%" stopColor="#FDE68A" stopOpacity="1" />
-        <Stop offset="84%" stopColor="#D4AF37" stopOpacity="1" />
-        <Stop offset="100%" stopColor="#92400E" stopOpacity="1" />
+        <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="1" />
+        <Stop offset="24%" stopColor={FEATURE_COLORS.japa.gradVaijayantiInactiveStop26} stopOpacity="1" />
+        <Stop offset="58%" stopColor={FEATURE_COLORS.japa.hessoniteLight} stopOpacity="1" />
+        <Stop offset="84%" stopColor={COLORS.metallicGold} stopOpacity="1" />
+        <Stop offset="100%" stopColor={FEATURE_COLORS.japa.gradVaijayantiDoneStop100} stopOpacity="1" />
       </RadialGradient>
       <RadialGradient id="grad-vaijayanti-active" cx="28%" cy="24%" r="78%">
-        <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="1" />
-        <Stop offset="22%" stopColor="#FEF08A" stopOpacity="1" />
-        <Stop offset="55%" stopColor="#F59E0B" stopOpacity="1" />
-        <Stop offset="85%" stopColor="#B45309" stopOpacity="1" />
-        <Stop offset="100%" stopColor="#78350F" stopOpacity="1" />
+        <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="1" />
+        <Stop offset="22%" stopColor={FEATURE_COLORS.japa.topazLight} stopOpacity="1" />
+        <Stop offset="55%" stopColor={COLORS.warningDark} stopOpacity="1" />
+        <Stop offset="85%" stopColor={FEATURE_COLORS.japa.topazDark} stopOpacity="1" />
+        <Stop offset="100%" stopColor={FEATURE_COLORS.japa.hessoniteDark} stopOpacity="1" />
       </RadialGradient>
 
       {/* 3D Tactile Navaratna 9-Gem Gradients */}
       {NAVARATNA_GEMS.map((gem, idx) => (
         <RadialGradient key={`grad-gem-${idx}`} id={`grad-gem-${idx}`} cx="26%" cy="22%" r="80%">
-          <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.95" />
+          <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="0.95" />
           <Stop offset="24%" stopColor={gem.light} stopOpacity="1" />
           <Stop offset="60%" stopColor={gem.color} stopOpacity="1" />
           <Stop offset="85%" stopColor={gem.dark} stopOpacity="1" />
-          <Stop offset="100%" stopColor="rgba(0,0,0,0.6)" stopOpacity="0.75" />
+          <Stop offset="100%" stopColor={OVERLAYS.black[0.6]} stopOpacity="0.75" />
         </RadialGradient>
       ))}
     </Defs>
@@ -2843,8 +2843,8 @@ export default function JapaScreen() {
             <LinearGradient
               pointerEvents="none"
               colors={isDark
-                ? ['rgba(0,0,0,0.18)', 'rgba(0,0,0,0.06)', 'rgba(0,0,0,0.26)']
-                : ['rgba(255,253,248,0.34)', 'rgba(255,253,248,0.12)', 'rgba(45,31,14,0.12)']}
+                ? [OVERLAYS.black[0.18], OVERLAYS.black[0.06], OVERLAYS.black[0.26]]
+                : [FEATURE_COLORS.japa.gradientLightStart2, FEATURE_COLORS.japa.surfaceLight, FEATURE_COLORS.japa.surfaceLight2]}
               style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
             />
             <Pressable
@@ -2869,14 +2869,14 @@ export default function JapaScreen() {
                         cy={PRACTICE_CENTER_Y + PRACTICE_RADIUS_Y + 12}
                         r={7.5}
                         fill="url(#grad-meru-gold)"
-                        stroke="#FFD700"
+                        stroke={COLORS.radiantGold}
                         strokeWidth={1.2}
                       />
                       <Circle
                         cx={PRACTICE_CENTER_X}
                         cy={PRACTICE_CENTER_Y + PRACTICE_RADIUS_Y + 22}
                         r={4.5}
-                        fill="#D4AF37"
+                        fill={COLORS.metallicGold}
                       />
                       {/* Sacred silk tassel strands */}
                       <Line
@@ -3031,7 +3031,7 @@ export default function JapaScreen() {
                 borderRadius: 20,
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: isDark ? 'rgba(8,6,4,0.50)' : 'rgba(255,253,248,0.65)',
+                backgroundColor: isDark ? FEATURE_COLORS.japa.pressableSurfaceDark : FEATURE_COLORS.japa.pressableSurfaceLight,
                 borderWidth: 1,
                 borderColor: `${theme.brand}30`,
               }}
@@ -3056,7 +3056,7 @@ export default function JapaScreen() {
                 borderRadius: 20,
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: isDark ? 'rgba(8,6,4,0.36)' : 'rgba(255,253,248,0.42)',
+                backgroundColor: isDark ? FEATURE_COLORS.japa.pressableSurfaceDark2 : FEATURE_COLORS.japa.pressableSurfaceLight2,
                 borderWidth: 1,
                 borderColor: `${theme.brand}28`,
               }}
@@ -3093,8 +3093,8 @@ export default function JapaScreen() {
                   style={{
                     borderRadius: 24,
                     borderWidth: 1,
-                    borderColor: isDark ? 'rgba(216,138,28,0.58)' : 'rgba(216,138,28,0.46)',
-                    backgroundColor: isDark ? 'rgba(8,6,4,0.68)' : 'rgba(255,253,248,0.82)',
+                    borderColor: isDark ? OVERLAYS.amber[0.58] : OVERLAYS.amber[0.46],
+                    backgroundColor: isDark ? FEATURE_COLORS.japa.surfaceDark2 : FEATURE_COLORS.japa.surfaceLight3,
                     paddingHorizontal: 18,
                     paddingVertical: 14,
                     alignItems: 'center',
@@ -3128,7 +3128,7 @@ export default function JapaScreen() {
                 paddingVertical: 10,
                 minHeight: MIN_TOUCH_TARGET,
                 borderRadius: 999,
-                backgroundColor: isDark ? 'rgba(8,6,4,0.72)' : 'rgba(255,253,248,0.92)',
+                backgroundColor: isDark ? FEATURE_COLORS.japa.pressableSurfaceDark3 : FEATURE_COLORS.japa.pressableSurfaceLight3,
                 borderWidth: 1,
                 borderColor: selectedSoundId !== 'off' ? theme.brand : `${theme.brand}35`,
                 boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
@@ -3194,7 +3194,7 @@ export default function JapaScreen() {
                 accessibilityLabel="Continue practice"
                 onPress={() => setShowStopSheet(false)}
                 hitSlop={10}
-                style={{ width: 32, height: 32, minHeight: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' }}
+                style={{ width: 32, height: 32, minHeight: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: isDark ? OVERLAYS.white[0.05] : OVERLAYS.black[0.04] }}
               >
                 <Feather name="x" size={16} color={dim} />
               </PressableSurface>
@@ -3235,7 +3235,7 @@ export default function JapaScreen() {
                 minHeight: MIN_TOUCH_TARGET,
                 borderWidth: 1,
                 borderColor: theme.premiumBorder,
-                backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                backgroundColor: isDark ? OVERLAYS.white[0.05] : OVERLAYS.black[0.04],
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
@@ -3544,7 +3544,7 @@ export default function JapaScreen() {
                   borderRadius: 16,
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                  backgroundColor: isDark ? OVERLAYS.white[0.05] : OVERLAYS.black[0.04],
                 }}
               >
                 <Feather name="x" size={16} color={dim} />
@@ -3760,7 +3760,7 @@ export default function JapaScreen() {
                 accessibilityLabel="Close"
                 onPress={() => setSyncReviewVisible(false)}
                 hitSlop={10}
-                style={{ width: 32, height: 32, minHeight: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' }}
+                style={{ width: 32, height: 32, minHeight: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: isDark ? OVERLAYS.white[0.05] : OVERLAYS.black[0.04] }}
               >
                 <Feather name="x" size={16} color={dim} />
               </PressableSurface>

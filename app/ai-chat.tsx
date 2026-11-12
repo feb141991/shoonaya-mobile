@@ -29,7 +29,7 @@ import { useAiChat, DAILY_AI_MESSAGE_LIMIT, type ChatMessage } from '@/hooks/use
 import { reportAiChatResponse, type AiReportReason } from '@/lib/ai-safety';
 import { useAppIdentity } from '@/lib/appIdentity';
 import { parseAiMessageCitations } from '@/lib/ai-citations';
-import { COLORS, FONTS, SHADOWS, themeColor } from '@/lib/constants';
+import { OVERLAYS, COLORS, FONTS, SHADOWS, themeColor } from '@/lib/constants';
 import { getTraditionGreeting, getTraditionPrompts, getTraditionSymbol } from '@/lib/dharma-mitra-content';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { describeFailure } from '@/lib/user-facing-error';
@@ -123,7 +123,7 @@ function renderFormattedMessage(
             style={{
               fontFamily: FONTS.serifBold,
               color: theme.brandStrong,
-              backgroundColor: isDark ? 'rgba(197, 160, 89, 0.20)' : 'rgba(197, 160, 89, 0.14)',
+              backgroundColor: isDark ? OVERLAYS.gold[0.2] : OVERLAYS.gold[0.14],
             }}
           >
             {` 📜 ${p.text} `}
@@ -239,9 +239,9 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
             style={{
               paddingHorizontal: 16,
               paddingVertical: 14,
-              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.055)' : 'rgba(255, 255, 255, 0.94)',
+              backgroundColor: isDark ? OVERLAYS.white[0.055] : OVERLAYS.white[0.94],
               borderWidth: 1,
-              borderColor: isDark ? 'rgba(218, 165, 32, 0.22)' : 'rgba(218, 165, 32, 0.32)',
+              borderColor: isDark ? COLORS.chatComposerBorderDark : COLORS.chatComposerBorderLight,
               borderRadius: 22,
               borderBottomLeftRadius: 5,
             }}

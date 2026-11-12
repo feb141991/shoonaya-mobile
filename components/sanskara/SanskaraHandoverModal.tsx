@@ -259,7 +259,7 @@ export function SanskaraHandoverModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    backgroundColor: COLORS.deepModalScrim,
     justifyContent: 'flex-end',
   },
   sheetContainer: {

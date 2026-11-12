@@ -25,7 +25,7 @@ import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
 import { fetchTodaySacredText } from '@/lib/shlokaToday';
 import { describeFailure, requestErrorFromResponse } from '@/lib/user-facing-error';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { spiritualDate } from '@/lib/spiritualDate';
 import { supabase } from '@/lib/supabase';
@@ -669,7 +669,7 @@ export default function ShlokaScreen() {
                 justifyContent: 'center',
                 flexDirection: 'row',
                 gap: 8,
-                boxShadow: isDark ? '0 14px 30px rgba(197,160,89,0.28)' : '0 14px 30px rgba(216,138,28,0.30)',
+                boxShadow: isDark ? FEATURE_COLORS.shloka.readButtonShadowDark : FEATURE_COLORS.shloka.readButtonShadowLight,
               }}
             >
               {marking ? (

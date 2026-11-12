@@ -3,7 +3,7 @@ import { Animated, BackHandler, Easing, Pressable, StyleSheet, useColorScheme, u
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { COLORS, SHADOWS, themeColor } from '@/lib/constants';
+import { OVERLAYS, COLORS, SHADOWS, themeColor } from '@/lib/constants';
 import { PANEL_MARGIN, getPanelBottomOffset } from '@/lib/panelKeyboard';
 import { useReducedMotion } from '@/components/ui/Motion';
 
@@ -244,14 +244,14 @@ export function ScrollUnrollPanel({ visible, origin, onClose, children }: Scroll
             paper rather than a flat modern card. */}
         <LinearGradient
           pointerEvents="none"
-          colors={['rgba(0,0,0,0.10)', 'rgba(0,0,0,0)']}
+          colors={[OVERLAYS.black[0.1], OVERLAYS.black[0]]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 16 }}
         />
         <LinearGradient
           pointerEvents="none"
-          colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.10)']}
+          colors={[OVERLAYS.black[0], OVERLAYS.black[0.1]]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 16 }}
@@ -312,7 +312,7 @@ export function ScrollUnrollPanel({ visible, origin, onClose, children }: Scroll
           },
         ]}
       >
-        <LinearGradient colors={['rgba(0,0,0,0.15)', 'rgba(0,0,0,0)']} style={StyleSheet.absoluteFill} />
+        <LinearGradient colors={[OVERLAYS.black[0.15], OVERLAYS.black[0]]} style={StyleSheet.absoluteFill} />
       </Animated.View>
 
       <Animated.View

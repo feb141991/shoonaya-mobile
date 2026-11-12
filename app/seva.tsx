@@ -21,7 +21,7 @@ import { Screen } from '@/components/ui/Screen';
 import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { SacredIcon } from '@/components/ui/SacredIcon';
 import { SacredLoader } from '@/components/ui/SacredLoader';
-import { FONTS, SHADOWS, SPACING, TYPE, themeColor } from '@/lib/constants';
+import { COLORS, FONTS, SHADOWS, SPACING, TYPE, themeColor } from '@/lib/constants';
 import { captureAppIdentity, useAppIdentity } from '@/lib/appIdentity';
 import { supabase } from '@/lib/supabase';
 import { getTraditionAccent, type TraditionKey } from '@/lib/traditions';
@@ -374,7 +374,7 @@ export default function SevaScreen() {
                 backgroundColor: accent,
               }}
             >
-              <Text style={{ ...TYPE.body, fontFamily: FONTS.sansSemiBold, color: '#fff' }}>
+              <Text style={{ ...TYPE.body, fontFamily: FONTS.sansSemiBold, color: COLORS.onMediaWhite }}>
                 {submitting ? 'Logging…' : 'Log Seva'}
               </Text>
             </PressableSurface>

@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/Card';
 import { apiFetch } from '@/lib/api';
 import { fetchFestivalOccurrence } from '@/lib/festivalOccurrence';
 import { supabase } from '@/lib/supabase';
-import { COLORS, FONTS, TYPE, RADII } from '@/lib/constants';
+import { FEATURE_COLORS, OVERLAYS, COLORS, FONTS, TYPE, RADII } from '@/lib/constants';
 import { lookupFestivalContent } from '@/lib/festival-content.generated';
 import { OBSERVANCE_SERIES_CONTENT_SNAPSHOT } from '@/lib/observance-series-content.generated';
 import {
@@ -565,7 +565,7 @@ export default function FestivalDetailScreen() {
                       style={{
                         fontFamily: isSelected ? FONTS.sansSemiBold : FONTS.sansMedium,
                         fontSize: 12,
-                        color: isSelected ? (isDark ? '#000' : '#FFF') : theme.text,
+                        color: isSelected ? (isDark ? COLORS.black : COLORS.onMediaWhite) : theme.text,
                       }}
                     >
                       {dayLabel}
@@ -682,7 +682,7 @@ export default function FestivalDetailScreen() {
                             style={{
                               fontFamily: isSelected ? FONTS.sansSemiBold : FONTS.sansMedium,
                               fontSize: 11,
-                              color: isSelected ? (isDark ? '#000' : '#FFF') : theme.text,
+                              color: isSelected ? (isDark ? COLORS.black : COLORS.onMediaWhite) : theme.text,
                             }}
                           >
                             {label}: {cand.civilDate} {cand.isPrimary ? '★' : ''}
@@ -731,7 +731,7 @@ export default function FestivalDetailScreen() {
                       style={{
                         fontFamily: FONTS.sansSemiBold,
                         fontSize: 12,
-                        color: isActive ? (isDark ? '#000' : '#FFF') : theme.dim,
+                        color: isActive ? (isDark ? COLORS.black : COLORS.onMediaWhite) : theme.dim,
                       }}
                     >
                       {sec.label}
@@ -800,7 +800,7 @@ export default function FestivalDetailScreen() {
                             width: 2,
                             flex: 1,
                             minHeight: 26,
-                            backgroundColor: isDark ? 'rgba(212, 175, 55, 0.25)' : 'rgba(212, 175, 55, 0.35)',
+                            backgroundColor: isDark ? OVERLAYS.metallicGold[0.25] : OVERLAYS.metallicGold[0.35],
                             marginVertical: 4,
                           }}
                         />
@@ -854,9 +854,9 @@ export default function FestivalDetailScreen() {
                       flex: 1,
                       padding: 12,
                       borderRadius: RADII.md,
-                      backgroundColor: isDark ? 'rgba(34, 197, 94, 0.08)' : 'rgba(34, 197, 94, 0.12)',
+                      backgroundColor: isDark ? FEATURE_COLORS.festivalDetail.positiveSurfaceDark : FEATURE_COLORS.festivalDetail.positiveSurfaceLight,
                       borderWidth: 1,
-                      borderColor: isDark ? 'rgba(34, 197, 94, 0.22)' : 'rgba(34, 197, 94, 0.3)',
+                      borderColor: isDark ? FEATURE_COLORS.festivalDetail.positiveBorderDark : FEATURE_COLORS.festivalDetail.positiveBorderLight,
                     }}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 8 }}>
@@ -881,9 +881,9 @@ export default function FestivalDetailScreen() {
                       flex: 1,
                       padding: 12,
                       borderRadius: RADII.md,
-                      backgroundColor: isDark ? 'rgba(239, 68, 68, 0.08)' : 'rgba(239, 68, 68, 0.12)',
+                      backgroundColor: isDark ? FEATURE_COLORS.festivalDetail.negativeSurfaceDark : FEATURE_COLORS.festivalDetail.negativeSurfaceLight,
                       borderWidth: 1,
-                      borderColor: isDark ? 'rgba(239, 68, 68, 0.22)' : 'rgba(239, 68, 68, 0.3)',
+                      borderColor: isDark ? FEATURE_COLORS.festivalDetail.negativeBorderDark : FEATURE_COLORS.festivalDetail.negativeBorderLight,
                     }}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 8 }}>
@@ -908,9 +908,9 @@ export default function FestivalDetailScreen() {
                   style={{
                     padding: 12,
                     borderRadius: RADII.md,
-                    backgroundColor: isDark ? 'rgba(34, 197, 94, 0.08)' : 'rgba(34, 197, 94, 0.12)',
+                    backgroundColor: isDark ? FEATURE_COLORS.festivalDetail.positiveSurfaceDark : FEATURE_COLORS.festivalDetail.positiveSurfaceLight,
                     borderWidth: 1,
-                    borderColor: isDark ? 'rgba(34, 197, 94, 0.22)' : 'rgba(34, 197, 94, 0.3)',
+                    borderColor: isDark ? FEATURE_COLORS.festivalDetail.positiveBorderDark : FEATURE_COLORS.festivalDetail.positiveBorderLight,
                   }}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
@@ -934,9 +934,9 @@ export default function FestivalDetailScreen() {
                   style={{
                     padding: 12,
                     borderRadius: RADII.md,
-                    backgroundColor: isDark ? 'rgba(239, 68, 68, 0.08)' : 'rgba(239, 68, 68, 0.12)',
+                    backgroundColor: isDark ? FEATURE_COLORS.festivalDetail.negativeSurfaceDark : FEATURE_COLORS.festivalDetail.negativeSurfaceLight,
                     borderWidth: 1,
-                    borderColor: isDark ? 'rgba(239, 68, 68, 0.22)' : 'rgba(239, 68, 68, 0.3)',
+                    borderColor: isDark ? FEATURE_COLORS.festivalDetail.negativeBorderDark : FEATURE_COLORS.festivalDetail.negativeBorderLight,
                   }}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
@@ -979,7 +979,7 @@ export default function FestivalDetailScreen() {
                       borderRadius: RADII.pill,
                       backgroundColor: theme.card,
                       borderWidth: 1,
-                      borderColor: isDark ? 'rgba(212, 175, 55, 0.3)' : 'rgba(212, 175, 55, 0.4)',
+                      borderColor: isDark ? OVERLAYS.metallicGold[0.3] : OVERLAYS.metallicGold[0.4],
                       flexDirection: 'row',
                       alignItems: 'center',
                       gap: 6,
@@ -1003,9 +1003,9 @@ export default function FestivalDetailScreen() {
               style={{
                 padding: 20,
                 marginBottom: 16,
-                backgroundColor: isDark ? 'rgba(212, 175, 55, 0.06)' : 'rgba(212, 175, 55, 0.1)',
+                backgroundColor: isDark ? OVERLAYS.metallicGold[0.06] : OVERLAYS.metallicGold[0.1],
                 borderWidth: 1.5,
-                borderColor: isDark ? 'rgba(212, 175, 55, 0.35)' : 'rgba(212, 175, 55, 0.45)',
+                borderColor: isDark ? OVERLAYS.metallicGold[0.35] : OVERLAYS.metallicGold[0.45],
                 alignItems: 'center',
               }}
             >
@@ -1114,8 +1114,8 @@ export default function FestivalDetailScreen() {
                     backgroundColor: theme.brand,
                   }}
                 >
-                  <Feather name="play-circle" size={13} color={isDark ? '#000' : '#FFF'} />
-                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: isDark ? '#000' : '#FFF' }}>
+                  <Feather name="play-circle" size={13} color={isDark ? COLORS.black : COLORS.onMediaWhite} />
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 12, color: isDark ? COLORS.black : COLORS.onMediaWhite }}>
                     {resolvedLang === 'hi' ? 'जप आरंभ करें' : 'Chant Now'}
                   </Text>
                 </TouchableOpacity>

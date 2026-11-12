@@ -19,7 +19,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS } from '@/lib/constants';
+import { FEATURE_COLORS, OVERLAYS, COLORS, FONTS } from '@/lib/constants';
 import { selectDharmVeer, selectDharmVeerOfTheDayFromRoster, getDharmVeerOfTheDay, getDharmVeerCardCopy, DHARM_VEERS, TRADITION_META, type DharmVeer } from '@/lib/dharm-veer';
 import { getDharmVeerArtworkSource } from '@/lib/dharm-veer-artwork';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
@@ -40,12 +40,12 @@ const TRADITION_FILTERS: Array<{ key: TraditionFilter; label: string; emoji: str
 ];
 
 const TRADITION_ACCENT: Record<string, string> = {
-  hindu:    '#FF7800',
-  sikh:     '#4080FF',
-  buddhist: '#FFC800',
-  jain:     '#00C832',
-  sufi:     '#8C5ADC',
-  tribal:   '#3CA05A',
+  hindu:    FEATURE_COLORS.dharmVeerRoster.traditionAccentHindu,
+  sikh:     FEATURE_COLORS.dharmVeerRoster.traditionAccentSikh,
+  buddhist: FEATURE_COLORS.dharmVeerRoster.traditionAccentBuddhist,
+  jain:     FEATURE_COLORS.dharmVeerRoster.traditionAccentJain,
+  sufi:     FEATURE_COLORS.dharmVeerRoster.traditionAccentSufi,
+  tribal:   FEATURE_COLORS.dharmVeerRoster.traditionAccentTribal,
 };
 
 export default function DharmVeerScreen() {
@@ -250,8 +250,8 @@ export default function DharmVeerScreen() {
           flexDirection: 'row',
           alignItems: 'center',
           gap: 6,
-          backgroundColor: isDark ? 'rgba(197,160,89,0.1)' : 'rgba(197,160,89,0.15)',
-          borderColor: isDark ? 'rgba(197,160,89,0.22)' : 'rgba(197,160,89,0.4)',
+          backgroundColor: isDark ? OVERLAYS.gold[0.1] : OVERLAYS.gold[0.15],
+          borderColor: isDark ? OVERLAYS.gold[0.22] : OVERLAYS.gold[0.4],
           borderWidth: 1,
           paddingHorizontal: 12,
           paddingVertical: 6,
@@ -282,8 +282,8 @@ export default function DharmVeerScreen() {
               haptic="selection"
               onPress={() => router.push(`/dharm-veer/${liveTodayHero.id}`)}
               style={{
-                backgroundColor: isDark ? 'rgba(197,160,89,0.06)' : 'rgba(197,160,89,0.1)',
-                borderColor: isDark ? 'rgba(197,160,89,0.28)' : 'rgba(197,160,89,0.4)',
+                backgroundColor: isDark ? OVERLAYS.gold[0.06] : OVERLAYS.gold[0.1],
+                borderColor: isDark ? OVERLAYS.gold[0.28] : OVERLAYS.gold[0.4],
                 borderWidth: 1,
                 borderRadius: 28,
                 padding: 20,
@@ -298,9 +298,9 @@ export default function DharmVeerScreen() {
                     height: 68,
                     borderRadius: 18,
                     overflow: 'hidden',
-                    borderColor: 'rgba(197,160,89,0.35)',
+                    borderColor: OVERLAYS.gold[0.35],
                     borderWidth: 1,
-                    backgroundColor: '#0a0908',
+                    backgroundColor: COLORS.traditionPortraitBg,
                   }}>
                     <Image
                       source={getDharmVeerArtworkSource(liveTodayHero.id)!}
@@ -315,8 +315,8 @@ export default function DharmVeerScreen() {
                     borderRadius: 16,
                     alignItems: 'center',
                     justifyContent: 'center',
-                    backgroundColor: TRADITION_META[liveTodayHero.tradition]?.color.replace('0.12', isDark ? '0.2' : '0.4') ?? 'rgba(197,160,89,0.2)',
-                    borderColor: 'rgba(197,160,89,0.3)',
+                    backgroundColor: TRADITION_META[liveTodayHero.tradition]?.color.replace('0.12', isDark ? '0.2' : '0.4') ?? OVERLAYS.gold[0.2],
+                    borderColor: OVERLAYS.gold[0.3],
                     borderWidth: 1,
                   }}>
                     <Text style={{ fontSize: 32 }}>{liveTodayHero.emoji}</Text>
@@ -324,7 +324,7 @@ export default function DharmVeerScreen() {
                 )}
                 <View style={{ flex: 1, gap: 4 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <View style={{ backgroundColor: 'rgba(197,160,89,0.15)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 }}>
+                    <View style={{ backgroundColor: OVERLAYS.gold[0.15], paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 }}>
                       <Text style={{ color: gold, fontFamily: FONTS.sansSemiBold, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 }}>
                         {TRADITION_META[liveTodayHero.tradition]?.label ?? liveTodayHero.tradition}
                       </Text>
@@ -341,11 +341,11 @@ export default function DharmVeerScreen() {
                 </View>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 16, gap: 8 }}>
-                <View style={{ flex: 1, height: 1, backgroundColor: 'rgba(197,160,89,0.2)' }} />
+                <View style={{ flex: 1, height: 1, backgroundColor: OVERLAYS.gold[0.2] }} />
                 <Feather name="book-open" size={14} color={gold} />
                 <Text style={{ color: gold, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>{language === 'hi' ? 'कथा पढ़ें' : language === 'pa' ? 'ਕਥਾ ਪੜ੍ਹੋ' : 'Read story'}</Text>
                 <Feather name="chevron-right" size={14} color={gold} />
-                <View style={{ flex: 1, height: 1, backgroundColor: 'rgba(197,160,89,0.2)' }} />
+                <View style={{ flex: 1, height: 1, backgroundColor: OVERLAYS.gold[0.2] }} />
               </View>
             </PressableSurface>
 
@@ -370,8 +370,8 @@ export default function DharmVeerScreen() {
                       paddingHorizontal: 14,
                       paddingVertical: 8,
                       borderRadius: 999,
-                      backgroundColor: active ? gold : isDark ? 'rgba(197,160,89,0.07)' : 'rgba(197,160,89,0.1)',
-                      borderColor: active ? gold : 'rgba(197,160,89,0.18)',
+                      backgroundColor: active ? gold : isDark ? OVERLAYS.gold[0.07] : OVERLAYS.gold[0.1],
+                      borderColor: active ? gold : OVERLAYS.gold[0.18],
                       borderWidth: 1,
                     }}
                   >
@@ -403,8 +403,8 @@ export default function DharmVeerScreen() {
                 gap: 14,
                 padding: 16,
                 borderRadius: 20,
-                backgroundColor: isToday ? 'rgba(197,160,89,0.08)' : isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
-                borderColor: isToday ? 'rgba(197,160,89,0.32)' : isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+                backgroundColor: isToday ? OVERLAYS.gold[0.08] : isDark ? OVERLAYS.white[0.03] : OVERLAYS.black[0.02],
+                borderColor: isToday ? COLORS.homeGoldPillBorder : isDark ? OVERLAYS.white[0.06] : OVERLAYS.black[0.06],
                 borderWidth: 1,
               }}
             >
@@ -414,9 +414,9 @@ export default function DharmVeerScreen() {
                   height: 48,
                   borderRadius: 14,
                   overflow: 'hidden',
-                  borderColor: isToday ? 'rgba(197,160,89,0.45)' : 'rgba(197,160,89,0.2)',
+                  borderColor: isToday ? OVERLAYS.gold[0.45] : OVERLAYS.gold[0.2],
                   borderWidth: 1,
-                  backgroundColor: '#0a0908',
+                  backgroundColor: COLORS.traditionPortraitBg,
                 }}>
                   <Image
                     source={getDharmVeerArtworkSource(hero.id)!}
@@ -431,8 +431,8 @@ export default function DharmVeerScreen() {
                   borderRadius: 12,
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: meta?.color.replace('0.12', '0.22') ?? 'rgba(197,160,89,0.15)',
-                  borderColor: meta?.color.replace('0.12', '0.32') ?? 'rgba(197,160,89,0.2)',
+                  backgroundColor: meta?.color.replace('0.12', '0.22') ?? OVERLAYS.gold[0.15],
+                  borderColor: meta?.color.replace('0.12', '0.32') ?? OVERLAYS.gold[0.2],
                   borderWidth: 1,
                 }}>
                   <Text style={{ fontSize: 24 }}>{hero.emoji}</Text>
@@ -444,7 +444,7 @@ export default function DharmVeerScreen() {
                     {meta?.label ?? hero.tradition}
                   </Text>
                   {isToday ? (
-                    <View style={{ backgroundColor: 'rgba(197,160,89,0.15)', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 999 }}>
+                    <View style={{ backgroundColor: OVERLAYS.gold[0.15], paddingHorizontal: 6, paddingVertical: 1, borderRadius: 999 }}>
                       <Text style={{ color: gold, fontFamily: FONTS.sansSemiBold, fontSize: 9 }}>Today</Text>
                     </View>
                   ) : null}
@@ -457,7 +457,7 @@ export default function DharmVeerScreen() {
               {isRead ? (
                 <Feather name="check-circle" size={20} color={COLORS.success} />
               ) : (
-                <View style={{ width: 20, height: 20, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(197,160,89,0.3)' }} />
+                <View style={{ width: 20, height: 20, borderRadius: 999, borderWidth: 1, borderColor: OVERLAYS.gold[0.3] }} />
               )}
             </PressableSurface>
           );
@@ -468,8 +468,8 @@ export default function DharmVeerScreen() {
             padding: 24,
             borderRadius: 24,
             alignItems: 'center',
-            backgroundColor: 'rgba(197,160,89,0.05)',
-            borderColor: 'rgba(197,160,89,0.12)',
+            backgroundColor: OVERLAYS.gold[0.05],
+            borderColor: OVERLAYS.gold[0.12],
             borderWidth: 1,
             gap: 8,
           }}>

@@ -33,7 +33,7 @@ import {
   parseServerTimingHeader,
   type TelemetryIdentity,
 } from '@/lib/telemetry';
-import { COLORS, FONTS } from '@/lib/constants';
+import { FEATURE_COLORS, OVERLAYS, COLORS, FONTS } from '@/lib/constants';
 import { calculatePanchang, type PanchangData } from '@sangam/panchang-engine';
 import { supabase } from '@/lib/supabase';
 import { RASHI_MAP } from '@/lib/jyotish';
@@ -131,23 +131,23 @@ function getSkyPhase(nowMin: number, sunriseMin: number, sunsetMin: number): Sky
 // Shoonaya ivory/sandalwood/gold palette so Panchang matches the rest of
 // the app instead of reading as a separate blue-purple feature.
 const SKY_GRADIENTS: Record<SkyPhase, [string, string, string]> = {
-  night: [COLORS.darkBg, '#17100B', '#24170D'],
-  predawn: ['#100B08', '#26170D', '#5F3A16'],
-  dawn: ['#2A170D', '#9F6314', '#F6E8CF'],
-  morning: ['#744817', COLORS.brandGoldLight, '#F6E8CF'],
-  afternoon: ['#5F3A16', '#B97924', '#F5E8D4'],
-  dusk: ['#2A170D', '#7A2F18', '#D4784A'],
-  evening: ['#120C08', '#2C1C11', '#5F3A16'],
+  night: [COLORS.darkBg, FEATURE_COLORS.panchang.skyGradientsNightMiddle, FEATURE_COLORS.panchang.skyGradientsNightEnd],
+  predawn: [FEATURE_COLORS.panchang.skyGradientsPredawnStart, FEATURE_COLORS.panchang.skyGradientsPredawnMiddle, FEATURE_COLORS.panchang.skyGradientsPredawnEnd],
+  dawn: [FEATURE_COLORS.panchang.skyGradientsDawnStart, FEATURE_COLORS.panchang.skyGradientsDawnMiddle, FEATURE_COLORS.panchang.skyGradientsDawnEnd],
+  morning: [FEATURE_COLORS.panchang.skyGradientsMorningStart, COLORS.brandGoldLight, FEATURE_COLORS.panchang.skyGradientsDawnEnd],
+  afternoon: [FEATURE_COLORS.panchang.skyGradientsPredawnEnd, FEATURE_COLORS.panchang.skyGradientsAfternoonMiddle, FEATURE_COLORS.panchang.skyGradientsAfternoonEnd],
+  dusk: [FEATURE_COLORS.panchang.skyGradientsDawnStart, FEATURE_COLORS.panchang.skyGradientsDuskMiddle, FEATURE_COLORS.panchang.skyGradientsDuskEnd],
+  evening: [FEATURE_COLORS.panchang.skyGradientsEveningStart, FEATURE_COLORS.panchang.skyGradientsEveningMiddle, FEATURE_COLORS.panchang.skyGradientsPredawnEnd],
 };
 
 const SKY_ORB: Record<SkyPhase, { color: string; size: number; opacity: number }> = {
-  night: { color: 'rgba(200,220,255,0.35)', size: 80, opacity: 0.9 },
-  predawn: { color: 'rgba(180,160,220,0.25)', size: 64, opacity: 0.6 },
-  dawn: { color: 'rgba(255,180,80,0.45)', size: 96, opacity: 0.8 },
-  morning: { color: 'rgba(255,220,100,0.5)', size: 128, opacity: 0.9 },
-  afternoon: { color: 'rgba(255,240,150,0.4)', size: 160, opacity: 0.7 },
-  dusk: { color: 'rgba(255,120,50,0.5)', size: 144, opacity: 0.85 },
-  evening: { color: 'rgba(220,100,60,0.3)', size: 96, opacity: 0.5 },
+  night: { color: FEATURE_COLORS.panchang.nightOrb, size: 80, opacity: 0.9 },
+  predawn: { color: FEATURE_COLORS.panchang.predawnOrb, size: 64, opacity: 0.6 },
+  dawn: { color: FEATURE_COLORS.panchang.dawnOrb, size: 96, opacity: 0.8 },
+  morning: { color: FEATURE_COLORS.panchang.morningOrb, size: 128, opacity: 0.9 },
+  afternoon: { color: FEATURE_COLORS.panchang.afternoonOrb, size: 160, opacity: 0.7 },
+  dusk: { color: FEATURE_COLORS.panchang.duskOrb, size: 144, opacity: 0.85 },
+  evening: { color: FEATURE_COLORS.panchang.eveningOrb, size: 96, opacity: 0.5 },
 };
 
 const PHASE_LABELS: Record<SkyPhase, string> = {
@@ -296,8 +296,8 @@ function GlassCard({ children, style }: { children: React.ReactNode; style?: obj
         {
           borderRadius: 20,
           borderWidth: 1,
-          borderColor: 'rgba(255,255,255,0.10)',
-          backgroundColor: 'rgba(10,8,25,0.5)',
+          borderColor: OVERLAYS.white[0.1],
+          backgroundColor: FEATURE_COLORS.panchang.summarySurface,
           padding: 16,
           gap: 10,
         },
@@ -327,31 +327,31 @@ function PanchangRow({
           paddingVertical: 12,
           paddingHorizontal: 14,
           borderRadius: 14,
-          backgroundColor: warn ? 'rgba(200,80,20,0.18)' : 'rgba(255,255,255,0.06)',
+          backgroundColor: warn ? FEATURE_COLORS.panchang.cautionSurface : OVERLAYS.white[0.06],
           borderWidth: 1,
-          borderColor: warn ? 'rgba(200,80,20,0.3)' : 'rgba(255,255,255,0.08)',
+          borderColor: warn ? FEATURE_COLORS.panchang.cautionBorder : OVERLAYS.white[0.08],
         }}
       >
         <Text style={{ fontSize: 17, width: 22, textAlign: 'center' }}>{emoji}</Text>
         <View style={{ flex: 1, minWidth: 0 }}>
-          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
+          <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: OVERLAYS.white[0.4] }}>
             {label}
           </Text>
           <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, flexWrap: 'wrap', marginTop: 2 }}>
-            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: warn ? '#FDBA74' : CREAM }}>
+            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: warn ? FEATURE_COLORS.panchang.cautionText : CREAM }}>
               {value}
             </Text>
-            {upto ? <Text style={{ fontFamily: FONTS.sans, fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>upto {upto}</Text> : null}
+            {upto ? <Text style={{ fontFamily: FONTS.sans, fontSize: 10, color: OVERLAYS.white[0.4] }}>upto {upto}</Text> : null}
           </View>
         </View>
         {infoKey ? (
           <View
             style={{
               width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center',
-              backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)',
+              backgroundColor: OVERLAYS.white[0.1], borderWidth: 1, borderColor: OVERLAYS.white[0.2],
             }}
           >
-            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: 'rgba(255,255,255,0.55)' }}>i</Text>
+            <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: OVERLAYS.white[0.55] }}>i</Text>
           </View>
         ) : null}
       </Pressable>
@@ -359,10 +359,10 @@ function PanchangRow({
         <View
           style={{
             marginTop: 6, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12,
-            backgroundColor: 'rgba(8,6,22,0.65)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
+            backgroundColor: FEATURE_COLORS.panchang.periodSurface, borderWidth: 1, borderColor: OVERLAYS.white[0.12],
           }}
         >
-          <Text style={{ fontFamily: FONTS.sans, fontSize: 11, lineHeight: 16, color: 'rgba(255,255,255,0.75)' }}>{INFO_TEXT[infoKey]}</Text>
+          <Text style={{ fontFamily: FONTS.sans, fontSize: 11, lineHeight: 16, color: OVERLAYS.white[0.75] }}>{INFO_TEXT[infoKey]}</Text>
         </View>
       ) : null}
     </View>
@@ -371,7 +371,7 @@ function PanchangRow({
 
 const iconBtnStyle = {
   width: 40, height: 40, borderRadius: 20, alignItems: 'center' as const, justifyContent: 'center' as const,
-  backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
+  backgroundColor: OVERLAYS.white[0.1], borderWidth: 1, borderColor: OVERLAYS.white[0.15],
 };
 
 export default function PanchangScreen() {
@@ -726,7 +726,7 @@ export default function PanchangScreen() {
                 <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: COLORS.onMediaWhite }}>{tradMeta.badge}</Text>
               </View>
             </View>
-            <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
+            <Text style={{ fontFamily: FONTS.sans, fontSize: 12, color: OVERLAYS.white[0.5], marginTop: 2 }}>
               {PHASE_LABELS[skyPhase]}{profileState.city ? ` · 📍 ${profileState.city}` : ''}
             </Text>
           </View>
@@ -736,7 +736,7 @@ export default function PanchangScreen() {
         </View>
 
         {profileState.lat === INITIAL_STATE.lat && profileState.lon === INITIAL_STATE.lon && !profileState.city ? (
-          <Text accessibilityRole="text" style={{ color: 'rgba(255,255,255,0.68)', fontFamily: FONTS.sans, fontSize: 12 }}>
+          <Text accessibilityRole="text" style={{ color: OVERLAYS.white[0.68], fontFamily: FONTS.sans, fontSize: 12 }}>
             Using Ujjain reference timings{loading ? ' while your profile and upcoming observances load.' : '. Add or confirm your city in Profile for local timings.'}
           </Text>
         ) : null}
@@ -747,12 +747,12 @@ export default function PanchangScreen() {
             style={{
               alignSelf: 'flex-start', minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6,
               borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5,
-              backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
+              backgroundColor: OVERLAYS.white[0.08], borderWidth: 1, borderColor: OVERLAYS.white[0.12],
             }}
           >
-            <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, color: displayTz === 'local' ? GOLD : 'rgba(255,255,255,0.6)' }}>Your time</Text>
-            <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>↔</Text>
-            <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, color: displayTz === 'ist' ? GOLD : 'rgba(255,255,255,0.6)' }}>IST</Text>
+            <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, color: displayTz === 'local' ? GOLD : OVERLAYS.white[0.6] }}>Your time</Text>
+            <Text style={{ fontSize: 10, color: OVERLAYS.white[0.4] }}>↔</Text>
+            <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, color: displayTz === 'ist' ? GOLD : OVERLAYS.white[0.6] }}>IST</Text>
           </Pressable>
         ) : null}
 
@@ -790,11 +790,11 @@ export default function PanchangScreen() {
                   style={{
                     minWidth: 56, borderRadius: 16, paddingVertical: 9, paddingHorizontal: 12, alignItems: 'center', gap: 2,
                     minHeight: 44,
-                    backgroundColor: active ? GOLD : 'rgba(255,255,255,0.08)',
-                    borderWidth: 1, borderColor: active ? GOLD : 'rgba(255,255,255,0.12)',
+                    backgroundColor: active ? GOLD : OVERLAYS.white[0.08],
+                    borderWidth: 1, borderColor: active ? GOLD : OVERLAYS.white[0.12],
                   }}
                 >
-                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: active ? COLORS.heroBgDark : 'rgba(255,255,255,0.5)' }}>
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, color: active ? COLORS.heroBgDark : OVERLAYS.white[0.5] }}>
                     {date.toLocaleDateString('en-GB', { weekday: 'short' })}
                   </Text>
                   <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 15, color: active ? COLORS.heroBgDark : CREAM }}>
@@ -810,21 +810,21 @@ export default function PanchangScreen() {
         <View
           style={{
             borderRadius: 18, paddingHorizontal: 16, paddingVertical: 13, flexDirection: 'row', alignItems: 'center', gap: 12,
-            backgroundColor: `${tradMeta.accent}CC`, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
+            backgroundColor: `${tradMeta.accent}CC`, borderWidth: 1, borderColor: OVERLAYS.white[0.12],
           }}
         >
           <Text style={{ fontSize: 22 }}>🪔</Text>
           <View style={{ flex: 1 }}>
-            <Text style={{ color: '#fff', fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>
+            <Text style={{ color: COLORS.onMediaWhite, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>
               {panchang.paksha} Paksha · {panchang.masaName}
             </Text>
-            <Text style={{ color: 'rgba(255,255,255,0.65)', fontFamily: FONTS.sans, fontSize: 11, marginTop: 2 }}>
+            <Text style={{ color: OVERLAYS.white[0.65], fontFamily: FONTS.sans, fontSize: 11, marginTop: 2 }}>
               {panchang.vara} · {panchang.samvatYear} {panchang.samvatName}
             </Text>
           </View>
           <View style={{ alignItems: 'flex-end' }}>
-            <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, fontFamily: FONTS.sansSemiBold }}>{panchang.sunrise}</Text>
-            <Text style={{ color: 'rgba(255,255,255,0.45)', fontFamily: FONTS.sans, fontSize: 10 }}>sunrise</Text>
+            <Text style={{ color: OVERLAYS.white[0.85], fontSize: 12, fontFamily: FONTS.sansSemiBold }}>{panchang.sunrise}</Text>
+            <Text style={{ color: OVERLAYS.white[0.45], fontFamily: FONTS.sans, fontSize: 10 }}>sunrise</Text>
           </View>
         </View>
 
@@ -835,7 +835,7 @@ export default function PanchangScreen() {
               accessibilityLabel="Today's Panchang marked as observed"
               style={{
                 flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 14,
-                borderRadius: 14, backgroundColor: 'rgba(197,160,89,0.15)', borderWidth: 1, borderColor: 'rgba(197,160,89,0.3)',
+                borderRadius: 14, backgroundColor: OVERLAYS.gold[0.15], borderWidth: 1, borderColor: OVERLAYS.gold[0.3],
                 alignSelf: 'flex-start',
               }}
             >
@@ -866,7 +866,7 @@ export default function PanchangScreen() {
               </PressableSurface>
               {markError ? (
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Text style={{ color: 'rgba(255,255,255,0.6)', fontFamily: FONTS.sans, fontSize: 12, flex: 1 }}>{markError}</Text>
+                  <Text style={{ color: OVERLAYS.white[0.6], fontFamily: FONTS.sans, fontSize: 12, flex: 1 }}>{markError}</Text>
                   <Pressable onPress={markObserved} hitSlop={8}>
                     <Text style={{ color: GOLD, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>Retry</Text>
                   </Pressable>
@@ -888,7 +888,7 @@ export default function PanchangScreen() {
 
         {/* Daily timings */}
         <GlassCard>
-          <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, textTransform: 'uppercase', letterSpacing: 1, color: 'rgba(255,255,255,0.35)' }}>
+          <Text style={{ fontSize: 10, fontFamily: FONTS.sansSemiBold, textTransform: 'uppercase', letterSpacing: 1, color: OVERLAYS.white[0.35] }}>
             Daily Timings
           </Text>
           <PanchangRow emoji="🌅" label="Sunrise" value={panchang.sunrise} infoKey="Sunrise" isOpen={openInfo === 'Sunrise'} onToggleInfo={() => setOpenInfo((k) => (k === 'Sunrise' ? null : 'Sunrise'))} />
@@ -899,9 +899,9 @@ export default function PanchangScreen() {
         </GlassCard>
 
         {/* Guidance footer */}
-        <View style={{ borderRadius: 14, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: 'rgba(255,200,100,0.08)', borderWidth: 1, borderColor: 'rgba(255,200,100,0.15)' }}>
-          <Text style={{ fontFamily: FONTS.sans, fontSize: 12, lineHeight: 18, color: 'rgba(253,230,180,0.85)' }}>
-            <Text style={{ fontFamily: FONTS.sansSemiBold, color: '#FDE6B4' }}>Today&apos;s guidance: </Text>
+        <View style={{ borderRadius: 14, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: FEATURE_COLORS.panchang.guidanceSurface, borderWidth: 1, borderColor: FEATURE_COLORS.panchang.guidanceBorder }}>
+          <Text style={{ fontFamily: FONTS.sans, fontSize: 12, lineHeight: 18, color: FEATURE_COLORS.panchang.guidanceText }}>
+            <Text style={{ fontFamily: FONTS.sansSemiBold, color: FEATURE_COLORS.panchang.guidanceHeading }}>Today&apos;s guidance: </Text>
             {panchang.paksha === 'Shukla'
               ? 'Shukla Paksha — auspicious for new beginnings, prayers, and blessings. Act and grow.'
               : 'Krishna Paksha — quiet reflection. Focus on purification, ancestral gratitude, and inward practices.'}
@@ -915,12 +915,12 @@ export default function PanchangScreen() {
             onPress={() => router.push('/rashiphala')}
             style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', gap: 16, padding: 16 }}
           >
-            <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: OVERLAYS.white[0.08], alignItems: 'center', justifyContent: 'center' }}>
               <Text style={{ fontSize: 24 }}>{rashiObj ? rashiObj.symbol : '✨'}</Text>
             </View>
             <View style={{ flex: 1, gap: 4 }}>
               <Text style={{ color: CREAM, fontFamily: FONTS.serifBold, fontSize: 19 }}>Your Rashiphala</Text>
-              <Text style={{ color: 'rgba(255,255,255,0.55)', fontFamily: FONTS.sans, fontSize: 13 }}>
+              <Text style={{ color: OVERLAYS.white[0.55], fontFamily: FONTS.sans, fontSize: 13 }}>
                 {rashiObj ? (
                   <Text><Text style={{ fontFamily: FONTS.sansSemiBold, color: CREAM }}>{rashiObj.sa}</Text> · Today&apos;s reading</Text>
                 ) : (
@@ -931,18 +931,18 @@ export default function PanchangScreen() {
                 Daily · Weekly · Monthly
               </Text>
             </View>
-            <Feather name="chevron-right" size={20} color="rgba(255,255,255,0.4)" />
+            <Feather name="chevron-right" size={20} color={OVERLAYS.white[0.4]} />
           </PressableSurface>
 
           {(showRashiPicker || (!profileState.rashi && !rashiPromptDismissed)) && (
-            <View style={{ paddingHorizontal: 16, paddingBottom: 16, paddingTop: 4, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)' }}>
+            <View style={{ paddingHorizontal: 16, paddingBottom: 16, paddingTop: 4, borderTopWidth: 1, borderTopColor: OVERLAYS.white[0.08] }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                 <Text style={{ color: GOLD, fontFamily: FONTS.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                   {profileState.rashi ? 'Change your Rashi' : '✦ Set your Rashi for personalised readings'}
                 </Text>
                 {profileState.rashi && showRashiPicker ? (
                   <Pressable onPress={() => setShowRashiPicker(false)} style={{ minHeight: 44, justifyContent: 'center' }}>
-                    <Text style={{ color: 'rgba(255,255,255,0.5)', fontFamily: FONTS.sans, fontSize: 12, textDecorationLine: 'underline' }}>Cancel</Text>
+                    <Text style={{ color: OVERLAYS.white[0.5], fontFamily: FONTS.sans, fontSize: 12, textDecorationLine: 'underline' }}>Cancel</Text>
                   </Pressable>
                 ) : !profileState.rashi ? (
                   <Pressable
@@ -955,7 +955,7 @@ export default function PanchangScreen() {
                     }}
                     style={{ minHeight: 44, justifyContent: 'center' }}
                   >
-                    <Text style={{ color: 'rgba(255,255,255,0.6)', fontFamily: FONTS.sans, fontSize: 12 }}>Not now</Text>
+                    <Text style={{ color: OVERLAYS.white[0.6], fontFamily: FONTS.sans, fontSize: 12 }}>Not now</Text>
                   </Pressable>
                 ) : null}
               </View>
@@ -971,12 +971,12 @@ export default function PanchangScreen() {
                         width: '23%', alignItems: 'center', justifyContent: 'center', paddingVertical: 12,
                         minHeight: 64,
                         borderRadius: 12, borderWidth: 1,
-                        backgroundColor: isSelected ? 'rgba(197,160,89,0.18)' : 'rgba(255,255,255,0.05)',
-                        borderColor: isSelected ? GOLD : 'rgba(255,255,255,0.1)',
+                        backgroundColor: isSelected ? OVERLAYS.gold[0.18] : OVERLAYS.white[0.05],
+                        borderColor: isSelected ? GOLD : OVERLAYS.white[0.1],
                       }}
                     >
                       <Text style={{ fontSize: 20 }}>{r.symbol}</Text>
-                      <Text style={{ marginTop: 6, color: isSelected ? GOLD : 'rgba(255,255,255,0.5)', fontFamily: FONTS.sansSemiBold, fontSize: 10 }}>{r.en}</Text>
+                      <Text style={{ marginTop: 6, color: isSelected ? GOLD : OVERLAYS.white[0.5], fontFamily: FONTS.sansSemiBold, fontSize: 10 }}>{r.en}</Text>
                     </Pressable>
                   );
                 })}
@@ -986,7 +986,7 @@ export default function PanchangScreen() {
 
           {profileState.rashi && !showRashiPicker && (
           <Pressable onPress={() => setShowRashiPicker(true)} hitSlop={8} style={{ paddingBottom: 16, alignItems: 'center', minHeight: 44, justifyContent: 'center' }}>
-              <Text style={{ color: 'rgba(255,255,255,0.5)', fontFamily: FONTS.sans, fontSize: 11, textDecorationLine: 'underline' }}>Change Rashi</Text>
+              <Text style={{ color: OVERLAYS.white[0.5], fontFamily: FONTS.sans, fontSize: 11, textDecorationLine: 'underline' }}>Change Rashi</Text>
             </Pressable>
           )}
         </GlassCard>
@@ -998,14 +998,14 @@ export default function PanchangScreen() {
             onPress={() => router.push('/kundali')}
             style={{ minHeight: 0, flexDirection: 'row', alignItems: 'center', gap: 16, padding: 16 }}
           >
-            <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: OVERLAYS.white[0.08], alignItems: 'center', justifyContent: 'center' }}>
               <Text style={{ fontSize: 24 }}>🛕</Text>
             </View>
             <View style={{ flex: 1, gap: 4 }}>
               <Text style={{ color: CREAM, fontFamily: FONTS.serifBold, fontSize: 19 }}>Vedic Kundali</Text>
-              <Text style={{ color: 'rgba(255,255,255,0.55)', fontFamily: FONTS.sans, fontSize: 13 }}>Generate your birth chart</Text>
+              <Text style={{ color: OVERLAYS.white[0.55], fontFamily: FONTS.sans, fontSize: 13 }}>Generate your birth chart</Text>
             </View>
-            <Feather name="chevron-right" size={20} color="rgba(255,255,255,0.4)" />
+            <Feather name="chevron-right" size={20} color={OVERLAYS.white[0.4]} />
           </PressableSurface>
         </GlassCard>
 
@@ -1013,7 +1013,7 @@ export default function PanchangScreen() {
         <GlassCard>
           <Text style={{ color: CREAM, fontFamily: FONTS.serifBold, fontSize: 19 }}>Upcoming festivals</Text>
           {festivals.length === 0 ? (
-            <Text style={{ color: 'rgba(255,255,255,0.5)', fontFamily: FONTS.sans, fontSize: 13 }}>
+            <Text style={{ color: OVERLAYS.white[0.5], fontFamily: FONTS.sans, fontSize: 13 }}>
               {loading ? 'Loading upcoming observances…' : 'No upcoming observances loaded.'}
             </Text>
           ) : (
@@ -1032,7 +1032,7 @@ export default function PanchangScreen() {
                 onPress={() => setWhyTodayFestival(festival)}
                 accessibilityLabel={`Why ${festival.display_name} is on ${festival.date}`}
                 style={{
-                  borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.05)',
+                  borderRadius: 14, borderWidth: 1, borderColor: OVERLAYS.white[0.08], backgroundColor: OVERLAYS.white[0.05],
                   padding: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12,
                 }}
               >
@@ -1040,7 +1040,7 @@ export default function PanchangScreen() {
                   <Text style={{ color: CREAM, fontFamily: FONTS.sansSemiBold, fontSize: 14 }}>
                     {festival.emoji} {festival.display_name}
                   </Text>
-                  <Text style={{ color: 'rgba(255,255,255,0.45)', fontFamily: FONTS.sans, fontSize: 11, marginTop: 2 }}>
+                  <Text style={{ color: OVERLAYS.white[0.45], fontFamily: FONTS.sans, fontSize: 11, marginTop: 2 }}>
                     {festival.status === 'unresolved'
                       ? 'Date under review'
                       : festival.monthLabel
@@ -1081,16 +1081,16 @@ export default function PanchangScreen() {
           borderRadius: 14,
           padding: 12,
           borderWidth: 1,
-          borderColor: 'rgba(255,255,255,0.15)',
-          backgroundColor: 'rgba(255,255,255,0.04)',
+          borderColor: OVERLAYS.white[0.15],
+          backgroundColor: OVERLAYS.white[0.04],
           flexDirection: 'row',
           alignItems: 'center',
           gap: 12,
           marginTop: 12,
           marginBottom: 16,
         }}>
-          <Feather name="globe" size={16} color="rgba(255,255,255,0.6)" style={{ flexShrink: 0 }} />
-          <Text style={{ flex: 1, color: 'rgba(255,255,255,0.5)', fontFamily: FONTS.sans, fontSize: 11, lineHeight: 16 }}>
+          <Feather name="globe" size={16} color={OVERLAYS.white[0.6]} style={{ flexShrink: 0 }} />
+          <Text style={{ flex: 1, color: OVERLAYS.white[0.5], fontFamily: FONTS.sans, fontSize: 11, lineHeight: 16 }}>
             Observance dates and timings depend on tradition and location. Verify calculations locally.
           </Text>
         </View>

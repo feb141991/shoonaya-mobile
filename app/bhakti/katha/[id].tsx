@@ -56,7 +56,7 @@ const TRADITION_LABEL: Record<string, string> = {
   hindu: 'Katha', sikh: 'Sakhi', buddhist: 'Dhamma Story', jain: 'Katha',
 };
 
-const LIKE_ACCENT = '#F47888';
+const LIKE_ACCENT = COLORS.like;
 
 const OCCASION_LABEL: Record<string, string> = {
   ekadashi: 'Ekadashi', purnima: 'Purnima', amavasya: 'Amavasya',

@@ -9,7 +9,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS, RADII, SHADOWS, TYPE } from '@/lib/constants';
+import { FEATURE_COLORS, TRADITION_ACCENT, COLORS, FONTS, RADII, SHADOWS, TYPE } from '@/lib/constants';
 import { getDevotionalTrackById } from '@/lib/devotional-audio';
 import { readBhaktiContentCache, writeBhaktiContentCache, bhaktiCacheKeys } from '@/lib/bhaktiContentCache';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
@@ -56,13 +56,13 @@ function isStotram(value: unknown): value is Stotram {
 }
 
 const DEITY_COLOR: Record<string, string> = {
-  ganesha: '#e07b3a',
-  shiva: '#8b7de0',
-  vishnu: '#3a8bcd',
+  ganesha: FEATURE_COLORS.stotram.deityColorGanesha,
+  shiva: FEATURE_COLORS.stotram.deityColorShiva,
+  vishnu: FEATURE_COLORS.stotram.deityColorVishnu,
   devi: COLORS.deityRose,
-  hanuman: '#d4643a',
-  surya: '#f0a020',
-  universal: '#8b9e6e',
+  hanuman: FEATURE_COLORS.stotram.deityColorHanuman,
+  surya: FEATURE_COLORS.stotram.deityColorSurya,
+  universal: TRADITION_ACCENT.all,
 };
 
 type FontSize = 'sm' | 'md' | 'lg' | 'xl';

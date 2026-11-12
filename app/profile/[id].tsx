@@ -12,7 +12,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { Screen } from '@/components/ui/Screen';
-import { API_BASE, COLORS, FONTS, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, API_BASE, COLORS, FONTS, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
 import { blockUser, isUserBlocked, reportMandaliMember, unblockUser } from '@/lib/mandali';
@@ -388,9 +388,9 @@ export default function MemberProfileScreen() {
               paddingHorizontal: 16,
               paddingVertical: 12,
               borderRadius: RADII.lg,
-              backgroundColor: isDark ? 'rgba(239, 68, 68, 0.12)' : '#FEF2F2',
+              backgroundColor: isDark ? FEATURE_COLORS.memberProfile.blockActionSurfaceDark : FEATURE_COLORS.memberProfile.blockActionSurfaceLight,
               borderWidth: 1,
-              borderColor: isDark ? 'rgba(239, 68, 68, 0.3)' : '#FCA5A5',
+              borderColor: isDark ? FEATURE_COLORS.memberProfile.blockActionBorderDark : FEATURE_COLORS.memberProfile.blockActionBorderLight,
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
@@ -748,7 +748,7 @@ export default function MemberProfileScreen() {
               style={{
                 fontFamily: FONTS.sansSemiBold,
                 fontSize: 15,
-                color: pranamSent ? theme.text : isDark ? COLORS.cardBgDark : '#FFFFFF',
+                color: pranamSent ? theme.text : isDark ? COLORS.cardBgDark : COLORS.onMediaWhite,
               }}
             >
               {pranamSent ? 'Pranam Offered with Reverence' : 'Send Pranam • सादर प्रणाम'}

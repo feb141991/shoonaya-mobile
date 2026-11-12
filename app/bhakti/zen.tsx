@@ -7,7 +7,7 @@ import { BackButton } from '@/components/ui/BackButton';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
-import { COLORS, FONTS, TYPE, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, COLORS, FONTS, TYPE, themeColor } from '@/lib/constants';
 import { DEVOTIONAL_STARTER_TRACKS } from '@/lib/devotional-audio';
 import { supabase } from '@/lib/supabase';
 
@@ -38,9 +38,9 @@ const BREATH_PATTERNS: { id: PatternId; label: string; inhale: number; hold: num
 
 const PHASE_META: Record<Phase, { label: string; color: string }> = {
   inhale: { label: 'Inhale', color: COLORS.brandGold },
-  hold: { label: 'Hold', color: '#A89880' },
-  exhale: { label: 'Exhale', color: '#D4B483' },
-  holdAfter: { label: 'Hold', color: '#A89880' },
+  hold: { label: 'Hold', color: FEATURE_COLORS.zen.holdText },
+  exhale: { label: 'Exhale', color: FEATURE_COLORS.zen.exhaleText },
+  holdAfter: { label: 'Hold', color: FEATURE_COLORS.zen.holdText },
 };
 
 const PRESET_DURATIONS = [12, 24, 48];
@@ -346,7 +346,7 @@ export default function SattvicModeScreen() {
             {PRESET_DURATIONS.map((v) => (
               <PressableSurface key={v} haptic="selection" onPress={() => { setDuration(v); setShowCustom(false); }} style={{ borderRadius: 999 }}>
                 <View style={{ borderRadius: 999, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: duration === v && !showCustom ? gold : theme.card, borderWidth: 1, borderColor: duration === v && !showCustom ? gold : theme.border }}>
-                  <Text style={{ ...TYPE.caption, fontWeight: '700', color: duration === v && !showCustom ? '#1c1208' : theme.dim }}>{v} min</Text>
+                  <Text style={{ ...TYPE.caption, fontWeight: '700', color: duration === v && !showCustom ? COLORS.goldButtonInk : theme.dim }}>{v} min</Text>
                 </View>
               </PressableSurface>
             ))}
@@ -370,7 +370,7 @@ export default function SattvicModeScreen() {
               <Text style={{ ...TYPE.caption, color: theme.dim }}>min</Text>
               <PressableSurface haptic="selection" onPress={applyCustomDuration} style={{ borderRadius: 10 }}>
                 <View style={{ borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: gold }}>
-                  <Text style={{ ...TYPE.caption, fontWeight: '700', color: '#1c1208' }}>Set</Text>
+                  <Text style={{ ...TYPE.caption, fontWeight: '700', color: COLORS.goldButtonInk }}>Set</Text>
                 </View>
               </PressableSurface>
             </View>
@@ -385,7 +385,7 @@ export default function SattvicModeScreen() {
           <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 10 }}>
             <PressableSurface haptic="selection" onPress={toggleRunning} style={{ borderRadius: 999 }}>
               <View style={{ borderRadius: 999, paddingHorizontal: 28, paddingVertical: 14, backgroundColor: running ? theme.card : gold, borderWidth: 1, borderColor: gold }}>
-                <Text style={{ ...TYPE.body, fontWeight: '700', color: running ? theme.text : '#1c1208' }}>{running ? 'Pause' : 'Begin'}</Text>
+                <Text style={{ ...TYPE.body, fontWeight: '700', color: running ? theme.text : COLORS.goldButtonInk }}>{running ? 'Pause' : 'Begin'}</Text>
               </View>
             </PressableSurface>
             <PressableSurface haptic="selection" onPress={reset} style={{ borderRadius: 999 }}>

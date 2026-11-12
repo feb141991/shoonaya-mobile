@@ -13,7 +13,7 @@ import { Pill } from '@/components/ui/Pill';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { Screen } from '@/components/ui/Screen';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE } from '@/lib/constants';
+import { FEATURE_COLORS, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE } from '@/lib/constants';
 import { supabase } from '@/lib/supabase';
 import { getStartupPreferences } from '@/lib/startup-scenes/preferences';
 import {
@@ -204,7 +204,7 @@ function LiveDarshanContent() {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: bg }} edges={['top']}>
         <ScrollView contentContainerStyle={{ paddingBottom: 48 }} showsVerticalScrollIndicator={false}>
-          <View style={{ width: '100%', height: playerHeight, backgroundColor: '#000', position: 'relative' }}>
+          <View style={{ width: '100%', height: playerHeight, backgroundColor: COLORS.black, position: 'relative' }}>
             <YoutubeIframe
               ref={playerRef}
               height={playerHeight}
@@ -226,9 +226,9 @@ function LiveDarshanContent() {
           <View style={{ paddingHorizontal: 20, paddingTop: 18, gap: 20 }}>
             <View style={{ gap: 4 }}>
               {activeStream.isHealthy !== false ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: 'rgba(220,38,38,0.12)', marginBottom: 2 }}>
-                  <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#DC2626' }} />
-                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 9, color: '#DC2626', letterSpacing: 0.6, textTransform: 'uppercase' }}>Live</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, backgroundColor: FEATURE_COLORS.liveDarshan.liveBadgeSurface, marginBottom: 2 }}>
+                  <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: COLORS.danger }} />
+                  <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 9, color: COLORS.danger, letterSpacing: 0.6, textTransform: 'uppercase' }}>Live</Text>
                 </View>
               ) : null}
               <Text style={{ ...TYPE.cardHeading, fontSize: 19, color: text }} numberOfLines={2}>
@@ -454,7 +454,7 @@ function LiveDarshanContent() {
                           paddingHorizontal: 8,
                           paddingVertical: 4,
                           borderRadius: 8,
-                          backgroundColor: 'rgba(220,38,38,0.85)',
+                          backgroundColor: FEATURE_COLORS.liveDarshan.streamLiveBadgeSurface,
                         }}
                       >
                         <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: COLORS.onMediaWhite }} />

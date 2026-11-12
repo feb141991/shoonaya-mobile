@@ -4,7 +4,7 @@ import Feather from '@expo/vector-icons/Feather';
 
 import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { COLORS, FONTS, TYPE, themeColor } from '@/lib/constants';
+import { OVERLAYS, COLORS, FONTS, TYPE, themeColor } from '@/lib/constants';
 import {
   AstroChart,
   calculateDashaProgress,
@@ -98,7 +98,7 @@ export function DashaTimeline({ chart, isDark }: DashaTimelineProps) {
           ) : null}
 
           {/* Visual Progress Bar */}
-          <View style={[styles.progressBarTrack, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]}>
+          <View style={[styles.progressBarTrack, { backgroundColor: isDark ? OVERLAYS.white[0.08] : OVERLAYS.black[0.06] }]}>
             <View
               style={[
                 styles.progressBarFill,
@@ -178,7 +178,7 @@ export function DashaTimeline({ chart, isDark }: DashaTimelineProps) {
 
                 {/* Expanded Sub-periods (Antardasha) */}
                 {isExpanded && subPeriods.length > 0 ? (
-                  <View style={[styles.subPeriodContainer, { backgroundColor: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.03)', borderColor: theme.border }]}>
+                  <View style={[styles.subPeriodContainer, { backgroundColor: isDark ? OVERLAYS.black[0.2] : OVERLAYS.black[0.03], borderColor: theme.border }]}>
                     <Text style={[styles.subPeriodHeader, { color: theme.dim }]}>Antardashas within {entry.planet}:</Text>
                     {subPeriods.map((sub, sIdx) => (
                       <View key={`sub-${sub.planet}-${sIdx}`} style={styles.subPeriodRow}>

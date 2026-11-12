@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { COLORS, FONTS, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, OVERLAYS, COLORS, FONTS, themeColor } from '@/lib/constants';
 
 interface SlenderNeedlesChartProps {
   dowCounts: number[];
@@ -94,11 +94,11 @@ export function SlenderNeedlesChart({
               ? theme.brand
               : val > 0
               ? isDark
-                ? 'rgba(255, 248, 225, 0.45)'
-                : 'rgba(62, 42, 31, 0.45)'
+                ? OVERLAYS.ivory[0.45]
+                : FEATURE_COLORS.slenderNeedlesChart.needleColorLight
               : isDark
-              ? 'rgba(255, 248, 225, 0.14)'
-              : 'rgba(62, 42, 31, 0.14)';
+              ? OVERLAYS.ivory[0.14]
+              : FEATURE_COLORS.slenderNeedlesChart.needleColorLight2;
 
             return (
               <View key={idx} style={styles.needleCol}>

@@ -3,7 +3,7 @@ import { ActivityIndicator, Text, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { COLORS, FONTS, RADII } from '@/lib/constants';
+import { OVERLAYS, COLORS, FONTS, RADII } from '@/lib/constants';
 import type { MandaliPoll } from '@/lib/mandali';
 
 export type MandaliPollCardProps = {
@@ -79,7 +79,7 @@ export const MandaliPollCard = memo(function MandaliPollCard({
     <View
       style={{
         borderRadius: RADII.md,
-        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
+        backgroundColor: isDark ? OVERLAYS.white[0.03] : OVERLAYS.black[0.02],
         borderColor: border,
         borderWidth: 1,
         padding: 12,
@@ -127,7 +127,7 @@ export const MandaliPollCard = memo(function MandaliPollCard({
                 borderRadius: RADII.sm,
                 borderWidth: 1,
                 borderColor: isSelected ? brand : border,
-                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.65)',
+                backgroundColor: isDark ? OVERLAYS.white[0.04] : OVERLAYS.white[0.65],
                 overflow: 'hidden',
                 justifyContent: 'center',
                 paddingHorizontal: 12,
@@ -145,11 +145,11 @@ export const MandaliPollCard = memo(function MandaliPollCard({
                     width: `${percentage}%`,
                     backgroundColor: isSelected
                       ? isDark
-                        ? 'rgba(197, 160, 89, 0.22)'
-                        : 'rgba(197, 160, 89, 0.16)'
+                        ? OVERLAYS.gold[0.22]
+                        : COLORS.brandSoftDark
                       : isDark
-                        ? 'rgba(255, 255, 255, 0.07)'
-                        : 'rgba(0, 0, 0, 0.05)',
+                        ? OVERLAYS.white[0.07]
+                        : OVERLAYS.black[0.05],
                   }}
                 />
               ) : null}

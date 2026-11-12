@@ -11,7 +11,7 @@ import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
 
 import { getYatraList, YatraCircuit } from '@/lib/yatra-data';
-import { COLORS, FONTS, RADII, SHADOWS, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, COLORS, FONTS, RADII, SHADOWS, themeColor } from '@/lib/constants';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 
 export function YatraCircuitsSection() {
@@ -34,7 +34,7 @@ export function YatraCircuitsSection() {
           <View
             style={[
               styles.headerIconContainer,
-              { backgroundColor: isDark ? 'rgba(217, 119, 6, 0.16)' : '#FEF3C7' },
+              { backgroundColor: isDark ? FEATURE_COLORS.yatraCircuitsSection.surfaceDark : FEATURE_COLORS.yatraCircuitsSection.surfaceLight },
             ]}
           >
             <Feather name="compass" size={16} color={theme.brand} />
@@ -64,8 +64,8 @@ export function YatraCircuitsSection() {
               style={[
                 styles.card,
                 {
-                  backgroundColor: isDark ? '#111827' : '#FFFFFF',
-                  borderColor: isDark ? '#374151' : '#E5E7EB',
+                  backgroundColor: isDark ? FEATURE_COLORS.yatraCircuitsSection.pressableSurfaceDark : COLORS.onMediaWhite,
+                  borderColor: isDark ? FEATURE_COLORS.yatraCircuitsSection.pressableSurfaceBorderDark : FEATURE_COLORS.yatraCircuitsSection.pressableSurfaceBorderLight,
                 },
               ]}
               accessibilityLabel={`Explore ${yatra.title}`}
@@ -76,7 +76,7 @@ export function YatraCircuitsSection() {
                   style={[
                     styles.traditionTag,
                     {
-                      backgroundColor: isDark ? 'rgba(217, 119, 6, 0.15)' : '#FEF3C7',
+                      backgroundColor: isDark ? FEATURE_COLORS.yatraCircuitsSection.surfaceDark2 : FEATURE_COLORS.yatraCircuitsSection.surfaceLight,
                       borderColor: theme.brandSoft,
                     },
                   ]}
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(156, 163, 175, 0.25)',
+    borderTopColor: FEATURE_COLORS.yatraCircuitsSection.cardFooterTopBorder,
     paddingTop: 10,
   },
   exploreText: {

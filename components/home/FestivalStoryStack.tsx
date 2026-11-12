@@ -5,7 +5,7 @@ import { Linking, Modal, ScrollView, Share, Text, View } from 'react-native';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SacredIcon } from '@/components/ui/SacredIcon';
-import { COLORS, RADII, SHADOWS, TYPE } from '@/lib/constants';
+import { OVERLAYS, COLORS, RADII, SHADOWS, TYPE } from '@/lib/constants';
 import type { HomeObservanceStoryCard } from '@/lib/observance-story-contract.generated';
 
 type Theme = { card: string; border: string; premiumBorder: string; text: string; dim: string; brand: string };
@@ -31,7 +31,7 @@ export function FestivalStoryStack({ cards, theme, isDark }: { cards?: HomeObser
       })}
     </View>
     <Modal visible={Boolean(active)} transparent animationType="slide" onRequestClose={() => setActive(null)}>
-      <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.64)' }}>
+      <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: OVERLAYS.black[0.64] }}>
         {active ? <View style={{ maxHeight: '90%', borderTopLeftRadius: 28, borderTopRightRadius: 28, backgroundColor: surface, borderWidth: 1, borderColor: theme.premiumBorder, overflow: 'hidden' }}>
           <View style={{ alignItems: 'center', paddingTop: 10 }}><View style={{ width: 42, height: 4, borderRadius: 2, backgroundColor: theme.border }} /></View>
           <View style={{ minHeight: 56, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, justifyContent: 'space-between' }}><View style={{ flex: 1 }}><Text style={{ ...TYPE.section, color: accent, fontSize: 10 }}>SOURCE-REVIEWED STORY</Text><Text style={{ ...TYPE.title, color: theme.text, marginTop: 3 }}>{active.story.displayName}</Text></View><PressableSurface haptic="none" accessibilityLabel="Close" onPress={() => setActive(null)} style={{ width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' }}><Feather name="x" size={20} color={theme.dim} /></PressableSurface></View>

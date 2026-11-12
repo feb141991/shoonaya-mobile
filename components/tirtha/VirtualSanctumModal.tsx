@@ -16,7 +16,7 @@ import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 
 import { TempleSanctumNode } from '@/lib/yatra-data';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, OVERLAYS, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, themeColor } from '@/lib/constants';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { FlowerShowerOverlay } from '@/components/ui/FlowerShowerOverlay';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
@@ -176,8 +176,8 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
   });
 
   const goldAccent = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
-  const cardSurface = isDark ? 'rgba(30, 26, 20, 0.95)' : 'rgba(255, 255, 255, 0.98)';
-  const sanctumBg: [string, string] = isDark ? ['#1a120b', '#0d0a07'] : ['#2c1a0e', '#150d07'];
+  const cardSurface = isDark ? FEATURE_COLORS.virtualSanctumModal.cardSurfaceDark : OVERLAYS.white[0.98];
+  const sanctumBg: [string, string] = isDark ? [FEATURE_COLORS.virtualSanctumModal.sanctumBgDarkStart, FEATURE_COLORS.virtualSanctumModal.sanctumBgDarkEnd] : [FEATURE_COLORS.virtualSanctumModal.sanctumBgLightStart, FEATURE_COLORS.virtualSanctumModal.sanctumBgLightEnd];
 
   return (
     <Modal
@@ -192,14 +192,14 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
             styles.sheetContainer,
             {
               backgroundColor: cardSurface,
-              borderColor: isDark ? 'rgba(197, 160, 89, 0.3)' : 'rgba(197, 160, 89, 0.4)',
+              borderColor: isDark ? OVERLAYS.gold[0.3] : OVERLAYS.gold[0.4],
             },
           ]}
           onPress={(e) => e.stopPropagation()}
         >
           {/* Handle bar */}
           <View style={styles.handleBarContainer}>
-            <View style={[styles.handleBar, { backgroundColor: isDark ? '#4A3B2C' : '#D1C4B2' }]} />
+            <View style={[styles.handleBar, { backgroundColor: isDark ? FEATURE_COLORS.virtualSanctumModal.handleBarSurfaceDark : FEATURE_COLORS.virtualSanctumModal.handleBarSurfaceLight }]} />
           </View>
 
           {/* Header Row */}
@@ -224,7 +224,7 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
               style={[
                 styles.closeButton,
                 {
-                  backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
+                  backgroundColor: isDark ? OVERLAYS.white[0.08] : OVERLAYS.black[0.05],
                   borderColor: theme.borderSoft,
                 },
               ]}
@@ -335,12 +335,12 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
                   {
                     backgroundColor: diyaLit
                       ? isDark
-                        ? 'rgba(217, 119, 6, 0.25)'
-                        : 'rgba(217, 119, 6, 0.15)'
+                        ? FEATURE_COLORS.virtualSanctumModal.pressableSurfaceDark
+                        : FEATURE_COLORS.virtualSanctumModal.pressableSurfaceLight
                       : isDark
-                      ? 'rgba(255, 255, 255, 0.05)'
-                      : 'rgba(0, 0, 0, 0.03)',
-                    borderColor: diyaLit ? goldAccent : isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+                      ? OVERLAYS.white[0.05]
+                      : OVERLAYS.black[0.03],
+                    borderColor: diyaLit ? goldAccent : isDark ? OVERLAYS.white[0.1] : OVERLAYS.black[0.08],
                   },
                 ]}
                 accessibilityLabel="Light Ghee Diya"
@@ -357,8 +357,8 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
                 style={[
                   styles.sanctumActionBtn,
                   {
-                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
-                    borderColor: flowersCount > 0 ? '#EC4899' : isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+                    backgroundColor: isDark ? OVERLAYS.white[0.05] : OVERLAYS.black[0.03],
+                    borderColor: flowersCount > 0 ? FEATURE_COLORS.virtualSanctumModal.flowerActiveBorder : isDark ? OVERLAYS.white[0.1] : OVERLAYS.black[0.08],
                   },
                 ]}
                 accessibilityLabel="Offer Sacred Flowers"
@@ -375,8 +375,8 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
                 style={[
                   styles.sanctumActionBtn,
                   {
-                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
-                    borderColor: bellRungCount > 0 ? goldAccent : isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+                    backgroundColor: isDark ? OVERLAYS.white[0.05] : OVERLAYS.black[0.03],
+                    borderColor: bellRungCount > 0 ? goldAccent : isDark ? OVERLAYS.white[0.1] : OVERLAYS.black[0.08],
                   },
                 ]}
                 accessibilityLabel="Ring Temple Bell"
@@ -393,8 +393,8 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
                 style={[
                   styles.sanctumActionBtn,
                   {
-                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
-                    borderColor: parikramaCount > 0 ? '#10B981' : isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
+                    backgroundColor: isDark ? OVERLAYS.white[0.05] : OVERLAYS.black[0.03],
+                    borderColor: parikramaCount > 0 ? FEATURE_COLORS.virtualSanctumModal.parikramaActiveBorder : isDark ? OVERLAYS.white[0.1] : OVERLAYS.black[0.08],
                   },
                 ]}
                 accessibilityLabel="Perform Sacred Parikrama"
@@ -426,8 +426,8 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
                         backgroundColor: active
                           ? goldAccent
                           : isDark
-                          ? 'rgba(255, 255, 255, 0.05)'
-                          : 'rgba(0, 0, 0, 0.04)',
+                          ? OVERLAYS.white[0.05]
+                          : OVERLAYS.black[0.04],
                       },
                     ]}
                   >
@@ -448,18 +448,18 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
             {activeTab === 'darshan' ? (
               <View style={styles.tabContentBlock}>
                 <View style={styles.tagsRow}>
-                  <View style={[styles.tag, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', borderColor: theme.borderSoft }]}>
+                  <View style={[styles.tag, { backgroundColor: isDark ? OVERLAYS.white[0.06] : OVERLAYS.black[0.04], borderColor: theme.borderSoft }]}>
                     <Feather name="map-pin" size={12} color={goldAccent} />
                     <Text style={[styles.tagText, { color: theme.text }]}>{temple.location}</Text>
                   </View>
                   {temple.sacredRiverOrKund ? (
-                    <View style={[styles.tag, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', borderColor: theme.borderSoft }]}>
-                      <Feather name="droplet" size={12} color="#3B82F6" />
+                    <View style={[styles.tag, { backgroundColor: isDark ? OVERLAYS.white[0.06] : OVERLAYS.black[0.04], borderColor: theme.borderSoft }]}>
+                      <Feather name="droplet" size={12} color={FEATURE_COLORS.virtualSanctumModal.dropletText} />
                       <Text style={[styles.tagText, { color: theme.text }]}>{temple.sacredRiverOrKund}</Text>
                     </View>
                   ) : null}
                   {temple.architecturalStyle ? (
-                    <View style={[styles.tag, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', borderColor: theme.borderSoft }]}>
+                    <View style={[styles.tag, { backgroundColor: isDark ? OVERLAYS.white[0.06] : OVERLAYS.black[0.04], borderColor: theme.borderSoft }]}>
                       <Feather name="shield" size={12} color={goldAccent} />
                       <Text style={[styles.tagText, { color: theme.text }]}>{temple.architecturalStyle}</Text>
                     </View>
@@ -467,7 +467,7 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
                 </View>
 
                 {/* Significance Card */}
-                <View style={[styles.significanceCard, { backgroundColor: isDark ? 'rgba(197, 160, 89, 0.06)' : 'rgba(197, 160, 89, 0.08)', borderColor: 'rgba(197, 160, 89, 0.2)' }]}>
+                <View style={[styles.significanceCard, { backgroundColor: isDark ? OVERLAYS.gold[0.06] : OVERLAYS.gold[0.08], borderColor: OVERLAYS.gold[0.2] }]}>
                   <Text style={[styles.significanceLabel, { color: goldAccent }]}>
                     SPIRITUAL SIGNIFICANCE
                   </Text>
@@ -478,7 +478,7 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
 
                 {/* Stotra / Audio Section */}
                 {temple.stotraOrChant ? (
-                  <View style={[styles.stotraCard, { backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)', borderColor: theme.borderSoft }]}>
+                  <View style={[styles.stotraCard, { backgroundColor: isDark ? OVERLAYS.white[0.04] : OVERLAYS.black[0.02], borderColor: theme.borderSoft }]}>
                     <View style={styles.stotraHeader}>
                       <View style={styles.stotraHeaderLeft}>
                         <Feather name="volume-2" size={18} color={goldAccent} />
@@ -494,7 +494,7 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
                         style={[
                           styles.stotraPlayBtn,
                           {
-                            backgroundColor: audioState === 'playing' ? goldAccent : isDark ? 'rgba(197, 160, 89, 0.18)' : 'rgba(197, 160, 89, 0.12)',
+                            backgroundColor: audioState === 'playing' ? goldAccent : isDark ? OVERLAYS.gold[0.18] : OVERLAYS.gold[0.12],
                             borderColor: goldAccent,
                           },
                         ]}
@@ -506,12 +506,12 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
                             <Feather
                               name={audioState === 'playing' ? 'pause' : 'play'}
                               size={13}
-                              color={audioState === 'playing' ? '#1a120b' : goldAccent}
+                              color={audioState === 'playing' ? FEATURE_COLORS.virtualSanctumModal.sanctumBgDarkStart : goldAccent}
                             />
                             <Text
                               style={[
                                 styles.stotraPlayText,
-                                { color: audioState === 'playing' ? '#1a120b' : goldAccent },
+                                { color: audioState === 'playing' ? FEATURE_COLORS.virtualSanctumModal.sanctumBgDarkStart : goldAccent },
                               ]}
                             >
                               {audioState === 'playing' ? 'Pause' : audioState === 'paused' ? 'Resume' : 'Chant'}
@@ -592,7 +592,7 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: OVERLAYS.black[0.75],
     justifyContent: 'flex-end',
   },
   sheetContainer: {
@@ -665,9 +665,9 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(197, 160, 89, 0.4)',
+    borderColor: OVERLAYS.gold[0.4],
     marginVertical: 10,
-    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.35)',
+    boxShadow: FEATURE_COLORS.virtualSanctumModal.sanctumOuterFrameShadow,
   },
   sanctumStage: {
     paddingTop: 16,
@@ -687,15 +687,15 @@ const styles = StyleSheet.create({
   bellChain: {
     width: 2,
     height: 18,
-    backgroundColor: '#C5A059',
+    backgroundColor: COLORS.brandGold,
   },
   bellDome: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(197, 160, 89, 0.25)',
+    backgroundColor: OVERLAYS.gold[0.25],
     borderWidth: 1,
-    borderColor: '#C5A059',
+    borderColor: COLORS.brandGold,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -706,9 +706,9 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: 'rgba(197, 160, 89, 0.15)',
+    backgroundColor: OVERLAYS.gold[0.15],
     borderWidth: 1.5,
-    borderColor: '#C5A059',
+    borderColor: COLORS.brandGold,
     alignItems: 'center',
     justifyContent: 'center',
     marginVertical: 8,
@@ -724,7 +724,7 @@ const styles = StyleSheet.create({
   deityTitleText: {
     fontFamily: FONTS.serifBold,
     fontSize: 11,
-    color: '#FDE68A',
+    color: FEATURE_COLORS.virtualSanctumModal.deityTitleText,
     textAlign: 'center',
     letterSpacing: 0.5,
   },
@@ -743,9 +743,9 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: OVERLAYS.black[0.4],
     borderWidth: 1,
-    borderColor: '#C5A059',
+    borderColor: COLORS.brandGold,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -758,45 +758,45 @@ const styles = StyleSheet.create({
     width: 54,
     height: 54,
     borderRadius: 27,
-    backgroundColor: 'rgba(245, 158, 11, 0.25)',
+    backgroundColor: FEATURE_COLORS.virtualSanctumModal.diyaGlowCircleSurface,
   },
   diyaLabel: {
     fontFamily: FONTS.sansSemiBold,
     fontSize: 10,
-    color: '#D1C4B2',
+    color: FEATURE_COLORS.virtualSanctumModal.handleBarSurfaceLight,
   },
   parikramaRing: {
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: OVERLAYS.black[0.5],
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(197, 160, 89, 0.3)',
+    borderColor: OVERLAYS.gold[0.3],
   },
   parikramaLabel: {
     fontFamily: FONTS.sansSemiBold,
     fontSize: 9,
-    color: '#C5A059',
+    color: COLORS.brandGold,
     letterSpacing: 1,
   },
   parikramaCountNumber: {
     fontFamily: FONTS.serifBold,
     fontSize: 18,
-    color: '#FFFFFF',
+    color: COLORS.onMediaWhite,
   },
   sanctumFloor: {
     marginTop: 10,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(197, 160, 89, 0.25)',
+    borderTopColor: OVERLAYS.gold[0.25],
     width: '100%',
     alignItems: 'center',
   },
   sanctumFloorMantra: {
     fontFamily: FONTS.serif,
     fontSize: 11,
-    color: '#C5A059',
+    color: COLORS.brandGold,
     letterSpacing: 1.5,
     opacity: 0.85,
   },

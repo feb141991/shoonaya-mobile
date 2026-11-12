@@ -23,7 +23,7 @@ import { Screen } from '@/components/ui/Screen';
 import { useFallbackBackHandler } from '@/components/ui/BackButton';
 import { MotionView } from '@/components/ui/Motion';
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, SPACING, TYPE, themeColor } from '@/lib/constants';
+import { OVERLAYS, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, SPACING, TYPE, themeColor } from '@/lib/constants';
 import { MOODS_CONFIG, findMoodConfig, type MoodConfig } from '@/lib/mood-registry';
 import { MoodGlyph } from '@/components/mood/MoodGlyph';
 import { resolveNativeRoute } from '@/lib/routes';
@@ -700,14 +700,14 @@ export default function MoodScreen() {
                   styles.moodCard,
                   {
                     width: moodCardWidth,
-                    backgroundColor: isDark ? 'rgba(255, 248, 225, 0.05)' : COLORS.homeRaisedLight,
+                    backgroundColor: isDark ? OVERLAYS.ivory[0.05] : COLORS.homeRaisedLight,
                     borderColor: isDark ? `${mood.colour}30` : COLORS.homeBorderSoftLight,
                     boxShadow: isDark ? SHADOWS.md.dark : SHADOWS.md.light,
                   },
                 ]}
                 onPress={() => handleMoodSelect(mood)}
               >
-                <View pointerEvents="none" style={[styles.moodGlow, { backgroundColor: isDark ? mood.bg : 'rgba(216,138,28,0.10)' }]} />
+                <View pointerEvents="none" style={[styles.moodGlow, { backgroundColor: isDark ? mood.bg : OVERLAYS.amber[0.1] }]} />
                 <Animated.View
                   pointerEvents="none"
                   style={[
@@ -749,7 +749,7 @@ export default function MoodScreen() {
                     style={[
                       styles.quickChip,
                       {
-                        backgroundColor: isDark ? theme.brandSoft : 'rgba(216,138,28,0.12)',
+                        backgroundColor: isDark ? theme.brandSoft : COLORS.brandSoftLight,
                         borderColor: isDark ? theme.border : COLORS.homeBorderSoftLight,
                       },
                     ]}
@@ -877,7 +877,7 @@ export default function MoodScreen() {
                         styles.moodCard,
                         {
                           width: moodCardWidth,
-                          backgroundColor: isDark ? 'rgba(255, 248, 225, 0.05)' : COLORS.homeRaisedLight,
+                          backgroundColor: isDark ? OVERLAYS.ivory[0.05] : COLORS.homeRaisedLight,
                           borderColor: isDark ? theme.border : COLORS.homeBorderSoftLight,
                           boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
                         },

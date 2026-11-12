@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { FONTS, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, OVERLAYS, FONTS, themeColor } from '@/lib/constants';
 
 interface HairlineWeekThreadProps {
   days: { date: string; japa: boolean; nitya: boolean }[];
@@ -119,8 +119,8 @@ export function HairlineWeekThread({ days, isDark, theme }: HairlineWeekThreadPr
                   styles.nodeEmptyDot,
                   {
                     backgroundColor: isDark
-                      ? 'rgba(255, 248, 225, 0.14)'
-                      : 'rgba(62, 42, 31, 0.14)',
+                      ? OVERLAYS.ivory[0.14]
+                      : FEATURE_COLORS.hairlineWeekThread.surfaceLight,
                   },
                 ]}
               />
