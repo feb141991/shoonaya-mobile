@@ -30,8 +30,8 @@ describe('onboarding marketing email switch', () => {
     const block = source.slice(source.indexOf('setMarketingOptIn((value) => !value)') - 200);
     assert.match(block, /accessibilityRole="switch"/);
     assert.match(block, /accessibilityState=\{\{ checked: marketingOptIn \}\}/);
-    assert.match(block, /accessibilityLabel="Occasional email from Shoonaya"/);
-    assert.match(block, /accessibilityHint="Optional\. Off unless you turn it on\."/);
+    assert.match(block, /accessibilityLabel=\{translated\(/);
+    assert.match(block, /accessibilityHint=\{translated\(/);
   });
 
   it('keeps a 44pt-or-larger tap target', () => {
@@ -40,10 +40,9 @@ describe('onboarding marketing email switch', () => {
     assert.ok(minHeight >= 44, `minHeight ${minHeight}`);
   });
 
-  it('is shown in English only (a consent declaration is not translated, AGENTS.md section 27) and says it is optional and can be unsubscribed', () => {
-    assert.match(source, /Occasional email from Shoonaya/);
+  it('has a translated title, and an English-only explanation that says it is optional and can be unsubscribed (AGENTS.md section 27)', () => {
+    assert.match(source, /'Occasional email from Shoonaya', 'Shoonaya से कभी-कभार ईमेल'/);
     assert.match(source, /Optional, and you can unsubscribe at any time/);
-    assert.doesNotMatch(source, /Shoonaya से कभी-कभार ईमेल/);
     assert.doesNotMatch(source, /वैकल्पिक, और आप कभी भी सदस्यता छोड़ सकते हैं/);
   });
 

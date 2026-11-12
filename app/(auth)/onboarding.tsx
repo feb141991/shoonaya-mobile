@@ -1855,8 +1855,8 @@ export default function OnboardingScreen() {
               onPress={() => setMarketingOptIn((value) => !value)}
               accessibilityRole="switch"
               accessibilityState={{ checked: marketingOptIn }}
-              accessibilityLabel="Occasional email from Shoonaya"
-              accessibilityHint="Optional. Off unless you turn it on."
+              accessibilityLabel={translated('Occasional email from Shoonaya', 'Shoonaya से कभी-कभार ईमेल')}
+              accessibilityHint={translated('Optional. Off unless you turn it on.', 'वैकल्पिक। आप चालू न करें तो बंद रहेगा।')}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -1871,8 +1871,8 @@ export default function OnboardingScreen() {
               }}
             >
               <View style={{ flex: 1, gap: 2 }}>
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: text }}>
-                  Occasional email from Shoonaya
+                <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 14, lineHeight: isHindi ? 21 : undefined, color: text }}>
+                  {translated('Occasional email from Shoonaya', 'Shoonaya से कभी-कभार ईमेल')}
                 </Text>
                 <Text style={{ fontFamily: FONTS.sans, fontSize: 12, lineHeight: 18, color: dim }}>
                   New features, festival guides and a weekly newsletter. Optional, and you can unsubscribe at any time.
@@ -1891,8 +1891,8 @@ export default function OnboardingScreen() {
               onPress={() => setTapConsentOptIn((value) => !value)}
               accessibilityRole="switch"
               accessibilityState={{ checked: tapConsentOptIn }}
-              accessibilityLabel="Help improve reminders"
-              accessibilityHint="Optional. Off unless you turn it on."
+              accessibilityLabel={translated('Help improve reminders', 'स्मरण बेहतर बनाने में मदद करें')}
+              accessibilityHint={translated('Optional. Off unless you turn it on.', 'वैकल्पिक। आप चालू न करें तो बंद रहेगा।')}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -1907,8 +1907,8 @@ export default function OnboardingScreen() {
               }}
             >
               <View style={{ flex: 1, gap: 2 }}>
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: text }}>
-                  Help improve reminders
+                <Text style={{ fontFamily: isHindi ? FONTS.devanagariBold : FONTS.sansSemiBold, fontSize: 14, lineHeight: isHindi ? 21 : undefined, color: text }}>
+                  {translated('Help improve reminders', 'स्मरण बेहतर बनाने में मदद करें')}
                 </Text>
                 <Text style={{ fontFamily: FONTS.sans, fontSize: 12, lineHeight: 18, color: dim }}>
                   Optional. Lets us see which reminders you tap (which one, when, your app version) so we can send fewer that do not help. This includes practice reminders, which can reflect your religious practice. We never record what you read or wrote. Turn it off any time in Settings and these records are deleted.

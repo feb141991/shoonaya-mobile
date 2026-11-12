@@ -50,8 +50,10 @@ only while the server confirms the switch is off, and at most twice ("Not now" i
 you turn on 'Help improve reminders' in Settings ..." The full paragraph, including the retention period, deletion on
 withdrawal and the reporting floor, is in that file. The export paragraph also lists "notification taps".
 
-**E. Languages.** All consent declarations are shown in English only (decision 2026-11-12). Hindi versions that engineering had
-written were removed, so no translated wording needs review now.
+**E. Languages.** The explanatory text above (A to D) is shown in English only (decision 2026-11-12). Titles, labels, hints and
+buttons on the same screens (for example the heading "Help improve reminders" and the buttons "Not now" and "Yes, help") are
+translated into Hindi. Those short interface strings were written by the engineering assistant and have not been reviewed by a
+native speaker. No Punjabi version exists.
 
 ## 3. Questions for counsel
 
@@ -78,22 +80,5 @@ written were removed, so no translated wording needs review now.
    personalised suggestions and practice analytics events. It does not gate calendar dates or reminder scheduling,
    which still use the person's stored tradition. Does that match what the toggle's text says, and is the stored
    tradition itself special-category data needing its own consent at signup?
-9. **Language.** Is English-only acceptable for the notice and consent where the app language is Hindi, or must a translation
-   (reviewed by a qualified translator) be offered?
-
-## 4. Open facts you should know
-
-- The feature is deployed in the app code and the database, but no over-the-air update or new build has been published,
-  so installed apps do not have it yet.
-- It has been exercised only in the iOS Simulator on the owner's account. No notification tap has been recorded yet
-  (0 rows), and withdrawal has therefore not been proven end to end with real stored taps.
-- The Android build and a real device have not been tested.
-
-## 5. Where the code lives
-
-- Native: `lib/notificationTapConsent.ts`, `lib/notificationTapPrompt.ts`, `lib/notificationTapQueue.ts`,
-  `lib/notificationTapTracking.ts`, `components/notifications/TapConsentCard.tsx`, `app/settings/detail-screen.tsx`,
-  `app/(auth)/onboarding.tsx`, AGENTS.md section 28.
-- Backend: migration `supabase/migrations/20261111100000_notification_tap_tracking.sql`, route
-  `src/app/api/native/profile/route.ts`, policy text `src/lib/privacy-content.ts`,
-  `docs/notifications/NOTIFICATION_TAP_TRACKING.md`.
+9. **Language.** Is English-only acceptable for the explanation and consent where the app language is Hindi, given that the
+   heading and buttons around it are Hindi? Or must a translation (reviewed by a qualified translator) be offered?

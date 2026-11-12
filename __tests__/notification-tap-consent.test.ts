@@ -103,8 +103,8 @@ test('the card lives in the notifications inbox, not on Home, and nothing is cho
   }
   const card = read('components/notifications/TapConsentCard.tsx');
   assert.match(card, /saveNotificationTapConsent\(userId, true\)/);
-  assert.match(card, /label="Not now"/);
-  assert.match(card, /label="Yes, help"/);
+  assert.match(card, /label=\{t\('Not now'/);
+  assert.match(card, /label=\{t\('Yes, help'/);
   assert.equal((card.match(/saveNotificationTapConsent\(/g) ?? []).length, 1, 'only the Yes button writes consent');
 });
 
