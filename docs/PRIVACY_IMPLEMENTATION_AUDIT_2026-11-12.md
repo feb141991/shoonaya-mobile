@@ -86,6 +86,42 @@ Native `dbb3b4c` to `74e540e`.
 
 ### New findings from the live checks
 
+## 6. Migration/deploy reconciliation (2026-11-12, later check)
+
+The status sentence in section 5 is a historical snapshot, not the current
+deployment state. A read-only `supabase migration list --linked` check against
+the linked production project found the following:
+
+| Migration | Production state | Native/backend impact |
+|---|---|---|
+| `20261110100000_profile_tradition_lock` | Applied | No pending dependency identified in this release set. |
+| `20261110140000_one_nudge_a_day_cadence` | Applied | Notification cadence is live. |
+| `20261111100000_notification_tap_tracking` | Applied | The Native tap route can use `record_notification_tap`. |
+| `20261112100000_notification_reminders_default_on_except_brahma` | Applied | Reminder defaults are live. |
+| `20261112110000_notification_brahma_opt_in_reset` | Applied | Brahma opt-in reset is live. |
+| `20261112120000_drop_legacy_device_tokens` | Applied | Legacy device-token retirement is live. |
+| `20261112130000_account_deletion_completeness_and_retention` | Applied | Database deletion cascades and retention jobs are live; backend route deployment still needs separate verification. |
+| `20261112140000_consent_evidence_ledger` | Applied | Consent context is now captured by the database ledger. Existing pre-ledger consents remain explicitly marked `before_ledger`. |
+| `20261112150000_drop_profiles_onesignal_player_id` | Applied | The final OneSignal profile-column retirement is live. |
+
+The Native privacy commits are local-only (`f93427b` is 13 commits ahead of
+`origin/main`), and the backend is local-only (`5fccf67` is 9 commits ahead of
+`origin/main`). No migration or deployment was performed for this
+reconciliation. The remaining release order is: deploy and verify the reviewed
+backend routes/code for export, deletion and consent-ledger export support,
+then release the Native build with the privacy manifest and perform device
+verification. The consent UI and database ledger are now active; existing
+consents remain explicitly classified as `before_ledger`.
+
+The migrations are now applied, but the schema state must not be confused with
+backend release state. The consent ledger requires generated-type/export
+follow-up in the deployed backend, and the deletion/export routes still need a
+release verification against the applied schema. The repository rule against
+`supabase db push` still applies.
+
+This reconciliation did not change files in the backend, apply a migration,
+push a branch, or modify production data.
+
 - **Mandali posts are readable by anyone with the app's public key.** The select policies on `posts`, `post_comments`, `forum_threads`,
   `forum_replies`, `post_upvotes`, `comment_upvotes` and `event_rsvps` are `USING (true)` for everyone, including signed-out callers. On
   2026-11-12 the public key could count 44 posts and 7 post upvotes (with user ids). Private tables (journal, mood, notifications, profiles,
@@ -95,3 +131,35 @@ Native `dbb3b4c` to `74e540e`.
 - **Advisor:** 56 `SECURITY DEFINER` functions are executable by signed-in users; the ones I read derive the user from `auth.uid()`.
   `st_estimatedextent` (PostGIS) is executable by anonymous callers. `pgtap` and its views sit in `public`.
 - **Generated types were stale** (missing `notification_taps`); regenerated in `f44d8c0`.
+
+Verified by a direct production read later the same day (2026-11-12): migrations `20261112120000` to `20261112150000` are applied. `device_tokens`
+and `profiles.onesignal_player_id` are gone, `consent_events` holds 17 rows and every chain verifies, `consent_wording` has its 7 wordings, and
+the four new retention jobs are scheduled. `20261112160000` (voter identities) is **not** applied.
+
+## 7. Services review and Mandali guest read (2026-11-12, later)
+
+**Retired (committed in the backend, not yet deployed):** WhatsApp sending and login (Twilio and Meta): the OTP routes and page, the login button,
+the unscheduled daily WhatsApp route, the provider, the `twilio` package and the WhatsApp step of the retired web onboarding. Evidence it was unused:
+0 stored WhatsApp numbers, 0 phone sign-ins, 0 WhatsApp dispatches, no Native caller. Marketing keeps the channel for drafts and dry runs; a live
+dispatch is refused everywhere. The Gemini label, the OneSignal admin option and comments, and the `maps.mail.ru` Overpass mirror are removed (a test
+now fails if a map host outside the reviewed three is added). The OneSignal column drop is applied.
+
+**Policy now names:** Supabase (Ireland), Vercel, Expo, Firebase Cloud Messaging, Sarvam AI, Bhashini, Resend, Geoapify, OpenStreetMap Nominatim and
+Overpass, Slack (report alerts carry the content kind, reason category and a report reference, never the reporter's text), YouTube, Google Analytics
+and AdSense (website, with consent). A test fails if a retired service is named or a named one disappears.
+
+**Still to confirm outside the code:** whether `NEXT_PUBLIC_GA_MEASUREMENT_ID` and `NEXT_PUBLIC_ADSENSE_CLIENT` are set in Vercel (the live homepage
+contains neither id, so GA and AdSense appear not to be configured); whether `BHASHINI_API_KEY` is set; Twilio and Meta account and key cleanup in
+the vendors' dashboards and Vercel environment variables (the code no longer reads them). Historic `notification_deliveries` rows with provider
+`onesignal` (301) age out through the 90-day job.
+
+**Children:** founder decision, no parent verification and no limited mode: the existing notice and the opt-in toggles stay. Residual risk accepted
+pending counsel: DPDP expects verifiable parental consent for people under 18.
+
+**Mandali, founder decision:** a signed-out person may read posts; everything else needs an account.
+- Built, not deployed: `GET /api/mandali/public-feed` (posts, public username and avatar, counts; no account or Mandali ids, no who-reacted, no comments,
+  poll votes, RSVPs or members; banned and deleting accounts excluded; rate limited; cached 30 s) and the app's `GuestMandaliFeed` with sign-in prompts
+  on react, comment, share, post menu and profile.
+- Written, **unapplied**: `20261112160000` limits who-upvoted and who-RSVP'd to signed-in users. Posts and comments keep their public SELECT.
+- **Order:** deploy the backend route before the app update, and apply `…160000` any time after the route is live (nothing the app does reads those
+  tables as a signed-out user).
