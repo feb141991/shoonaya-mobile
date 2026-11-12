@@ -106,27 +106,51 @@ export function getOnboardingReadyPracticeCta(tradition: TraditionKey | null): R
 }
 
 /**
- * Per-category reminder choices, each shown and toggled on its own in the
- * onboarding notifications step -- never inferred from the single OS push
- * permission answer (AGENTS.md rule 19). Brahma Muhurta defaults to false:
- * it is a pre-dawn, night-delivered wake reminder and needs its own
- * deliberate opt-in, distinct from the other categories' gentler defaults.
+ * One choice per notification, each shown and toggled on its own in the onboarding notifications step, and ALL OFF until the
+ * person turns one on (AGENTS 19 and 26). Nothing here is inferred from the single OS push permission answer, from "Not now",
+ * or from another notification's choice: an earlier version bundled seven reminder families behind one "Daily Wisdom" switch and
+ * defaulted them on, so a person could consent to far more than the screen said.
+ *
+ * The keys are the notifications a person can choose in Settings (see app/settings/detail-screen.tsx, NOTIFICATION_TOGGLES); a
+ * guard test keeps the two lists equal.
  */
-export type NotificationCategoryChoices = {
-  festivalsAndVrats: boolean;
-  dailySadhana: boolean;
-  dailyQuiz: boolean;
-  communityAndFamily: boolean;
-  brahmaMuhurta: boolean;
-};
+export const NOTIFICATION_CHOICE_KEYS = [
+  'festival', 'vrat', 'tithi', 'sankalpaMidpoint',
+  'shloka', 'nitya', 'midday', 'evening', 'sattvic', 'japa',
+  'mood',
+  'quiz', 'dharmVeer',
+  'community', 'family', 'familyRemembrance',
+  'brahmaMuhurta',
+] as const;
 
-export const DEFAULT_NOTIFICATION_CATEGORY_CHOICES: NotificationCategoryChoices = {
-  festivalsAndVrats: true,
-  dailySadhana: true,
-  dailyQuiz: true,
-  communityAndFamily: true,
-  brahmaMuhurta: false,
-};
+export type NotificationChoiceKey = (typeof NOTIFICATION_CHOICE_KEYS)[number];
+export type NotificationCategoryChoices = Record<NotificationChoiceKey, boolean>;
+
+export const DEFAULT_NOTIFICATION_CATEGORY_CHOICES: NotificationCategoryChoices = Object.freeze(
+  Object.fromEntries(NOTIFICATION_CHOICE_KEYS.map((key) => [key, false])),
+) as NotificationCategoryChoices;
+
+export function isNotificationChoiceKey(value: unknown): value is NotificationChoiceKey {
+  return typeof value === 'string' && (NOTIFICATION_CHOICE_KEYS as readonly string[]).includes(value);
+}
+
+export function hasAnyNotificationChoice(choices: NotificationCategoryChoices): boolean {
+  return NOTIFICATION_CHOICE_KEYS.some((key) => choices[key] === true);
+}
+
+/**
+ * Restores choices from a saved onboarding draft. Only known keys holding a real boolean are taken. A draft written by an earlier
+ * build used five bundled keys (festivalsAndVrats, dailySadhana, dailyQuiz, communityAndFamily); those are ignored on purpose, so
+ * a remembered bundled "yes" can never switch on notifications the person was never shown one by one.
+ */
+export function readNotificationChoices(saved: unknown): NotificationCategoryChoices {
+  const result: NotificationCategoryChoices = { ...DEFAULT_NOTIFICATION_CATEGORY_CHOICES };
+  if (typeof saved !== 'object' || saved === null || Array.isArray(saved)) return result;
+  for (const [key, value] of Object.entries(saved as Record<string, unknown>)) {
+    if (isNotificationChoiceKey(key) && typeof value === 'boolean') result[key] = value;
+  }
+  return result;
+}
 
 export function computePushNotificationEligibility(
   choice: NotificationChoice,
@@ -146,39 +170,32 @@ export function computeFinalNotificationState(
 }
 
 export function getNotificationPersistencePayload(
-  categories: NotificationCategoryChoices = DEFAULT_NOTIFICATION_CATEGORY_CHOICES
+  choices: NotificationCategoryChoices = DEFAULT_NOTIFICATION_CATEGORY_CHOICES
 ) {
+  // `=== true`: only a real true switches anything on.
+  const on = (key: NotificationChoiceKey) => choices[key] === true;
   return {
-    wants_festival_reminders: categories.festivalsAndVrats,
-    wants_vrat_reminders: categories.festivalsAndVrats,
-    wants_tithi_reminders: categories.festivalsAndVrats,
-    wants_sankalpa_midpoint_reminders: categories.festivalsAndVrats,
-    wants_nitya_reminders: categories.dailySadhana,
-    // The older column for the same reminder. The dispatcher reads wants_nitya_reminders; this one is kept equal so the
-    // account export and admin views never show a choice the person did not make (the server keeps them equal on Settings writes).
-    nitya_reminder_enabled: categories.dailySadhana,
-    wants_shloka_reminders: categories.dailySadhana,
-    japa_reminder_enabled: categories.dailySadhana,
+    wants_festival_reminders: on('festival'),
+    wants_vrat_reminders: on('vrat'),
+    wants_tithi_reminders: on('tithi'),
+    wants_sankalpa_midpoint_reminders: on('sankalpaMidpoint'),
+    wants_shloka_reminders: on('shloka'),
+    wants_nitya_reminders: on('nitya'),
+    nitya_reminder_enabled: on('nitya'),
+    wants_madhyahn_reminder: on('midday'),
+    wants_evening_reminder: on('evening'),
+    wants_sattvic_reminders: on('sattvic'),
+    japa_reminder_enabled: on('japa'),
     japa_reminder_time: '07:00',
-    // Evening/midday Nitya nudges, the Sattvic Mode evening prompt, and
-    // mood check-ins are the same "daily practice" bucket as Nitya/shloka/
-    // japa above -- see AGENTS.md rule 6's 2026-10-27 notification coverage
-    // gap entry. They already existed (or now exist) as live, always-on
-    // columns with no prior UI; this is the first time they're visible.
-    wants_evening_reminder: categories.dailySadhana,
-    wants_madhyahn_reminder: categories.dailySadhana,
-    wants_sattvic_reminders: categories.dailySadhana,
-    wants_mood_reminders: categories.dailySadhana,
-    quiz_reminder_enabled: categories.dailyQuiz,
+    wants_mood_reminders: on('mood'),
+    quiz_reminder_enabled: on('quiz'),
     quiz_reminder_time: '10:00',
-    // Dharm Veer learning-engagement nudges ride the same cron as the quiz
-    // reminder (learning-engagement-candidates) -- same coverage-gap entry.
-    dharm_veer_reminder_enabled: categories.dailyQuiz,
-    wants_community_notifications: categories.communityAndFamily,
-    wants_family_notifications: categories.communityAndFamily,
-    wants_family_remembrance_reminders: categories.communityAndFamily,
+    dharm_veer_reminder_enabled: on('dharmVeer'),
+    wants_community_notifications: on('community'),
+    wants_family_notifications: on('family'),
+    wants_family_remembrance_reminders: on('familyRemembrance'),
     family_remembrance_time: '09:00',
-    wants_brahma_muhurta_reminders: categories.brahmaMuhurta,
+    wants_brahma_muhurta_reminders: on('brahmaMuhurta'),
   };
 }
 

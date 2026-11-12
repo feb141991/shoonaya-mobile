@@ -628,3 +628,8 @@ Rules:
 - Only advance the session duration watermark after durable handoff. Reset it together with the clock and counters on every new practice. Before publishing completion context, recheck the original identity lease after parsing the response.
 - Cancel automatic beads when the route blurs, the app leaves the foreground, or a sheet interrupts practice. Commit the bead before starting asynchronous haptics. Automatic ceremony dismissal must not open the sign-in prompt.
 - Origin: the 2026-11-12 Japa review found lost rounds on queue-write failure, duplicate partials after an unreadable success response, and late context from a prior account. The Japa auto-advance tests exercise the production handoff, reconciliation, identity and timer helpers.
+
+### 34. Onboarding Reminders Require Individual Choices
+- Onboarding starts all 17 reminder switches off, records each choice explicitly, and only opens OS permission or recovery when a reminder is selected. “Not now” clears the switches. Legacy bundled drafts cannot opt someone in. Both Nitya column names mirror the one Nitya choice.
+- Keep reminder preferences, notification tap measurement, and optional email consent independent. Verify server-side reminder defaults and eligibility separately from the Native form.
+- Origin: the 2026-11-07 notification audit found that bundled switches could enable more reminders than the copy described. Guarded by the onboarding notification and data contract tests.
