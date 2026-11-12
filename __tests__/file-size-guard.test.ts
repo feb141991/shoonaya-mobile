@@ -54,7 +54,6 @@ export function findSizeViolations(files: Array<{ path: string; lines: number }>
 
 // Files over their limit on 2026-11-12, with their line counts then. This list may only shrink.
 const OVER_LIMIT_CEILINGS: Record<string, number> = {
-  'lib/dharm-veer.ts': 4048,
   'app/kul.tsx': 3699,
   'app/(tabs)/mandali.tsx': 2933,
   'app/(tabs)/index.tsx': 2910,
