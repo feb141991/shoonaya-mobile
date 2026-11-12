@@ -58,6 +58,7 @@ import {
   getOnboardingReadyPracticeCta,
   computePushNotificationEligibility,
   DEFAULT_NOTIFICATION_CATEGORY_CHOICES,
+  NO_NOTIFICATION_CATEGORY_CHOICES,
   hasAnyNotificationChoice,
   readNotificationChoices,
   type NotificationCategoryChoices,
@@ -687,12 +688,12 @@ export default function OnboardingScreen() {
   const handleNotNow = () => {
     if (requestingNotifications || saving) return;
     // "Not now" is not consent to any reminder: it clears every switch so nothing a person half-chose is saved with it.
-    setNotificationCategories(DEFAULT_NOTIFICATION_CATEGORY_CHOICES);
+    setNotificationCategories(NO_NOTIFICATION_CATEGORY_CHOICES);
     setNotificationChoice('disabled');
     setNotificationsDenied(false);
     goToStep('location', {
       notificationChoice: 'disabled',
-      notificationCategories: DEFAULT_NOTIFICATION_CATEGORY_CHOICES,
+      notificationCategories: NO_NOTIFICATION_CATEGORY_CHOICES,
       deniedNotificationPromptShown: false,
     });
   };
@@ -830,7 +831,7 @@ export default function OnboardingScreen() {
         calendarProfile,
         calendarScope,
         goals,
-        notificationCategories,
+        notificationCategories: notificationChoice === 'enabled' ? notificationCategories : NO_NOTIFICATION_CATEGORY_CHOICES,
         marketingOptIn,
         religiousDataConsent,
         consentRecordedAt: new Date().toISOString(),
@@ -1784,8 +1785,8 @@ export default function OnboardingScreen() {
           <>
             <Text style={{ fontFamily: isHindi ? FONTS.devanagari : FONTS.sans, fontSize: 15, lineHeight: isHindi ? 23 : 21, color: dim }}>
               {translated(
-                'Everything is off until you turn it on. Choose only the reminders you’d like; you can change any of them later in Settings.',
-                'जब तक आप चालू न करें, सब कुछ बंद है। केवल वही स्मरण चुनें जो आप चाहें; इन्हें बाद में सेटिंग्स में कभी भी बदला जा सकता है।'
+                'Review the reminders below. Keep the ones you’d like, or continue without reminders. You can change any of them later in Settings.',
+                'नीचे दिए गए स्मरण देखें। जो चाहें उन्हें चुनें या बिना स्मरण के आगे बढ़ें। बाद में इन्हें सेटिंग्स में बदल सकते हैं।'
               )}
             </Text>
             {ONBOARDING_NOTIFICATION_GROUPS.map((group) => (

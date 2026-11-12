@@ -117,6 +117,7 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before 
   inspect the backend working tree when a backend service or shared contract is
   in scope.
 - Preserve unrelated and parallel changes.
+- Create a Git branch only when the founder explicitly asks for one. Use a detached checkout for merge verification.
 - One scoped objective and one scoped commit per prompt.
 - Report every changed file and prove unrelated dirty files were not staged.
 - Never push, deploy, apply production migrations, trigger production
@@ -630,6 +631,6 @@ Rules:
 - Origin: the 2026-11-12 Japa review found lost rounds on queue-write failure, duplicate partials after an unreadable success response, and late context from a prior account. The Japa auto-advance tests exercise the production handoff, reconciliation, identity and timer helpers.
 
 ### 34. Onboarding Reminders Require Individual Choices
-- Onboarding starts all 17 reminder switches off, records each choice explicitly, and only opens OS permission or recovery when a reminder is selected. “Not now” clears the switches. Legacy bundled drafts cannot opt someone in. Both Nitya column names mirror the one Nitya choice.
+- Onboarding displays all 17 reminder switches individually and preserves the visible defaults in section 19. An unconfirmed or skipped step saves every reminder off. The app opens OS permission or recovery only when a reminder is selected. Legacy bundled drafts cannot opt someone in. Both Nitya columns mirror the one Nitya choice.
 - Keep reminder preferences, notification tap measurement, and optional email consent independent. Verify server-side reminder defaults and eligibility separately from the Native form.
 - Origin: the 2026-11-07 notification audit found that bundled switches could enable more reminders than the copy described. Guarded by the onboarding notification and data contract tests.

@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { NOTIFICATION_CHOICE_KEYS, getNotificationPersistencePayload, DEFAULT_NOTIFICATION_CATEGORY_CHOICES } from '../lib/onboarding-contract';
+import { NOTIFICATION_CHOICE_KEYS, getNotificationPersistencePayload, NO_NOTIFICATION_CATEGORY_CHOICES } from '../lib/onboarding-contract';
 import { ONBOARDING_NOTIFICATION_GROUPS, ONBOARDING_NOTIFICATION_ITEMS } from '../lib/onboardingNotificationCatalog';
 
 /**
- * Onboarding shows EVERY notification a person can choose, one switch each, all off (AGENTS 19). These pins keep the screen, the
+ * Onboarding shows EVERY notification a person can choose, one switch each (AGENTS 19). These pins keep the screen, the
  * catalogue, the saved columns and Settings telling the same story, and keep the OS prompt tied to a real choice.
  */
 const ROOT = join(__dirname, '..');
@@ -51,7 +51,7 @@ describe('the catalogue of notifications shown in onboarding', () => {
 
   it('each switch writes only its own reminder, including the mirrored Nitya flag', () => {
     for (const item of ONBOARDING_NOTIFICATION_ITEMS) {
-      const payload = getNotificationPersistencePayload({ ...DEFAULT_NOTIFICATION_CATEGORY_CHOICES, [item.key]: true }) as Record<string, unknown>;
+      const payload = getNotificationPersistencePayload({ ...NO_NOTIFICATION_CATEGORY_CHOICES, [item.key]: true }) as Record<string, unknown>;
       const on = Object.entries(payload).filter(([, value]) => value === true).map(([column]) => column);
       const columns = item.key === 'nitya' ? [item.settingsKey, 'nitya_reminder_enabled'] : [item.settingsKey];
       assert.deepEqual(on, columns, item.key);
@@ -101,9 +101,9 @@ describe('the notifications step', () => {
     }
   });
 
-  it('says everything is off until turned on, and no longer claims "zero spam"', () => {
+  it('asks the seeker to review their choices and no longer claims "zero spam"', () => {
     const raw = read('app/(auth)/onboarding.tsx');
-    assert.match(raw, /Everything is off until you turn it on/);
+    assert.match(raw, /Review the reminders below/);
     assert.equal(/Zero spam/i.test(raw), false);
   });
 
@@ -121,8 +121,8 @@ describe('the notifications step', () => {
   it('"Not now" is not consent: it clears every switch', () => {
     const handler = onboarding.slice(onboarding.indexOf('const handleNotNow'), onboarding.indexOf('const handleAllowLocation = async'));
     assert.ok(handler.length > 100, 'found the handler');
-    assert.match(handler, /setNotificationCategories\(DEFAULT_NOTIFICATION_CATEGORY_CHOICES\)/);
-    assert.match(handler, /notificationCategories: DEFAULT_NOTIFICATION_CATEGORY_CHOICES/);
+    assert.match(handler, /setNotificationCategories\(NO_NOTIFICATION_CATEGORY_CHOICES\)/);
+    assert.match(handler, /notificationCategories: NO_NOTIFICATION_CATEGORY_CHOICES/);
   });
 
   it('clearing the last switch withdraws the in-app choice, and the toggle keeps its state updates out of an updater function', () => {
@@ -137,7 +137,8 @@ describe('the notifications step', () => {
     assert.equal(/\.\.\.draft\.notificationCategories/.test(onboarding), false, 'a draft is never spread straight into the choices');
   });
 
-  it('starts every switch off', () => {
+  it('uses the visible defaults only on the form and never saves unconfirmed choices', () => {
+    assert.match(onboarding, /notificationCategories: notificationChoice === 'enabled' \? notificationCategories : NO_NOTIFICATION_CATEGORY_CHOICES/);
     assert.match(onboarding, /useState<NotificationCategoryChoices>\(\s*DEFAULT_NOTIFICATION_CATEGORY_CHOICES\s*\)/);
   });
 });

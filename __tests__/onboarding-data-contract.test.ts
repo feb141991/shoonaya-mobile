@@ -13,6 +13,7 @@ import {
   computePushNotificationEligibility,
   computeFinalNotificationState,
   DEFAULT_NOTIFICATION_CATEGORY_CHOICES,
+  NO_NOTIFICATION_CATEGORY_CHOICES,
   NOTIFICATION_CHOICE_KEYS,
   hasAnyNotificationChoice,
   readNotificationChoices,
@@ -194,14 +195,13 @@ describe('Onboarding Data Contract & Draft Persistence Suite', () => {
       assert.deepEqual(getNotificationPersistencePayload(ALL_FALSE), expectedAllDisabledPayload);
     });
 
-    it('EVERY notification starts off: nothing is consented to until the person turns it on (AGENTS 19)', () => {
+    it('saves no reminders when the form is skipped or no choices are passed', () => {
       assert.equal(NOTIFICATION_CHOICE_KEYS.length, 17);
-      assert.deepEqual(DEFAULT_NOTIFICATION_CATEGORY_CHOICES, ALL_FALSE);
-      for (const key of NOTIFICATION_CHOICE_KEYS) assert.equal(DEFAULT_NOTIFICATION_CATEGORY_CHOICES[key], false, key);
-      assert.deepEqual(getNotificationPersistencePayload(DEFAULT_NOTIFICATION_CATEGORY_CHOICES), expectedAllDisabledPayload);
-      assert.deepEqual(getNotificationPersistencePayload(), expectedAllDisabledPayload, 'calling it with nothing is also all off');
-      assert.equal(hasAnyNotificationChoice(DEFAULT_NOTIFICATION_CATEGORY_CHOICES), false);
-      assert.equal(Object.isFrozen(DEFAULT_NOTIFICATION_CATEGORY_CHOICES), true, 'the shared default cannot be mutated into a default-on');
+      assert.deepEqual(NO_NOTIFICATION_CATEGORY_CHOICES, ALL_FALSE);
+      assert.deepEqual(getNotificationPersistencePayload(NO_NOTIFICATION_CATEGORY_CHOICES), expectedAllDisabledPayload);
+      assert.deepEqual(getNotificationPersistencePayload(), expectedAllDisabledPayload);
+      assert.equal(hasAnyNotificationChoice(NO_NOTIFICATION_CATEGORY_CHOICES), false);
+      assert.equal(Object.isFrozen(NO_NOTIFICATION_CATEGORY_CHOICES), true);
     });
 
     // The profile column(s) each single notification writes, and nothing else.
@@ -743,7 +743,7 @@ describe('4. Marketing email consent from onboarding', () => {
     religiousDataConsent: false,
     consentRecordedAt: '2026-10-15T08:00:00.000Z',
   };
-  const ALL_CATEGORIES_FALSE: NotificationCategoryChoices = DEFAULT_NOTIFICATION_CATEGORY_CHOICES;
+  const ALL_CATEGORIES_FALSE: NotificationCategoryChoices = NO_NOTIFICATION_CATEGORY_CHOICES;
   const MARKETING_KEYS = ['marketing_consent', 'email_newsletter', 'consent_updated_at'];
 
   it('opting in sets both columns the campaign audience reads, and stamps the consent time', () => {

@@ -126,8 +126,13 @@ export const NOTIFICATION_CHOICE_KEYS = [
 export type NotificationChoiceKey = (typeof NOTIFICATION_CHOICE_KEYS)[number];
 export type NotificationCategoryChoices = Record<NotificationChoiceKey, boolean>;
 
-export const DEFAULT_NOTIFICATION_CATEGORY_CHOICES: NotificationCategoryChoices = Object.freeze(
+export const NO_NOTIFICATION_CATEGORY_CHOICES: NotificationCategoryChoices = Object.freeze(
   Object.fromEntries(NOTIFICATION_CHOICE_KEYS.map((key) => [key, false])),
+) as NotificationCategoryChoices;
+
+// Only for the visible choices. An unconfirmed or skipped step persists the all-off set.
+export const DEFAULT_NOTIFICATION_CATEGORY_CHOICES: NotificationCategoryChoices = Object.freeze(
+  Object.fromEntries(NOTIFICATION_CHOICE_KEYS.map((key) => [key, key !== 'brahmaMuhurta'])),
 ) as NotificationCategoryChoices;
 
 export function isNotificationChoiceKey(value: unknown): value is NotificationChoiceKey {
@@ -144,7 +149,7 @@ export function hasAnyNotificationChoice(choices: NotificationCategoryChoices): 
  * a remembered bundled "yes" can never switch on notifications the person was never shown one by one.
  */
 export function readNotificationChoices(saved: unknown): NotificationCategoryChoices {
-  const result: NotificationCategoryChoices = { ...DEFAULT_NOTIFICATION_CATEGORY_CHOICES };
+  const result: NotificationCategoryChoices = { ...NO_NOTIFICATION_CATEGORY_CHOICES };
   if (typeof saved !== 'object' || saved === null || Array.isArray(saved)) return result;
   for (const [key, value] of Object.entries(saved as Record<string, unknown>)) {
     if (isNotificationChoiceKey(key) && typeof value === 'boolean') result[key] = value;
@@ -170,7 +175,7 @@ export function computeFinalNotificationState(
 }
 
 export function getNotificationPersistencePayload(
-  choices: NotificationCategoryChoices = DEFAULT_NOTIFICATION_CATEGORY_CHOICES
+  choices: NotificationCategoryChoices = NO_NOTIFICATION_CATEGORY_CHOICES
 ) {
   // `=== true`: only a real true switches anything on.
   const on = (key: NotificationChoiceKey) => choices[key] === true;
