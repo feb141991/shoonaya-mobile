@@ -365,7 +365,7 @@ Rules:
   pre-selected choice the person can untick and Settings has a toggle for each; it is never a silent write on "Not now" or on completing
   onboarding without seeing the choices, and the OS push prompt never stands in for any category. Settings' fallback for a missing
   profile value must read the same way (guard: `__tests__/notification-default-tier.test.ts`). Backend: migrations `20261112100000`
-  (defaults) and `20261112110000` (Brahma opt-in reset), unapplied until approved.
+  (defaults) and `20261112110000` (Brahma opt-in reset), both APPLIED to production (confirmed in the production migration list on 2026-11-13).
 - Why this rule exists: on 2026-10-26, the backend half of this same defect
   (nine reminder columns backfilled with `WHERE x = false OR x IS NULL`,
   destroying the record of real opt-outs) was recorded in the Shoonaya
@@ -580,8 +580,9 @@ Rules:
   no longer hashes to its pinned value, and the backend's `consent-wording.test.ts` pins the same list: keep the two equal (section 1).
 - A new consent screen or write path must send the context, and a consent with no registered wording on that screen is simply recorded as having none.
 - Origin: 2026-11-12 privacy audit. Consents were yes/no flags with one shared, client-supplied timestamp, and no record of when each was given, which
-  wording was shown or on which screen. Backend migration `20261112140000_consent_evidence_ledger` is UNAPPLIED: until it is, the context is sent and
-  ignored. Not verified on a device. Whether proof of consent should outlive the account is a counsel decision.
+  wording was shown or on which screen. Backend migration `20261112140000_consent_evidence_ledger` is APPLIED to production (confirmed in the production
+  migration list on 2026-11-13), so the database now records the context. Not verified: whether the deployed backend's export and generated types have caught
+  up with the ledger, and the Native consent screens on a device. Whether proof of consent should outlive the account is a counsel decision.
 
 ### 31. A Signed-Out Person May Read Mandali, and Nothing More
 - Founder decision 2026-11-12: a guest sees Mandali posts (`components/mandali/GuestMandaliFeed.tsx`, from the backend's `GET /api/mandali/public-feed`).
@@ -589,7 +590,7 @@ Rules:
   database enforces. The guest feed carries posts, the author's public username and avatar, and counts. It never carries an account id, a Mandali id,
   the names of people who reacted, comments, poll votes, RSVPs or member lists, and it is never stored on the device.
 - A new guest-visible Mandali surface must come from that route (or one built the same way), never from a direct table read. The database also closed
-  who-upvoted and who-RSVP'd to signed-in users (backend migration `20261112160000`, UNAPPLIED); posts and comments keep a public SELECT for this.
+  who-upvoted and who-RSVP'd to signed-in users (backend migration `20261112160000`, APPLIED to production, confirmed 2026-11-13); posts and comments keep a public SELECT for this.
 - Guard: `__tests__/mandali-guest-readonly.test.ts` (three mutations proven red). Not verified on a device, in dark mode, with large text, or against the
   deployed route.
 
@@ -634,3 +635,41 @@ Rules:
 - Onboarding displays all 17 reminder switches individually and preserves the visible defaults in section 19. An unconfirmed or skipped step saves every reminder off. The app opens OS permission or recovery only when a reminder is selected. Legacy bundled drafts cannot opt someone in. Both Nitya columns mirror the one Nitya choice.
 - Keep reminder preferences, notification tap measurement, and optional email consent independent. Verify server-side reminder defaults and eligibility separately from the Native form.
 - Origin: the 2026-11-07 notification audit found that bundled switches could enable more reminders than the copy described. Guarded by the onboarding notification and data contract tests.
+
+### 35. Lint Is a Gate, and Its Warnings Only Ratchet Down
+- ESLint runs in `npm run prebuild:verify` (so in CI and before every EAS build or OTA update) through `npm run check:lint`
+  (`scripts/check-lint-ratchet.ts`, rules in `lib/lintRatchet.ts`, config in `eslint.config.js`, set up as the Expo lint guide describes).
+  Never remove it from `prebuild:verify`, and never switch a rule off to make a change pass.
+- An **error** is a rule the repo already satisfies, so it stays at zero: `react-hooks/rules-of-hooks` and `react-hooks/static-components`
+  (a component declared inside another component remounts on every render). A **warning** is a rule existing code still breaks. Its count
+  per rule is recorded in `lint-baseline.json` and may only go down: the gate fails if any rule has more warnings than its baseline, if a
+  rule that is not in the baseline has any, and if a baseline is left more than 25 above the real count. After fixing warnings, run
+  `npm run check:lint -- --update`; it lowers the baseline and refuses to raise it or add a rule. Never edit the file by hand upward.
+- Switched off on purpose, with the reason in `eslint.config.js`: `import/no-unresolved` (the typecheck resolves the `@/` alias, this rule cannot)
+  and `react/no-unescaped-entities` (JSX text in React Native is not HTML; entities are guarded by `entity-in-js-string-guard.test.ts`).
+- Use `npm run lint` to see every finding. New code should add none: a warning you introduce is a failure of the gate even while the total is
+  under the old baseline for that rule.
+- Why this rule exists: on 2026-11-13 a review found the repo had no linter, with the bug classes below caught only by hand or by tests that read
+  source text. The first run found 0 errors after two real fixes (a function called `useManualCity` that was not a hook and tripped the
+  rules-of-hooks check, and `StatBox` declared inside the Mood Insights screen, which remounted on every render, the same class as the Japa
+  Meru-crown remount) and a baseline of 1,431 warnings: 476 `react-hooks/refs`, 209 unused variables, 207 `any`, 199 import order, 108
+  `set-state-in-effect`, 50 `console.*` other than warn and error, 42 empty `catch {}`, 36 `exhaustive-deps`, and smaller counts.
+- Not verified: that the 1,431 warnings are all worth fixing (the React Compiler-era `react-hooks/*` rules are new to this codebase and some
+  will be false positives), and the CI run itself: the gate ran locally (`npm run prebuild:verify`), not yet on a pull request.
+
+### 36. Tests Prove Behaviour; Grepping Source Text Only Ratchets Down
+- A test that reads a source file and matches a regular expression against it proves a pattern exists, not that the screen works. It passes when
+  the behaviour is broken and fails when the code is harmlessly reorganised (the Japa split broke or silently re-pointed several of them). New UI tests
+  render the component with `@testing-library/react-native` and press its controls (`__component_tests__/`, run by `npm run test:components`, part of
+  `prebuild:verify`), or call the logic directly. Prove each new test red by breaking the behaviour on a scratch copy, never on a file Metro is serving.
+- `__tests__/source-text-tests-guard.test.ts` records, per file, how many `assert.match`/`doesNotMatch` calls a test makes in a file that reads source
+  (108 files, 1,354 assertions on 2026-11-13). A ceiling only goes down; a new test file gets none; a listed file that drops to zero loses its entry. Never
+  raise a ceiling or add a file. Tests that read project configuration (`lint-ratchet.test.ts`) are exempt by name. A check about the whole codebase
+  ("no screen calls X") belongs in an ESLint rule, not a regex over one file.
+- The harness uses `@react-native/jest-preset` with hand-written mocks in `jest.setup.ts`, NOT `jest-expo`: `jest-expo` fails with a null-path
+  TypeError when the checkout path contains parentheses (`/Users/Business(C)/`), because its stack parser strips `(...)` from file names. NativeWind's
+  Babel plugin is skipped when `NODE_ENV=test` (`babel.config.js`). A native module a component needs is mocked there as a host-name string.
+- Origin: 2026-11-13 review: 122 test files and about 1,450 regex assertions read source text, and there was no render test at all. First conversions:
+  the Japa launcher (10 tests) and the bead ring pendant (6 tests) replaced the source-grep assertions for the same behaviour.
+- Not done: converting the other ~100 files (the roughly 45 that pin UI layout are the best candidates); component tests run on Node, so they say
+  nothing about Android or iOS rendering. Device verification is still required (section 7).

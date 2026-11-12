@@ -24,6 +24,20 @@ type MoodInsightsResponse = {
   preferredActions: { action: string; count: number }[];
 };
 
+// Declared at module scope: a component declared inside the screen is a new type on every render,
+// so React would remount it each time.
+function StatBox({ icon, label, value, color, theme }: { icon: React.ComponentProps<typeof Feather>['name']; label: string; value: string | number; color: string; theme: ReturnType<typeof themeColor> }) {
+  return (
+    <View style={{ flex: 1, backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1, borderRadius: 16, padding: 16 }}>
+      <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: `${color}33`, alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+        <Feather name={icon} size={16} color={color} />
+      </View>
+      <Text style={{ ...TYPE.metric, color: theme.text, marginBottom: 4 }}>{value}</Text>
+      <Text style={{ ...TYPE.caption, color: theme.dim }}>{label}</Text>
+    </View>
+  );
+}
+
 export default function MoodInsightsScreen() {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
@@ -75,18 +89,6 @@ export default function MoodInsightsScreen() {
       fetchAiReflection();
     }
   }, [aiReflection, fetchAiReflection]);
-
-  function StatBox({ icon, label, value, color }: { icon: React.ComponentProps<typeof Feather>['name']; label: string; value: string | number; color: string }) {
-    return (
-      <View style={{ flex: 1, backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1, borderRadius: 16, padding: 16 }}>
-        <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: `${color}33`, alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
-          <Feather name={icon} size={16} color={color} />
-        </View>
-        <Text style={{ ...TYPE.metric, color: theme.text, marginBottom: 4 }}>{value}</Text>
-        <Text style={{ ...TYPE.caption, color: theme.dim }}>{label}</Text>
-      </View>
-    );
-  }
 
   return (
     <Screen
@@ -146,12 +148,12 @@ export default function MoodInsightsScreen() {
 
             {/* Metrics Grid */}
             <View style={{ flexDirection: 'row', gap: 12 }}>
-              <StatBox icon="calendar" label="Check-ins" value={metrics?.totalCheckins || 0} color={theme.brand} />
-              <StatBox icon="check-circle" label="Actions Completed" value={metrics?.completedActions || 0} color={COLORS.success} />
+              <StatBox theme={theme} icon="calendar" label="Check-ins" value={metrics?.totalCheckins || 0} color={theme.brand} />
+              <StatBox theme={theme} icon="check-circle" label="Actions Completed" value={metrics?.completedActions || 0} color={COLORS.success} />
             </View>
             <View style={{ flexDirection: 'row', gap: 12 }}>
-              <StatBox icon="trending-up" label="Day Streak" value={metrics?.streak || 0} color={COLORS.danger} />
-              <StatBox icon="activity" label="Frequent Mood" value={metrics?.mostFrequentMood || 'None'} color={COLORS.navy} />
+              <StatBox theme={theme} icon="trending-up" label="Day Streak" value={metrics?.streak || 0} color={COLORS.danger} />
+              <StatBox theme={theme} icon="activity" label="Frequent Mood" value={metrics?.mostFrequentMood || 'None'} color={COLORS.navy} />
             </View>
 
             {/* Preferred Actions */}

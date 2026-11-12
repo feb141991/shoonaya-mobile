@@ -1,0 +1,20 @@
+{
+  "_note": "Warnings per ESLint rule that the repo still has. May only go down: see AGENTS.md, \"Lint is a gate, and its warnings only ratchet down\". Lower it with `npm run check:lint -- --update`.",
+  "rules": {
+    "@typescript-eslint/no-explicit-any": 207,
+    "@typescript-eslint/no-require-imports": 13,
+    "@typescript-eslint/no-unused-vars": 209,
+    "import/first": 199,
+    "import/no-duplicates": 10,
+    "no-console": 50,
+    "no-empty": 42,
+    "no-unused-vars": 2,
+    "react-hooks/exhaustive-deps": 36,
+    "react-hooks/immutability": 43,
+    "react-hooks/preserve-manual-memoization": 25,
+    "react-hooks/purity": 10,
+    "react-hooks/refs": 476,
+    "react-hooks/set-state-in-effect": 108,
+    "unused-eslint-disable-directive": 1
+  }
+}

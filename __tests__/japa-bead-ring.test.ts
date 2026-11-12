@@ -141,8 +141,7 @@ test('the swing is small enough to look natural: 5 degrees moves the tassel tip 
 });
 
 test('the sway hangs from the pendant top, runs only on a tap, and respects Reduce Motion', () => {
-  const ring = readFileSync(join(__dirname, '../components/japa/JapaBeadRing.tsx'), 'utf8');
-  assert.match(ring, /\{ translateY: -\(PRACTICE_PENDANT\.height \* ringScale\) \/ 2 \}, \{ rotate: swayRotate \}, \{ translateY: \(PRACTICE_PENDANT\.height \* ringScale\) \/ 2 \}/);
+  // The pivot (shifted up, rotated, shifted back down) is covered by a render test: __component_tests__/japa-bead-ring.test.tsx.
   const screen = readFileSync(join(__dirname, '../app/(tabs)/japa.tsx'), 'utf8');
   const trigger = screen.slice(screen.indexOf('const triggerTapMotion = useCallback'), screen.indexOf('const triggerRoundCelebration'));
   assert.match(trigger, /if \(reduceMotion\) return;[\s\S]*swayAnim\.setValue\(beadIndex % 2 === 0 \? 1 : -1\)/);
@@ -155,7 +154,7 @@ test('the pendant hook comes out of the guru bead: tucked inside it and drawn be
   assert.equal(ringBottom + BEAD_RADIUS.sumeru - PRACTICE_PENDANT.top, HOOK_TUCK);
   assert.ok(HOOK_TUCK >= 4 && HOOK_TUCK <= 12, `tuck ${HOOK_TUCK}`);
   const ring = readFileSync(join(__dirname, '../components/japa/JapaBeadRing.tsx'), 'utf8');
-  assert.ok(ring.indexOf("guru-pendant.png") < ring.indexOf('<Svg '), 'the pendant is drawn before (behind) the beads');
+  // That the pendant is drawn behind the beads is covered by the same render test file.
   assert.match(ring, /guruBeadBottom - 2\.4/, 'a drilled hole where the hook enters');
 });
 
