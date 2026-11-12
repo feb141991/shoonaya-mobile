@@ -60,6 +60,7 @@ import { StartupLifecycleController } from '@/lib/startup-scenes/lifecycle';
 import type { AppLanguage, StartupPreferences, StartupScene } from '@/lib/startup-scenes/types';
 import { trackScreenView } from '@/lib/analytics';
 import { clearSanskaraCache, purgeSanskaraExportFiles } from '@/lib/sanskara';
+import { purgePrivateExportFiles } from '@/lib/privateExportFiles';
 import { apiFetch, setApiAccessTokenFromSession } from '@/lib/api';
 import { markAuthReady } from '@/lib/authReadyGate';
 import { exchangeOAuthUrlIfPresent } from '@/lib/authRedirect';
@@ -607,6 +608,8 @@ function RootLayout() {
         void clearAllUserScopedStorage();
         // A downloaded Sanskāra copy holds private notes in the cache directory; it never outlives the account that made it.
         purgeSanskaraExportFiles();
+        // The account data export and the sadhana report are private files in the same cache; neither outlives the account either.
+        purgePrivateExportFiles();
         void clearProfileCache({ kind: 'authenticated', userId: previousRouteKey });
       }
       void getOrReadHomeCache({ kind: 'authenticated', userId: session.user.id });
@@ -1242,6 +1245,7 @@ function RootLayout() {
         // Private family and religious records are held in memory for a minute; sign-out ends that (AGENTS 5).
         clearSanskaraCache();
         purgeSanskaraExportFiles();
+        purgePrivateExportFiles();
       }
       // Keep the auth callback synchronous. routeForSession can perform API
       // work (including a token refresh during profile repair); running that

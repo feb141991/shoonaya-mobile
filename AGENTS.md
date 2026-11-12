@@ -470,9 +470,42 @@ Rules:
   `delete-mine` and `export` existed in the API and the contract file but no screen called them, although the authorization contract (E7) promised an
   export before the 12-month former-manager window ends. Guard: `__tests__/sanskara-data.test.ts` (33 mutations each proven to turn a test red).
   Not verified on a device, in light and dark mode, with large text or on 3-button Android navigation, and not in any build or over-the-air update.
-- Still open, found in the same sweep (two more private files written to the cache and never removed at sign-out): Settings "Download your data"
-  writes `shoonaya-data.json` and Profile's sadhana report writes `sadhana-report.html`. The account-wide export (`/api/user/export`) also holds no
-  Sanskāra data, so this sheet is the only way to download it. This applies equally to human and AI-agent contributors.
+- Closed 2026-11-06 (found in the same sweep: two more private files written to the cache and never removed at sign-out): Settings "Download your
+  data" wrote `shoonaya-data.json` (the account-wide export) and Profile's sadhana report wrote `sadhana-report.html`, each straight into the cache root.
+  Both now go through `lib/privateExportFilesDevice.ts` (rules in `lib/privateExportFiles.ts`): one cache directory (`private-exports`), removed before
+  each new export and after a failed share, and purged at sign-out and on an account switch by `app/_layout.tsx`; the purge also removes the two files
+  an earlier build left in the cache root. Sharing availability is checked before anything is written. The file is still NOT removed when
+  `Sharing.shareAsync` resolves (same reason as above). The account-wide export (`/api/user/export`) holds no Sanskāra data, so the Sanskāra sheet is
+  the only way to download it. Any new private file in the cache goes through one of the two purged device modules; `__tests__/private-export-files.test.ts`
+  fails for any other file that references `Paths.cache` or `cacheDirectory`, and its list of allowed files (the two purged modules, the public
+  `shoonaya-dharmic-calendar.ics`, and the public read-aloud audio `tts_audio_N`) may only shrink. Guard: that test (see the rule below).
+- Closed 2026-11-06 (the two classes the first fix could not see, because the libraries write the files, not our code): the share-card images and the
+  profile photo picker's copy. `lib/share-card.ts` takes the picture with `react-native-view-shot` (`tmpfile`), which leaves it in the cache root on
+  Android (named after the caller's `fileName` plus digits, so the library's own cleanup, which only matches its default prefix, never removes it) and in
+  `tmp/ReactNative` on iOS, as a bare path rather than a `file://` uri. The name-story card and its file name carry the person's own name. The card is now
+  copied into the same purged `private-exports` directory and the original is deleted; if the copy fails the original is shared exactly as before
+  (a leftover file, never a lost share). Sharing availability is now checked before the picture is taken. `expo-image-picker` writes its crop to
+  `<cache>/ImagePicker/` on both platforms (read in its Android and iOS sources); the profile picture is uploaded from the base64 the picker returns, so
+  `pickAvatar` removes that folder in its `finally` block and the sign-out purge removes it too. Only the folder is ever removed, never a uri a pick
+  returns, because an unedited pick can be the person's own photo.
+- Rule for the next file: any library that writes its own files (`react-native-view-shot`, `expo-image-picker`, and `expo-print`, `expo-document-picker`,
+  `expo-image-manipulator`, `expo-camera`, `expo-media-library` if they are ever added) is listed in `__tests__/private-export-files.test.ts` with the
+  files that import it and how its output is purged; a new importer fails the test until it is. Every caller of `Sharing.shareAsync` is likewise
+  listed. Guard: that test (50 mutations each proven to turn it red, including reverting Settings, Profile, the layout and `lib/share-card.ts` to
+  their previous files).
+- Device evidence, iOS Simulator, 2026-11-06 (iPhone 17 Pro Max, iOS 26.5, dev client `com.shoonaya.app` 1.0.0 build 7, JavaScript from a Metro serving
+  commit df7eda1, a real account, read-only API calls, no photo upload): the data export, the sadhana report and a share card each opened the system share
+  sheet and landed in `Library/Caches/private-exports/`, each replacing the previous file (one private copy at most); the export parsed as JSON; the card
+  was 1080x1920 and not blank; `tmp/ReactNative` was empty afterwards, so the iOS bare path was accepted, the copy worked, the original was deleted and the
+  fallback did not fire. A file planted in `Caches/ImagePicker/` was removed when `pickAvatar` finished (photo access denied, so the early-return path of
+  its `finally`; a control showed the file survives until then).
+- Still not verified on any device: the sign-out and account-switch purge, and the removal of an old build's files from the cache root. Two sign-out
+  attempts on a second simulator that day were invalid, not failed: the app process was connected to a different Metro (the main checkout, which has none
+  of this code), so they exercised nothing. Before a device test, confirm the app is running the intended checkout with `lsof -nP -a -p <app pid> -iTCP`
+  (connections to the intended Metro's port); the dev menu's "Connected to" line was misleading. Also unverified: a real photo-picker crop (the folder
+  location comes from reading the library's Android and iOS sources), everything on Android (`File.copy` from the cache root or the external cache, and a
+  receiving app reading a file after the share sheet resolves) and the added copy per share card, which is unmeasured. In a dev client the purge's lazy
+  `import()` may need Metro to be reachable; a release bundle should not (not verified). This applies equally to human and AI-agent contributors.
 
 ### 26. A Hand-over Code Needs a Saved Date of Birth, and the Screen Must Say So
 - An early Sanskāra hand-over (before 18) accepts a code only from an account whose profile date of birth equals the birth date the managers

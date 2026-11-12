@@ -16,8 +16,6 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import * as Haptics from 'expo-haptics';
-import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { BackButton } from '@/components/ui/BackButton';
@@ -32,6 +30,8 @@ import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, OFFICIAL_EMAIL, RADII, SHADO
 import { APP_VERSION_LABEL } from '@/lib/appVersion';
 import { apiFetch } from '@/lib/api';
 import { fetchSoleManagerDependents } from '@/lib/sanskara';
+import { ACCOUNT_DATA_EXPORT_NAME } from '@/lib/privateExportFiles';
+import { sharePrivateExport } from '@/lib/privateExportFilesDevice';
 import {
   openNotificationSettings,
   registerPushToken,
@@ -960,14 +960,11 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
       if (!response.ok) throw await requestErrorFromResponse(response);
       const data = await response.text();
 
-      if (!(await Sharing.isAvailableAsync())) {
+      // The export is the person's whole account. It goes through the private-export helper so the copy lives in one cache
+      // directory and is removed at sign-out and on an account switch (AGENTS 25). Nothing is written when sharing is unavailable.
+      if (!(await sharePrivateExport(ACCOUNT_DATA_EXPORT_NAME, data))) {
         Alert.alert('Sharing not available', 'Your device does not support saving or sharing this file.');
-        return;
       }
-
-      const targetFile = new FileSystem.File(FileSystem.Paths.cache, 'shoonaya-data.json');
-      targetFile.write(data);
-      await Sharing.shareAsync(targetFile.uri);
     } catch (error) {
       Alert.alert('Could not download data', describeFailure(error, 'Could not prepare your data. Please try again.', language));
     } finally {
