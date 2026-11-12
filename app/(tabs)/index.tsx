@@ -743,7 +743,7 @@ function PanchangPill({
         ? (language === 'hi' ? 'सुरक्षित तिथि · रीफ़्रेश करें' : language === 'pa' ? 'ਸੰਭਾਲੀ ਮਿਤੀ · ਤਾਜ਼ਾ ਕਰੋ' : 'Saved date · Refresh')
         : calendarStatus === 'degraded'
           ? (language === 'hi' ? 'सत्यापित तिथियाँ · जांचें' : language === 'pa' ? 'ਪ੍ਰਮਾਣਿਤ ਮਿਤੀਆਂ · ਜਾਂਚ ਕਰੋ' : 'Verified dates · Check coverage')
-          : (language === 'hi' ? 'जांच नहीं हो सकी · पुनः प्रयास' : language === 'pa' ? 'ਜਾਂਚ ਨਹੀਂ ਹੋ ਸਕੀ · ਮੁੜ ਕੋਸ਼ਿਸ਼' : 'Couldn&apos;t check · Retry');
+          : (language === 'hi' ? 'जांच नहीं हो सकी · पुनः प्रयास' : language === 'pa' ? 'ਜਾਂਚ ਨਹੀਂ ਹੋ ਸਕੀ · ਮੁੜ ਕੋਸ਼ਿਸ਼' : 'Couldn’t check · Retry');
 
       return (
         <PressableSurface

@@ -518,3 +518,7 @@ Rules:
 - Known limits, do not assume them closed: on Android the last notification response can persist until cleared, so an old tap replayed at an ordinary launch that was
   never recorded before could be counted when it did not just happen (the server refuses anything over a week old, and a recorded one is deduplicated). Not verified on a
   device, on Android, in a cold start versus a running app, or in any build. The feature records nothing until the backend migration is applied AND the person has opted in.
+
+### 29. HTML Entities Belong in JSX Text, Not in JavaScript Strings
+- JSX decodes `&apos;`, `&amp;` and the like in text and in bare attribute strings (`title="Don&apos;t"`). It never decodes them inside a JavaScript string or a `{'...'}` expression: the characters appear literally on screen. In a JS string write the real character (`’`).
+- Origin: 2026-11-12. Home's calendar pill showed "Couldn&apos;t check · Retry" (`app/(tabs)/index.tsx`, since 2026-10-07). A sweep of `app/`, `components/` and `lib/` found no other instance. Guard: `__tests__/entity-in-js-string-guard.test.ts` (proven red with the fix reverted). Not verified on a device after the fix.
