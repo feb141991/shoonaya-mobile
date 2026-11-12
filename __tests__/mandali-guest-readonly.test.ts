@@ -73,7 +73,12 @@ describe('the guest feed is read-only and holds nothing', () => {
     assert.match(component, /action\('react'/);
     assert.match(component, /action\('comment'/);
     assert.match(component, /action\('more'/);
-    assert.match(component, /onPress=\{onSignIn\}/);
+    assert.match(component, /onPress=\{\(\) => \{ setPrompt\(null\); onSignIn\(\); \}\}/, 'the prompt leads to the login');
+    // The prompt covers the screen the person is looking at. It must not live in the list header, which scrolls out of view.
+    assert.match(component, /<Modal transparent visible=\{prompt !== null\}/);
+    assert.match(component, /accessibilityLabel="Not now"/);
+    assert.match(component, /You are reading Mandali as a guest/);
+    assert.doesNotMatch(component, /: 'You are reading Mandali as a guest/, 'the header text is fixed, it does not swap in the prompt');
   });
 
   it('actions are real 44pt buttons with a label that names what signing in is for', () => {

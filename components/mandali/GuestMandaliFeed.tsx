@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, Text, View, useColorScheme } from 'react-native';
+import { ActivityIndicator, FlatList, Modal, Pressable, RefreshControl, StyleSheet, Text, View, useColorScheme } from 'react-native';
 import { Image } from 'expo-image';
 import Feather from '@expo/vector-icons/Feather';
 
@@ -112,7 +112,7 @@ const GuestPostCard = memo(function GuestPostCard({ post, theme, onAction }: { p
 
 /**
  * The read-only Mandali for a signed-out person. Pull to refresh and scrolling work; reacting, commenting, sharing, opening a profile or the
- * post menu show a sign-in prompt in place. The feed is never stored on the device and carries no account id.
+ * post menu show a sign-in prompt over the screen, where the person tapped. The feed is never stored on the device and carries no account id.
  */
 export function GuestMandaliFeed({ onSignIn }: { onSignIn: () => void }) {
   const theme = themeColor(useColorScheme() === 'dark');
@@ -181,7 +181,7 @@ export function GuestMandaliFeed({ onSignIn }: { onSignIn: () => void }) {
       <Text style={{ ...TYPE.title, color: theme.text }}>Mandali</Text>
       <Card tone="auto" style={{ backgroundColor: theme.brandSoft, borderColor: theme.premiumBorder, padding: 12, borderRadius: 16, gap: 8 }}>
         <Text style={{ ...TYPE.body, color: theme.text }}>
-          {prompt ? GUEST_ACTION_COPY[prompt] : 'You are reading Mandali as a guest. Sign in to react, comment, share and join your city’s Mandali.'}
+          You are reading Mandali as a guest. Sign in to react, comment, share and join your city’s Mandali.
         </Text>
         <PressableSurface
           haptic="selection"
@@ -199,6 +199,40 @@ export function GuestMandaliFeed({ onSignIn }: { onSignIn: () => void }) {
 
   return (
     <Screen style={{ backgroundColor: theme.bg, paddingHorizontal: 0 }}>
+      <Modal transparent visible={prompt !== null} animationType="fade" onRequestClose={() => setPrompt(null)}>
+        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: COLORS.bottomSheetScrim }}>
+          <Pressable accessibilityLabel="Close" onPress={() => setPrompt(null)} style={StyleSheet.absoluteFill} />
+          <View
+            accessibilityViewIsModal
+            style={{ backgroundColor: theme.card, borderTopLeftRadius: 28, borderTopRightRadius: 28, borderWidth: 1, borderColor: theme.border, padding: 20, paddingBottom: 32, gap: 14 }}
+          >
+            <Text style={{ ...TYPE.cardHeading, color: theme.text }}>Sign in to continue</Text>
+            <Text accessibilityLiveRegion="polite" style={{ ...TYPE.body, color: theme.dim }}>
+              {prompt ? GUEST_ACTION_COPY[prompt] : ''}
+            </Text>
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <PressableSurface
+                haptic="selection"
+                accessibilityRole="button"
+                accessibilityLabel="Not now"
+                onPress={() => setPrompt(null)}
+                style={{ flex: 1, minHeight: MIN_TOUCH_TARGET, alignItems: 'center', justifyContent: 'center', borderRadius: 999, borderWidth: 1, borderColor: theme.border }}
+              >
+                <Text style={{ ...TYPE.label, color: theme.text }}>Not now</Text>
+              </PressableSurface>
+              <PressableSurface
+                haptic="selection"
+                accessibilityRole="button"
+                accessibilityLabel="Sign in"
+                onPress={() => { setPrompt(null); onSignIn(); }}
+                style={{ flex: 1, minHeight: MIN_TOUCH_TARGET, alignItems: 'center', justifyContent: 'center', borderRadius: 999, backgroundColor: theme.brand }}
+              >
+                <Text style={{ ...TYPE.label, color: COLORS.creamBg }}>Sign in</Text>
+              </PressableSurface>
+            </View>
+          </View>
+        </View>
+      </Modal>
       <FlatList
         data={posts}
         keyExtractor={(post) => post.id}
