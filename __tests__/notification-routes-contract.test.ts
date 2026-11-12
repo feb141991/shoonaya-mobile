@@ -28,7 +28,7 @@ const BACKEND_URLS: Array<{ source: string; url: string; opens: string; noNative
   { source: 'cron/shloka-reminder; shloka-candidate-producer; notification-delivery-policy', url: '/home?focus=shloka', opens: '/shloka' },
   { source: 'legacy weekly-summary', url: '/home?focus=weekly-summary', opens: '/my-progress' },
   { source: 'cron/pitru-paksha-reminder (event date)', url: 'https://www.shoonaya.com/panchang?date=2026-10-10', opens: '/panchang?date=2026-10-10' },
-  { source: 'admin/broadcast (absolute), digest/generate, notifications/diagnostics', url: '/home', opens: '/(tabs)' },
+  { source: 'admin/broadcast (absolute), notifications/diagnostics', url: '/home', opens: '/(tabs)' },
   { source: 'quiz-candidate-producer; notification-delivery-policy', url: '/quiz', opens: '/quiz' },
   { source: 'sankalpa-midpoint-candidate', url: '/sankalpa', opens: '/sankalpa' },
   { source: 'kul-family-remembrance-candidate', url: '/kul?section=family', opens: '/kul?section=family' },
@@ -121,7 +121,7 @@ for (const row of BACKEND_URLS) {
 
 test('the only notification destinations that open Home are the ones that mean Home', () => {
   const opensHome = BACKEND_URLS.filter((row) => row.opens === '/(tabs)').map((row) => row.url);
-  // Broadcast/digest intentionally stay on Home; summary and dated events have explicit destinations.
+  // Broadcasts intentionally stay on Home (the daily digest that also did was retired 2026-11-10); summary and dated events have explicit destinations.
   assert.deepEqual(opensHome.sort(), ['/home']);
 });
 
