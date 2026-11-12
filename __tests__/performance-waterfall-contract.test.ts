@@ -40,7 +40,9 @@ describe('high-traffic screen performance contracts', () => {
     for (const route of ['pathshala', 'japa', 'vrat', 'dharm_veer']) {
       assert.match(telemetry, new RegExp(`'${route}'`));
     }
-    assert.match(source('app/(tabs)/japa.tsx'), /recordRouteOpen\([^;]*'japa'/s);
+    // Japa's route-open telemetry lives in the hook that loads its context.
+    assert.match(source('hooks/useJapaContext.ts'), /recordRouteOpen\([^;]*'japa'/s);
+    assert.match(source('app/(tabs)/japa.tsx'), /useJapaContext\(/);
     assert.match(source('app/vrat.tsx'), /recordRouteOpen\([^;]*'vrat'/s);
     assert.match(source('app/dharm-veer.tsx'), /recordRouteOpen\([^;]*'dharm_veer'/s);
   });

@@ -39,12 +39,19 @@ test('Root is the only Supabase auth-event owner and guards stale routing work',
   assert.doesNotMatch(home, /supabase\.auth\.getSession/);
   assert.match(home, /useAppIdentity\(\)/);
 
-  assert.doesNotMatch(japa, /supabase\.auth\.onAuthStateChange/);
-  assert.doesNotMatch(japa, /supabase\.auth\.getSession/);
-  assert.doesNotMatch(japa, /isGuestMode\(/);
+  // The Japa screen owns no auth listener; it loads through useJapaContext,
+  // which holds the identity and stale-response rules (moved out of the screen
+  // on 2026-11-12, so those two are now checked in the hook).
+  const japaContext = fs.readFileSync(path.join(process.cwd(), 'hooks/useJapaContext.ts'), 'utf8');
+  for (const source of [japa, japaContext]) {
+    assert.doesNotMatch(source, /supabase\.auth\.onAuthStateChange/);
+    assert.doesNotMatch(source, /supabase\.auth\.getSession/);
+    assert.doesNotMatch(source, /isGuestMode\(/);
+  }
   assert.match(japa, /useAppIdentity\(\)/);
-  assert.match(japa, /contextLoadGenerationRef/);
-  assert.match(japa, /expectedUserId: userId/);
+  assert.match(japa, /useJapaContext\(\{[^}]*appIdentity/);
+  assert.match(japaContext, /contextLoadGenerationRef/);
+  assert.match(japaContext, /expectedUserId: userId/);
 
   assert.doesNotMatch(mandali, /supabase\.auth\.onAuthStateChange/);
   assert.doesNotMatch(mandali, /supabase\.auth\.getUser/);

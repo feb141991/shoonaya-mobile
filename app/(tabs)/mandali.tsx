@@ -40,6 +40,7 @@ import { PostOptionsSheet } from '@/components/mandali/PostOptionsSheet';
 import { NotificationTargetSheet } from '@/components/mandali/NotificationTargetSheet';
 import { mandaliNotificationTarget } from '@/lib/notificationDestination';
 import { ConnectionRequestsSheet } from '@/components/mandali/ConnectionRequestsSheet';
+import { GuestMandaliFeed } from '@/components/mandali/GuestMandaliFeed';
 import { PostReactionButton } from '@/components/mandali/PostReactionButton';
 import { PostReactorsSheet } from '@/components/mandali/PostReactorsSheet';
 import { PostReactionSummaryBar } from '@/components/mandali/PostReactionSummaryBar';
@@ -2717,21 +2718,14 @@ function MandaliScreen() {
   }
 
   if (isGuest) {
+    // A signed-out person reads Mandali; anything that needs an account asks them to sign in (founder decision 2026-11-12).
     return (
-      <Screen style={{ backgroundColor: theme.bg }}>
-        <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 16 }}>
-          <EmptyState
-            icon="users"
-            title="Join Mandali"
-            subtitle="Mandali is a sacred community space for registered seekers. Sign in to join Mandali, share posts, and connect with other seekers."
-            ctaLabel="Sign In"
-            onCta={async () => {
-              await setGuestMode(false);
-              router.replace('/(auth)/login');
-            }}
-          />
-        </View>
-      </Screen>
+      <GuestMandaliFeed
+        onSignIn={async () => {
+          await setGuestMode(false);
+          router.replace('/(auth)/login');
+        }}
+      />
     );
   }
 

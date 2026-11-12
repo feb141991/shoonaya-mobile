@@ -581,3 +581,50 @@ Rules:
 - Origin: 2026-11-12 privacy audit. Consents were yes/no flags with one shared, client-supplied timestamp, and no record of when each was given, which
   wording was shown or on which screen. Backend migration `20261112140000_consent_evidence_ledger` is UNAPPLIED: until it is, the context is sent and
   ignored. Not verified on a device. Whether proof of consent should outlive the account is a counsel decision.
+
+### 31. A Signed-Out Person May Read Mandali, and Nothing More
+- Founder decision 2026-11-12: a guest sees Mandali posts (`components/mandali/GuestMandaliFeed.tsx`, from the backend's `GET /api/mandali/public-feed`).
+  Reacting, commenting, sharing, opening a profile and the post menu show a sign-in prompt; posting, voting and RSVPs need an account, which the
+  database enforces. The guest feed carries posts, the author's public username and avatar, and counts. It never carries an account id, a Mandali id,
+  the names of people who reacted, comments, poll votes, RSVPs or member lists, and it is never stored on the device.
+- A new guest-visible Mandali surface must come from that route (or one built the same way), never from a direct table read. The database also closed
+  who-upvoted and who-RSVP'd to signed-in users (backend migration `20261112160000`, UNAPPLIED); posts and comments keep a public SELECT for this.
+- Guard: `__tests__/mandali-guest-readonly.test.ts` (three mutations proven red). Not verified on a device, in dark mode, with large text, or against the
+  deployed route.
+
+### 32. Keep Files Small Enough to Review: Line Limits With a Shrink-Only List
+- A hand-written source file under `app/`, `components/`, `hooks/` or `lib/` stays at or under **800 lines for a screen in `app/`** and **600 lines for everything else**. A
+  generated snapshot is exempt only by its `.generated.` name and is rebuilt by its generator, never edited. A content table is not exempt: it is listed like any other file,
+  and anything that splits verified spiritual content still follows section 3.
+- The files already over their limit on 2026-11-12 are listed with a ceiling equal to their size then, in `__tests__/file-size-guard.test.ts`. A ceiling only goes down. A change
+  that has to add lines to a listed file takes at least as many out in the same change. Never raise a ceiling, never add a file to the list, and never delete the guard to make a
+  change pass. The guard also fails when a listed file shrinks and its ceiling is left more than 25 lines above it (lower it, so it cannot grow back), and when a listed file
+  drops under its limit (delete the entry).
+- A new file starts under its limit, and a screen that is heading for it is split by responsibility first, not by line count: a file cut into pieces that only re-export each
+  other, or code moved into a data file to dodge the count, is not a split. Signs it is time before the limit: a component with more than about 15 `useState` calls, a
+  component declared inside another component's body (it remounts on every render), or a screen that draws, loads, saves and animates in one place.
+- How to split (the method that worked for `app/(tabs)/japa.tsx`, 4,093 lines to 1,216):
+  - Order by risk: pure display first (an animated drawing, a launcher, a ceremony overlay), then storage helpers, then the hook that loads data, last. State stays in the screen;
+    a component takes values and callbacks and draws them. A hook that loads private data keeps the identity, stale-response and cache rules of sections 5, 22, 23 and 24 in one place.
+  - Move the text verbatim by a script, not by retyping it, and change only what the move forces (imports, props, a storage call swapped for its helper). Run the typecheck with
+    `--noUnusedLocals` filtered to the files involved, and the full test suite, after every extraction, never once at the end.
+  - A test that reads a file's text is repointed to the file that now holds the code, with the same assertions, and each is proven red by removing the code it pins. A test
+    that still passes after a move can be passing on other text: the Japa ambient-sound check matched a code comment and a different button after the launcher moved out, and
+    the launcher row was unprotected until it read the launcher file.
+  - Check the screen on a device or simulator one input at a time, from a settled screenshot, taking no action that saves. Never edit, even temporarily, a file the running
+    Metro bundler is serving to a live app (see the note below).
+- Why this rule exists: on 2026-11-12 `app/(tabs)/japa.tsx` had grown to 4,093 lines (43 `useState` calls, 21 effects, a Meru crown component declared inside the screen that
+  remounted on every bead tap, 110 tests that read it as text) and splitting it took a whole session, found three tests pinned to its text and one pinned to a code comment, and
+  shipped nothing a person could see. At that point 54 hand-written files were over 600 lines and 22 were over 1,000 (`lib/dharm-veer.ts` 4,048, `app/kul.tsx` 3,699, the Mandali,
+  Home and Profile screens near 2,000 to 3,000); 48 are listed. Guard: `__tests__/file-size-guard.test.ts` (four violations each proven red on the real tree, and the
+  checker is a pure function with its own tests). Not verified on a device: Japa's extracted screens were checked in light mode on the iOS Simulator only, not on Android, in dark
+  mode or with large text.
+- Two incidents from that session, so they are not repeated: a mutation test that appended code to a file Metro was serving hot-reloaded into the running app and crashed it
+  (run mutation checks on the test file or a copy); and a chain of simulator taps on a lagging screen saved a real practice session to the signed-in account (verify each screen
+  before each tap, and never tap a control that saves on a real account without saying so).
+
+### 33. Japa Round Handoff and Timer Ownership
+- A counted round stays in the current practice until the device queue confirms its write. Keep the same completion ID and payload across local retries. Once queued, a delivery failure or unreadable response must never reopen the same beads for a new submission.
+- Only advance the session duration watermark after durable handoff. Reset it together with the clock and counters on every new practice. Before publishing completion context, recheck the original identity lease after parsing the response.
+- Cancel automatic beads when the route blurs, the app leaves the foreground, or a sheet interrupts practice. Commit the bead before starting asynchronous haptics. Automatic ceremony dismissal must not open the sign-in prompt.
+- Origin: the 2026-11-12 Japa review found lost rounds on queue-write failure, duplicate partials after an unreadable success response, and late context from a prior account. The Japa auto-advance tests exercise the production handoff, reconciliation, identity and timer helpers.
