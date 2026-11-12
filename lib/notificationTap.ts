@@ -88,8 +88,20 @@ let handledKeys: string[] = [];
 const acknowledgements = new Map<string, () => void>();
 const listeners = new Set<() => void>();
 
+/**
+ * Calls every subscriber. One that throws must not stop the others or make `enqueueNotificationTap` throw: that call is
+ * made from the operating-system link handler, so a throw there drops the tap or link (the destination is already held in
+ * `pending`, so the next render still sees it). The error is logged with its message so a repeat can be diagnosed; the
+ * first occurrence (2026-11-12) arrived with a code frame and no message. Nothing from the tap itself is logged.
+ */
 function notify() {
-  for (const listener of listeners) listener();
+  for (const listener of Array.from(listeners)) {
+    try {
+      listener();
+    } catch (error) {
+      console.error('[notificationTap] a subscriber threw:', error instanceof Error ? `${error.name}: ${error.message}` : String(error));
+    }
+  }
 }
 
 /** Holds a tap for delivery. The same response (same key) is accepted once per session. */

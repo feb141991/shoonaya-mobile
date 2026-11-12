@@ -425,6 +425,12 @@ Rules:
   the app can ship in either order: an app without these changes opens the same section for every new URL. This applies
   equally to human and AI-agent contributors.
 
+- A subscriber to the held-tap store that throws must not drop a tap or link (2026-11-12): `notify()` in `lib/notificationTap.ts` calls each subscriber
+  in its own `try/catch` and logs the error message (never the tap's contents). Origin: Metro logged a subscriber error, with no message, from the
+  system-link handler on 2026-11-01 and 2026-11-12; five link opens in the simulator (warm, repeated, and just after load) did not reproduce it, so
+  the cause is unknown and this is containment plus diagnosis, not a root-cause fix. Guard: `__tests__/notification-tap-subscribers.test.ts` (3 tests,
+  proven red against the old `notify()`). Not verified on a device; look for the new `[notificationTap] a subscriber threw:` line if it recurs.
+
 ### 21. A Screen Calls the Route for Its Own Slice, Not the Aggregate
 - `/api/native/home-summary` is Home's aggregate (profile, calendar, observances, sadhana, sankalpa, Dharm Veer). A screen that needs one slice of it must call a route that computes only that slice, never `home-summary` with the rest discarded: whatever is slow or failing in an unrelated slice then holds this screen open, and a 503 from the aggregate becomes this screen's error. If no such route exists, add one in the backend (section 1) and keep a 404-only compatibility fallback (`lib/shlokaToday.ts`: `home-summary?skipCalendar=true`) so an over-the-air update shipped before the backend deploy still works. A fallback is for "route not deployed" (404) only; a 401, 503 or network failure is the answer and must reach the screen unchanged.
 - The Shloka screen reads today's text from `GET /api/native/shloka/today`. It deliberately has no persisted cache: the text is chosen on the server by `getDayOfYear()` (server-local day) for non-Hindu traditions but by the profile's timezone for Hindu, so a cache keyed by the device's date can show yesterday's or tomorrow's verse as today's. A correct cache needs the server to return the day it computed for (a `dayKey`) and the client to key by user, tradition, language, that `dayKey` and a content version, and to label itself stale (sections 5 and 9). Do not add one without that.
