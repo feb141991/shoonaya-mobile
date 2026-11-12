@@ -3,7 +3,7 @@ import { Animated } from 'react-native';
 import { Image } from 'expo-image';
 import Svg, { Circle, Defs, RadialGradient, Stop, Path, G, Line, Ellipse } from 'react-native-svg';
 
-import { COLORS } from '@/lib/constants';
+import { FEATURE_COLORS, JAPA_COLORS, OVERLAYS, COLORS } from '@/lib/constants';
 import {
   BEAD_RADIUS,
   PRACTICE_BEAD_POSITIONS,
@@ -80,30 +80,30 @@ export function JapaBeadRing({
         return (
           <Fragment key={`bead-${index}`}>
             {isCurrent || isDone ? (
-              <Circle cx={x} cy={y} r={r + 2.5} fill="rgba(186,230,253,0.32)" />
+              <Circle cx={x} cy={y} r={r + 2.5} fill={FEATURE_COLORS.japa.fill2} />
             ) : null}
             {/* Ambient drop shadow for 3D sphere elevation */}
-            <Circle cx={x + r * 0.22} cy={y + r * 0.26} r={r} fill="rgba(15,23,42,0.55)" />
+            <Circle cx={x + r * 0.22} cy={y + r * 0.26} r={r} fill={FEATURE_COLORS.japa.fill3} />
             <Circle
               cx={x}
               cy={y}
               r={r}
               fill={`url(#${gradientId})`}
-              stroke={isCurrent ? '#38BDF8' : isDone ? 'rgba(255,255,255,0.9)' : 'rgba(186,230,253,0.75)'}
+              stroke={isCurrent ? FEATURE_COLORS.japa.stroke3 : isDone ? OVERLAYS.white[0.9] : FEATURE_COLORS.japa.stroke4}
               strokeWidth={isCurrent ? 1.6 : 0.8}
             />
             {/* Prismatic facet reflections */}
             <Path
               d={`M ${x - r * 0.42} ${y} L ${x} ${y - r * 0.42} L ${x + r * 0.42} ${y} L ${x} ${y + r * 0.42} Z`}
               fill="none"
-              stroke="#FFFFFF"
+              stroke={COLORS.onMediaWhite}
               strokeWidth={0.65}
               opacity={isDone || isCurrent ? 0.8 : 0.45}
             />
             {/* Specular pinpoint gleam */}
-            <Circle cx={x - r * 0.32} cy={y - r * 0.34} r={Math.max(1.0, r * 0.28)} fill="#FFFFFF" opacity={0.95} />
+            <Circle cx={x - r * 0.32} cy={y - r * 0.34} r={Math.max(1.0, r * 0.28)} fill={COLORS.onMediaWhite} opacity={0.95} />
             {/* Internal crystal refraction bounce */}
-            <Ellipse cx={x + r * 0.22} cy={y + r * 0.24} rx={r * 0.24} ry={r * 0.12} fill="#E0F2FE" opacity={0.55} />
+            <Ellipse cx={x + r * 0.22} cy={y + r * 0.24} rx={r * 0.24} ry={r * 0.12} fill={FEATURE_COLORS.japa.diamondGem} opacity={0.55} />
           </Fragment>
         );
       }
@@ -115,29 +115,29 @@ export function JapaBeadRing({
         return (
           <Fragment key={`bead-${index}`}>
             {isCurrent || isDone ? (
-              <Circle cx={x} cy={y} r={r + 2.2} fill="rgba(245,225,160,0.38)" />
+              <Circle cx={x} cy={y} r={r + 2.2} fill={FEATURE_COLORS.japa.fill4} />
             ) : null}
             {/* Ambient warm drop shadow */}
-            <Circle cx={x + r * 0.2} cy={y + r * 0.24} r={r} fill="rgba(69,26,3,0.55)" />
+            <Circle cx={x + r * 0.2} cy={y + r * 0.24} r={r} fill={FEATURE_COLORS.japa.fill5} />
             <Circle
               cx={x}
               cy={y}
               r={r}
               fill={`url(#${gradientId})`}
-              stroke={isCurrent ? '#F59E0B' : isDone ? '#D4AF37' : 'rgba(180,140,60,0.7)'}
+              stroke={isCurrent ? COLORS.warningDark : isDone ? COLORS.metallicGold : FEATURE_COLORS.japa.stroke5}
               strokeWidth={isCurrent ? 1.6 : 0.8}
             />
             {/* Sacred seed striation curve */}
             <Path
               d={`M ${x} ${y - r * 0.7} Q ${x + r * 0.35} ${y} ${x} ${y + r * 0.7}`}
               fill="none"
-              stroke="#D4AF37"
+              stroke={COLORS.metallicGold}
               strokeWidth={0.65}
               opacity={0.5}
             />
             {/* Specular glint */}
-            <Circle cx={x - r * 0.3} cy={y - r * 0.32} r={Math.max(1.0, r * 0.26)} fill="#FFFFFF" opacity={0.9} />
-            <Ellipse cx={x + r * 0.2} cy={y + r * 0.22} rx={r * 0.26} ry={r * 0.13} fill="#FEF08A" opacity={0.45} />
+            <Circle cx={x - r * 0.3} cy={y - r * 0.32} r={Math.max(1.0, r * 0.26)} fill={COLORS.onMediaWhite} opacity={0.9} />
+            <Ellipse cx={x + r * 0.2} cy={y + r * 0.22} rx={r * 0.26} ry={r * 0.13} fill={FEATURE_COLORS.japa.topazLight} opacity={0.45} />
           </Fragment>
         );
       }
@@ -153,13 +153,13 @@ export function JapaBeadRing({
               <Circle cx={x} cy={y} r={r + 2.4} fill={gem.light} opacity={0.36} />
             ) : null}
             {/* Deep drop shadow */}
-            <Circle cx={x + r * 0.2} cy={y + r * 0.24} r={r} fill="rgba(0,0,0,0.55)" />
+            <Circle cx={x + r * 0.2} cy={y + r * 0.24} r={r} fill={COLORS.deepModalScrim} />
             <Circle
               cx={x}
               cy={y}
               r={r}
               fill={`url(#${gradientId})`}
-              stroke={isCurrent ? '#FFFFFF' : '#FFD700'}
+              stroke={isCurrent ? COLORS.onMediaWhite : COLORS.radiantGold}
               strokeWidth={isCurrent ? 1.6 : 0.9}
               opacity={isDone || isCurrent ? 1 : 0.72}
             />
@@ -167,11 +167,11 @@ export function JapaBeadRing({
             <Path
               d={`M ${x - r * 0.42} ${y} L ${x} ${y - r * 0.42} L ${x + r * 0.42} ${y} L ${x} ${y + r * 0.42} Z`}
               fill="none"
-              stroke="rgba(255,255,255,0.75)"
+              stroke={COLORS.premiumGlassLight}
               strokeWidth={0.6}
               opacity={isDone || isCurrent ? 0.85 : 0.5}
             />
-            <Circle cx={x - r * 0.32} cy={y - r * 0.34} r={Math.max(1.0, r * 0.26)} fill="#FFFFFF" opacity={0.95} />
+            <Circle cx={x - r * 0.32} cy={y - r * 0.34} r={Math.max(1.0, r * 0.26)} fill={COLORS.onMediaWhite} opacity={0.95} />
           </Fragment>
         );
       }
@@ -189,7 +189,7 @@ export function JapaBeadRing({
             cx={x + r * 0.2}
             cy={y + r * 0.24}
             r={r}
-            fill="rgba(0,0,0,0.55)"
+            fill={COLORS.deepModalScrim}
             opacity={shadowOpacity}
           />
           <Circle
@@ -248,13 +248,13 @@ export function JapaBeadRing({
         <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="0.75" />
         <Stop offset="30%" stopColor={malaSkin.beadColor} stopOpacity="0.85" />
         <Stop offset="75%" stopColor={malaSkin.beadBorder} stopOpacity="0.95" />
-        <Stop offset="100%" stopColor="rgba(0,0,0,0.6)" stopOpacity="0.8" />
+        <Stop offset="100%" stopColor={OVERLAYS.black[0.6]} stopOpacity="0.8" />
       </RadialGradient>
       <RadialGradient id="grad-done" cx="30%" cy="26%" r="70%">
         <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="0.95" />
         <Stop offset="28%" stopColor={malaSkin.beadColor} stopOpacity="1" />
         <Stop offset="72%" stopColor={malaSkin.beadBorder} stopOpacity="1" />
-        <Stop offset="100%" stopColor="rgba(0,0,0,0.5)" stopOpacity="0.7" />
+        <Stop offset="100%" stopColor={OVERLAYS.black[0.5]} stopOpacity="0.7" />
       </RadialGradient>
       <RadialGradient id="grad-active" cx="30%" cy="26%" r="70%">
         <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="1" />
@@ -266,72 +266,72 @@ export function JapaBeadRing({
         <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="0.95" />
         <Stop offset="30%" stopColor={malaSkin.threadColor} stopOpacity="1" />
         <Stop offset="75%" stopColor={malaSkin.beadBorder} stopOpacity="1" />
-        <Stop offset="100%" stopColor="rgba(0,0,0,0.6)" stopOpacity="0.8" />
+        <Stop offset="100%" stopColor={OVERLAYS.black[0.6]} stopOpacity="0.8" />
       </RadialGradient>
 
       {/* Radiant Meru Crown 3D Gold */}
       <RadialGradient id="grad-meru-gold" cx="26%" cy="22%" r="80%">
-        <Stop offset="0%" stopColor="#FFFDF0" stopOpacity="1" />
-        <Stop offset="22%" stopColor="#FFE066" stopOpacity="1" />
-        <Stop offset="50%" stopColor="#F59E0B" stopOpacity="1" />
-        <Stop offset="82%" stopColor="#D97706" stopOpacity="1" />
-        <Stop offset="100%" stopColor="#78350F" stopOpacity="1" />
+        <Stop offset="0%" stopColor={FEATURE_COLORS.japa.gradMeruGoldStop0} stopOpacity="1" />
+        <Stop offset="22%" stopColor={FEATURE_COLORS.japa.gradMeruGoldStop22} stopOpacity="1" />
+        <Stop offset="50%" stopColor={COLORS.warningDark} stopOpacity="1" />
+        <Stop offset="82%" stopColor={COLORS.warningLight} stopOpacity="1" />
+        <Stop offset="100%" stopColor={FEATURE_COLORS.japa.hessoniteDark} stopOpacity="1" />
       </RadialGradient>
 
       {/* 3D Tactile Sphatik Crystal Gradients */}
       <RadialGradient id="grad-sphatik-inactive" cx="28%" cy="24%" r="72%">
-        <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.95" />
-        <Stop offset="24%" stopColor="#F0F9FF" stopOpacity="0.85" />
-        <Stop offset="60%" stopColor="#BAE6FD" stopOpacity="0.75" />
-        <Stop offset="85%" stopColor="#7DD3FC" stopOpacity="0.85" />
-        <Stop offset="100%" stopColor="#0369A1" stopOpacity="0.75" />
+        <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="0.95" />
+        <Stop offset="24%" stopColor={FEATURE_COLORS.japa.gradSphatikInactiveStop24} stopOpacity="0.85" />
+        <Stop offset="60%" stopColor={FEATURE_COLORS.japa.diamondRim} stopOpacity="0.75" />
+        <Stop offset="85%" stopColor={FEATURE_COLORS.japa.gradSphatikInactiveStop85} stopOpacity="0.85" />
+        <Stop offset="100%" stopColor={FEATURE_COLORS.japa.gradSphatikInactiveStop100} stopOpacity="0.75" />
       </RadialGradient>
       <RadialGradient id="grad-sphatik-done" cx="28%" cy="24%" r="72%">
-        <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="1" />
-        <Stop offset="22%" stopColor="#F0F9FF" stopOpacity="0.95" />
-        <Stop offset="55%" stopColor="#BAE6FD" stopOpacity="0.9" />
-        <Stop offset="82%" stopColor="#38BDF8" stopOpacity="0.95" />
-        <Stop offset="100%" stopColor="#0284C7" stopOpacity="1" />
+        <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="1" />
+        <Stop offset="22%" stopColor={FEATURE_COLORS.japa.gradSphatikInactiveStop24} stopOpacity="0.95" />
+        <Stop offset="55%" stopColor={FEATURE_COLORS.japa.diamondRim} stopOpacity="0.9" />
+        <Stop offset="82%" stopColor={FEATURE_COLORS.japa.stroke3} stopOpacity="0.95" />
+        <Stop offset="100%" stopColor={FEATURE_COLORS.japa.diamondDark} stopOpacity="1" />
       </RadialGradient>
       <RadialGradient id="grad-sphatik-active" cx="28%" cy="24%" r="72%">
-        <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="1" />
-        <Stop offset="20%" stopColor="#E0F2FE" stopOpacity="1" />
-        <Stop offset="52%" stopColor="#38BDF8" stopOpacity="1" />
-        <Stop offset="85%" stopColor="#0284C7" stopOpacity="1" />
-        <Stop offset="100%" stopColor="#075985" stopOpacity="1" />
+        <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="1" />
+        <Stop offset="20%" stopColor={FEATURE_COLORS.japa.diamondGem} stopOpacity="1" />
+        <Stop offset="52%" stopColor={FEATURE_COLORS.japa.stroke3} stopOpacity="1" />
+        <Stop offset="85%" stopColor={FEATURE_COLORS.japa.diamondDark} stopOpacity="1" />
+        <Stop offset="100%" stopColor={FEATURE_COLORS.japa.gradSphatikActiveStop100} stopOpacity="1" />
       </RadialGradient>
 
       {/* 3D Tactile Vaijayanti Seed Gradients */}
       <RadialGradient id="grad-vaijayanti-inactive" cx="30%" cy="26%" r="70%">
-        <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.9" />
-        <Stop offset="26%" stopColor="#FEF9C3" stopOpacity="0.9" />
-        <Stop offset="60%" stopColor="#FDE68A" stopOpacity="0.9" />
-        <Stop offset="85%" stopColor="#D4AF37" stopOpacity="0.95" />
-        <Stop offset="100%" stopColor="#78350F" stopOpacity="0.8" />
+        <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="0.9" />
+        <Stop offset="26%" stopColor={FEATURE_COLORS.japa.gradVaijayantiInactiveStop26} stopOpacity="0.9" />
+        <Stop offset="60%" stopColor={FEATURE_COLORS.japa.hessoniteLight} stopOpacity="0.9" />
+        <Stop offset="85%" stopColor={COLORS.metallicGold} stopOpacity="0.95" />
+        <Stop offset="100%" stopColor={FEATURE_COLORS.japa.hessoniteDark} stopOpacity="0.8" />
       </RadialGradient>
       <RadialGradient id="grad-vaijayanti-done" cx="30%" cy="26%" r="70%">
-        <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="1" />
-        <Stop offset="24%" stopColor="#FEF9C3" stopOpacity="1" />
-        <Stop offset="58%" stopColor="#FDE68A" stopOpacity="1" />
-        <Stop offset="84%" stopColor="#D4AF37" stopOpacity="1" />
-        <Stop offset="100%" stopColor="#92400E" stopOpacity="1" />
+        <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="1" />
+        <Stop offset="24%" stopColor={FEATURE_COLORS.japa.gradVaijayantiInactiveStop26} stopOpacity="1" />
+        <Stop offset="58%" stopColor={FEATURE_COLORS.japa.hessoniteLight} stopOpacity="1" />
+        <Stop offset="84%" stopColor={COLORS.metallicGold} stopOpacity="1" />
+        <Stop offset="100%" stopColor={FEATURE_COLORS.japa.gradVaijayantiDoneStop100} stopOpacity="1" />
       </RadialGradient>
       <RadialGradient id="grad-vaijayanti-active" cx="30%" cy="26%" r="70%">
-        <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="1" />
-        <Stop offset="22%" stopColor="#FEF08A" stopOpacity="1" />
-        <Stop offset="55%" stopColor="#F59E0B" stopOpacity="1" />
-        <Stop offset="85%" stopColor="#B45309" stopOpacity="1" />
-        <Stop offset="100%" stopColor="#78350F" stopOpacity="1" />
+        <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="1" />
+        <Stop offset="22%" stopColor={FEATURE_COLORS.japa.topazLight} stopOpacity="1" />
+        <Stop offset="55%" stopColor={COLORS.warningDark} stopOpacity="1" />
+        <Stop offset="85%" stopColor={FEATURE_COLORS.japa.topazDark} stopOpacity="1" />
+        <Stop offset="100%" stopColor={FEATURE_COLORS.japa.hessoniteDark} stopOpacity="1" />
       </RadialGradient>
 
       {/* 3D Tactile Navaratna 9-Gem Gradients */}
       {NAVARATNA_GEMS.map((gem, idx) => (
         <RadialGradient key={`grad-gem-${idx}`} id={`grad-gem-${idx}`} cx="28%" cy="24%" r="72%">
-          <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.95" />
+          <Stop offset="0%" stopColor={COLORS.onMediaWhite} stopOpacity="0.95" />
           <Stop offset="24%" stopColor={gem.light} stopOpacity="1" />
           <Stop offset="60%" stopColor={gem.color} stopOpacity="1" />
           <Stop offset="85%" stopColor={gem.dark} stopOpacity="1" />
-          <Stop offset="100%" stopColor="rgba(0,0,0,0.6)" stopOpacity="0.75" />
+          <Stop offset="100%" stopColor={OVERLAYS.black[0.6]} stopOpacity="0.75" />
         </RadialGradient>
       ))}
     </Defs>
@@ -376,14 +376,14 @@ export function JapaBeadRing({
               cy={PRACTICE_CENTER_Y + PRACTICE_RADIUS_Y + 12}
               r={7.5}
               fill="url(#grad-meru-gold)"
-              stroke="#FFD700"
+              stroke={COLORS.radiantGold}
               strokeWidth={1.2}
             />
             <Circle
               cx={PRACTICE_CENTER_X}
               cy={PRACTICE_CENTER_Y + PRACTICE_RADIUS_Y + 22}
               r={4.5}
-              fill="#D4AF37"
+              fill={COLORS.metallicGold}
             />
             {/* Sacred silk tassel strands */}
             <Line
@@ -445,8 +445,8 @@ export function JapaBeadRing({
         {!malaSkin.hasMeruCrown ? (
           <>
             {/* Where the hook comes out of the guru bead: a soft contact shadow on the hook and a small drilled hole in the bead's lower edge */}
-            <Ellipse cx={PRACTICE_CENTER_X} cy={guruBeadBottom + 1.5} rx={9} ry={3.4} fill="rgba(30,16,4,0.42)" />
-            <Ellipse cx={PRACTICE_CENTER_X} cy={guruBeadBottom - 2.4} rx={4.8} ry={1.7} fill="rgba(40,20,4,0.72)" />
+            <Ellipse cx={PRACTICE_CENTER_X} cy={guruBeadBottom + 1.5} rx={9} ry={3.4} fill={JAPA_COLORS.japaBeadRing.meruOuterGlow} />
+            <Ellipse cx={PRACTICE_CENTER_X} cy={guruBeadBottom - 2.4} rx={4.8} ry={1.7} fill={JAPA_COLORS.japaBeadRing.meruInnerGlow} />
           </>
         ) : null}
         {/* Radiant Golden Filigree Meru Crown Bead at Top Apex */}

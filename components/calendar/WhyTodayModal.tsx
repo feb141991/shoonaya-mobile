@@ -1,7 +1,7 @@
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 
-import { COLORS, FONTS } from '@/lib/constants';
+import { FEATURE_COLORS, OVERLAYS, COLORS, FONTS } from '@/lib/constants';
 
 // Mobile port of web's WhyTodayExplanationModal
 // (Sanatan Sangam/Shoonaya/src/components/calendar/WhyTodayExplanationModal.tsx).
@@ -59,8 +59,8 @@ function InfoCard({ children }: { children: React.ReactNode }) {
       style={{
         borderRadius: 14,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.10)',
-        backgroundColor: 'rgba(255,255,255,0.05)',
+        borderColor: OVERLAYS.white[0.1],
+        backgroundColor: OVERLAYS.white[0.05],
         padding: 12,
       }}
     >
@@ -87,9 +87,9 @@ export function WhyTodayModal({ visible, observance, onClose }: WhyTodayModalPro
             maxHeight: '82%',
             borderTopLeftRadius: 24,
             borderTopRightRadius: 24,
-            backgroundColor: '#0A0819',
+            backgroundColor: FEATURE_COLORS.whyTodayModal.sheetSurface,
             borderWidth: 1,
-            borderColor: 'rgba(255,255,255,0.10)',
+            borderColor: OVERLAYS.white[0.1],
             borderBottomWidth: 0,
           }}
         >
@@ -101,14 +101,14 @@ export function WhyTodayModal({ visible, observance, onClose }: WhyTodayModalPro
               gap: 12,
               padding: 18,
               borderBottomWidth: 1,
-              borderBottomColor: 'rgba(255,255,255,0.08)',
+              borderBottomColor: OVERLAYS.white[0.08],
             }}
           >
             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <View
                 style={{
                   width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center',
-                  backgroundColor: 'rgba(200,146,74,0.15)', borderWidth: 1, borderColor: 'rgba(200,146,74,0.3)',
+                  backgroundColor: FEATURE_COLORS.whyTodayModal.headerIconSurface, borderWidth: 1, borderColor: FEATURE_COLORS.whyTodayModal.headerIconBorder,
                 }}
               >
                 <Text style={{ fontSize: 18 }}>{observance.emoji}</Text>
@@ -117,7 +117,7 @@ export function WhyTodayModal({ visible, observance, onClose }: WhyTodayModalPro
                 <Text style={{ color: CREAM, fontFamily: FONTS.serifBold, fontSize: 17 }} numberOfLines={2}>
                   Why {observance.display_name} Today?
                 </Text>
-                <Text style={{ color: 'rgba(255,255,255,0.45)', fontFamily: FONTS.sans, fontSize: 11, marginTop: 2 }}>
+                <Text style={{ color: OVERLAYS.white[0.45], fontFamily: FONTS.sans, fontSize: 11, marginTop: 2 }}>
                   {observance.date}
                 </Text>
               </View>
@@ -129,10 +129,10 @@ export function WhyTodayModal({ visible, observance, onClose }: WhyTodayModalPro
               accessibilityRole="button"
               style={{
                 width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center',
-                backgroundColor: 'rgba(255,255,255,0.08)',
+                backgroundColor: OVERLAYS.white[0.08],
               }}
             >
-              <Feather name="x" size={14} color="rgba(255,255,255,0.7)" />
+              <Feather name="x" size={14} color={OVERLAYS.white[0.7]} />
             </Pressable>
           </View>
 
@@ -140,7 +140,7 @@ export function WhyTodayModal({ visible, observance, onClose }: WhyTodayModalPro
             {observance.description ? (
               <Text
                 style={{
-                  color: 'rgba(255,255,255,0.6)', fontFamily: FONTS.sans, fontSize: 12, lineHeight: 18, fontStyle: 'italic',
+                  color: OVERLAYS.white[0.6], fontFamily: FONTS.sans, fontSize: 12, lineHeight: 18, fontStyle: 'italic',
                   borderLeftWidth: 2, borderLeftColor: GOLD, paddingLeft: 10,
                 }}
               >
@@ -151,12 +151,12 @@ export function WhyTodayModal({ visible, observance, onClose }: WhyTodayModalPro
             <View
               style={{
                 flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14, borderWidth: 1,
-                backgroundColor: isUnderReview ? 'rgba(245,158,11,0.10)' : 'rgba(16,185,129,0.10)',
-                borderColor: isUnderReview ? 'rgba(245,158,11,0.3)' : 'rgba(16,185,129,0.3)',
+                backgroundColor: isUnderReview ? FEATURE_COLORS.whyTodayModal.reviewSurface : FEATURE_COLORS.whyTodayModal.publishedSurface,
+                borderColor: isUnderReview ? FEATURE_COLORS.whyTodayModal.reviewBorder : FEATURE_COLORS.whyTodayModal.publishedBorder,
               }}
             >
-              <Feather name={isUnderReview ? 'alert-triangle' : 'shield'} size={16} color={isUnderReview ? '#F59E0B' : '#10B981'} />
-              <Text style={{ flex: 1, color: isUnderReview ? '#FCD34D' : '#6EE7B7', fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
+              <Feather name={isUnderReview ? 'alert-triangle' : 'shield'} size={16} color={isUnderReview ? COLORS.warningDark : FEATURE_COLORS.whyTodayModal.publishedIcon} />
+              <Text style={{ flex: 1, color: isUnderReview ? FEATURE_COLORS.whyTodayModal.reviewText : FEATURE_COLORS.whyTodayModal.publishedText, fontFamily: FONTS.sansSemiBold, fontSize: 12 }}>
                 {isUnderReview ? 'Date under review — see alternatives below' : 'Published calendar result'}
               </Text>
             </View>
@@ -169,8 +169,8 @@ export function WhyTodayModal({ visible, observance, onClose }: WhyTodayModalPro
                     {observance.monthLabel.formattedLabel}
                   </Text>
                   {observance.monthLabel.isDivergentFromRuleDefault ? (
-                    <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999, backgroundColor: 'rgba(59,130,246,0.15)' }}>
-                      <Text style={{ color: '#93C5FD', fontFamily: FONTS.sansSemiBold, fontSize: 9 }}>Profile Convention</Text>
+                    <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999, backgroundColor: FEATURE_COLORS.whyTodayModal.conventionSurface }}>
+                      <Text style={{ color: FEATURE_COLORS.whyTodayModal.conventionText, fontFamily: FONTS.sansSemiBold, fontSize: 9 }}>Profile Convention</Text>
                     </View>
                   ) : null}
                 </View>
@@ -183,7 +183,7 @@ export function WhyTodayModal({ visible, observance, onClose }: WhyTodayModalPro
                   {reasons.map((r, i) => (
                     <InfoCard key={i}>
                       <Text style={{ color: CREAM, fontFamily: FONTS.sansSemiBold, fontSize: 12, marginBottom: 2 }}>{r.label}</Text>
-                      <Text style={{ color: 'rgba(255,255,255,0.55)', fontFamily: FONTS.sans, fontSize: 11, lineHeight: 16 }}>
+                      <Text style={{ color: OVERLAYS.white[0.55], fontFamily: FONTS.sans, fontSize: 11, lineHeight: 16 }}>
                         {r.description}
                       </Text>
                     </InfoCard>
@@ -197,7 +197,7 @@ export function WhyTodayModal({ visible, observance, onClose }: WhyTodayModalPro
                 <View style={{ gap: 8 }}>
                   {diagnostics.map((d, i) => (
                     <InfoCard key={i}>
-                      <Text style={{ color: '#FCD34D', fontFamily: FONTS.sans, fontSize: 11, lineHeight: 16 }}>{d}</Text>
+                      <Text style={{ color: FEATURE_COLORS.whyTodayModal.reviewText, fontFamily: FONTS.sans, fontSize: 11, lineHeight: 16 }}>{d}</Text>
                     </InfoCard>
                   ))}
                 </View>
@@ -218,7 +218,7 @@ export function WhyTodayModal({ visible, observance, onClose }: WhyTodayModalPro
                         ) : null}
                       </View>
                       {alt.note ? (
-                        <Text style={{ color: 'rgba(255,255,255,0.5)', fontFamily: FONTS.sans, fontSize: 11, marginTop: 3 }}>
+                        <Text style={{ color: OVERLAYS.white[0.5], fontFamily: FONTS.sans, fontSize: 11, marginTop: 3 }}>
                           {alt.note}
                         </Text>
                       ) : null}
@@ -238,7 +238,7 @@ export function WhyTodayModal({ visible, observance, onClose }: WhyTodayModalPro
                         <Text style={{ color: GOLD, fontFamily: FONTS.sansSemiBold, fontSize: 10, marginTop: 2 }}>{s.tier}</Text>
                       ) : null}
                       {s.citation ? (
-                        <Text style={{ color: 'rgba(255,255,255,0.5)', fontFamily: FONTS.sans, fontSize: 11, fontStyle: 'italic', marginTop: 2 }}>
+                        <Text style={{ color: OVERLAYS.white[0.5], fontFamily: FONTS.sans, fontSize: 11, fontStyle: 'italic', marginTop: 2 }}>
                           Citation: {s.citation}
                         </Text>
                       ) : null}

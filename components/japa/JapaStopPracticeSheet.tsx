@@ -1,7 +1,7 @@
 import { Modal, Pressable, Text, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 
-import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE } from '@/lib/constants';
+import { OVERLAYS, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE } from '@/lib/constants';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 
 type Theme = {
@@ -57,7 +57,7 @@ export function JapaStopPracticeSheet({
               accessibilityLabel="Continue practice"
               onPress={onClose}
               hitSlop={10}
-              style={{ width: 32, height: 32, minHeight: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' }}
+              style={{ width: 32, height: 32, minHeight: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: isDark ? OVERLAYS.white[0.05] : OVERLAYS.black[0.04] }}
             >
               <Feather name="x" size={16} color={dim} />
             </PressableSurface> : null}
@@ -87,7 +87,7 @@ export function JapaStopPracticeSheet({
           {!saving && !saveFailed ? <PressableSurface
             haptic="selection"
             onPress={onClose}
-            style={{ borderRadius: 999, minHeight: MIN_TOUCH_TARGET, borderWidth: 1, borderColor: theme.premiumBorder, backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', alignItems: 'center', justifyContent: 'center' }}
+            style={{ borderRadius: 999, minHeight: MIN_TOUCH_TARGET, borderWidth: 1, borderColor: theme.premiumBorder, backgroundColor: isDark ? OVERLAYS.white[0.05] : OVERLAYS.black[0.04], alignItems: 'center', justifyContent: 'center' }}
           >
             <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 14, color: theme.brand }}>Continue practice</Text>
           </PressableSurface> : null}

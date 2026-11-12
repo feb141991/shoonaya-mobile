@@ -94,6 +94,11 @@ describe('the guest feed is read-only and holds nothing', () => {
     assert.match(component, /describeFailure\(failure,/);
   });
 
+  it('keeps the sign-in path available while the public route returns 404', () => {
+    assert.match(component, /failure instanceof ApiRequestError && failure\.status === 404[\s\S]*?setFeedUnavailable\(true\)/);
+    assert.match(component, /if \(feedUnavailable\)[\s\S]*?title="Join Mandali"[\s\S]*?onCta=\{onSignIn\}/);
+  });
+
   it('the Mandali screen shows the guest feed to a signed-out person, not the old sign-in wall', () => {
     const screen = read('app/(tabs)/mandali.tsx');
     assert.match(screen, /if \(isGuest\) \{[\s\S]*?<GuestMandaliFeed/);

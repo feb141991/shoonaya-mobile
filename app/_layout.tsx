@@ -2,7 +2,6 @@ import 'react-native-url-polyfill/auto';
 import 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import '../global.css';
-
 import { useEffect, useState, useCallback, useRef, useSyncExternalStore } from 'react';
 import { Alert, AppState, LogBox, Platform, Settings, View } from 'react-native';
 
@@ -48,6 +47,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { RouteTransition } from '@/components/ui/Motion';
 import { ContextualStartupScene } from '@/components/startup/ContextualStartupScene';
+import { FEATURE_COLORS } from '@/lib/constants';
 import { selectStartupScene } from '@/lib/startup-scenes/selector';
 import {
   getStartupPreferences,
@@ -1284,11 +1284,11 @@ function RootLayout() {
   return (
     <AppProviders>
       <StatusBar style={showStartupScene ? "light" : "dark"} />
-      <View style={{ flex: 1, backgroundColor: '#FDF6E3' }}>
+      <View style={{ flex: 1, backgroundColor: FEATURE_COLORS.startup.splashSurface }}>
         {showStartupFallback ? (
           <View
             testID="startup-opaque-fallback"
-            style={[StyleSheet.absoluteFill, { backgroundColor: '#FDF6E3' }]}
+            style={[StyleSheet.absoluteFill, { backgroundColor: FEATURE_COLORS.startup.splashSurface }]}
           />
         ) : null}
         <RouteTransition>
@@ -1316,7 +1316,7 @@ function RootLayout() {
           <View
             style={[
               StyleSheet.absoluteFill,
-              { backgroundColor: '#FDF6E3', zIndex: 10000, justifyContent: 'center' },
+              { backgroundColor: FEATURE_COLORS.startup.splashSurface, zIndex: 10000, justifyContent: 'center' },
             ]}
           >
             <EmptyState

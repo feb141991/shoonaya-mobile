@@ -17,7 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/ui/Button';
 import { MotionView } from '@/components/ui/Motion';
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, themeColor } from '@/lib/constants';
 
 import {
   type FounderTradition,
@@ -224,8 +224,8 @@ export function FounderNoteInterlude({
         pointerEvents="none"
         colors={
           isDark
-            ? ['rgba(17,14,12,0.52)', 'rgba(17,14,12,0.74)', 'rgba(17,14,12,0.88)']
-            : ['rgba(255,252,245,0.04)', 'rgba(255,252,245,0.12)', 'rgba(250,246,239,0.24)']
+            ? [FEATURE_COLORS.founderNoteInterlude.gradientDarkStart, FEATURE_COLORS.founderNoteInterlude.gradientDarkMiddle, FEATURE_COLORS.founderNoteInterlude.gradientDarkEnd]
+            : [FEATURE_COLORS.founderNoteInterlude.gradientLightStart, FEATURE_COLORS.founderNoteInterlude.gradientLightMiddle, FEATURE_COLORS.founderNoteInterlude.gradientLightEnd]
         }
         locations={[0, 0.54, 1]}
         style={StyleSheet.absoluteFill}
@@ -285,7 +285,7 @@ export function FounderNoteInterlude({
                   {
                     maxWidth: cardMaxWidth,
                     marginTop: compact ? 18 : 30,
-                    backgroundColor: isDark ? 'rgba(35,29,24,0.94)' : 'rgba(255,252,246,0.94)',
+                    backgroundColor: isDark ? FEATURE_COLORS.founderNoteInterlude.quoteSurfaceDark : FEATURE_COLORS.founderNoteInterlude.quoteSurfaceLight,
                     borderColor: theme.premiumBorder,
                     boxShadow: isDark ? SHADOWS.lg.dark : SHADOWS.lg.light,
                   },
@@ -384,7 +384,7 @@ export function FounderNoteInterlude({
                   styles.readerPaper,
                   {
                     maxWidth: cardMaxWidth,
-                    backgroundColor: isDark ? 'rgba(35,29,24,0.96)' : 'rgba(255,252,246,0.96)',
+                    backgroundColor: isDark ? FEATURE_COLORS.founderNoteInterlude.letterSurfaceDark : FEATURE_COLORS.founderNoteInterlude.letterSurfaceLight,
                     borderColor: theme.premiumBorder,
                     boxShadow: isDark ? SHADOWS.lg.dark : SHADOWS.lg.light,
                   },

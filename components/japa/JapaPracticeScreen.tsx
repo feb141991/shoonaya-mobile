@@ -9,7 +9,7 @@ import { JapaBeadRing } from '@/components/japa/JapaBeadRing';
 import { JapaHandsFreeControls } from '@/components/japa/JapaHandsFreeControls';
 import { SceneBackdrop, StaticSceneBackdrop } from '@/components/japa/JapaSceneMotion';
 import { SceneImagePlate, SceneReadabilityWash, type JapaSceneId } from '@/components/japa/JapaSceneSurfaces';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, OVERLAYS, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import type { MalaSkin } from '@/lib/mala-skins';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import type { JapaSoundTrack } from '@/lib/japa-audio';
@@ -125,8 +125,8 @@ export function JapaPracticeScreen({
           pointerEvents="none"
           colors={
             isDark
-              ? ['rgba(0,0,0,0.18)', 'rgba(0,0,0,0.06)', 'rgba(0,0,0,0.26)']
-              : ['rgba(255,253,248,0.34)', 'rgba(255,253,248,0.12)', 'rgba(45,31,14,0.12)']
+              ? [OVERLAYS.black[0.18], OVERLAYS.black[0.06], OVERLAYS.black[0.26]]
+              : [FEATURE_COLORS.japa.gradientLightStart2, FEATURE_COLORS.japa.surfaceLight, FEATURE_COLORS.japa.surfaceLight2]
           }
           style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
         />
@@ -189,7 +189,7 @@ export function JapaPracticeScreen({
             borderRadius: 20,
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: isDark ? 'rgba(8,6,4,0.50)' : 'rgba(255,253,248,0.65)',
+            backgroundColor: isDark ? FEATURE_COLORS.japa.pressableSurfaceDark : FEATURE_COLORS.japa.pressableSurfaceLight,
             borderWidth: 1,
             borderColor: `${theme.brand}30`,
           }}
@@ -213,7 +213,7 @@ export function JapaPracticeScreen({
             borderRadius: 20,
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: isDark ? 'rgba(8,6,4,0.36)' : 'rgba(255,253,248,0.42)',
+            backgroundColor: isDark ? FEATURE_COLORS.japa.pressableSurfaceDark2 : FEATURE_COLORS.japa.pressableSurfaceLight2,
             borderWidth: 1,
             borderColor: `${theme.brand}28`,
           }}
@@ -279,8 +279,8 @@ export function JapaPracticeScreen({
               style={{
                 borderRadius: 24,
                 borderWidth: 1,
-                borderColor: isDark ? 'rgba(216,138,28,0.58)' : 'rgba(216,138,28,0.46)',
-                backgroundColor: isDark ? 'rgba(8,6,4,0.68)' : 'rgba(255,253,248,0.82)',
+                borderColor: isDark ? OVERLAYS.amber[0.58] : OVERLAYS.amber[0.46],
+                backgroundColor: isDark ? FEATURE_COLORS.japa.surfaceDark2 : FEATURE_COLORS.japa.surfaceLight3,
                 paddingHorizontal: 18,
                 paddingVertical: 14,
                 alignItems: 'center',
@@ -322,7 +322,7 @@ export function JapaPracticeScreen({
             paddingVertical: 10,
             minHeight: MIN_TOUCH_TARGET,
             borderRadius: 999,
-            backgroundColor: isDark ? 'rgba(8,6,4,0.72)' : 'rgba(255,253,248,0.92)',
+            backgroundColor: isDark ? FEATURE_COLORS.japa.pressableSurfaceDark3 : FEATURE_COLORS.japa.pressableSurfaceLight3,
             borderWidth: 1,
             borderColor: selectedSoundId !== 'off' ? theme.brand : `${theme.brand}35`,
             boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,

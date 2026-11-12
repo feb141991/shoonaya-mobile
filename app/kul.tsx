@@ -1563,7 +1563,7 @@ export default function KulScreen() {
             <Pressable
               style={{
                 flex: 1,
-                backgroundColor: "#0C0A07BB",
+                backgroundColor: COLORS.familyModalScrim,
                 justifyContent: "flex-end",
               }}
               onPress={() => setShowFamilyForm(false)}
@@ -1691,7 +1691,7 @@ export default function KulScreen() {
             <Pressable
               style={{
                 flex: 1,
-                backgroundColor: "#0C0A07BB",
+                backgroundColor: COLORS.familyModalScrim,
                 justifyContent: "flex-end",
               }}
               onPress={() => setShowLineageForm(false)}
@@ -2075,9 +2075,9 @@ export default function KulScreen() {
                         disabled={working || !editedKulName.trim()}
                       >
                         {working ? (
-                          <ActivityIndicator size="small" color="#fff" />
+                          <ActivityIndicator size="small" color={COLORS.onMediaWhite} />
                         ) : (
-                          <Feather name="check" size={16} color="#fff" />
+                          <Feather name="check" size={16} color={COLORS.onMediaWhite} />
                         )}
                       </PressableSurface>
                       <PressableSurface
@@ -2225,7 +2225,7 @@ export default function KulScreen() {
                       <Feather
                         name={section.icon}
                         size={14}
-                        color={selected ? "#FFFFFF" : theme.dim}
+                        color={selected ? COLORS.onMediaWhite : theme.dim}
                       />
                     </View>
                     <Text
@@ -3458,7 +3458,7 @@ export default function KulScreen() {
                 borderWidth: 1,
                 padding: 22,
                 gap: 12,
-                shadowColor: "#000",
+                shadowColor: COLORS.black,
                 shadowOpacity: 0.25,
                 shadowRadius: 16,
                 elevation: 8,

@@ -14,7 +14,7 @@ import {
 import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
 
-import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { DatePickerField } from '@/components/ui/DatePickerField';
 import type { SanskaraRecord } from '@/lib/sanskara';
@@ -187,7 +187,7 @@ export function SanskaraNodeSheet({
                   style={[
                     styles.statusBadge,
                     {
-                      backgroundColor: isCompleted ? 'rgba(76, 175, 80, 0.12)' : theme.brandSoft,
+                      backgroundColor: isCompleted ? COLORS.sanskaraCompletedBg : theme.brandSoft,
                       borderColor: isCompleted ? COLORS.success : theme.borderSoft,
                     },
                   ]}
@@ -437,7 +437,7 @@ export function SanskaraNodeSheet({
               <PressableSurface
                 onPress={handleDelete}
                 disabled={deleting}
-                style={[styles.deleteButton, { backgroundColor: isDark ? 'rgba(239, 83, 80, 0.12)' : 'rgba(211, 47, 47, 0.08)' }]}
+                style={[styles.deleteButton, { backgroundColor: isDark ? FEATURE_COLORS.sanskaraNodeSheet.pressableSurfaceDark : FEATURE_COLORS.sanskaraNodeSheet.pressableSurfaceLight }]}
               >
                 {deleting ? (
                   <ActivityIndicator size="small" color={COLORS.danger} />
@@ -459,7 +459,7 @@ export function SanskaraNodeSheet({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    backgroundColor: COLORS.deepModalScrim,
     justifyContent: 'flex-end',
   },
   sheetContainer: {

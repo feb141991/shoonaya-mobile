@@ -28,7 +28,7 @@ import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { DatePickerField } from '@/components/ui/DatePickerField';
 import { formatLocalDateOnly } from '@/lib/dateOnly';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, TRADITION_ACCENT, themeColor } from '@/lib/constants';
+import { OVERLAYS, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, TRADITION_ACCENT, themeColor } from '@/lib/constants';
 import { apiFetch } from '@/lib/api';
 import { AI_CHAT_TIMEOUT_MS } from '@/lib/api-policy';
 import { isFetchCancelled } from '@/lib/fetch-error';
@@ -1290,7 +1290,7 @@ export default function OnboardingScreen() {
                           alignItems: 'center',
                           justifyContent: 'center',
                           backgroundColor: isSelected
-                            ? (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)')
+                            ? (isDark ? OVERLAYS.white[0.08] : OVERLAYS.black[0.04])
                             : wellBg,
                         }}
                       >
@@ -1331,7 +1331,7 @@ export default function OnboardingScreen() {
                           borderColor: border,
                         }}
                       >
-                        {isSelected ? <Feather name="check" size={13} color="#FFFFFF" /> : null}
+                        {isSelected ? <Feather name="check" size={13} color={COLORS.onMediaWhite} /> : null}
                       </View>
                     </PressableSurface>
                   );

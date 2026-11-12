@@ -19,7 +19,7 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 import { YatraCircuit, TempleSanctumNode } from '@/lib/yatra-data';
 import { computeYatraLayout, LayoutYatraNode, LayoutYatraEdge } from '@/lib/yatraLayout';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, OVERLAYS, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, themeColor } from '@/lib/constants';
 
 interface YatraGraphCanvasProps {
   yatra: YatraCircuit;
@@ -132,8 +132,8 @@ export function YatraGraphCanvas({
             >
               <Defs>
                 <LinearGradient id="yatraGradient" x1="0" y1="0" x2="0" y2="1">
-                  <Stop offset="0" stopColor={isDark ? '#D97706' : '#B45309'} stopOpacity="0.85" />
-                  <Stop offset="1" stopColor={isDark ? '#F59E0B' : '#D97706'} stopOpacity="0.45" />
+                  <Stop offset="0" stopColor={isDark ? COLORS.warningLight : FEATURE_COLORS.yatraGraphCanvas.yatraGradientStopLight0} stopOpacity="0.85" />
+                  <Stop offset="1" stopColor={isDark ? COLORS.warningDark : COLORS.warningLight} stopOpacity="0.45" />
                 </LinearGradient>
               </Defs>
 
@@ -143,7 +143,7 @@ export function YatraGraphCanvas({
                   <Path
                     d={edge.pathD}
                     fill="none"
-                    stroke={isDark ? 'rgba(217, 119, 6, 0.28)' : 'rgba(180, 83, 9, 0.2)'}
+                    stroke={isDark ? FEATURE_COLORS.yatraGraphCanvas.strokeDark : FEATURE_COLORS.yatraGraphCanvas.strokeLight}
                     strokeWidth={6.5}
                     strokeLinecap="round"
                   />
@@ -172,15 +172,15 @@ export function YatraGraphCanvas({
                     {
                       left: edge.labelX - 44,
                       top: edge.labelY,
-                      backgroundColor: isDark ? '#1F2937' : '#FEF3C7',
-                      borderColor: isDark ? '#374151' : '#FDE68A',
+                      backgroundColor: isDark ? FEATURE_COLORS.yatraGraphCanvas.surfaceDark : FEATURE_COLORS.yatraGraphCanvas.surfaceLight,
+                      borderColor: isDark ? FEATURE_COLORS.yatraGraphCanvas.borderDark : FEATURE_COLORS.yatraGraphCanvas.borderLight,
                     },
                   ]}
                 >
                   <Text
                     style={[
                       styles.edgeLabelText,
-                      { color: isDark ? '#FDE68A' : '#92400E' },
+                      { color: isDark ? FEATURE_COLORS.yatraGraphCanvas.borderLight : FEATURE_COLORS.yatraGraphCanvas.textLight },
                     ]}
                     numberOfLines={1}
                   >
@@ -207,13 +207,13 @@ export function YatraGraphCanvas({
                       top,
                       width: node.width,
                       height: node.height,
-                      backgroundColor: isDark ? '#111827' : '#FFFFFF',
+                      backgroundColor: isDark ? FEATURE_COLORS.yatraGraphCanvas.surfaceDark2 : COLORS.onMediaWhite,
                       borderColor: isSelected
                         ? COLORS.brandGold
                         : isDark
-                        ? '#374151'
-                        : '#E5E7EB',
-                      shadowColor: isSelected ? COLORS.brandGold : '#000',
+                        ? FEATURE_COLORS.yatraGraphCanvas.borderDark
+                        : FEATURE_COLORS.yatraGraphCanvas.borderLight2,
+                      shadowColor: isSelected ? COLORS.brandGold : COLORS.black,
                       shadowOpacity: isSelected ? 0.38 : 0.09,
                       shadowRadius: isSelected ? 12 : 4,
                     },
@@ -229,8 +229,8 @@ export function YatraGraphCanvas({
                     style={[
                       styles.nodeAvatar,
                       {
-                        backgroundColor: isDark ? 'rgba(217, 119, 6, 0.16)' : '#FEF3C7',
-                        borderColor: isDark ? 'rgba(217, 119, 6, 0.3)' : '#FDE68A',
+                        backgroundColor: isDark ? FEATURE_COLORS.yatraGraphCanvas.surfaceDark3 : FEATURE_COLORS.yatraGraphCanvas.surfaceLight,
+                        borderColor: isDark ? FEATURE_COLORS.yatraGraphCanvas.borderDark2 : FEATURE_COLORS.yatraGraphCanvas.borderLight,
                       },
                     ]}
                   >
@@ -274,7 +274,7 @@ export function YatraGraphCanvas({
         style={[
           styles.zoomControlsHud,
           {
-            backgroundColor: isDark ? 'rgba(17, 24, 39, 0.88)' : 'rgba(255, 255, 255, 0.92)',
+            backgroundColor: isDark ? FEATURE_COLORS.yatraGraphCanvas.surfaceDark4 : OVERLAYS.white[0.92],
             borderColor: theme.borderSoft,
           },
         ]}

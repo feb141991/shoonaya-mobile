@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Card } from '@/components/ui/Card';
-import { COLORS, FONTS, TYPE, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, COLORS, FONTS, TYPE, themeColor } from '@/lib/constants';
 import {
   AstroChart,
   CANONICAL_GRAHA_ORDER,
@@ -29,31 +29,31 @@ const GRAHA_DISPLAY: Record<string, { en: string; symbol: string }> = {
 const DIGNITY_LABELS: Record<string, { label: string; bgLight: string; textLight: string; bgDark: string; textDark: string }> = {
   exalted: {
     label: 'Exalted (Uccha)',
-    bgLight: 'rgba(16, 185, 129, 0.15)',
-    textLight: '#047857',
-    bgDark: 'rgba(16, 185, 129, 0.25)',
-    textDark: '#34D399',
+    bgLight: FEATURE_COLORS.planetaryPositions.exaltedBgLight,
+    textLight: FEATURE_COLORS.planetaryPositions.exaltedTextLight,
+    bgDark: FEATURE_COLORS.planetaryPositions.exaltedBgDark,
+    textDark: FEATURE_COLORS.planetaryPositions.exaltedTextDark,
   },
   debilitated: {
     label: 'Debilitated (Neecha)',
-    bgLight: 'rgba(239, 68, 68, 0.15)',
-    textLight: '#B91C1C',
-    bgDark: 'rgba(239, 68, 68, 0.25)',
-    textDark: '#F87171',
+    bgLight: FEATURE_COLORS.planetaryPositions.debilitatedBgLight,
+    textLight: FEATURE_COLORS.planetaryPositions.debilitatedTextLight,
+    bgDark: FEATURE_COLORS.planetaryPositions.debilitatedBgDark,
+    textDark: FEATURE_COLORS.planetaryPositions.debilitatedTextDark,
   },
   own: {
     label: 'Own Sign (Swakshetra)',
-    bgLight: 'rgba(59, 130, 246, 0.15)',
-    textLight: '#1D4ED8',
-    bgDark: 'rgba(59, 130, 246, 0.25)',
-    textDark: '#60A5FA',
+    bgLight: FEATURE_COLORS.planetaryPositions.ownBgLight,
+    textLight: FEATURE_COLORS.planetaryPositions.ownTextLight,
+    bgDark: FEATURE_COLORS.planetaryPositions.ownBgDark,
+    textDark: FEATURE_COLORS.planetaryPositions.ownTextDark,
   },
   neutral: {
     label: 'Neutral',
-    bgLight: 'rgba(156, 163, 175, 0.15)',
-    textLight: '#4B5563',
-    bgDark: 'rgba(156, 163, 175, 0.25)',
-    textDark: '#9CA3AF',
+    bgLight: FEATURE_COLORS.planetaryPositions.neutralBgLight,
+    textLight: FEATURE_COLORS.planetaryPositions.neutralTextLight,
+    bgDark: FEATURE_COLORS.planetaryPositions.neutralBgDark,
+    textDark: FEATURE_COLORS.planetaryPositions.neutralTextDark,
   },
 };
 
@@ -135,12 +135,12 @@ export function PlanetaryPositions({ chart, isDark }: PlanetaryPositionsProps) {
                     style={[
                       styles.statusChip,
                       {
-                        backgroundColor: isDark ? 'rgba(245, 158, 11, 0.25)' : 'rgba(254, 243, 199, 1)',
-                        borderColor: isDark ? 'rgba(245, 158, 11, 0.5)' : 'rgba(245, 158, 11, 0.6)',
+                        backgroundColor: isDark ? FEATURE_COLORS.planetaryPositions.surfaceDark : FEATURE_COLORS.planetaryPositions.surfaceLight,
+                        borderColor: isDark ? FEATURE_COLORS.planetaryPositions.borderDark : FEATURE_COLORS.planetaryPositions.borderLight,
                       },
                     ]}
                   >
-                    <Text style={[styles.statusText, { color: isDark ? '#FBBF24' : '#B45309' }]}>
+                    <Text style={[styles.statusText, { color: isDark ? FEATURE_COLORS.planetaryPositions.statusTextDark : FEATURE_COLORS.planetaryPositions.statusTextLight }]}>
                       Retrograde (R)
                     </Text>
                   </View>
@@ -152,12 +152,12 @@ export function PlanetaryPositions({ chart, isDark }: PlanetaryPositionsProps) {
                     style={[
                       styles.statusChip,
                       {
-                        backgroundColor: isDark ? 'rgba(239, 68, 68, 0.2)' : 'rgba(254, 226, 226, 1)',
-                        borderColor: isDark ? 'rgba(239, 68, 68, 0.4)' : 'rgba(239, 68, 68, 0.5)',
+                        backgroundColor: isDark ? FEATURE_COLORS.planetaryPositions.surfaceDark2 : FEATURE_COLORS.planetaryPositions.surfaceLight2,
+                        borderColor: isDark ? FEATURE_COLORS.planetaryPositions.borderDark2 : FEATURE_COLORS.planetaryPositions.borderLight2,
                       },
                     ]}
                   >
-                    <Text style={[styles.statusText, { color: isDark ? '#F87171' : '#B91C1C' }]}>
+                    <Text style={[styles.statusText, { color: isDark ? FEATURE_COLORS.planetaryPositions.debilitatedTextDark : FEATURE_COLORS.planetaryPositions.debilitatedTextLight }]}>
                       Combust (C)
                     </Text>
                   </View>

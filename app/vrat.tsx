@@ -15,7 +15,7 @@ import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS, TYPE, RADII, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, COLORS, FONTS, TYPE, RADII, themeColor } from '@/lib/constants';
 import { VRAT_DATABASE, lookupVratData, resolveVratSlug, type VratData } from '@/lib/vrat-data';
 import type { ClientObservanceResult } from '@/lib/calendar-contract';
 import { supabase } from '@/lib/supabase';
@@ -531,7 +531,7 @@ export default function VratScreen() {
                   alignItems: 'center',
                 }}
               >
-                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: '#1c1208' }}>{copy.setCalendarProfile}</Text>
+                <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 13, color: COLORS.goldButtonInk }}>{copy.setCalendarProfile}</Text>
               </PressableSurface>
               <Pressable
                 onPress={handleDismissPrompt}
@@ -571,8 +571,8 @@ export default function VratScreen() {
                       ? (todayVratOccurrence.vratData.nameLocal || todayVratOccurrence.vratData.name)
                       : todayVratOccurrence.vratData.name}
                   </Text>
-                  <View style={{ backgroundColor: 'rgba(134,187,110,0.2)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
-                    <Text style={{ fontSize: 10, color: '#5aaa38', fontFamily: FONTS.sansSemiBold }}>{copy.canonicalToday}</Text>
+                  <View style={{ backgroundColor: FEATURE_COLORS.vrat.surface, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                    <Text style={{ fontSize: 10, color: COLORS.success, fontFamily: FONTS.sansSemiBold }}>{copy.canonicalToday}</Text>
                   </View>
                 </View>
                 <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 2 }}>

@@ -1,3 +1,4 @@
+import { FEATURE_COLORS } from '@/lib/constants';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, Easing, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Svg, { Ellipse, Path } from 'react-native-svg';
@@ -25,13 +26,13 @@ type FlowerShowerOverlayProps = {
 };
 
 const PETAL_TYPES: { type: FlowerPetalType; color: string }[] = [
-  { type: 'marigold', color: '#F39C12' },
-  { type: 'marigold', color: '#E67E22' },
-  { type: 'rose', color: '#C0392B' },
-  { type: 'rose', color: '#E74C3C' },
-  { type: 'lotus', color: '#F48FB1' },
-  { type: 'bilva', color: '#27AE60' },
-  { type: 'jasmine', color: '#FFF9E6' },
+  { type: 'marigold', color: FEATURE_COLORS.flowerShowerOverlay.marigoldGold },
+  { type: 'marigold', color: FEATURE_COLORS.flowerShowerOverlay.marigoldOrange },
+  { type: 'rose', color: FEATURE_COLORS.flowerShowerOverlay.roseCrimson },
+  { type: 'rose', color: FEATURE_COLORS.flowerShowerOverlay.roseRed },
+  { type: 'lotus', color: FEATURE_COLORS.flowerShowerOverlay.lotusPink },
+  { type: 'bilva', color: FEATURE_COLORS.flowerShowerOverlay.bilvaGreen },
+  { type: 'jasmine', color: FEATURE_COLORS.flowerShowerOverlay.jasmineIvory },
 ];
 
 function buildPetals(count: number): FlowerParticle[] {
@@ -113,7 +114,7 @@ function PetalShape({ type, color, size }: { type: FlowerPetalType; color: strin
         <Ellipse cx="10" cy="15" rx="2.5" ry="5" fill={color} opacity={0.95} />
         <Ellipse cx="5" cy="10" rx="5" ry="2.5" fill={color} opacity={0.95} />
         <Ellipse cx="15" cy="10" rx="5" ry="2.5" fill={color} opacity={0.95} />
-        <Ellipse cx="10" cy="10" rx="2.5" ry="2.5" fill="#F1C40F" opacity={0.9} />
+        <Ellipse cx="10" cy="10" rx="2.5" ry="2.5" fill={FEATURE_COLORS.flowerShowerOverlay.jasmineCenter} opacity={0.9} />
       </Svg>
     );
   }

@@ -11,7 +11,7 @@ import { BackButton } from '@/components/ui/BackButton';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { SkeletonRow } from '@/components/ui/SkeletonLoader';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, TYPE } from '@/lib/constants';
+import { FEATURE_COLORS, OVERLAYS, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, TYPE } from '@/lib/constants';
 import {
   clearNotifications,
   fetchNotifications,
@@ -314,10 +314,10 @@ export default function NotificationsScreen() {
       card: isDark ? COLORS.cardBgDark : COLORS.cardBgLight,
       border: isDark ? COLORS.borderDark : COLORS.borderLight,
       text: isDark ? COLORS.creamBg : COLORS.ink,
-      bodyText: isDark ? '#E2DDD5' : '#3E2A1F',
-      dim: isDark ? COLORS.textDimDark : '#6E5D52',
+      bodyText: isDark ? FEATURE_COLORS.notifications.themeBodyTextDark : COLORS.ink,
+      dim: isDark ? COLORS.textDimDark : FEATURE_COLORS.notifications.themeDimLight,
       iconWell: isDark ? COLORS.homeIconWellDark : COLORS.homeIconWellLight,
-      unreadBg: isDark ? 'rgba(197,160,89,0.12)' : 'rgba(197,160,89,0.16)',
+      unreadBg: isDark ? OVERLAYS.gold[0.12] : COLORS.brandSoftDark,
       brand: isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight,
     }),
     [isDark]

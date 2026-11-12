@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
+import { CONFETTI_PALETTES } from '../lib/constants';
 import { dedupeNearbyMandalis, mandaliLocationKey } from '../lib/mandaliLocation';
 
 const screen = readFileSync(new URL('../app/(tabs)/mandali.tsx', import.meta.url), 'utf8');
@@ -52,9 +53,14 @@ describe('Mandali post options', () => {
 });
 
 describe('Native celebration palette', () => {
-  it('uses the same sacred confetti palette as the PWA', () => {
-    for (const color of ['#E88C35', '#C5A059', '#F0A830', '#D4784A', '#F2EAD6', '#D4926A', '#FABE5A']) {
-      assert.match(confetti, new RegExp(color));
+  it('keeps the established gold foil, petal, and stardust colours', () => {
+    assert.deepEqual(CONFETTI_PALETTES, {
+      goldFoil: ['#FFD700', '#C5A059', '#E88C35', '#F0A830', '#FABE5A', '#D4926A'],
+      petal: ['#E88C35', '#F0A830', '#D4784A', '#F472B6', '#E11D48', '#F2EAD6'],
+      stardust: ['#FFFDF0', '#FFD700', '#FFE066', '#FABE5A', '#F2EAD6'],
+    });
+    for (const stream of ['goldFoil', 'petal', 'stardust']) {
+      assert.ok(confetti.includes(`CONFETTI_PALETTES.${stream}[index % CONFETTI_PALETTES.${stream}.length]`));
     }
   });
 });

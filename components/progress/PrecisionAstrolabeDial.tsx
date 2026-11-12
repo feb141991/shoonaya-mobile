@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Line, Path, Defs, LinearGradient, Stop } from 'react-native-svg';
-import { COLORS, FONTS, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, OVERLAYS, COLORS, FONTS, themeColor } from '@/lib/constants';
 
 interface PrecisionAstrolabeDialProps {
   harmonyScore: number;
@@ -51,8 +51,8 @@ export function PrecisionAstrolabeDial({
 
   const activeColor = theme.brand;
   const inactiveColor = isDark
-    ? 'rgba(255, 248, 225, 0.10)'
-    : 'rgba(62, 42, 31, 0.10)';
+    ? OVERLAYS.ivory[0.1]
+    : FEATURE_COLORS.precisionAstrolabeDial.inactiveColorLight;
 
   return (
     <View style={styles.container}>
@@ -93,7 +93,7 @@ export function PrecisionAstrolabeDial({
           <Path
             d="M 38 110 A 82 82 0 0 1 202 110"
             fill="none"
-            stroke={isDark ? 'rgba(255, 248, 225, 0.08)' : 'rgba(62, 42, 31, 0.08)'}
+            stroke={isDark ? OVERLAYS.ivory[0.08] : FEATURE_COLORS.precisionAstrolabeDial.strokeLight}
             strokeWidth={0.8}
           />
         </Svg>

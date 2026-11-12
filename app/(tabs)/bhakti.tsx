@@ -13,7 +13,7 @@ import { Screen } from '@/components/ui/Screen';
 import type { SacredIconName } from '@/components/ui/SacredIcon';
 import { IconTile } from '@/components/ui/IconTile';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { COLORS, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, COLORS, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import { supabase } from '@/lib/supabase';
@@ -79,16 +79,16 @@ type BhaktiCard = TileCard | FeatherCard;
 // from CollapsibleBottomNav's /bhakti tab-match list. app/mantras.tsx
 // itself is left in place, unlinked, in case this gets picked back up.
 const CONTENT_CARDS: BhaktiCard[] = [
-  { kind: 'feather', id: 'puranic-tales', icon: 'file-text', title: 'Puranic Tales', description: 'Ramayana, Mahabharata & the Puranas', accent: '#C8A03C', href: '/bhakti/katha?view=puranic' as Href, traditions: ['hindu'] },
-  { kind: 'feather', id: 'bani-sakhis', icon: 'book-open', title: 'Bani & Sakhis', description: 'Guru stories, sakhis & kirtan wisdom', accent: '#64A0DC', href: '/bhakti/katha?view=bani' as Href, traditions: ['sikh'] },
-  { kind: 'feather', id: 'dhamma-stories', icon: 'book-open', title: 'Dhamma Stories', description: "Buddha's parables & Jataka tales", accent: '#8C64C8', href: '/bhakti/katha?view=dhamma' as Href, traditions: ['buddhist'] },
-  { kind: 'feather', id: 'jain-kathas', icon: 'book-open', title: 'Jain Kathas', description: 'Tirthankara stories & moral tales', accent: '#32A050', href: '/bhakti/katha?view=jain' as Href, traditions: ['jain'] },
+  { kind: 'feather', id: 'puranic-tales', icon: 'file-text', title: 'Puranic Tales', description: 'Ramayana, Mahabharata & the Puranas', accent: FEATURE_COLORS.bhakti.puranicTalesAccent, href: '/bhakti/katha?view=puranic' as Href, traditions: ['hindu'] },
+  { kind: 'feather', id: 'bani-sakhis', icon: 'book-open', title: 'Bani & Sakhis', description: 'Guru stories, sakhis & kirtan wisdom', accent: FEATURE_COLORS.bhakti.baniSakhisAccent, href: '/bhakti/katha?view=bani' as Href, traditions: ['sikh'] },
+  { kind: 'feather', id: 'dhamma-stories', icon: 'book-open', title: 'Dhamma Stories', description: "Buddha's parables & Jataka tales", accent: FEATURE_COLORS.bhakti.dhammaStoriesAccent, href: '/bhakti/katha?view=dhamma' as Href, traditions: ['buddhist'] },
+  { kind: 'feather', id: 'jain-kathas', icon: 'book-open', title: 'Jain Kathas', description: 'Tirthankara stories & moral tales', accent: FEATURE_COLORS.bhakti.jainKathasAccent, href: '/bhakti/katha?view=jain' as Href, traditions: ['jain'] },
   { kind: 'feather', id: 'stotrams-hymns', icon: 'music', title: 'Stotrams & Hymns', description: 'Sanskrit chants, chalisa, ashtakam', accent: COLORS.brandGold, href: '/bhakti/browse?tradition=hindu' as Href, traditions: ['hindu', 'jain'] },
-  { kind: 'feather', id: 'sacred-chants', icon: 'mic', title: 'Sacred Chants', description: 'Buddhist sutras, chants & mantras', accent: '#8C64C8', href: '/bhakti/browse?tradition=buddhist' as Href, traditions: ['buddhist'] },
-  { kind: 'feather', id: 'panchatantra', icon: 'star', title: 'Panchatantra', description: 'Ancient animal fables & wisdom tales', accent: '#C87850', href: '/bhakti/katha?view=panchatantra' as Href },
-  { kind: 'feather', id: 'heroes-bharat', icon: 'shield', title: 'Heroes of Bharat', description: 'Warriors, saints & unsung legends', accent: '#B45050', href: '/bhakti/katha?view=heroes' as Href },
+  { kind: 'feather', id: 'sacred-chants', icon: 'mic', title: 'Sacred Chants', description: 'Buddhist sutras, chants & mantras', accent: FEATURE_COLORS.bhakti.dhammaStoriesAccent, href: '/bhakti/browse?tradition=buddhist' as Href, traditions: ['buddhist'] },
+  { kind: 'feather', id: 'panchatantra', icon: 'star', title: 'Panchatantra', description: 'Ancient animal fables & wisdom tales', accent: FEATURE_COLORS.bhakti.panchatantraAccent, href: '/bhakti/katha?view=panchatantra' as Href },
+  { kind: 'feather', id: 'heroes-bharat', icon: 'shield', title: 'Heroes of Bharat', description: 'Warriors, saints & unsung legends', accent: FEATURE_COLORS.bhakti.heroesBharatAccent, href: '/bhakti/katha?view=heroes' as Href },
   { kind: 'tile', id: 'japa', fallbackGlyph: 'heart', title: 'Japa Mala', description: 'Digital mala for mantra & Naam Simran', href: '/bhakti/mala' as Href },
-  { kind: 'feather', id: 'sattvic-mode', icon: 'star', title: 'Sattvic Mode', description: 'Sacred ambience for puja & meditation', accent: '#C8B478', href: '/bhakti/zen' as Href },
+  { kind: 'feather', id: 'sattvic-mode', icon: 'star', title: 'Sattvic Mode', description: 'Sacred ambience for puja & meditation', accent: FEATURE_COLORS.bhakti.sattvicModeAccent, href: '/bhakti/zen' as Href },
   { kind: 'tile', id: 'dharmveer', fallbackGlyph: 'shield', title: 'Dharm Veer', description: 'Stories of dharmic courage', href: '/dharm-veer' },
   { kind: 'tile', id: 'vrat', fallbackGlyph: 'moon', title: 'Vrat', description: 'Observances & fasting days', href: '/vrat' },
 ];

@@ -20,7 +20,7 @@ import { SacredLoader } from '@/components/ui/SacredLoader';
 import { ShoonayaShareCard } from '@/components/share/ShoonayaShareCard';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { apiFetch } from '@/lib/api';
-import { COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, OVERLAYS, COLORS, FONTS, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { loadDailyQuiz } from '@/lib/dailyQuiz';
 import { clearQuizRequests } from '@/lib/quizRequests';
 import { spiritualDate } from '@/lib/spiritualDate';
@@ -326,7 +326,7 @@ export default function QuizScreen() {
           width: 320,
           height: 180,
           borderRadius: 160,
-          backgroundColor: isDark ? 'rgba(165,148,224,0.08)' : 'rgba(165,148,224,0.12)',
+          backgroundColor: isDark ? FEATURE_COLORS.quiz.surfaceDark : FEATURE_COLORS.quiz.surfaceLight,
           transform: [{ scaleX: 1.5 }],
         }}
       />
@@ -839,7 +839,7 @@ export default function QuizScreen() {
             <View
               style={{
                 borderRadius: 12,
-                backgroundColor: isDark ? 'rgba(197,160,89,0.12)' : 'rgba(197,160,89,0.18)',
+                backgroundColor: isDark ? OVERLAYS.gold[0.12] : OVERLAYS.gold[0.18],
                 paddingHorizontal: 8,
                 paddingVertical: 4,
               }}
@@ -911,8 +911,8 @@ export default function QuizScreen() {
           <LinearGradient
             colors={
               isDark
-                ? ['rgba(197,160,89,0.12)', 'rgba(28,26,22,0.4)']
-                : ['rgba(197,160,89,0.14)', 'rgba(255,253,249,0.8)']
+                ? [OVERLAYS.gold[0.12], FEATURE_COLORS.quiz.gradientDarkEnd]
+                : [OVERLAYS.gold[0.14], FEATURE_COLORS.quiz.gradientLightEnd]
             }
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}

@@ -1,3 +1,4 @@
+import { FEATURE_COLORS, OVERLAYS } from '@/lib/constants';
 import { useEffect, useMemo, useRef } from 'react';
 import { Animated, Easing, View } from 'react-native';
 
@@ -23,7 +24,7 @@ function FlameFlicker() {
     return () => { cancelled = true; };
   }, [opacity, scale]);
 
-  return <Animated.View pointerEvents="none" style={{ position: 'absolute', top: '14%', left: '50%', marginLeft: -70, width: 140, height: 140, borderRadius: 70, backgroundColor: 'rgba(255,150,60,0.35)', opacity, transform: [{ scale }] }} />;
+  return <Animated.View pointerEvents="none" style={{ position: 'absolute', top: '14%', left: '50%', marginLeft: -70, width: 140, height: 140, borderRadius: 70, backgroundColor: FEATURE_COLORS.japa.animatedViewSurface, opacity, transform: [{ scale }] }} />;
 }
 
 function DawnSweep({ color }: { color: string }) {
@@ -78,16 +79,16 @@ function ShootingStar({ delaySeed }: { delaySeed: number }) {
   const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [-60, 220] });
   const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [-20, 90] });
   const opacity = progress.interpolate({ inputRange: [0, 0.1, 0.8, 1], outputRange: [0, 1, 1, 0] });
-  return <Animated.View pointerEvents="none" style={{ position: 'absolute', top: '18%', left: '10%', width: 46, height: 1.6, borderRadius: 1, backgroundColor: 'rgba(255,255,255,0.9)', opacity, transform: [{ rotate: '24deg' }, { translateX }, { translateY }] }} />;
+  return <Animated.View pointerEvents="none" style={{ position: 'absolute', top: '18%', left: '10%', width: 46, height: 1.6, borderRadius: 1, backgroundColor: OVERLAYS.white[0.9], opacity, transform: [{ rotate: '24deg' }, { translateX }, { translateY }] }} />;
 }
 
 const SCENE_PARTICLES: Record<JapaSceneId, { count: number; color: string; minSize: number; maxSize: number; motion: ParticleMotion; minDuration: number; maxDuration: number }> = {
-  midnight: { count: 20, color: 'rgba(255,255,255,0.9)', minSize: 1.8, maxSize: 3.8, motion: 'twinkle', minDuration: 2200, maxDuration: 4200 },
-  himalayan: { count: 14, color: 'rgba(255,222,175,0.9)', minSize: 2.2, maxSize: 4.2, motion: 'twinkle', minDuration: 2800, maxDuration: 4600 },
-  temple: { count: 13, color: 'rgba(255,176,102,0.95)', minSize: 2.4, maxSize: 4.4, motion: 'drift-up', minDuration: 3200, maxDuration: 5200 },
-  river: { count: 14, color: 'rgba(190,225,255,0.82)', minSize: 2, maxSize: 3.8, motion: 'wave', minDuration: 2600, maxDuration: 4600 },
-  forest: { count: 16, color: 'rgba(198,230,180,0.9)', minSize: 2.2, maxSize: 4.6, motion: 'drift-up', minDuration: 4200, maxDuration: 7200 },
-  cosmos: { count: 30, color: 'rgba(255,255,255,0.95)', minSize: 1.3, maxSize: 3.2, motion: 'twinkle', minDuration: 1800, maxDuration: 3600 },
+  midnight: { count: 20, color: OVERLAYS.white[0.9], minSize: 1.8, maxSize: 3.8, motion: 'twinkle', minDuration: 2200, maxDuration: 4200 },
+  himalayan: { count: 14, color: FEATURE_COLORS.japa.himalayanParticle, minSize: 2.2, maxSize: 4.2, motion: 'twinkle', minDuration: 2800, maxDuration: 4600 },
+  temple: { count: 13, color: FEATURE_COLORS.japa.templeParticle, minSize: 2.4, maxSize: 4.4, motion: 'drift-up', minDuration: 3200, maxDuration: 5200 },
+  river: { count: 14, color: FEATURE_COLORS.japa.riverParticle, minSize: 2, maxSize: 3.8, motion: 'wave', minDuration: 2600, maxDuration: 4600 },
+  forest: { count: 16, color: FEATURE_COLORS.japa.forestParticle, minSize: 2.2, maxSize: 4.6, motion: 'drift-up', minDuration: 4200, maxDuration: 7200 },
+  cosmos: { count: 30, color: OVERLAYS.white[0.95], minSize: 1.3, maxSize: 3.2, motion: 'twinkle', minDuration: 1800, maxDuration: 3600 },
 };
 
 export function SceneBackdrop({ sceneId }: { sceneId: JapaSceneId }) {
@@ -105,11 +106,11 @@ export function SceneBackdrop({ sceneId }: { sceneId: JapaSceneId }) {
     <View pointerEvents="none" style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
       {particles.map((particle) => <BackgroundParticle key={particle.seed} seed={particle.seed} color={particleConfig.color} size={particle.size} motion={particleConfig.motion} duration={particle.duration} />)}
       {sceneId === 'temple' ? <FlameFlicker /> : null}
-      {sceneId === 'himalayan' ? <DawnSweep color="rgba(255,214,150,0.5)" /> : null}
+      {sceneId === 'himalayan' ? <DawnSweep color={FEATURE_COLORS.japa.dawnSweepText} /> : null}
       {sceneId === 'river' ? <>
-        <WaveBand topPct={30} color="rgba(190,225,255,0.5)" seed={31} />
-        <WaveBand topPct={52} color="rgba(190,225,255,0.4)" seed={37} />
-        <WaveBand topPct={74} color="rgba(190,225,255,0.3)" seed={41} />
+        <WaveBand topPct={30} color={FEATURE_COLORS.japa.riverWaveForeground} seed={31} />
+        <WaveBand topPct={52} color={FEATURE_COLORS.japa.riverWaveMiddle} seed={37} />
+        <WaveBand topPct={74} color={FEATURE_COLORS.japa.riverWaveBackground} seed={41} />
       </> : null}
       {sceneId === 'cosmos' ? <>
         <ShootingStar delaySeed={51} />

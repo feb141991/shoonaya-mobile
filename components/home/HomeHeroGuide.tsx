@@ -2,7 +2,7 @@ import { Text, View, useColorScheme } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { FONTS, MIN_TOUCH_TARGET, TYPE, themeColor } from '@/lib/constants';
+import { COLORS, FEATURE_COLORS, FONTS, MIN_TOUCH_TARGET, TYPE, themeColor } from '@/lib/constants';
 import type { AppLanguage } from '@/lib/language-runtime';
 import { GUIDED_TOUR_STEP_COUNT } from '@/lib/homeDiscovery';
 
@@ -95,7 +95,7 @@ export function HomeHeroGuide({
         paddingHorizontal: 12,
         paddingVertical: 10,
         gap: 6,
-        shadowColor: isDark ? '#000000' : '#493514',
+        shadowColor: isDark ? COLORS.black : FEATURE_COLORS.homeHeroGuide.shadowColorLight,
         shadowOpacity: isDark ? 0.3 : 0.1,
         shadowRadius: 8,
         shadowOffset: { width: 0, height: 4 },

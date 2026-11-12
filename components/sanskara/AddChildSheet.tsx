@@ -13,7 +13,7 @@ import {
 import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
 
-import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, TYPE, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, TYPE, themeColor } from '@/lib/constants';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { DatePickerField } from '@/components/ui/DatePickerField';
 import { describeFailure } from '@/lib/user-facing-error';
@@ -127,7 +127,7 @@ export function AddChildSheet({
 
           <ScrollView style={styles.scrollBody} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             {errorMessage ? (
-              <View style={[styles.errorCard, { backgroundColor: 'rgba(239, 83, 80, 0.1)', borderColor: COLORS.danger }]}>
+              <View style={[styles.errorCard, { backgroundColor: FEATURE_COLORS.addChildSheet.errorCardSurface, borderColor: COLORS.danger }]}>
                 <Feather name="alert-circle" size={14} color={COLORS.danger} />
                 <Text style={[styles.errorText, { color: COLORS.danger }]}>{errorMessage}</Text>
               </View>
@@ -248,7 +248,7 @@ export function AddChildSheet({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    backgroundColor: COLORS.deepModalScrim,
     justifyContent: 'flex-end',
   },
   sheetContainer: {

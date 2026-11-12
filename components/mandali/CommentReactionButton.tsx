@@ -129,7 +129,7 @@ export function CommentReactionButton({
                 borderWidth: 1,
                 borderColor: border,
                 padding: 8,
-                shadowColor: '#000',
+                shadowColor: COLORS.black,
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.15,
                 shadowRadius: 10,

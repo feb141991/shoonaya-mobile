@@ -189,7 +189,7 @@ export function ReminderTimePicker({ label, value, fallback, min, max, hint, onS
         <Pressable
           style={{
             flex: 1,
-            backgroundColor: 'rgba(0, 0, 0, 0.45)',
+            backgroundColor: COLORS.celebrationScrim,
             justifyContent: 'center',
             alignItems: 'center',
             padding: 20,

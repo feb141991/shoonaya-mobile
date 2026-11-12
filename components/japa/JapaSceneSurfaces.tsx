@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, View } from 'react-native';
 
-import { COLORS } from '@/lib/constants';
+import { FEATURE_COLORS, OVERLAYS, COLORS } from '@/lib/constants';
 
 export type JapaSceneId = 'midnight' | 'himalayan' | 'temple' | 'river' | 'forest' | 'cosmos';
 
@@ -88,7 +88,7 @@ export function SceneReadabilityWash({ isDark, haloOffsetY = 0 }: { isDark: bool
           marginLeft: -129,
           borderRadius: 129,
           transform: [{ translateY: haloOffsetY }],
-          backgroundColor: isDark ? 'rgba(8,6,4,0.08)' : 'rgba(255,253,248,0.12)',
+          backgroundColor: isDark ? FEATURE_COLORS.japa.surfaceDark : FEATURE_COLORS.japa.surfaceLight,
         }}
       />
       <View
@@ -98,13 +98,13 @@ export function SceneReadabilityWash({ isDark, haloOffsetY = 0 }: { isDark: bool
           left: -30,
           right: -30,
           height: 260,
-          backgroundColor: isDark ? 'rgba(0,0,0,0.22)' : 'rgba(45,31,14,0.12)',
+          backgroundColor: isDark ? OVERLAYS.black[0.22] : FEATURE_COLORS.japa.surfaceLight2,
         }}
       />
       <LinearGradient
         colors={isDark
-          ? ['rgba(0,0,0,0.22)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.30)']
-          : ['rgba(255,253,248,0.40)', 'rgba(255,253,248,0)', 'rgba(45,31,14,0.16)']}
+          ? [OVERLAYS.black[0.22], OVERLAYS.black[0], OVERLAYS.black[0.3]]
+          : [FEATURE_COLORS.japa.gradientLightStart, FEATURE_COLORS.japa.gradientLightMiddle, FEATURE_COLORS.japa.gradientLightEnd]}
         style={{ position: 'absolute', inset: 0 }}
       />
     </View>

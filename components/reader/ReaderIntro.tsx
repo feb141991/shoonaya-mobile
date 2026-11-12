@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Modal, Text, TouchableWithoutFeedback, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Feather from '@expo/vector-icons/Feather';
-import { COLORS, FONTS, TYPE } from '@/lib/constants';
+import { FEATURE_COLORS, COLORS, FONTS, TYPE } from '@/lib/constants';
 import type { ReadableCapabilities } from '@/lib/readable-content';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 
@@ -124,7 +124,7 @@ export function ReaderIntro({ capabilities, isDark }: ReaderIntroProps) {
           paddingBottom: 40,
           borderTopWidth: 1,
           borderColor: brandSoft,
-          boxShadow: isDark ? '0 -10px 24px rgba(0,0,0,0.30)' : '0 -10px 24px rgba(49,35,20,0.10)',
+          boxShadow: isDark ? FEATURE_COLORS.readerIntro.toolbarShadowDark : FEATURE_COLORS.readerIntro.toolbarShadowLight,
         }}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
             <View style={{

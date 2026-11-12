@@ -1,7 +1,7 @@
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 
-import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE } from '@/lib/constants';
+import { OVERLAYS, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, TYPE } from '@/lib/constants';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import type { JapaSoundTrack } from '@/lib/japa-audio';
 
@@ -34,7 +34,7 @@ export function JapaSoundSheet({ visible, selectedId, options, isDark, cardBg, b
               <Text style={{ ...TYPE.screenTitle, color: text }}>Sacred Ambient Sound</Text>
               <Text style={{ ...TYPE.caption, color: dim }}>Continuous harmonic drone to anchor your chanting</Text>
             </View>
-            <PressableSurface haptic="selection" onPress={onClose} hitSlop={10} style={{ width: 32, height: 32, minHeight: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' }}>
+            <PressableSurface haptic="selection" onPress={onClose} hitSlop={10} style={{ width: 32, height: 32, minHeight: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: isDark ? OVERLAYS.white[0.05] : OVERLAYS.black[0.04] }}>
               <Feather name="x" size={16} color={dim} />
             </PressableSurface>
           </View>

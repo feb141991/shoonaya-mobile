@@ -2,7 +2,7 @@ import { Text, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, JAPA_COLORS, COLORS, FONTS, MIN_TOUCH_TARGET, SHADOWS, themeColor } from '@/lib/constants';
 import type { JapaChantingMode } from '@/lib/japaPreferences';
 
 type Theme = ReturnType<typeof themeColor>;
@@ -58,7 +58,7 @@ export function JapaHandsFreeControls({
           paddingVertical: 8,
           minHeight: MIN_TOUCH_TARGET,
           borderRadius: 999,
-          backgroundColor: isDark ? 'rgba(8,6,4,0.72)' : 'rgba(255,253,248,0.88)',
+          backgroundColor: isDark ? FEATURE_COLORS.japa.pressableSurfaceDark3 : JAPA_COLORS.japaHandsFreeControls.controlSurfaceLight,
           borderWidth: 1,
           borderColor: isHandsFree ? theme.brand : `${theme.brand}35`,
           boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
@@ -98,7 +98,7 @@ export function JapaHandsFreeControls({
               height: MIN_TOUCH_TARGET,
               minHeight: MIN_TOUCH_TARGET,
               borderRadius: MIN_TOUCH_TARGET / 2,
-              backgroundColor: isPaused ? theme.brand : (isDark ? 'rgba(8,6,4,0.72)' : 'rgba(255,253,248,0.88)'),
+              backgroundColor: isPaused ? theme.brand : (isDark ? FEATURE_COLORS.japa.pressableSurfaceDark3 : JAPA_COLORS.japaHandsFreeControls.controlSurfaceLight),
               borderWidth: 1,
               borderColor: theme.brand,
               boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,
@@ -124,7 +124,7 @@ export function JapaHandsFreeControls({
               paddingVertical: 8,
               minHeight: MIN_TOUCH_TARGET,
               borderRadius: 999,
-              backgroundColor: isDark ? 'rgba(8,6,4,0.72)' : 'rgba(255,253,248,0.88)',
+              backgroundColor: isDark ? FEATURE_COLORS.japa.pressableSurfaceDark3 : JAPA_COLORS.japaHandsFreeControls.controlSurfaceLight,
               borderWidth: 1,
               borderColor: `${theme.brand}40`,
               boxShadow: isDark ? SHADOWS.sm.dark : SHADOWS.sm.light,

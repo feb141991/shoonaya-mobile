@@ -2,7 +2,7 @@ import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { COLORS, FONTS, TYPE, themeColor } from '@/lib/constants';
+import { OVERLAYS, COLORS, FONTS, TYPE, themeColor } from '@/lib/constants';
 import { parsePendingCompletionMantra } from '@/lib/japaCompletionReconciliation';
 import type { PendingJapaCompletion } from '@/lib/japaPendingCompletion';
 
@@ -43,7 +43,7 @@ export function JapaSyncReviewSheet({
               <Text style={{ fontFamily: FONTS.sansSemiBold, fontSize: 10, letterSpacing: 1.6, textTransform: 'uppercase', color: COLORS.danger }}>Couldn't save</Text>
               <Text style={{ ...TYPE.metric, color: text }}>{failedItems.length} {failedItems.length === 1 ? 'round' : 'rounds'}</Text>
             </View>
-            <PressableSurface haptic="selection" accessibilityLabel="Close" onPress={onClose} hitSlop={10} style={{ width: 32, height: 32, minHeight: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' }}>
+            <PressableSurface haptic="selection" accessibilityLabel="Close" onPress={onClose} hitSlop={10} style={{ width: 32, height: 32, minHeight: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: isDark ? OVERLAYS.white[0.05] : OVERLAYS.black[0.04] }}>
               <Feather name="x" size={16} color={dim} />
             </PressableSurface>
           </View>

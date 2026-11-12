@@ -1,6 +1,6 @@
 import { StyleSheet, View, Text } from 'react-native';
 import { Image, type ImageSource } from 'expo-image';
-import { COLORS } from '@/lib/constants';
+import { OVERLAYS, COLORS } from '@/lib/constants';
 
 const RELIC_ASSETS: Record<string, ImageSource> = {
   'maha-shivratri': require('@/assets/relics/trishula-gold.png'),
@@ -118,8 +118,8 @@ export function FestivalEmblem({
 }) {
   const relic = resolveRelicSource(slug, tradition);
   const iconSize = Math.round(size * 0.68);
-  const borderColor = isDark ? 'rgba(212, 175, 55, 0.45)' : 'rgba(212, 175, 55, 0.55)';
-  const bg = isDark ? 'rgba(216, 138, 28, 0.12)' : 'rgba(216, 138, 28, 0.08)';
+  const borderColor = isDark ? OVERLAYS.metallicGold[0.45] : OVERLAYS.metallicGold[0.55];
+  const bg = isDark ? COLORS.brandSoftLight : OVERLAYS.amber[0.08];
 
   return (
     <View
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#C5A059',
+    shadowColor: COLORS.brandGold,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.18,
     shadowRadius: 6,

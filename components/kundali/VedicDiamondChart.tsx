@@ -5,7 +5,7 @@ import Feather from '@expo/vector-icons/Feather';
 
 import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SPACING, TYPE, themeColor } from '@/lib/constants';
+import { FEATURE_COLORS, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SPACING, TYPE, themeColor } from '@/lib/constants';
 import {
   AstroChart,
   CANONICAL_GRAHA_ORDER,
@@ -180,17 +180,17 @@ export function VedicDiamondChart({
   }
 
   // Sacred Janam Patri & Astronomical Color Scheme
-  const terracottaBorder = isDark ? '#D97706' : '#991B1B'; // Deep sacred red / terracotta
-  const celestialGold = isDark ? '#F59E0B' : '#D97706'; // Astronomical gold
-  const parchmentBg = isDark ? '#1C1917' : '#FFFDF7'; // Sandalwood / parchment tone
-  const frameBorder = isDark ? 'rgba(217, 119, 6, 0.45)' : 'rgba(153, 27, 27, 0.45)';
-  const gridLines = isDark ? 'rgba(245, 158, 11, 0.5)' : 'rgba(180, 83, 9, 0.6)';
-  const innerDiamondColor = isDark ? 'rgba(245, 158, 11, 0.85)' : 'rgba(153, 27, 27, 0.85)';
-  const rashiNumberColor = isDark ? 'rgba(253, 230, 138, 0.65)' : 'rgba(153, 27, 27, 0.7)';
-  const planetTextColor = isDark ? '#FEF3C7' : '#2A1A0A';
-  const degreeTextColor = isDark ? 'rgba(254, 243, 199, 0.6)' : 'rgba(120, 53, 15, 0.75)';
-  const retroColor = isDark ? '#FBBF24' : '#C2410C';
-  const ascColor = isDark ? '#38BDF8' : '#0369A1';
+  const terracottaBorder = isDark ? COLORS.warningLight : FEATURE_COLORS.vedicDiamondChart.terracottaBorderLight; // Deep sacred red / terracotta
+  const celestialGold = isDark ? COLORS.warningDark : COLORS.warningLight; // Astronomical gold
+  const parchmentBg = isDark ? FEATURE_COLORS.vedicDiamondChart.parchmentBgDark : FEATURE_COLORS.vedicDiamondChart.parchmentBgLight; // Sandalwood / parchment tone
+  const frameBorder = isDark ? FEATURE_COLORS.vedicDiamondChart.frameBorderDark : FEATURE_COLORS.vedicDiamondChart.frameBorderLight;
+  const gridLines = isDark ? FEATURE_COLORS.vedicDiamondChart.gridLinesDark : FEATURE_COLORS.vedicDiamondChart.gridLinesLight;
+  const innerDiamondColor = isDark ? FEATURE_COLORS.vedicDiamondChart.innerDiamondColorDark : FEATURE_COLORS.vedicDiamondChart.innerDiamondColorLight;
+  const rashiNumberColor = isDark ? FEATURE_COLORS.vedicDiamondChart.rashiNumberColorDark : FEATURE_COLORS.vedicDiamondChart.rashiNumberColorLight;
+  const planetTextColor = isDark ? FEATURE_COLORS.vedicDiamondChart.planetTextColorDark : FEATURE_COLORS.vedicDiamondChart.planetTextColorLight;
+  const degreeTextColor = isDark ? FEATURE_COLORS.vedicDiamondChart.degreeTextColorDark : FEATURE_COLORS.vedicDiamondChart.degreeTextColorLight;
+  const retroColor = isDark ? FEATURE_COLORS.vedicDiamondChart.retroColorDark : FEATURE_COLORS.vedicDiamondChart.retroColorLight;
+  const ascColor = isDark ? FEATURE_COLORS.vedicDiamondChart.ascColorDark : FEATURE_COLORS.vedicDiamondChart.ascColorLight;
 
   const VIEW_SIZE = 340;
 
@@ -232,7 +232,7 @@ export function VedicDiamondChart({
             style={[
               styles.toggleBtn,
               {
-                backgroundColor: showDegrees ? (isDark ? 'rgba(245, 158, 11, 0.2)' : 'rgba(254, 243, 199, 1)') : theme.card,
+                backgroundColor: showDegrees ? (isDark ? FEATURE_COLORS.vedicDiamondChart.pressableSurfaceDark : FEATURE_COLORS.vedicDiamondChart.pressableSurfaceLight) : theme.card,
                 borderColor: showDegrees ? celestialGold : theme.premiumBorder,
               },
             ]}
@@ -254,7 +254,7 @@ export function VedicDiamondChart({
             style={[
               styles.toggleBtn,
               {
-                backgroundColor: isDark ? 'rgba(217, 119, 6, 0.2)' : 'rgba(254, 226, 226, 0.9)',
+                backgroundColor: isDark ? FEATURE_COLORS.vedicDiamondChart.pressableSurfaceDark2 : FEATURE_COLORS.vedicDiamondChart.pressableSurfaceLight2,
                 borderColor: terracottaBorder,
               },
             ]}

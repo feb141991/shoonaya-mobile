@@ -11,7 +11,7 @@ import { COLORS, FONTS, MIN_TOUCH_TARGET, TYPE, themeColor } from '@/lib/constan
 import { formatRelativeTime } from '@/lib/formatRelativeTime';
 import { fetchPublicMandaliFeed } from '@/lib/mandaliPublicFeed';
 import type { PublicMandaliPost } from '@/lib/mandaliPublicFeedContract';
-import { describeFailure } from '@/lib/user-facing-error';
+import { ApiRequestError, describeFailure } from '@/lib/user-facing-error';
 
 /** What a guest may do on Mandali: read. Everything below that touches an account asks them to sign in instead. */
 export type GuestAction = 'react' | 'comment' | 'share' | 'more' | 'author';
@@ -121,6 +121,7 @@ export function GuestMandaliFeed({ onSignIn }: { onSignIn: () => void }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [feedUnavailable, setFeedUnavailable] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [prompt, setPrompt] = useState<GuestAction | null>(null);
   const requestRef = useRef(0);
@@ -133,10 +134,18 @@ export function GuestMandaliFeed({ onSignIn }: { onSignIn: () => void }) {
       if (request !== requestRef.current) return;
       setPosts(page.posts);
       setNextCursor(page.nextCursor);
+      setFeedUnavailable(false);
       setError(null);
     } catch (failure) {
       if (request !== requestRef.current) return;
-      setError(describeFailure(failure, 'Mandali could not be loaded right now. Please try again.'));
+      if (failure instanceof ApiRequestError && failure.status === 404) {
+        setPosts([]);
+        setNextCursor(null);
+        setFeedUnavailable(true);
+        setError(null);
+      } else {
+        setError(describeFailure(failure, 'Mandali could not be loaded right now. Please try again.'));
+      }
     } finally {
       if (request === requestRef.current) { setLoading(false); setRefreshing(false); }
     }
@@ -165,6 +174,21 @@ export function GuestMandaliFeed({ onSignIn }: { onSignIn: () => void }) {
 
   if (loading && posts.length === 0) {
     return <Screen style={{ backgroundColor: theme.bg }}><View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator color={theme.brand} /></View></Screen>;
+  }
+  if (feedUnavailable) {
+    return (
+      <Screen style={{ backgroundColor: theme.bg }}>
+        <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 16 }}>
+          <EmptyState
+            icon="users"
+            title="Join Mandali"
+            subtitle="Sign in to join Mandali, share posts, and connect with other seekers."
+            ctaLabel="Sign In"
+            onCta={onSignIn}
+          />
+        </View>
+      </Screen>
+    );
   }
   if (error && posts.length === 0) {
     return (
