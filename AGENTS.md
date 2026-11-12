@@ -581,3 +581,13 @@ Rules:
 - Origin: 2026-11-12 privacy audit. Consents were yes/no flags with one shared, client-supplied timestamp, and no record of when each was given, which
   wording was shown or on which screen. Backend migration `20261112140000_consent_evidence_ledger` is UNAPPLIED: until it is, the context is sent and
   ignored. Not verified on a device. Whether proof of consent should outlive the account is a counsel decision.
+
+### 31. A Signed-Out Person May Read Mandali, and Nothing More
+- Founder decision 2026-11-12: a guest sees Mandali posts (`components/mandali/GuestMandaliFeed.tsx`, from the backend's `GET /api/mandali/public-feed`).
+  Reacting, commenting, sharing, opening a profile and the post menu show a sign-in prompt; posting, voting and RSVPs need an account, which the
+  database enforces. The guest feed carries posts, the author's public username and avatar, and counts. It never carries an account id, a Mandali id,
+  the names of people who reacted, comments, poll votes, RSVPs or member lists, and it is never stored on the device.
+- A new guest-visible Mandali surface must come from that route (or one built the same way), never from a direct table read. The database also closed
+  who-upvoted and who-RSVP'd to signed-in users (backend migration `20261112160000`, UNAPPLIED); posts and comments keep a public SELECT for this.
+- Guard: `__tests__/mandali-guest-readonly.test.ts` (three mutations proven red). Not verified on a device, in dark mode, with large text, or against the
+  deployed route.
