@@ -177,13 +177,12 @@ describe('a resumed draft', () => {
 });
 
 describe('the wording', () => {
-  it('exists in both languages with every part, and the switch is described as off by default', () => {
-    for (const lang of ['en', 'hi'] as const) {
-      const c = RELIGIOUS_DATA_CONSENT_COPY[lang];
-      for (const key of ['title', 'body', 'switchLabel', 'switchHint', 'needed', 'footer'] as const) {
-        assert.ok(c[key].length > 10, `${lang}.${key}`);
-      }
+  it('exists in English with every part, and the switch is described as off by default', () => {
+    const c = RELIGIOUS_DATA_CONSENT_COPY.en;
+    for (const key of ['title', 'body', 'switchLabel', 'switchHint', 'needed', 'footer'] as const) {
+      assert.ok(c[key].length > 10, `en.${key}`);
     }
+    assert.deepEqual(Object.keys(RELIGIOUS_DATA_CONSENT_COPY), ['en']);
     assert.match(RELIGIOUS_DATA_CONSENT_COPY.en.switchHint, /off by default/i);
   });
 

@@ -50,9 +50,8 @@ only while the server confirms the switch is off, and at most twice ("Not now" i
 you turn on 'Help improve reminders' in Settings ..." The full paragraph, including the retention period, deletion on
 withdrawal and the reporting floor, is in that file. The export paragraph also lists "notification taps".
 
-**E. Hindi.** All three in-app texts have Hindi versions. They were written by the engineering assistant and have **not**
-been reviewed by a native speaker or by counsel. Punjabi is offered only to Sikh profiles and these texts have no
-Punjabi version (what a Punjabi-language user sees instead has not been checked).
+**E. Languages.** All consent declarations are shown in English only (decision 2026-11-12). Hindi versions that engineering had
+written were removed, so no translated wording needs review now.
 
 ## 3. Questions for counsel
 
@@ -79,7 +78,8 @@ Punjabi version (what a Punjabi-language user sees instead has not been checked)
    personalised suggestions and practice analytics events. It does not gate calendar dates or reminder scheduling,
    which still use the person's stored tradition. Does that match what the toggle's text says, and is the stored
    tradition itself special-category data needing its own consent at signup?
-9. **Hindi text.** Does the Hindi need review by a qualified translator before release?
+9. **Language.** Is English-only acceptable for the notice and consent where the app language is Hindi, or must a translation
+   (reviewed by a qualified translator) be offered?
 
 ## 4. Open facts you should know
 

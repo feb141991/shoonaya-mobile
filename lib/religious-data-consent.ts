@@ -87,6 +87,10 @@ export function planConsentChange({
     : { tradition: 'none', consent_religious_data: false, consent_updated_at: now };
 }
 
+/**
+ * English only by decision (2026-11-12): a consent declaration is not translated until a native speaker and counsel
+ * have reviewed the wording (AGENTS.md section 27).
+ */
 export const RELIGIOUS_DATA_CONSENT_COPY = {
   en: {
     title: 'Your tradition is personal information',
@@ -97,15 +101,5 @@ export const RELIGIOUS_DATA_CONSENT_COPY = {
     needed: 'To continue with this tradition, turn this on, or choose Universal / Exploring above.',
     footer:
       'You can change this any time in Settings, under Privacy & Data, and delete your account and data there too. Prefer not to share? Choose Universal / Exploring and nothing about your tradition is saved to your account.',
-  },
-  hi: {
-    title: 'आपकी परंपरा निजी जानकारी है',
-    body:
-      'आपकी परंपरा और जो जन्म विवरण आप आगे जोड़ सकते हैं (जन्म तिथि, नक्षत्र, राशि, गोत्र) धार्मिक और व्यक्तिगत जानकारी हैं। आपकी अनुमति से Shoonaya इन्हें आपके खाते में सहेजता है, ताकि पंचांग, स्मरण, साधना और मार्गदर्शन आपके अनुरूप हो सके।',
-    switchLabel: 'मैं सहमत हूँ कि Shoonaya ये विवरण सहेजे और उपयोग करे',
-    switchHint: 'यह पहले से बंद है। इस परंपरा के साथ आगे बढ़ने के लिए इसे चालू करें।',
-    needed: 'इस परंपरा के साथ आगे बढ़ने के लिए इसे चालू करें, या ऊपर “सार्वभौमिक / अन्वेषण” चुनें।',
-    footer:
-      'आप इसे कभी भी सेटिंग्स में “Privacy & Data” के अंतर्गत बदल सकते हैं, और वहीं से अपना खाता व डेटा हटा सकते हैं। साझा नहीं करना चाहते? “सार्वभौमिक / अन्वेषण” चुनें; आपकी परंपरा के बारे में कुछ भी आपके खाते में सहेजा नहीं जाएगा।',
   },
 } as const;

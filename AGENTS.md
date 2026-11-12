@@ -526,6 +526,11 @@ Rules:
 - Only the offer is gated. The `pa` type, generated content, startup scenes, backend producers and notification text stay in place; removing them is a separate decision. Onboarding already offers English and Hindi only.
 - Not built: resetting a non-Sikh profile's Punjabi to English. Tradition is locked after signup in Native (`app/(tabs)/profile.tsx`), so no Native screen changes it, and production had no Punjabi profile on 2026-11-10. If a path that changes tradition appears, it must reset `app_language` and `meaning_language` to English in the same write.
 - Safety-critical warnings are shown in English only (founder decision 2026-11-10), because neither Hindi nor Punjabi has had a native review. Built for the only such translated copy in Native: the account-deletion warnings and the deletion-pending notice in Settings (`REVIEWED_DELETION_LANGUAGES`, `accountDeletionCopy`, `reviewedDeletionLanguage`; adding a language there is the whole change once reviewed). Consent, Sanskāra hand-over and the date-of-birth card have no Punjabi in Native and are English only. Backend Sanskāra notice text still has Punjabi producers; the founder chose not to gate them (2026-11-10). A new safety-critical string in any language goes through the same allow-list.
+- Consent declarations are English only (founder decision 2026-11-12): the religious-data consent (`lib/religious-data-consent.ts`), the
+  "Help improve reminders" switch, card and Settings row, and the onboarding e-mail opt-in carry no Hindi, and the screens do not pick their wording by
+  language. A translation of a declaration waits for a native-speaker and counsel review, then goes through the same allow-list idea as the deletion
+  warnings. Ordinary labels (reminder names, buttons, notification-permission prompts) may still be translated. Guard:
+  `__tests__/declaration-english-only.test.ts` (proven red by re-adding Hindi to the card and to the onboarding switch). Not verified on a device.
 - Origin: 2026-11-10 decision to narrow languages to English and Hindi, with Punjabi for Sikh profiles. Guard: `__tests__/language-options.test.ts` (4 mutations each proven red). Not verified on a device.
 
 ### 28. A Notification Tap Is Counted Once, for the Signed-In Account, and Only With Consent
