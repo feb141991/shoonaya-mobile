@@ -60,7 +60,7 @@ const OVER_LIMIT_CEILINGS: Record<string, number> = {
   'app/(tabs)/index.tsx': 2910,
   'app/(tabs)/profile.tsx': 2197,
   'app/(auth)/onboarding.tsx': 2011,
-  'app/settings/detail-screen.tsx': 1806,
+  'app/settings/detail-screen.tsx': 1769,
   'app/pathshala/[pathId]/[lessonId].tsx': 1555,
   'components/reader/PanchatantraStorybookView.tsx': 1549,
   'app/(tabs)/tirtha.tsx': 1524,

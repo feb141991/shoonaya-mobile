@@ -636,7 +636,11 @@ Rules:
 - Keep reminder preferences, notification tap measurement, and optional email consent independent. Verify server-side reminder defaults and eligibility separately from the Native form.
 - Origin: the 2026-11-07 notification audit found that bundled switches could enable more reminders than the copy described. Guarded by the onboarding notification and data contract tests.
 
-### 35. Lint Is a Gate, and Its Warnings Only Ratchet Down
+### 35. A Lock-Screen Privacy Control Needs a Sender Capability
+- Enable “Hide notification details” only after an authenticated read from the endpoint that ships with push redaction. An existing profile column cannot prove that the active sender honors the preference. Keep the switch unavailable after an uncertain save until a fresh read confirms the value.
+- Origin: the 2026-11-12 branch review found the database column in production before the sender code was deployed. The old column-only readiness check could offer privacy the sender had no code to enforce. Guarded by the Native discretion contract tests and the backend Expo-payload tests.
+
+### 36. Lint Is a Gate, and Its Warnings Only Ratchet Down
 - ESLint runs in `npm run prebuild:verify` (so in CI and before every EAS build or OTA update) through `npm run check:lint`
   (`scripts/check-lint-ratchet.ts`, rules in `lib/lintRatchet.ts`, config in `eslint.config.js`, set up as the Expo lint guide describes).
   Never remove it from `prebuild:verify`, and never switch a rule off to make a change pass.
@@ -657,7 +661,7 @@ Rules:
 - Not verified: that the 1,431 warnings are all worth fixing (the React Compiler-era `react-hooks/*` rules are new to this codebase and some
   will be false positives), and the CI run itself: the gate ran locally (`npm run prebuild:verify`), not yet on a pull request.
 
-### 36. Tests Prove Behaviour; Grepping Source Text Only Ratchets Down
+### 37. Tests Prove Behaviour; Grepping Source Text Only Ratchets Down
 - A test that reads a source file and matches a regular expression against it proves a pattern exists, not that the screen works. It passes when
   the behaviour is broken and fails when the code is harmlessly reorganised (the Japa split broke or silently re-pointed several of them). New UI tests
   render the component with `@testing-library/react-native` and press its controls (`__component_tests__/`, run by `npm run test:components`, part of

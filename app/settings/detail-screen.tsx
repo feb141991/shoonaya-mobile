@@ -5,7 +5,6 @@ import {
   AppState,
   Linking,
   ScrollView,
-  Switch,
   Text,
   useColorScheme,
   View,
@@ -13,6 +12,8 @@ import {
 import Feather from '@expo/vector-icons/Feather';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useFocusEffect, useRouter } from 'expo-router';
+import { NotificationDiscretionSetting } from '@/components/settings/NotificationDiscretionSetting';
+import { ToggleRow } from '@/components/settings/ToggleRow';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import * as Haptics from 'expo-haptics';
@@ -275,50 +276,6 @@ function SettingsSection({
       <Card tone="auto" style={{ backgroundColor: theme.card, borderColor: theme.border, gap: 16 }}>
         {children}
       </Card>
-    </View>
-  );
-}
-
-function ToggleRow({
-  label,
-  subtitle,
-  value,
-  onChange,
-  theme,
-  disabled,
-  badge,
-}: {
-  label: string;
-  subtitle?: string;
-  value: boolean;
-  onChange: (next: boolean) => void;
-  theme: ReturnType<typeof themeColor>;
-  disabled?: boolean;
-  badge?: string;
-}) {
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, opacity: disabled ? 0.6 : 1 }}>
-      <View style={{ flex: 1 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Text style={{ ...TYPE.label, color: theme.text }}>{label}</Text>
-          {badge ? (
-            <View style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, backgroundColor: theme.brandSoft, borderWidth: 1, borderColor: theme.premiumBorder }}>
-              <Text style={{ fontFamily: FONTS.sansMedium, fontSize: 10, color: theme.brand, letterSpacing: 0.3 }}>{badge}</Text>
-            </View>
-          ) : null}
-        </View>
-        {subtitle ? <Text style={{ ...TYPE.caption, color: theme.dim, marginTop: 2 }}>{subtitle}</Text> : null}
-      </View>
-      <Switch
-        value={value}
-        onValueChange={onChange}
-        disabled={disabled}
-        trackColor={{ true: theme.brand }}
-        accessibilityRole="switch"
-        accessibilityLabel={label}
-        accessibilityHint={subtitle}
-        accessibilityState={{ checked: value, disabled: !!disabled }}
-      />
     </View>
   );
 }
@@ -1391,6 +1348,12 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
                 value={settings.observance_reminder_time ?? '08:00'}
                 fallback="08:00"
                 onSave={(clock) => { void persistSettings({ ...settings, observance_reminder_time: clock }); }}
+                theme={theme}
+              />
+              <View style={{ height: 1, backgroundColor: theme.borderSoft }} />
+              <NotificationDiscretionSetting
+                key={appIdentity.kind === 'authenticated' ? appIdentity.userId : appIdentity.kind}
+                language={language}
                 theme={theme}
               />
             </SettingsSection> : null}
