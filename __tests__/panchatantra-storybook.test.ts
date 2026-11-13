@@ -241,7 +241,17 @@ test('Panchatantra detail screen error handling', async (t) => {
 test('Panchatantra storybook font scaling controls', async (t) => {
   const fs = require('node:fs');
   const path = require('node:path');
-  const src = fs.readFileSync(path.join(process.cwd(), 'components/reader/PanchatantraStorybookView.tsx'), 'utf8');
+  // The view was split (2026-11-13) into the main file, lib/panchatantraStorybook.ts and the Storybook* components;
+  // read all of them as one text. The components are found by name, so a later Storybook* file is not left out.
+  const reader = path.join(process.cwd(), 'components/reader');
+  const src = [
+    path.join(reader, 'PanchatantraStorybookView.tsx'),
+    path.join(process.cwd(), 'lib/panchatantraStorybook.ts'),
+    ...fs.readdirSync(reader)
+      .filter((file: string) => /^Storybook.*\.tsx$/.test(file))
+      .sort()
+      .map((file: string) => path.join(reader, file)),
+  ].map((file) => fs.readFileSync(file, 'utf8')).join('\n');
 
   await t.test('provides dedicated -- and ++ font scaling steppers while reading', () => {
     assert.match(src, /accessibilityLabel="Decrease text size \(--\)"/);

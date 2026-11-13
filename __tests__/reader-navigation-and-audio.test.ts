@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 
 const backButton = readFileSync(new URL('../components/ui/BackButton.tsx', import.meta.url), 'utf8');
@@ -84,7 +84,17 @@ describe('reader navigation and audio lifecycle', () => {
   });
 
   it('guarantees Panchatantra storybook narrations pass active scene text rather than dumping whole multi-thousand char text', () => {
-    const storybookSrc = readFileSync(new URL('../components/reader/PanchatantraStorybookView.tsx', import.meta.url), 'utf8');
+    // The view was split (2026-11-13) into the main file, lib/panchatantraStorybook.ts and the Storybook* components;
+    // read all of them as one text. The components are found by name, so a later Storybook* file is not left out.
+    const readerDir = new URL('../components/reader/', import.meta.url);
+    const storybookSrc = [
+      new URL('PanchatantraStorybookView.tsx', readerDir),
+      new URL('../../lib/panchatantraStorybook.ts', readerDir),
+      ...readdirSync(readerDir)
+        .filter((file) => /^Storybook.*\.tsx$/.test(file))
+        .sort()
+        .map((file) => new URL(file, readerDir)),
+    ].map((file) => readFileSync(file, 'utf8')).join('\n');
     assert.match(storybookSrc, /onTTS\?: \(sceneText\?: string\) => void;/);
     assert.match(storybookSrc, /onTTS\(currentSceneText\);/);
     assert.match(katha, /onTTS=\{\(sceneText\) => handlers\.toggleTTS\(sceneText \|\| textToCopy/);

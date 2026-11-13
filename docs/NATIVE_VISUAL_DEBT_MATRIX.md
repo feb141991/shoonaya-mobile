@@ -174,6 +174,10 @@ any other screen.
 
 ## Panchatantra storybook (`components/reader/PanchatantraStorybookView.tsx`) — 2026-10-07
 
+Split 2026-11-13, no style change: the code described below now lives in `PanchatantraStorybookView.tsx` (shell,
+hooks and the pager), `StorybookTopBar.tsx`, `StorybookSceneIllustration.tsx`, `StorybookParchmentCard.tsx` and
+`StorybookBottomBar.tsx`, each with its own style keys, plus `lib/panchatantraStorybook.ts`.
+
 Reader Phase 2 (`docs/READER_EXPERIENCE_GRAND_PLAN.md`) moved the page
 surfaces onto the reader paper tokens (`READER_PAPER` in `lib/constants.ts`
 via `useReaderAppearance()`): screen background, parchment panel and border,

@@ -276,7 +276,8 @@ export const FEATURE_COLORS = {
     guidanceText: 'rgba(253,230,180,0.85)',
     guidanceHeading: '#FDE6B4',
   },
-  // components/reader/PanchatantraStorybookView.tsx
+  // components/reader/StorybookSceneIllustration.tsx and components/reader/StorybookParchmentCard.tsx
+  // (split out of PanchatantraStorybookView.tsx on 2026-11-13)
   panchatantraStorybookView: {
     surfaceDark: '#17120D',
     surfaceLight: '#241810',

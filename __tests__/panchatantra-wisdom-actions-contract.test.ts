@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 // Source-level guard for the Panchatantra storybook's wisdom actions (Save to Treasury, Finish Reading).
@@ -8,7 +8,18 @@ import { resolve } from 'node:path';
 // "Saved to Treasury" button saved nothing, "Finish Reading" still recorded the daily katha after the
 // "Earn Karma" label was removed, and the new buttons used hard-coded colours. See AGENTS.md section 13.
 const root = resolve(__dirname, '..');
-const view = readFileSync(resolve(root, 'components/reader/PanchatantraStorybookView.tsx'), 'utf8');
+// The storybook view was split (2026-11-13) into the main file, lib/panchatantraStorybook.ts and the Storybook*
+// components. `view` is all of them read as one text, so every scan below still covers the code it covered before
+// the split (AGENTS.md section 13). The components are found by name, so a later Storybook* file is not left out.
+const STORYBOOK_FILES = [
+  'components/reader/PanchatantraStorybookView.tsx',
+  'lib/panchatantraStorybook.ts',
+  ...readdirSync(resolve(root, 'components/reader'))
+    .filter((file) => /^Storybook.*\.tsx$/.test(file))
+    .sort()
+    .map((file) => `components/reader/${file}`),
+];
+const view = STORYBOOK_FILES.map((file) => readFileSync(resolve(root, file), 'utf8')).join('\n');
 const katha = readFileSync(resolve(root, 'app/bhakti/katha/[id].tsx'), 'utf8');
 
 const actionsStart = view.indexOf('{/* Meaningful Wisdom Actions');
