@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Modal,
+  AppState,
+  type AppStateStatus,
   Pressable,
   StyleSheet,
   Text,
@@ -10,32 +11,44 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import Svg, { Path, Defs, LinearGradient, Stop, Circle as SvgCircle } from 'react-native-svg';
-import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withSpring,
-} from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import {
+  useSharedValue,
+  useReducedMotion,
+  runOnJS,
+} from 'react-native-reanimated';
+import { useIsFocused } from 'expo-router';
 
 import type { KulFamilyMember } from '@/lib/kul';
 import {
-  LayoutVanshNode,
-  LayoutVanshEdge,
-  VanshLayoutResult,
-  computeVanshFitScale,
+  type VanshLayoutResult,
 } from '@/lib/vanshLayout';
 import {
   COLORS,
   FONTS,
-  MIN_TOUCH_TARGET,
   RADII,
   themeColor,
 } from '@/lib/constants';
 import { getKinshipTier, type KinshipTier } from '@/lib/kinship';
+import {
+  type VanshViewMode,
+  type Vansh3DNode,
+  type Vansh3DCrest,
+  VIEW_PRESETS,
+  computeVansh3DLayout,
+  computePanAngles,
+  computePinchZoom,
+  project3D,
+  isAnyGestureActive,
+  shouldAutoOrbitRun,
+} from '@/lib/vansh3d';
+import { VanshTopHud } from './VanshTopHud';
+import { VanshKinshipModal } from './VanshKinshipModal';
+import { VanshControlsDock } from './VanshControlsDock';
+import { VanshFilaments } from './VanshFilaments';
+import { VanshCrestBadge } from './VanshCrestBadge';
+import { VanshBottomHud } from './VanshBottomHud';
 
 interface VanshGraphCanvasProps {
   layout: VanshLayoutResult;
@@ -55,105 +68,315 @@ export function VanshGraphCanvas({
   const isDark = useColorScheme() === 'dark';
   const theme = themeColor(isDark);
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const isReducedMotion = Boolean(useReducedMotion());
+  const isScreenFocused = useIsFocused();
+
   const [viewportSize, setViewportSize] = useState({
     width: windowWidth - 32,
     height: Math.max(windowHeight - 200, 480),
   });
-  const [activeKinshipTier, setActiveKinshipTier] = useState<KinshipTier | null>(null);
-  const fitScale = computeVanshFitScale(
-    layout.canvasWidth,
-    layout.canvasHeight,
-    viewportSize.width,
-    viewportSize.height
-  );
-  const minimumScale = Math.min(0.12, fitScale);
 
-  // Reanimated 2D Canvas Transform State
-  const scale = useSharedValue(fitScale);
-  const savedScale = useSharedValue(fitScale);
-  const translateX = useSharedValue(0);
-  const savedTranslateX = useSharedValue(0);
-  const translateY = useSharedValue(0);
-  const savedTranslateY = useSharedValue(0);
+  const [activeKinshipTier, setActiveKinshipTier] = useState<KinshipTier | null>(null);
+  const [viewMode, setViewMode] = useState<VanshViewMode>('orbit');
+  const [autoOrbit, setAutoOrbit] = useState<boolean>(false);
+  const [isAppActive, setIsAppActive] = useState<boolean>(true);
+  const [isInteractingState, setIsInteractingState] = useState<boolean>(false);
+
+  // AppState background/foreground lifecycle tracking
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state: AppStateStatus) => {
+      setIsAppActive(state === 'active');
+    });
+    return () => subscription.remove();
+  }, []);
+
+  // Compute 3D generational topology and adaptive fitScale from layout
+  const layout3D = useMemo(() => {
+    return computeVansh3DLayout(
+      layout.nodes,
+      layout.edges,
+      layout.crest,
+      viewportSize.width,
+      viewportSize.height
+    );
+  }, [layout, viewportSize.width, viewportSize.height]);
+
+  const initialPreset = VIEW_PRESETS.orbit;
+  const rotX = useSharedValue(initialPreset.rotX);
+  const savedRotX = useSharedValue(initialPreset.rotX);
+  const rotY = useSharedValue(initialPreset.rotY);
+  const savedRotY = useSharedValue(initialPreset.rotY);
+  const zoom = useSharedValue(initialPreset.zoom);
+  const savedZoom = useSharedValue(initialPreset.zoom);
+  const isInteracting = useSharedValue(false);
+  const panActive = useSharedValue(false);
+  const pinchActive = useSharedValue(false);
+  const lastSyncTime = useSharedValue(0);
+
+  const [camera, setCamera] = useState({
+    rotX: initialPreset.rotX,
+    rotY: initialPreset.rotY,
+    zoom: initialPreset.zoom,
+  });
+
+  const rafRef = useRef<number | null>(null);
+  const pendingCameraRef = useRef<{ rotX: number; rotY: number; zoom: number } | null>(null);
+
+  const scheduleSync = useCallback((rx: number, ry: number, z: number) => {
+    pendingCameraRef.current = { rotX: rx, rotY: ry, zoom: z };
+    if (rafRef.current === null) {
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = null;
+        if (pendingCameraRef.current) {
+          setCamera(pendingCameraRef.current);
+          pendingCameraRef.current = null;
+        }
+      });
+    }
+  }, []);
 
   useEffect(() => {
-    scale.value = withTiming(fitScale, { duration: 180 });
-    savedScale.value = fitScale;
-    translateX.value = withTiming(0, { duration: 180 });
-    savedTranslateX.value = 0;
-    translateY.value = withTiming(0, { duration: 180 });
-    savedTranslateY.value = 0;
-  }, [fitScale, savedScale, scale, translateX, translateY, savedTranslateX, savedTranslateY]);
+    return () => {
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+  }, []);
 
-  // Pan (Drag to explore)
+  const handleInteractionStart = useCallback(() => {
+    if (autoOrbit) setAutoOrbit(false);
+  }, [autoOrbit]);
+
+  // Gestures with baseline translation, scale math & bridge rate-limiting
   const panGesture = Gesture.Pan()
-    .maxPointers(2)
+    .onBegin(() => {
+      'worklet';
+      isInteracting.value = true;
+      panActive.value = true;
+      savedRotX.value = rotX.value;
+      savedRotY.value = rotY.value;
+      runOnJS(setIsInteractingState)(true);
+      runOnJS(handleInteractionStart)();
+    })
     .onUpdate((e) => {
       'worklet';
-      translateX.value = savedTranslateX.value + e.translationX;
-      translateY.value = savedTranslateY.value + e.translationY;
+      const next = computePanAngles(savedRotX.value, savedRotY.value, e.translationX, e.translationY);
+      rotX.value = next.rotX;
+      rotY.value = next.rotY;
+
+      const now = Date.now();
+      if (now - lastSyncTime.value >= 24) {
+        lastSyncTime.value = now;
+        runOnJS(scheduleSync)(next.rotX, next.rotY, zoom.value);
+      }
     })
     .onEnd(() => {
       'worklet';
-      savedTranslateX.value = translateX.value;
-      savedTranslateY.value = translateY.value;
+      savedRotX.value = rotX.value;
+      savedRotY.value = rotY.value;
+      runOnJS(scheduleSync)(rotX.value, rotY.value, zoom.value);
+    })
+    .onFinalize(() => {
+      'worklet';
+      panActive.value = false;
+      const stillInteracting = isAnyGestureActive(panActive.value, pinchActive.value);
+      isInteracting.value = stillInteracting;
+      runOnJS(setIsInteractingState)(stillInteracting);
+      if (!stillInteracting) {
+        runOnJS(scheduleSync)(rotX.value, rotY.value, zoom.value);
+      }
     });
 
-  // Pinch (Pinch to zoom)
   const pinchGesture = Gesture.Pinch()
+    .onBegin(() => {
+      'worklet';
+      isInteracting.value = true;
+      pinchActive.value = true;
+      savedZoom.value = zoom.value;
+      runOnJS(setIsInteractingState)(true);
+      runOnJS(handleInteractionStart)();
+    })
     .onUpdate((e) => {
       'worklet';
-      scale.value = Math.min(Math.max(savedScale.value * e.scale, minimumScale), 2.5);
+      const nextZoom = computePinchZoom(savedZoom.value, e.scale);
+      zoom.value = nextZoom;
+
+      const now = Date.now();
+      if (now - lastSyncTime.value >= 24) {
+        lastSyncTime.value = now;
+        runOnJS(scheduleSync)(rotX.value, rotY.value, nextZoom);
+      }
     })
     .onEnd(() => {
       'worklet';
-      savedScale.value = scale.value;
+      savedZoom.value = zoom.value;
+      runOnJS(scheduleSync)(rotX.value, rotY.value, zoom.value);
+    })
+    .onFinalize(() => {
+      'worklet';
+      pinchActive.value = false;
+      const stillInteracting = isAnyGestureActive(panActive.value, pinchActive.value);
+      isInteracting.value = stillInteracting;
+      runOnJS(setIsInteractingState)(stillInteracting);
+      if (!stillInteracting) {
+        runOnJS(scheduleSync)(rotX.value, rotY.value, zoom.value);
+      }
     });
 
   const composedGesture = Gesture.Simultaneous(panGesture, pinchGesture);
 
-  const animatedCanvasStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: translateX.value },
-      { translateY: translateY.value },
-      { scale: scale.value },
-    ],
-  }));
+  // Auto-Orbit lifecycle: respects focus, app state, user interaction, and reduced motion
+  const isAutoOrbitActive = shouldAutoOrbitRun({
+    isEnabled: autoOrbit,
+    isInteracting: isInteractingState,
+    isFocused: isScreenFocused,
+    isAppActive,
+    isReducedMotion,
+  });
 
-  const handleZoomIn = () => {
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const next = Math.min(scale.value + 0.25, 2.5);
-    scale.value = withTiming(next, { duration: 220 });
-    savedScale.value = next;
+  useEffect(() => {
+    if (!isAutoOrbitActive || viewMode !== 'orbit') return;
+
+    let animId: number;
+    let lastTime = Date.now();
+    let accumulatedTime = 0;
+
+    const loop = () => {
+      const now = Date.now();
+      const dt = (now - lastTime) / 1000;
+      lastTime = now;
+
+      if (!isInteracting.value) {
+        accumulatedTime += dt;
+        // Throttle React renders to ~25fps (every 40ms) instead of 60fps
+        if (accumulatedTime >= 0.04) {
+          const nextRotY = rotY.value + 0.15 * accumulatedTime;
+          rotY.value = nextRotY;
+          savedRotY.value = nextRotY;
+          accumulatedTime = 0;
+          scheduleSync(rotX.value, nextRotY, zoom.value);
+        }
+      }
+
+      animId = requestAnimationFrame(loop);
+    };
+
+    animId = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(animId);
+  }, [isAutoOrbitActive, viewMode, rotX, rotY, zoom, savedRotY, scheduleSync, isInteracting]);
+
+  const applyCameraPreset = (target: { rotX: number; rotY: number; zoom: number }) => {
+    rotX.value = target.rotX;
+    savedRotX.value = target.rotX;
+    rotY.value = target.rotY;
+    savedRotY.value = target.rotY;
+    zoom.value = target.zoom;
+    savedZoom.value = target.zoom;
+    setCamera(target);
   };
 
-  const handleZoomOut = () => {
+  const handleSelectPreset = (preset: VanshViewMode) => {
+    void Haptics.selectionAsync();
+    setViewMode(preset);
+    applyCameraPreset(VIEW_PRESETS[preset]);
+    if (preset !== 'orbit') setAutoOrbit(false);
+  };
+
+  const handleToggleOrbit = () => {
+    if (isReducedMotion) return;
+    void Haptics.selectionAsync();
+    setAutoOrbit((prev) => !prev);
+    if (!autoOrbit) {
+      setViewMode('orbit');
+      rotX.value = VIEW_PRESETS.orbit.rotX;
+      savedRotX.value = VIEW_PRESETS.orbit.rotX;
+      setCamera((prev) => ({ ...prev, rotX: VIEW_PRESETS.orbit.rotX }));
+    }
+  };
+
+  const adjustZoom = (delta: number) => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const next = Math.max(scale.value - 0.25, minimumScale);
-    scale.value = withTiming(next, { duration: 220 });
-    savedScale.value = next;
+    const next = Math.max(0.4, Math.min(2.5, zoom.value + delta));
+    zoom.value = next;
+    savedZoom.value = next;
+    setCamera((prev) => ({ ...prev, zoom: next }));
   };
 
   const handleResetZoom = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    scale.value = withSpring(fitScale);
-    savedScale.value = fitScale;
-    translateX.value = withSpring(0);
-    savedTranslateX.value = 0;
-    translateY.value = withSpring(0);
-    savedTranslateY.value = 0;
+    applyCameraPreset(VIEW_PRESETS[viewMode]);
   };
 
-  const handleMemberPress = (member: KulFamilyMember) => {
+  const handleMemberPress = useCallback((member: KulFamilyMember) => {
     void Haptics.selectionAsync();
     onSelectMember?.(member);
-  };
+  }, [onSelectMember]);
+
+  // Project 3D nodes into screen space incorporating fitScale
+  const projectedNodes: Vansh3DNode[] = useMemo(() => {
+    return layout3D.nodes.map((node) => ({
+      ...node,
+      proj: project3D(
+        node.p3d,
+        camera.rotX,
+        camera.rotY,
+        camera.zoom,
+        viewportSize.width,
+        viewportSize.height,
+        layout3D.fitScale
+      ),
+    }));
+  }, [layout3D.nodes, layout3D.fitScale, camera, viewportSize]);
+
+  const projectedNodeMap = useMemo(() => {
+    const map = new Map<string, Vansh3DNode>();
+    for (const n of projectedNodes) map.set(n.data.id, n);
+    return map;
+  }, [projectedNodes]);
+
+  // Project crest
+  const projectedCrest: Vansh3DCrest | null = useMemo(() => {
+    if (!layout3D.crest) return null;
+    return {
+      ...layout3D.crest,
+      proj: project3D(
+        layout3D.crest.p3d,
+        camera.rotX,
+        camera.rotY,
+        camera.zoom,
+        viewportSize.width,
+        viewportSize.height,
+        layout3D.fitScale
+      ),
+    };
+  }, [layout3D.crest, layout3D.fitScale, camera, viewportSize]);
+
+  // Sort nodes back-to-front by depth
+  const sortedNodes = useMemo(() => {
+    return [...projectedNodes].sort((a, b) => (b.proj?.depth || 0) - (a.proj?.depth || 0));
+  }, [projectedNodes]);
+
+  // Selected member
+  const selectedNode = useMemo(() => {
+    return projectedNodes.find((n) => n.data.id === selectedMemberId) ?? null;
+  }, [projectedNodes, selectedMemberId]);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.bg }, style]}>
-      {/* Interactive Gesture Viewport */}
+      {/* Top 3D Mode & Orbit Bar */}
+      <VanshTopHud
+        viewMode={viewMode}
+        autoOrbit={autoOrbit}
+        onSelectPreset={handleSelectPreset}
+        onToggleOrbit={handleToggleOrbit}
+        isDark={isDark}
+        reducedMotion={isReducedMotion}
+      />
+
+      {/* Interactive 3D Gesture Viewport */}
       <GestureDetector gesture={composedGesture}>
-        <Animated.View
+        <View
           style={styles.viewport}
           onLayout={(event) => {
             const { width, height } = event.nativeEvent.layout;
@@ -164,329 +387,163 @@ export function VanshGraphCanvas({
             );
           }}
         >
-          <Animated.View
-            style={[
-              animatedCanvasStyle,
-              {
-                width: layout.canvasWidth,
-                height: layout.canvasHeight,
-                alignSelf: 'center',
-              },
-            ]}
-          >
-            {/* Background SVG Connectors (Ancestral Threads) */}
-            <Svg
-              style={StyleSheet.absoluteFill}
-              width={layout.canvasWidth}
-              height={layout.canvasHeight}
-            >
-              <Defs>
-                <LinearGradient id="vanshGoldGradient" x1="0" y1="0" x2="0" y2="1">
-                  <Stop offset="0" stopColor={theme.brand} stopOpacity="0.9" />
-                  <Stop offset="1" stopColor={theme.brandStrong} stopOpacity="0.45" />
-                </LinearGradient>
-              </Defs>
+          {/* Background SVG Connectors (3D Lineage Filaments) */}
+          <VanshFilaments
+            viewportSize={viewportSize}
+            edges={layout3D.edges}
+            projectedNodeMap={projectedNodeMap}
+            theme={theme}
+          />
 
-              {layout.edges.map((edge: LayoutVanshEdge) => (
-                <React.Fragment key={edge.id}>
-                  {/* Subtle golden ambient glow path */}
-                  <Path
-                    d={edge.pathD}
-                    fill="none"
-                    stroke={isDark ? COLORS.navGlowGoldDark : COLORS.navGlowGoldLight}
-                    strokeWidth={edge.type === 'spouse' ? 3.5 : 5.5}
-                    strokeLinecap="round"
-                    strokeDasharray={edge.type === 'spouse' ? '5,5' : undefined}
-                  />
-                  {/* Main golden sacred thread */}
-                  <Path
-                    d={edge.pathD}
-                    fill="none"
-                    stroke="url(#vanshGoldGradient)"
-                    strokeWidth={edge.type === 'spouse' ? 1.8 : 2.2}
-                    strokeLinecap="round"
-                    strokeDasharray={edge.type === 'spouse' ? '4,4' : undefined}
-                  />
-                  {/* Node attachment endpoints */}
-                  <SvgCircle
-                    cx={edge.startX}
-                    cy={edge.startY}
-                    r={2.8}
-                    fill={theme.brand}
-                  />
-                  <SvgCircle
-                    cx={edge.endX}
-                    cy={edge.endY}
-                    r={3.2}
-                    fill={theme.brand}
-                  />
-                </React.Fragment>
-              ))}
-            </Svg>
+          {/* 3D Ancestral Crest Floating Anchor */}
+          <VanshCrestBadge crest={projectedCrest} theme={theme} />
 
-            {/* Top Kuldevi & Gotra Sacred Crest */}
-            {layout.crest ? (
-              <View
+          {/* 3D Spatial Member Nodes */}
+          {sortedNodes.map((node: Vansh3DNode) => {
+            const member = node.data;
+            const isSelected = selectedMemberId === member.id;
+            const kinshipTier = getKinshipTier(node.generation);
+            const proj = node.proj;
+            if (!proj) return null;
+
+            const scale = Math.max(0.65, Math.min(1.25, proj.scale));
+            const cardWidth = 118 * scale;
+            const cardHeight = 94 * scale;
+
+            return (
+              <Pressable
+                key={member.id}
+                onPress={() => handleMemberPress(member)}
                 style={[
-                  styles.crestCard,
+                  styles.memberCard3D,
                   {
-                    left: layout.crest.x,
-                    top: layout.crest.y,
-                    width: layout.crest.width,
-                    height: layout.crest.height,
-                    backgroundColor: theme.card,
-                    borderColor: theme.brand,
-                    shadowColor: theme.brand,
-                    shadowOpacity: isDark ? 0.22 : 0.1,
-                    shadowRadius: 8,
+                    left: proj.sx - cardWidth / 2,
+                    top: proj.sy - cardHeight / 2,
+                    width: cardWidth,
+                    height: cardHeight,
+                    backgroundColor: node.isRemembered ? theme.cardSoft : theme.card,
+                    borderColor: isSelected
+                      ? theme.brand
+                      : node.isRemembered
+                      ? theme.borderSoft
+                      : theme.border,
+                    borderWidth: isSelected ? 2 : 1,
+                    shadowColor: isSelected ? theme.brand : theme.border,
+                    zIndex: Math.round(proj.depth),
                   },
                 ]}
+                accessibilityRole="button"
+                accessibilityLabel={`${member.name}, ${member.role || 'Family member'}, ${kinshipTier.label}, generation ${node.generation}, ${node.isRemembered ? 'remembered' : 'living'}`}
+                accessibilityHint={isGuardian
+                  ? 'Select to view details and family record actions.'
+                  : 'Select to view family details.'}
+                accessibilityState={{ selected: isSelected }}
               >
-                <View style={styles.crestHeaderRow}>
-                  <View style={[styles.crestIconCircle, { backgroundColor: theme.brandSoft }]}>
-                    <Feather name="shield" size={16} color={theme.brand} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.crestGotraText, { color: theme.brandStrong, fontFamily: FONTS.serifBold }]}>
-                      {layout.crest.gotra ? `${layout.crest.gotra} Gotra` : 'Kul Parampara'}
-                      {layout.crest.pravara ? ` · ${layout.crest.pravara}` : ''}
-                    </Text>
-                    <Text style={[styles.crestDeityText, { color: theme.text, fontFamily: FONTS.sans }]} numberOfLines={1}>
-                      {layout.crest.kuldeviName ? `Kuldevi: ${layout.crest.kuldeviName}` : ''}
-                      {layout.crest.kuldeviName && layout.crest.kuldevtaName ? ' · ' : ''}
-                      {layout.crest.kuldevtaName ? `Kuldevta: ${layout.crest.kuldevtaName}` : ''}
-                    </Text>
-                  </View>
-                </View>
-                {layout.crest.ancestralOrigin ? (
-                  <View style={styles.originRow}>
-                    <Feather name="map-pin" size={11} color={theme.dim} />
-                    <Text style={[styles.originText, { color: theme.dim, fontFamily: FONTS.sans }]} numberOfLines={1}>
-                      Ancestral Origin: {layout.crest.ancestralOrigin}
-                    </Text>
-                  </View>
+                {/* Selection Highlight Ring (Required by test contract) */}
+                {isSelected ? (
+                  <View
+                    pointerEvents="none"
+                    style={[styles.selectionRing, { borderColor: theme.brand }]}
+                  />
                 ) : null}
-              </View>
-            ) : null}
 
-            {/* Generational Member Cards */}
-            {layout.nodes.map((node: LayoutVanshNode) => {
-              const member = node.data;
-              const isSelected = selectedMemberId === member.id;
-              const kinshipTier = getKinshipTier(node.generation);
+                {/* Card Top Row: Kinship Pill & Memorial Diya */}
+                <View style={styles.cardHeaderRow}>
+                  <Pressable
+                    onPress={(event) => {
+                      event.stopPropagation();
+                      void Haptics.selectionAsync();
+                      setActiveKinshipTier(kinshipTier);
+                    }}
+                    hitSlop={6}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${kinshipTier.label}, generation ${node.generation}. Tap for kinship explanation.`}
+                    style={[
+                      styles.kinshipPill,
+                      {
+                        borderColor: theme.borderSoft,
+                        backgroundColor: theme.brandSoft,
+                      },
+                    ]}
+                  >
+                    <Text
+                      numberOfLines={1}
+                      style={[styles.kinshipPillText, { color: theme.brand, fontSize: 9 * scale }]}
+                    >
+                      {kinshipTier.label}
+                    </Text>
+                  </Pressable>
 
-              return (
-                <Pressable
-                  key={member.id}
-                  onPress={() => handleMemberPress(member)}
-                  style={[
-                    styles.memberCard,
-                    {
-                      left: node.x,
-                      top: node.y,
-                      width: node.width,
-                      height: node.height,
-                      backgroundColor: node.isRemembered ? theme.cardSoft : theme.card,
-                      borderColor: isSelected
-                        ? theme.brand
-                        : node.isRemembered
-                        ? theme.borderSoft
-                        : theme.border,
-                      borderWidth: isSelected ? 2 : 1,
-                      shadowColor: isSelected ? theme.brand : COLORS.darkBg,
-                      shadowOpacity: isSelected ? 0.42 : 0.08,
-                      shadowRadius: isSelected ? 12 : 4,
-                    },
-                  ]}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${member.name}, ${member.role || 'Family member'}, ${kinshipTier.label}, generation ${node.generation}, ${node.isRemembered ? 'remembered' : 'living'}`}
-                  accessibilityHint={isGuardian
-                    ? 'Select to view details and family record actions.'
-                    : 'Select to view family details.'}
-                  accessibilityState={{ selected: isSelected }}
-                >
-                  {/* Selection Highlight Ring */}
-                  {isSelected ? (
+                  {node.isRemembered ? (
                     <View
-                      pointerEvents="none"
-                      style={[styles.selectionRing, { borderColor: theme.brand }]}
-                    />
-                  ) : null}
-
-                  {/* Top Header: Kinship Badge (left) & Diya/status indicator (right) */}
-                  <View style={styles.cardHeaderRow}>
-                    <Pressable
-                      onPress={(event) => {
-                        event.stopPropagation();
-                        void Haptics.selectionAsync();
-                        setActiveKinshipTier(kinshipTier);
-                      }}
-                      hitSlop={6}
-                      accessibilityRole="button"
-                      accessibilityLabel={`${kinshipTier.label}, generation ${node.generation}. Tap for kinship explanation.`}
                       style={[
-                        styles.kinshipPill,
+                        styles.smritiPill,
                         {
                           borderColor: theme.borderSoft,
                           backgroundColor: theme.brandSoft,
                         },
                       ]}
                     >
-                      <Text
-                        numberOfLines={1}
-                        style={[styles.kinshipPillText, { color: theme.brand }]}
-                      >
-                        {kinshipTier.label}
-                      </Text>
-                    </Pressable>
+                      <Text style={[styles.diyaIcon, { fontSize: 10 * scale }]}>🪔</Text>
+                    </View>
+                  ) : node.data.linked_user_id ? (
+                    <View style={[styles.statusDot, { backgroundColor: COLORS.success }]} />
+                  ) : (
+                    <View style={{ width: 4 }} />
+                  )}
+                </View>
 
-                    {node.isRemembered ? (
-                      <View
-                        style={[
-                          styles.smritiPill,
-                          {
-                            borderColor: theme.borderSoft,
-                            backgroundColor: theme.brandSoft,
-                          },
-                        ]}
-                      >
-                        <Text style={styles.diyaIcon}>🪔</Text>
-                      </View>
-                    ) : node.data.linked_user_id ? (
-                      <View style={[styles.statusDot, { backgroundColor: COLORS.success }]} />
-                    ) : (
-                      <View style={{ width: 6 }} />
-                    )}
-                  </View>
+                {/* Avatar Initial Circle */}
+                <View style={[styles.avatarCircle, { backgroundColor: theme.brandSoft, width: 26 * scale, height: 26 * scale, borderRadius: 13 * scale }]}>
+                  <Text style={{ fontFamily: FONTS.serifBold, fontSize: 12 * scale, color: theme.brand }}>
+                    {member.name.trim().charAt(0).toUpperCase() || 'ॐ'}
+                  </Text>
+                </View>
 
-                  {/* Centered Sacred Avatar Circle */}
-                  <View style={[styles.avatarCircle, { backgroundColor: theme.brandSoft }]}>
-                    <Text style={{ fontFamily: FONTS.serifBold, fontSize: 15, color: theme.brand }}>
-                      {member.name.trim().charAt(0).toUpperCase() || 'ॐ'}
-                    </Text>
-                  </View>
-
-                  {/* Member Name & Role */}
-                  <View style={styles.memberBody}>
-                    <Text
-                      style={[
-                        styles.memberName,
-                        { color: theme.text, fontFamily: FONTS.serifBold, textAlign: 'center' },
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {member.name}
-                    </Text>
-                    <Text style={[styles.memberRole, { color: theme.dim, fontFamily: FONTS.sans, textAlign: 'center' }]} numberOfLines={1}>
-                      {member.role || 'Family member'}
-                    </Text>
-                    {member.linked_user_id ? (
-                      <View style={[styles.linkedBadgeRow, { justifyContent: 'center' }]}>
-                        <Feather name="check-circle" size={9} color={theme.brand} />
-                        <Text numberOfLines={1} style={[styles.linkedBadgeText, { color: theme.brand, fontFamily: FONTS.sansSemiBold }]}>
-                          On Shoonaya
-                        </Text>
-                      </View>
-                    ) : null}
-                  </View>
-
-                </Pressable>
-              );
-            })}
-          </Animated.View>
-        </Animated.View>
+                {/* Member Name & Role */}
+                <View style={styles.memberBody}>
+                  <Text
+                    style={[
+                      styles.memberName,
+                      { color: theme.text, fontFamily: FONTS.serifBold, fontSize: 11 * scale, textAlign: 'center' },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {member.name}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.memberRole,
+                      { color: theme.dim, fontFamily: FONTS.sans, fontSize: 9 * scale, textAlign: 'center' },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {member.role || 'Family member'}
+                  </Text>
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
       </GestureDetector>
 
-      {/* Floating Canvas Controls */}
-      <View style={styles.controlsDock}>
-        <Pressable
-          onPress={handleZoomIn}
-          style={[styles.controlBtn, { backgroundColor: theme.card, borderColor: theme.border }]}
-          accessibilityRole="button"
-          accessibilityLabel="Zoom in lineage tree"
-          accessibilityHint="Increase the tree size."
-        >
-          <Feather name="plus" size={17} color={theme.text} />
-        </Pressable>
-        <Pressable
-          onPress={handleZoomOut}
-          style={[styles.controlBtn, { backgroundColor: theme.card, borderColor: theme.border }]}
-          accessibilityRole="button"
-          accessibilityLabel="Zoom out lineage tree"
-          accessibilityHint="Decrease the tree size."
-        >
-          <Feather name="minus" size={17} color={theme.text} />
-        </Pressable>
-        <Pressable
-          onPress={handleResetZoom}
-          style={[styles.controlBtn, { backgroundColor: theme.card, borderColor: theme.border }]}
-          accessibilityRole="button"
-          accessibilityLabel="Recenter lineage tree"
-          accessibilityHint="Fit the tree to the available space and reset its position."
-        >
-          <Feather name="maximize-2" size={14} color={theme.brand} />
-        </Pressable>
-      </View>
+      {/* Selected Member Quick HUD (Bottom Inspector) */}
+      <VanshBottomHud selectedNode={selectedNode} theme={theme} />
+
+      {/* Floating Canvas Zoom Controls */}
+      <VanshControlsDock
+        onZoomIn={() => adjustZoom(0.25)}
+        onZoomOut={() => adjustZoom(-0.25)}
+        onResetZoom={handleResetZoom}
+        isDark={isDark}
+      />
 
       {/* Kinship Explainer Tooltip Modal */}
-      {activeKinshipTier ? (
-        <Modal
-          transparent
-          animationType="fade"
-          visible={Boolean(activeKinshipTier)}
-          onRequestClose={() => setActiveKinshipTier(null)}
-        >
-          <Pressable
-            style={styles.modalBackdrop}
-            onPress={() => setActiveKinshipTier(null)}
-          >
-            <Pressable
-              onPress={(e) => e.stopPropagation()}
-              style={[
-                styles.tooltipCard,
-                {
-                  backgroundColor: theme.card,
-                  borderColor: theme.border,
-                },
-              ]}
-            >
-              <View style={styles.tooltipHeaderRow}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-                  <Text style={[styles.tooltipTitle, { color: theme.text, fontFamily: FONTS.serifBold }]}>
-                    {activeKinshipTier.label}
-                  </Text>
-                  <View style={[styles.genTag, { backgroundColor: theme.brandSoft }]}>
-                    <Text style={[styles.genTagText, { color: theme.brand }]}>
-                      Gen {activeKinshipTier.generation}
-                    </Text>
-                  </View>
-                </View>
-                <Pressable
-                  onPress={() => setActiveKinshipTier(null)}
-                  hitSlop={10}
-                  accessibilityLabel="Close kinship explanation"
-                >
-                  <Feather name="x" size={18} color={theme.dim} />
-                </Pressable>
-              </View>
-
-              <Text style={[styles.tooltipSubtitle, { color: theme.brand, fontFamily: FONTS.sansSemiBold }]}>
-                {activeKinshipTier.hindiLabel} · {activeKinshipTier.description}
-              </Text>
-
-              <Text style={[styles.tooltipBody, { color: theme.text, fontFamily: FONTS.sans }]}>
-                {activeKinshipTier.tooltip}
-              </Text>
-
-              <View style={[styles.tooltipDivider, { borderTopColor: theme.borderSoft }]}>
-                <Text style={[styles.tooltipNote, { color: theme.dim, fontFamily: FONTS.sans }]}>
-                  In Kutumb Vansh, generations trace your sacred roots from foundational elders down to future descendants.
-                </Text>
-              </View>
-            </Pressable>
-          </Pressable>
-        </Modal>
-      ) : null}
+      <VanshKinshipModal
+        activeKinshipTier={activeKinshipTier}
+        onClose={() => setActiveKinshipTier(null)}
+        isDark={isDark}
+      />
     </View>
   );
 }
@@ -498,224 +555,45 @@ const styles = StyleSheet.create({
     borderRadius: RADII.xl,
     overflow: 'hidden',
     position: 'relative',
-    marginVertical: 0,
-  },
-  viewport: {
-    flex: 1,
-    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
     paddingBottom: 72,
   },
-  crestCard: {
+  viewport: {
     position: 'absolute',
-    borderRadius: 18,
-    borderWidth: 1.5,
-    padding: 12,
-    justifyContent: 'center',
-    gap: 6,
-    elevation: 3,
-    shadowColor: COLORS.darkBg,
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    overflow: 'hidden',
   },
-  crestHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  crestIconCircle: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  crestGotraText: {
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 0.3,
-  },
-  crestDeityText: {
-    fontSize: 12,
-    fontWeight: '500',
-    marginTop: 2,
-  },
-  originRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingLeft: 44,
-  },
-  originText: {
-    fontSize: 11,
-  },
-  memberCard: {
+  memberCard3D: {
     position: 'absolute',
-    borderRadius: 16,
-    padding: 10,
+    borderRadius: RADII.lg,
+    padding: 6,
+    alignItems: 'center',
     justifyContent: 'space-between',
-    elevation: 2,
-    shadowColor: COLORS.darkBg,
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.16,
+    shadowRadius: 5,
   },
   selectionRing: {
     position: 'absolute',
-    top: -3,
-    left: -3,
-    right: -3,
-    bottom: -3,
-    borderRadius: 19,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: RADII.lg,
     borderWidth: 2,
   },
-  cardHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    minHeight: 18,
-  },
-  kinshipPill: {
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderRadius: 5,
-    borderWidth: 1,
-    maxWidth: 84,
-  },
-  kinshipPillText: {
-    fontSize: 9,
-    fontFamily: FONTS.sansSemiBold,
-    lineHeight: 12,
-  },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: COLORS.familyModalScrim,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  tooltipCard: {
-    width: '100%',
-    maxWidth: 320,
-    borderRadius: 18,
-    borderWidth: 1,
-    padding: 18,
-  },
-  tooltipHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-  },
-  tooltipTitle: {
-    fontSize: 17,
-    lineHeight: 22,
-  },
-  genTag: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  genTagText: {
-    fontSize: 10,
-    fontFamily: FONTS.sansSemiBold,
-  },
-  tooltipSubtitle: {
-    fontSize: 12,
-    lineHeight: 16,
-    marginBottom: 8,
-  },
-  tooltipBody: {
-    fontSize: 13,
-    lineHeight: 19,
-  },
-  tooltipDivider: {
-    marginTop: 12,
-    paddingTop: 10,
-    borderTopWidth: 1,
-  },
-  tooltipNote: {
-    fontSize: 11,
-    lineHeight: 16,
-  },
-  genPill: {
-    paddingHorizontal: 7,
-    paddingVertical: 1.5,
-    borderRadius: 7,
-  },
-  genPillText: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.2,
-  },
-  smritiPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    paddingHorizontal: 6,
-    paddingVertical: 1.5,
-    borderRadius: 7,
-    borderWidth: 1,
-  },
-  diyaIcon: {
-    fontSize: 10,
-  },
-  smritiText: {
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  avatarCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'center',
-    marginVertical: 2,
-  },
-  memberBody: {
-    gap: 2,
-    marginTop: 4,
-  },
-  memberName: {
-    fontSize: 13,
-    letterSpacing: 0.1,
-  },
-  memberRole: {
-    fontSize: 11,
-  },
-  linkedBadgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    marginTop: 2,
-  },
-  linkedBadgeText: {
-    fontSize: 9.5,
-    fontWeight: '600',
-  },
-  controlsDock: {
-    position: 'absolute',
-    bottom: 24,
-    right: 16,
-    flexDirection: 'column',
-    gap: 8,
-  },
-  controlBtn: {
-    width: MIN_TOUCH_TARGET,
-    height: MIN_TOUCH_TARGET,
-    borderRadius: MIN_TOUCH_TARGET / 2,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 3,
-    shadowColor: COLORS.darkBg,
-    shadowOpacity: 0.15,
-    shadowRadius: 5,
-  },
+  cardHeaderRow: { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  kinshipPill: { paddingHorizontal: 5, paddingVertical: 1, borderRadius: RADII.pill, borderWidth: 0.5 },
+  kinshipPillText: { fontFamily: FONTS.sansSemiBold },
+  smritiPill: { paddingHorizontal: 3, paddingVertical: 1, borderRadius: RADII.pill, borderWidth: 0.5 },
+  diyaIcon: { textAlign: 'center' },
+  statusDot: { width: 6, height: 6, borderRadius: 3 },
+  avatarCircle: { alignItems: 'center', justifyContent: 'center', marginVertical: 2 },
+  memberBody: { width: '100%', alignItems: 'center' },
+  memberName: { width: '100%' },
+  memberRole: { width: '100%' },
 });

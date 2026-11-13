@@ -93,7 +93,6 @@ const OVER_LIMIT_CEILINGS: Record<string, number> = {
   'components/ui/TimePickerField.tsx': 782,
   'lib/homeCache.ts': 780,
   'components/mandali/PostComments.tsx': 727,
-  'components/kul/VanshGraphCanvas.tsx': 721,
   'lib/ashrama.ts': 701,
   'components/ui/CalendarDatePicker.tsx': 692,
   'components/tour/AppTourModal.tsx': 691,

@@ -41,7 +41,7 @@ describe('KUL family tree interaction contract', () => {
   });
 
   it('fits the canvas from measured dimensions and keeps it centered around the controls dock', () => {
-    assert.match(canvas, /computeVanshFitScale\(/);
+    assert.match(canvas, /computeVansh3DLayout\(/);
     assert.match(canvas, /onLayout=\{\(event\) =>/);
     assert.match(canvas, /alignItems: 'center'/);
     assert.match(canvas, /justifyContent: 'center'/);
