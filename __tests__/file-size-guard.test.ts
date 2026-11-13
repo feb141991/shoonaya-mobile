@@ -99,7 +99,6 @@ const OVER_LIMIT_CEILINGS: Record<string, number> = {
   'components/settings/AccountDeletionSheet.tsx': 688,
   'lib/lineage-data.ts': 671,
   'components/sanskara/SanskaraNodeSheet.tsx': 645,
-  'lib/diaspora-temples.ts': 622,
   'components/vrat/VratFastingCard.tsx': 611,
 };
 
