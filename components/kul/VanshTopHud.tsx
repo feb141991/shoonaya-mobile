@@ -21,7 +21,7 @@ export function VanshTopHud({
   isDark,
   reducedMotion = false,
 }: VanshTopHudProps) {
-  const theme = themeColor(isDark);
+  const theme = themeColor(true);
 
   return (
     <View style={styles.topHudBar}>

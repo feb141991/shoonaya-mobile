@@ -17,7 +17,7 @@ export function VanshControlsDock({
   onResetZoom,
   isDark,
 }: VanshControlsDockProps) {
-  const theme = themeColor(isDark);
+  const theme = themeColor(true);
 
   return (
     <View style={styles.controlsDock}>
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
   controlsDock: {
     position: 'absolute',
     right: 12,
-    bottom: 12,
+    bottom: 80,
     zIndex: 100,
     flexDirection: 'column',
     gap: 8,

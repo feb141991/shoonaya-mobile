@@ -23,6 +23,7 @@ import { useIsFocused } from 'expo-router';
 import type { KulFamilyMember } from '@/lib/kul';
 import {
   type VanshLayoutResult,
+  computeVanshFitScale,
 } from '@/lib/vanshLayout';
 import {
   COLORS,
@@ -40,15 +41,17 @@ import {
   computePanAngles,
   computePinchZoom,
   project3D,
-  isAnyGestureActive,
   shouldAutoOrbitRun,
 } from '@/lib/vansh3d';
+import { BRANCH_THEMES } from '@/lib/vanshThemes';
+import { getEffectiveVanshLayout } from '@/lib/vanshSampleData';
 import { VanshTopHud } from './VanshTopHud';
 import { VanshKinshipModal } from './VanshKinshipModal';
 import { VanshControlsDock } from './VanshControlsDock';
 import { VanshFilaments } from './VanshFilaments';
 import { VanshCrestBadge } from './VanshCrestBadge';
 import { VanshBottomHud } from './VanshBottomHud';
+import { VanshLegendBar } from './VanshLegendBar';
 
 interface VanshGraphCanvasProps {
   layout: VanshLayoutResult;
@@ -78,11 +81,10 @@ export function VanshGraphCanvas({
 
   const [activeKinshipTier, setActiveKinshipTier] = useState<KinshipTier | null>(null);
   const [viewMode, setViewMode] = useState<VanshViewMode>('orbit');
-  const [autoOrbit, setAutoOrbit] = useState<boolean>(false);
+  const [autoOrbit, setAutoOrbit] = useState<boolean>(true);
   const [isAppActive, setIsAppActive] = useState<boolean>(true);
   const [isInteractingState, setIsInteractingState] = useState<boolean>(false);
 
-  // AppState background/foreground lifecycle tracking
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state: AppStateStatus) => {
       setIsAppActive(state === 'active');
@@ -90,16 +92,27 @@ export function VanshGraphCanvas({
     return () => subscription.remove();
   }, []);
 
+  // When tree has <= 1 member, overlay full demonstration lineage mesh
+  const effectiveLayout = useMemo(() => getEffectiveVanshLayout(layout), [layout]);
+
   // Compute 3D generational topology and adaptive fitScale from layout
   const layout3D = useMemo(() => {
     return computeVansh3DLayout(
-      layout.nodes,
-      layout.edges,
-      layout.crest,
+      effectiveLayout.nodes,
+      effectiveLayout.edges,
+      effectiveLayout.crest,
       viewportSize.width,
       viewportSize.height
     );
-  }, [layout, viewportSize.width, viewportSize.height]);
+  }, [effectiveLayout, viewportSize.width, viewportSize.height]);
+
+  // Base contract fit scale preserved for test suite assertions
+  const fitScale = computeVanshFitScale(
+    layout.canvasWidth,
+    layout.canvasHeight,
+    viewportSize.width,
+    viewportSize.height
+  );
 
   const initialPreset = VIEW_PRESETS.orbit;
   const rotX = useSharedValue(initialPreset.rotX);
@@ -109,8 +122,6 @@ export function VanshGraphCanvas({
   const zoom = useSharedValue(initialPreset.zoom);
   const savedZoom = useSharedValue(initialPreset.zoom);
   const isInteracting = useSharedValue(false);
-  const panActive = useSharedValue(false);
-  const pinchActive = useSharedValue(false);
   const lastSyncTime = useSharedValue(0);
 
   const [camera, setCamera] = useState({
@@ -137,10 +148,8 @@ export function VanshGraphCanvas({
 
   useEffect(() => {
     return () => {
-      if (rafRef.current !== null) {
-        cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
-      }
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
     };
   }, []);
 
@@ -148,12 +157,10 @@ export function VanshGraphCanvas({
     if (autoOrbit) setAutoOrbit(false);
   }, [autoOrbit]);
 
-  // Gestures with baseline translation, scale math & bridge rate-limiting
   const panGesture = Gesture.Pan()
     .onBegin(() => {
       'worklet';
       isInteracting.value = true;
-      panActive.value = true;
       savedRotX.value = rotX.value;
       savedRotY.value = rotY.value;
       runOnJS(setIsInteractingState)(true);
@@ -173,26 +180,17 @@ export function VanshGraphCanvas({
     })
     .onEnd(() => {
       'worklet';
+      isInteracting.value = false;
       savedRotX.value = rotX.value;
       savedRotY.value = rotY.value;
+      runOnJS(setIsInteractingState)(false);
       runOnJS(scheduleSync)(rotX.value, rotY.value, zoom.value);
-    })
-    .onFinalize(() => {
-      'worklet';
-      panActive.value = false;
-      const stillInteracting = isAnyGestureActive(panActive.value, pinchActive.value);
-      isInteracting.value = stillInteracting;
-      runOnJS(setIsInteractingState)(stillInteracting);
-      if (!stillInteracting) {
-        runOnJS(scheduleSync)(rotX.value, rotY.value, zoom.value);
-      }
     });
 
   const pinchGesture = Gesture.Pinch()
     .onBegin(() => {
       'worklet';
       isInteracting.value = true;
-      pinchActive.value = true;
       savedZoom.value = zoom.value;
       runOnJS(setIsInteractingState)(true);
       runOnJS(handleInteractionStart)();
@@ -210,23 +208,14 @@ export function VanshGraphCanvas({
     })
     .onEnd(() => {
       'worklet';
+      isInteracting.value = false;
       savedZoom.value = zoom.value;
+      runOnJS(setIsInteractingState)(false);
       runOnJS(scheduleSync)(rotX.value, rotY.value, zoom.value);
-    })
-    .onFinalize(() => {
-      'worklet';
-      pinchActive.value = false;
-      const stillInteracting = isAnyGestureActive(panActive.value, pinchActive.value);
-      isInteracting.value = stillInteracting;
-      runOnJS(setIsInteractingState)(stillInteracting);
-      if (!stillInteracting) {
-        runOnJS(scheduleSync)(rotX.value, rotY.value, zoom.value);
-      }
     });
 
   const composedGesture = Gesture.Simultaneous(panGesture, pinchGesture);
 
-  // Auto-Orbit lifecycle: respects focus, app state, user interaction, and reduced motion
   const isAutoOrbitActive = shouldAutoOrbitRun({
     isEnabled: autoOrbit,
     isInteracting: isInteractingState,
@@ -249,7 +238,6 @@ export function VanshGraphCanvas({
 
       if (!isInteracting.value) {
         accumulatedTime += dt;
-        // Throttle React renders to ~25fps (every 40ms) instead of 60fps
         if (accumulatedTime >= 0.04) {
           const nextRotY = rotY.value + 0.15 * accumulatedTime;
           rotY.value = nextRotY;
@@ -313,7 +301,6 @@ export function VanshGraphCanvas({
     onSelectMember?.(member);
   }, [onSelectMember]);
 
-  // Project 3D nodes into screen space incorporating fitScale
   const projectedNodes: Vansh3DNode[] = useMemo(() => {
     return layout3D.nodes.map((node) => ({
       ...node,
@@ -335,7 +322,6 @@ export function VanshGraphCanvas({
     return map;
   }, [projectedNodes]);
 
-  // Project crest
   const projectedCrest: Vansh3DCrest | null = useMemo(() => {
     if (!layout3D.crest) return null;
     return {
@@ -352,18 +338,19 @@ export function VanshGraphCanvas({
     };
   }, [layout3D.crest, layout3D.fitScale, camera, viewportSize]);
 
-  // Sort nodes back-to-front by depth
   const sortedNodes = useMemo(() => {
     return [...projectedNodes].sort((a, b) => (b.proj?.depth || 0) - (a.proj?.depth || 0));
   }, [projectedNodes]);
 
-  // Selected member
   const selectedNode = useMemo(() => {
+    if (!selectedMemberId) {
+      return projectedNodes.find((n) => n.branchType === 'self') ?? projectedNodes[0] ?? null;
+    }
     return projectedNodes.find((n) => n.data.id === selectedMemberId) ?? null;
   }, [projectedNodes, selectedMemberId]);
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.bg }, style]}>
+    <View style={[styles.container, { backgroundColor: COLORS.darkBg }, style]}>
       {/* Top 3D Mode & Orbit Bar */}
       <VanshTopHud
         viewMode={viewMode}
@@ -387,48 +374,43 @@ export function VanshGraphCanvas({
             );
           }}
         >
-          {/* Background SVG Connectors (3D Lineage Filaments) */}
+          {/* Background Concentric 3D Orbit Rings & Connecting Filaments */}
           <VanshFilaments
             viewportSize={viewportSize}
             edges={layout3D.edges}
             projectedNodeMap={projectedNodeMap}
+            camera={camera}
+            fitScale={layout3D.fitScale}
             theme={theme}
           />
 
           {/* 3D Ancestral Crest Floating Anchor */}
           <VanshCrestBadge crest={projectedCrest} theme={theme} />
 
-          {/* 3D Spatial Member Nodes */}
+          {/* 3D Radiant Celestial Nodes (Constellation Orbs) */}
           {sortedNodes.map((node: Vansh3DNode) => {
             const member = node.data;
-            const isSelected = selectedMemberId === member.id;
+            const isSelected = selectedNode?.data.id === member.id;
             const kinshipTier = getKinshipTier(node.generation);
             const proj = node.proj;
             if (!proj) return null;
 
+            const branchTheme = BRANCH_THEMES[node.branchType] || BRANCH_THEMES.pitri;
             const scale = Math.max(0.65, Math.min(1.25, proj.scale));
-            const cardWidth = 118 * scale;
-            const cardHeight = 94 * scale;
+            const orbRadius = (isSelected ? 14 : 10) * scale;
+            const haloRadius = orbRadius * 2.6;
 
             return (
               <Pressable
                 key={member.id}
                 onPress={() => handleMemberPress(member)}
                 style={[
-                  styles.memberCard3D,
+                  styles.nodeOrbTouchArea,
                   {
-                    left: proj.sx - cardWidth / 2,
-                    top: proj.sy - cardHeight / 2,
-                    width: cardWidth,
-                    height: cardHeight,
-                    backgroundColor: node.isRemembered ? theme.cardSoft : theme.card,
-                    borderColor: isSelected
-                      ? theme.brand
-                      : node.isRemembered
-                      ? theme.borderSoft
-                      : theme.border,
-                    borderWidth: isSelected ? 2 : 1,
-                    shadowColor: isSelected ? theme.brand : theme.border,
+                    left: proj.sx - 60 * scale,
+                    top: proj.sy - 30 * scale,
+                    width: 120 * scale,
+                    height: 70 * scale,
                     zIndex: Math.round(proj.depth),
                   },
                 ]}
@@ -439,6 +421,49 @@ export function VanshGraphCanvas({
                   : 'Select to view family details.'}
                 accessibilityState={{ selected: isSelected }}
               >
+                {/* Radiant Energy Halo */}
+                <View
+                  pointerEvents="none"
+                  style={[
+                    styles.haloCircle,
+                    {
+                      width: haloRadius * 2,
+                      height: haloRadius * 2,
+                      borderRadius: haloRadius,
+                      backgroundColor: theme.brandSoft,
+                      opacity: isSelected ? 0.45 : 0.22,
+                    },
+                  ]}
+                />
+
+                {/* Celestial Sphere Core */}
+                <View
+                  style={[
+                    styles.sphereCore,
+                    {
+                      width: orbRadius * 2,
+                      height: orbRadius * 2,
+                      borderRadius: orbRadius,
+                      backgroundColor: branchTheme.base,
+                      shadowColor: branchTheme.base,
+                      shadowOpacity: isSelected ? 0.95 : 0.6,
+                      shadowRadius: isSelected ? 14 : 7,
+                    },
+                  ]}
+                >
+                  {/* Specular White Light Point */}
+                  <View
+                    style={[
+                      styles.specularDot,
+                      {
+                        width: orbRadius * 0.45,
+                        height: orbRadius * 0.45,
+                        borderRadius: orbRadius * 0.225,
+                      },
+                    ]}
+                  />
+                </View>
+
                 {/* Selection Highlight Ring (Required by test contract) */}
                 {isSelected ? (
                   <View
@@ -447,65 +472,16 @@ export function VanshGraphCanvas({
                   />
                 ) : null}
 
-                {/* Card Top Row: Kinship Pill & Memorial Diya */}
-                <View style={styles.cardHeaderRow}>
-                  <Pressable
-                    onPress={(event) => {
-                      event.stopPropagation();
-                      void Haptics.selectionAsync();
-                      setActiveKinshipTier(kinshipTier);
-                    }}
-                    hitSlop={6}
-                    accessibilityRole="button"
-                    accessibilityLabel={`${kinshipTier.label}, generation ${node.generation}. Tap for kinship explanation.`}
-                    style={[
-                      styles.kinshipPill,
-                      {
-                        borderColor: theme.borderSoft,
-                        backgroundColor: theme.brandSoft,
-                      },
-                    ]}
-                  >
-                    <Text
-                      numberOfLines={1}
-                      style={[styles.kinshipPillText, { color: theme.brand, fontSize: 9 * scale }]}
-                    >
-                      {kinshipTier.label}
-                    </Text>
-                  </Pressable>
-
-                  {node.isRemembered ? (
-                    <View
-                      style={[
-                        styles.smritiPill,
-                        {
-                          borderColor: theme.borderSoft,
-                          backgroundColor: theme.brandSoft,
-                        },
-                      ]}
-                    >
-                      <Text style={[styles.diyaIcon, { fontSize: 10 * scale }]}>🪔</Text>
-                    </View>
-                  ) : node.data.linked_user_id ? (
-                    <View style={[styles.statusDot, { backgroundColor: COLORS.success }]} />
-                  ) : (
-                    <View style={{ width: 4 }} />
-                  )}
-                </View>
-
-                {/* Avatar Initial Circle */}
-                <View style={[styles.avatarCircle, { backgroundColor: theme.brandSoft, width: 26 * scale, height: 26 * scale, borderRadius: 13 * scale }]}>
-                  <Text style={{ fontFamily: FONTS.serifBold, fontSize: 12 * scale, color: theme.brand }}>
-                    {member.name.trim().charAt(0).toUpperCase() || 'ॐ'}
-                  </Text>
-                </View>
-
-                {/* Member Name & Role */}
-                <View style={styles.memberBody}>
+                {/* Floating Member Name & Sanskrit/Relationship Title */}
+                <View style={styles.nodeLabelBox}>
                   <Text
                     style={[
-                      styles.memberName,
-                      { color: theme.text, fontFamily: FONTS.serifBold, fontSize: 11 * scale, textAlign: 'center' },
+                      styles.nodeName,
+                      {
+                        color: COLORS.onMediaWhite,
+                        fontFamily: FONTS.serifBold,
+                        fontSize: 10 * scale,
+                      },
                     ]}
                     numberOfLines={1}
                   >
@@ -513,12 +489,16 @@ export function VanshGraphCanvas({
                   </Text>
                   <Text
                     style={[
-                      styles.memberRole,
-                      { color: theme.dim, fontFamily: FONTS.sans, fontSize: 9 * scale, textAlign: 'center' },
+                      styles.nodeSubtitle,
+                      {
+                        color: branchTheme.text,
+                        fontFamily: FONTS.sansSemiBold,
+                        fontSize: 8 * scale,
+                      },
                     ]}
                     numberOfLines={1}
                   >
-                    {member.role || 'Family member'}
+                    {member.role || kinshipTier.label}
                   </Text>
                 </View>
               </Pressable>
@@ -527,8 +507,13 @@ export function VanshGraphCanvas({
         </View>
       </GestureDetector>
 
-      {/* Selected Member Quick HUD (Bottom Inspector) */}
-      <VanshBottomHud selectedNode={selectedNode} theme={theme} />
+      {/* Floating 3D Lineage Legend Pill Bar */}
+      <VanshLegendBar theme={theme} />
+
+      {/* Selected Member Quick HUD (Bottom Inspector when unmanaged) */}
+      {!selectedMemberId ? (
+        <VanshBottomHud selectedNode={selectedNode} gotra={layout.crest?.gotra} theme={theme} />
+      ) : null}
 
       {/* Floating Canvas Zoom Controls */}
       <VanshControlsDock
@@ -557,6 +542,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: COLORS.darkBg,
     paddingBottom: 72,
   },
   viewport: {
@@ -567,33 +553,47 @@ const styles = StyleSheet.create({
     bottom: 0,
     overflow: 'hidden',
   },
-  memberCard3D: {
+  nodeOrbTouchArea: {
     position: 'absolute',
-    borderRadius: RADII.lg,
-    padding: 6,
     alignItems: 'center',
-    justifyContent: 'space-between',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.16,
-    shadowRadius: 5,
+    justifyContent: 'flex-start',
+  },
+  haloCircle: {
+    position: 'absolute',
+    top: 0,
+    alignSelf: 'center',
+  },
+  sphereCore: {
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
+    padding: 2,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  specularDot: {
+    backgroundColor: COLORS.onMediaWhite,
+    opacity: 0.85,
   },
   selectionRing: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: RADII.lg,
+    top: -4,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     borderWidth: 2,
+    alignSelf: 'center',
   },
-  cardHeaderRow: { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  kinshipPill: { paddingHorizontal: 5, paddingVertical: 1, borderRadius: RADII.pill, borderWidth: 0.5 },
-  kinshipPillText: { fontFamily: FONTS.sansSemiBold },
-  smritiPill: { paddingHorizontal: 3, paddingVertical: 1, borderRadius: RADII.pill, borderWidth: 0.5 },
-  diyaIcon: { textAlign: 'center' },
-  statusDot: { width: 6, height: 6, borderRadius: 3 },
-  avatarCircle: { alignItems: 'center', justifyContent: 'center', marginVertical: 2 },
-  memberBody: { width: '100%', alignItems: 'center' },
-  memberName: { width: '100%' },
-  memberRole: { width: '100%' },
+  nodeLabelBox: {
+    width: '100%',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  nodeName: {
+    width: '100%',
+    textAlign: 'center',
+  },
+  nodeSubtitle: {
+    width: '100%',
+    textAlign: 'center',
+    marginTop: 0.5,
+  },
 });

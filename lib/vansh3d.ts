@@ -487,19 +487,18 @@ export function computeVansh3DLayout(
   // crest is a fixed-size overlay, so it must use its own envelope rather than
   // the projected member-card scale.
   let fitScale = 1.0;
-  const fitPoints = nodes3D.map((node) => ({ point: node.p3d, kind: 'node' as const }));
+  const fitPoints: Array<{ point: Point3D; kind: 'node' | 'crest' }> = nodes3D.map((node) => ({
+    point: node.p3d,
+    kind: 'node',
+  }));
   if (crest3D) fitPoints.push({ point: crest3D.p3d, kind: 'crest' });
 
   if (fitPoints.length > 0) {
     const cameraSamples = [
-      ...Object.values(VIEW_PRESETS).map((preset) => ({ ...preset, zoom: MAX_ZOOM })),
-      ...[-1.45, -0.7, 0, 0.7, 1.45].flatMap((rotX) =>
-        [0, Math.PI / 2, Math.PI, (Math.PI * 3) / 2].map((rotY) => ({
-          rotX,
-          rotY,
-          zoom: MAX_ZOOM,
-        }))
-      ),
+      ...Object.values(VIEW_PRESETS).map((preset) => ({ ...preset, zoom: preset.zoom })),
+      { rotX: -0.35, rotY: 0, zoom: 1.0 },
+      { rotX: -0.2, rotY: 0.8, zoom: 1.0 },
+      { rotX: -0.2, rotY: -0.8, zoom: 1.0 },
     ];
     const safeTop = TOP_HUD_HEIGHT + 8;
     const safeBottom = viewportHeight - BOTTOM_CONTROLS_HEIGHT - 8;

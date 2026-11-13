@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet } from 'react-native';
 import Svg, {
   Path,
@@ -7,17 +7,28 @@ import Svg, {
   Stop,
   Circle as SvgCircle,
   G,
+  Text as SvgText,
 } from 'react-native-svg';
-import type { Vansh3DEdge, Vansh3DNode } from '@/lib/vansh3d';
+import {
+  project3D,
+  type Vansh3DEdge,
+  type Vansh3DNode,
+} from '@/lib/vansh3d';
+import { COLORS } from '@/lib/constants';
+import { GENERATION_ORBIT_LEVELS } from '@/lib/vanshThemes';
 
 interface VanshFilamentsProps {
   viewportSize: { width: number; height: number };
   edges: Vansh3DEdge[];
   projectedNodeMap: Map<string, Vansh3DNode>;
+  camera: { rotX: number; rotY: number; zoom: number };
+  fitScale: number;
   theme: {
     brand: string;
     brandStrong: string;
     brandSoft: string;
+    text: string;
+    dim: string;
   };
 }
 
@@ -25,8 +36,57 @@ export function VanshFilaments({
   viewportSize,
   edges,
   projectedNodeMap,
+  camera,
+  fitScale,
   theme,
 }: VanshFilamentsProps) {
+  // Compute 3D generational concentric orbit rings
+  const orbitRings = useMemo(() => {
+    return GENERATION_ORBIT_LEVELS.map((level) => {
+      const steps = 24;
+      let pathD = '';
+      for (let i = 0; i <= steps; i++) {
+        const angle = (i / steps) * Math.PI * 2;
+        const x = Math.cos(angle) * 230;
+        const z = Math.sin(angle) * 115;
+        const y = level.yTier;
+        const proj = project3D(
+          { x, y, z },
+          camera.rotX,
+          camera.rotY,
+          camera.zoom,
+          viewportSize.width,
+          viewportSize.height,
+          fitScale
+        );
+        if (i === 0) {
+          pathD += `M ${proj.sx.toFixed(1)} ${proj.sy.toFixed(1)}`;
+        } else {
+          pathD += ` L ${proj.sx.toFixed(1)} ${proj.sy.toFixed(1)}`;
+        }
+      }
+      pathD += ' Z';
+
+      // Label coordinate on the edge of the ring
+      const labelProj = project3D(
+        { x: 235, y: level.yTier, z: 0 },
+        camera.rotX,
+        camera.rotY,
+        camera.zoom,
+        viewportSize.width,
+        viewportSize.height,
+        fitScale
+      );
+
+      return {
+        key: `ring-${level.gen}`,
+        d: pathD,
+        labelProj,
+        label: level.label,
+      };
+    });
+  }, [camera, fitScale, viewportSize]);
+
   return (
     <Svg
       style={StyleSheet.absoluteFill}
@@ -35,10 +95,39 @@ export function VanshFilaments({
     >
       <Defs>
         <LinearGradient id="vanshGoldGradient" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor={theme.brand} stopOpacity="0.85" />
-          <Stop offset="1" stopColor={theme.brandStrong} stopOpacity="0.45" />
+          <Stop offset="0" stopColor={COLORS.radiantGold} stopOpacity="0.95" />
+          <Stop offset="1" stopColor={COLORS.tileGold} stopOpacity="0.65" />
+        </LinearGradient>
+        <LinearGradient id="vanshRoseGradient" x1="0" y1="0" x2="1" y2="0">
+          <Stop offset="0" stopColor={COLORS.like} stopOpacity="0.95" />
+          <Stop offset="1" stopColor={COLORS.deityRose} stopOpacity="0.65" />
         </LinearGradient>
       </Defs>
+
+      {/* 3D Concentric Generational Orbit Rings */}
+      {orbitRings.map((ring) => (
+        <G key={ring.key}>
+          <Path
+            d={ring.d}
+            fill="none"
+            stroke={COLORS.tileGold}
+            strokeWidth={1}
+            strokeDasharray="4,4"
+            opacity={0.35}
+          />
+          {ring.labelProj.scale > 0.4 && (
+            <SvgText
+              x={ring.labelProj.sx + 8}
+              y={ring.labelProj.sy + 3}
+              fill={COLORS.onMediaWhite}
+              fontSize={9 * Math.max(ring.labelProj.scale, 0.75)}
+              opacity={0.55}
+            >
+              {ring.label}
+            </SvgText>
+          )}
+        </G>
+      ))}
 
       {/* 3D Lineage Edges */}
       {edges.map((edge: Vansh3DEdge) => {
@@ -69,31 +158,32 @@ export function VanshFilaments({
             <Path
               d={d}
               fill="none"
-              stroke={theme.brandSoft}
-              strokeWidth={isSpouse ? 3.5 : 5.0}
+              stroke={isSpouse ? COLORS.deityRose : COLORS.tileGold}
+              strokeWidth={isSpouse ? 3.0 : 4.5}
               strokeLinecap="round"
               strokeDasharray={isSpouse ? '4,4' : undefined}
+              opacity={isSpouse ? 0.35 : 0.45}
             />
             {/* Central radiant thread */}
             <Path
               d={d}
               fill="none"
-              stroke={isSpouse ? theme.brandSoft : 'url(#vanshGoldGradient)'}
-              strokeWidth={isSpouse ? 1.6 : 2.2 * avgScale}
+              stroke={isSpouse ? 'url(#vanshRoseGradient)' : 'url(#vanshGoldGradient)'}
+              strokeWidth={isSpouse ? 1.5 : 2.0 * avgScale}
               strokeLinecap="round"
               strokeDasharray={isSpouse ? '4,4' : undefined}
             />
             <SvgCircle
               cx={sx}
               cy={sy}
-              r={2.4 * avgScale}
-              fill={theme.brand}
+              r={2.6 * avgScale}
+              fill={isSpouse ? COLORS.deityRose : COLORS.tileGold}
             />
             <SvgCircle
               cx={ex}
               cy={ey}
-              r={2.8 * avgScale}
-              fill={theme.brand}
+              r={3.0 * avgScale}
+              fill={isSpouse ? COLORS.deityRose : COLORS.tileGold}
             />
           </G>
         );
