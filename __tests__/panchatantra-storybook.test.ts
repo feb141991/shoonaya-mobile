@@ -1127,3 +1127,14 @@ test('The Remedy That Was Worse Than the Disease story uses six paragraph-aligne
     assert.ok(getPanchatantraSceneArtwork('panchatantra-remedy-worse-than-disease', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });
+
+test('The Results of Education story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-results-of-education');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-results-of-education'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-results-of-education'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-results-of-education', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});

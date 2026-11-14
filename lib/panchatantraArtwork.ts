@@ -15,105 +15,21 @@ if (typeof require !== 'undefined' && require.extensions) {
 }
 
 /**
- * Local pre-bundled illustrated artwork assets for Panchatantra fables.
- * Allows zero-latency, 100% offline rendering without network roundtrips.
+ * Cover artwork for Panchatantra fables whose cover is NOT their first scene.
+ * Every other story's cover is scene 1 of LOCAL_PANCHATANTRA_SCENE_ARTWORK
+ * (see getPanchatantraArtworkSource), so a new story needs only its scene list.
+ * All assets are pre-bundled for offline rendering.
  */
 const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
-  'panchatantra-brahmin-and-crooks': require('@/assets/panchatantra/brahmin-crooks-1.webp'),
   'panchatantra-camel-bell': require('@/assets/panchatantra/camel-bell.webp'),
   'panchatantra-clever-hare-and-elephant': require('@/assets/panchatantra/clever-hare-and-elephant.webp'),
   'panchatantra-moon-lake-rabbits': require('@/assets/panchatantra/moon-lake-rabbits.webp'),
   'panchatantra-blue-jackal': require('@/assets/panchatantra/blue-jackal.webp'),
-  'panchatantra-lion-and-rabbit': require('@/assets/panchatantra/lion-rabbit-1.webp'),
   'panchatantra-crows-and-cobra': require('@/assets/panchatantra/crows-and-cobra.webp'),
   'panchatantra-mice-and-elephants': require('@/assets/panchatantra/mice-and-elephants.webp'),
   'panchatantra-four-friends': require('@/assets/panchatantra/four-friends.webp'),
   'panchatantra-monkey-and-crocodile': require('@/assets/panchatantra/monkey-and-crocodile.webp'),
-  'panchatantra-mongoose-and-child': require('@/assets/panchatantra/mongoose-child-1.webp'),
   'panchatantra-talkative-tortoise': require('@/assets/panchatantra/talkative-tortoise.webp'),
-  'panchatantra-dove-king-and-net': require('@/assets/panchatantra/dove-king-1.webp'),
-  'panchatantra-foolish-friend-monkey': require('@/assets/panchatantra/foolish-friend-1.webp'),
-  'panchatantra-two-fish-and-frog': require('@/assets/panchatantra/two-fish-frog-1.webp'),
-  'panchatantra-bird-with-two-heads': require('@/assets/panchatantra/bird-two-heads-1.webp'),
-  'panchatantra-crane-and-crab': require('@/assets/panchatantra/crane-crab-1.webp'),
-  'panchatantra-merchant-and-iron-balance': require('@/assets/panchatantra/merchant-balance-1.webp'),
-  'panchatantra-lion-mouse-and-cat': require('@/assets/panchatantra/lion-mouse-cat-1.webp'),
-  'panchatantra-jackal-and-drum': require('@/assets/panchatantra/jackal-drum-1.webp'),
-  'panchatantra-fox-and-grapes': require('@/assets/panchatantra/fox-grapes-1.webp'),
-  'panchatantra-ass-in-tiger-skin': require('@/assets/panchatantra/ass-tiger-skin-1.webp'),
-  'panchatantra-greedy-jackal': require('@/assets/panchatantra/greedy-jackal-1.webp'),
-  'panchatantra-heron-and-fish': require('@/assets/panchatantra/heron-fish-1.webp'),
-  'panchatantra-sparrow-and-elephant': require('@/assets/panchatantra/sparrow-elephant-1.webp'),
-  'panchatantra-king-and-minister': require('@/assets/panchatantra/king-minister-1.webp'),
-  'panchatantra-owl-and-crows': require('@/assets/panchatantra/owl-crows-1.webp'),
-  'panchatantra-golden-dropping-bird': require('@/assets/panchatantra/golden-bird-1.webp'),
-  'panchatantra-weaver-as-vishnu': require('@/assets/panchatantra/weaver-vishnu-1.webp'),
-  'panchatantra-cat-as-judge': require('@/assets/panchatantra/cat-judge-1.webp'),
-  'panchatantra-donkey-and-jackal': require('@/assets/panchatantra/donkey-jackal-1.webp'),
-  'panchatantra-potter-as-warrior': require('@/assets/panchatantra/potter-warrior-1.webp'),
-  'panchatantra-greedy-brahmin-dream': require('@/assets/panchatantra/greedy-brahmin-1.webp'),
-  'panchatantra-snake-and-frogs': require('@/assets/panchatantra/snake-frogs-1.webp'),
-  'panchatantra-lion-makers': require('@/assets/panchatantra/lion-makers-1.webp'),
-  'panchatantra-sage-and-mouse': require('@/assets/panchatantra/sage-mouse-1.webp'),
-  'panchatantra-three-fish': require('@/assets/panchatantra/three-fish-1.webp'),
-  'panchatantra-dharmabuddhi-papabuddhi': require('@/assets/panchatantra/dharmabuddhi-1.webp'),
-  'panchatantra-musical-donkey': require('@/assets/panchatantra/musical-donkey-1.webp'),
-  'panchatantra-monk-and-jackal': require('@/assets/panchatantra/monk-jackal-1.webp'),
-  'panchatantra-lion-and-bull': require('@/assets/panchatantra/lion-bull-1.webp'),
-  'panchatantra-hunter-and-pigeons': require('@/assets/panchatantra/hunter-pigeons-1.webp'),
-  'panchatantra-four-treasure-seekers': require('@/assets/panchatantra/four-treasure-seekers-1.webp'),
-  'panchatantra-raven-and-swan': require('@/assets/panchatantra/raven-swan-1.webp'),
-  'panchatantra-golds-gloom': require('@/assets/panchatantra/golds-gloom-1.webp'),
-  'panchatantra-mother-shandilees-bargain': require('@/assets/panchatantra/mother-shandilee-1.webp'),
-  'panchatantra-self-defeating-forethought': require('@/assets/panchatantra/self-defeating-forethought-1.webp'),
-  'panchatantra-mister-duly': require('@/assets/panchatantra/mister-duly-1.webp'),
-  'panchatantra-soft-the-weaver': require('@/assets/panchatantra/soft-the-weaver-1.webp'),
-  'panchatantra-hang-ball-and-greedy': require('@/assets/panchatantra/hang-ball-and-greedy-1.webp'),
-  'panchatantra-spots-captivity': require('@/assets/panchatantra/spots-captivity-1.webp'),
-  'panchatantra-hundred-wit-thousand-wit-single-wit': require('@/assets/panchatantra/hundred-wit-thousand-wit-single-wit-1.webp'),
-  'panchatantra-slow-the-weaver': require('@/assets/panchatantra/slow-the-weaver-1.webp'),
-  'panchatantra-unforgiving-monkey': require('@/assets/panchatantra/unforgiving-monkey-1.webp'),
-  'panchatantra-credulous-fiend': require('@/assets/panchatantra/credulous-fiend-1.webp'),
-  'panchatantra-three-breasted-princess': require('@/assets/panchatantra/three-breasted-princess-1.webp'),
-  'panchatantra-fiend-who-washed-his-feet': require('@/assets/panchatantra/fiend-who-washed-his-feet-1.webp'),
-  'panchatantra-handsome-and-theodore': require('@/assets/panchatantra/handsome-and-theodore-1.webp'),
-  'panchatantra-flop-ear-and-dusty': require('@/assets/panchatantra/flop-ear-and-dusty-1.webp'),
-  'panchatantra-jackal-who-killed-no-elephants': require('@/assets/panchatantra/jackal-who-killed-no-elephants-1.webp'),
-  'panchatantra-ungrateful-wife': require('@/assets/panchatantra/ungrateful-wife-1.webp'),
-  'panchatantra-king-joy-and-secretary-splendour': require('@/assets/panchatantra/king-joy-and-secretary-splendour-1.webp'),
-  'panchatantra-farmers-wife': require('@/assets/panchatantra/farmers-wife-1.webp'),
-  'panchatantra-pert-hen-sparrow': require('@/assets/panchatantra/pert-hen-sparrow-1.webp'),
-  'panchatantra-how-supersmart-ate-the-elephant': require('@/assets/panchatantra/how-supersmart-ate-the-elephant-1.webp'),
-  'panchatantra-dog-who-went-abroad': require('@/assets/panchatantra/dog-who-went-abroad-1.webp'),
-  'panchatantra-how-birds-picked-a-king': require('@/assets/panchatantra/how-birds-picked-a-king-1.webp'),
-  'panchatantra-snake-and-the-ants': require('@/assets/panchatantra/snake-and-the-ants-1.webp'),
-  'panchatantra-snake-who-paid-cash': require('@/assets/panchatantra/snake-who-paid-cash-1.webp'),
-  'panchatantra-unsocial-swans': require('@/assets/panchatantra/unsocial-swans-1.webp'),
-  'panchatantra-self-sacrificing-dove': require('@/assets/panchatantra/self-sacrificing-dove-1.webp'),
-  'panchatantra-old-man-with-young-wife': require('@/assets/panchatantra/old-man-with-young-wife-1.webp'),
-  'panchatantra-brahman-thief-and-ghost': require('@/assets/panchatantra/brahman-thief-and-ghost-1.webp'),
-  'panchatantra-snake-in-princes-belly': require('@/assets/panchatantra/snake-in-princes-belly-1.webp'),
-  'panchatantra-gullible-carpenter': require('@/assets/panchatantra/gullible-carpenter-1.webp'),
-  'panchatantra-mouse-maid-made-mouse': require('@/assets/panchatantra/mouse-maid-made-mouse-1.webp'),
-  'panchatantra-cave-that-talked': require('@/assets/panchatantra/cave-that-talked-1.webp'),
-  'panchatantra-butter-blinded-brahman': require('@/assets/panchatantra/butter-blinded-brahman-1.webp'),
-  'panchatantra-monk-who-left-his-body-behind': require('@/assets/panchatantra/monk-who-left-his-body-behind-1.webp'),
-  'panchatantra-girl-who-married-a-snake': require('@/assets/panchatantra/girl-who-married-a-snake-1.webp'),
-  'panchatantra-remedy-worse-than-disease': require('@/assets/panchatantra/remedy-worse-than-disease-1.webp'),
-  'panchatantra-wedge-pulling-monkey': require('@/assets/panchatantra/wedge-pulling-monkey-1.webp'),
-  'panchatantra-merchant-strong-tooth': require('@/assets/panchatantra/merchant-strong-tooth-1.webp'),
-  'panchatantra-godly-and-june': require('@/assets/panchatantra/godly-and-june-1.webp'),
-  'panchatantra-jackal-at-ram-fight': require('@/assets/panchatantra/jackal-at-ram-fight-1.webp'),
-  'panchatantra-weavers-wife': require('@/assets/panchatantra/weavers-wife-1.webp'),
-  'panchatantra-ungrateful-man': require('@/assets/panchatantra/ungrateful-man-1.webp'),
-  'panchatantra-leap-and-creep': require('@/assets/panchatantra/leap-and-creep-1.webp'),
-  'panchatantra-passion-and-owl': require('@/assets/panchatantra/passion-and-owl-1.webp'),
-  'panchatantra-uglys-trust-abused': require('@/assets/panchatantra/uglys-trust-abused-1.webp'),
-  'panchatantra-lion-and-the-carpenter': require('@/assets/panchatantra/lion-and-the-carpenter-1.webp'),
-  'panchatantra-plover-who-fought-the-ocean': require('@/assets/panchatantra/plover-who-fought-the-ocean-1.webp'),
-  'panchatantra-shrewd-old-gander': require('@/assets/panchatantra/shrewd-old-gander-1.webp'),
-  'panchatantra-lion-and-the-ram': require('@/assets/panchatantra/lion-and-the-ram-1.webp'),
-  'panchatantra-smart-the-jackal': require('@/assets/panchatantra/smart-the-jackal-1.webp'),
 };
 
 /**
@@ -771,6 +687,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/remedy-worse-than-disease-5.webp'),
     require('@/assets/panchatantra/remedy-worse-than-disease-6.webp'),
   ],
+  'panchatantra-results-of-education': [
+    require('@/assets/panchatantra/panchatantra-results-of-education-1.webp'),
+    require('@/assets/panchatantra/panchatantra-results-of-education-2.webp'),
+    require('@/assets/panchatantra/panchatantra-results-of-education-3.webp'),
+    require('@/assets/panchatantra/panchatantra-results-of-education-4.webp'),
+    require('@/assets/panchatantra/panchatantra-results-of-education-5.webp'),
+    require('@/assets/panchatantra/panchatantra-results-of-education-6.webp'),
+  ],
   'panchatantra-wedge-pulling-monkey': [
     require('@/assets/panchatantra/wedge-pulling-monkey-1.webp'),
     require('@/assets/panchatantra/wedge-pulling-monkey-2.webp'),
@@ -887,17 +811,13 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
 
 /**
  * Resolves the artwork source for a given Panchatantra story.
- * Prioritizes local pre-bundled assets; falls back to cloud CDN if available, or returns null.
+ * An explicit cover wins; otherwise the story's first scene is its cover. Returns null when
+ * the story has no local artwork.
  */
 export function getPanchatantraArtworkSource(storyId: string): ImageSourcePropType | null {
   if (!storyId) return null;
   const normalizedId = storyId.trim().toLowerCase();
-  
-  if (LOCAL_PANCHATANTRA_ARTWORK[normalizedId]) {
-    return LOCAL_PANCHATANTRA_ARTWORK[normalizedId];
-  }
-
-  return null;
+  return LOCAL_PANCHATANTRA_ARTWORK[normalizedId] ?? LOCAL_PANCHATANTRA_SCENE_ARTWORK[normalizedId]?.[0] ?? null;
 }
 
 /**
@@ -919,8 +839,7 @@ export function getPanchatantraSceneArtwork(storyId: string, sceneIndex: number)
  * Returns true if a local artwork asset is available for the given story.
  */
 export function hasPanchatantraArtwork(storyId: string): boolean {
-  if (!storyId) return false;
-  return Boolean(LOCAL_PANCHATANTRA_ARTWORK[storyId.trim().toLowerCase()]);
+  return getPanchatantraArtworkSource(storyId) !== null;
 }
 
 /**
