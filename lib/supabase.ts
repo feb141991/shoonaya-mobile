@@ -2,6 +2,7 @@ import 'react-native-url-polyfill/auto';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
+import { fetchWithDeadline, isSupabaseAuthRequest, requestUrl, SUPABASE_AUTH_FETCH_TIMEOUT_MS } from './fetchDeadline';
 import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
 import { canRetryTransientTransportFailure } from '@/lib/api-auth-policy';
@@ -150,11 +151,15 @@ const resilientFetch: typeof fetch = async (input, init) => {
     }
   };
   const requestIds: Array<string | null> = [];
+  const isAuthCall = isSupabaseAuthRequest(requestUrl(input));
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       attemptCount += 1;
-      const response = await fetch(input, init);
+      // Auth calls get a deadline (lib/fetchDeadline.ts); everything else keeps its caller's own.
+      const response = isAuthCall
+        ? await fetchWithDeadline(fetch, input, init, SUPABASE_AUTH_FETCH_TIMEOUT_MS)
+        : await fetch(input, init);
       statuses.push(response.status);
       requestIds.push(response.headers.get('x-request-id'));
       saveDiagnostic(response);

@@ -677,3 +677,24 @@ Rules:
   the Japa launcher (10 tests) and the bead ring pendant (6 tests) replaced the source-grep assertions for the same behaviour.
 - Not done: converting the other ~100 files (the roughly 45 that pin UI layout are the best candidates); component tests run on Node, so they say
   nothing about Android or iOS rendering. Device verification is still required (section 7).
+
+### 38. Abort Reasons Must Survive React Native's AbortController
+- React Native 0.86 installs the old `abort-controller` package as the global `AbortController`
+  (`node_modules/react-native/Libraries/Core/setUpXHR.js`). Its `abort()` takes no argument and its signal has no `reason`, so on a device
+  `controller.abort(error)` keeps nothing and `signal.reason` is `undefined`. Node's built-in controller keeps it, so unit tests cannot see this.
+- Abort with a reason only through `abortWithReason(controller, reason)` and read one only through `abortReasonOf(signal)` (`lib/abort-reason.ts`).
+  Never read `signal.reason` directly or rethrow it: a timeout then rejects with `undefined`, which no caller can classify and no log can name.
+- Origin: 2026-11-13, the iOS simulator logged "Failed to persist japa completion undefined" twice (11:14 and 11:18 IST). The device log showed the app
+  made no request to the API or Supabase in that window: each of the three attempts gave up in sign-in preparation (`apiFetch`'s 15-second auth phase)
+  and rejected with `undefined`. The save stayed queued on the device (uncertain outcomes are never dropped). Sweep: the only direct `reason` reads were in
+  `lib/api.ts` (four) and `lib/getRequestSingleFlight.ts` (one); both, and `lib/api-phase-timeout.ts`, now use the helpers. Guard:
+  `__tests__/abort-reason-polyfill.test.ts` runs against the real `abort-controller` package (each fix proven red by reverting it).
+- A timeout is not a cancellation. `apiFetch`'s timeouts are `AbortError`s marked `timeout: true`; `isFetchTimeout` recognises them and
+  `isFetchCancelled` returns false for them (`lib/fetch-error.ts`), so the Japa, Mood, Sankalpa and Mandali write retries keep retrying a timeout and
+  log it when they give up, while a request the screen cancelled still stops silently. Guard: `__tests__/fetch-timeout-vs-cancel.test.ts`.
+- Supabase's sign-in calls (`/auth/v1/`: token refresh, sign-in, sign-out) have a 20-second deadline in the client's fetch (`lib/fetchDeadline.ts`,
+  used by `lib/supabase.ts`). auth-js shares one in-flight token refresh between every caller, so a refresh whose connection hangs would otherwise hold
+  every later `getSession()`, and with it every signed-in `apiFetch`, until the app restarts. Guard: `__tests__/supabase-auth-deadline.test.ts`.
+- Cause of the stall: not proven. The device log from 11:06 to 11:23 shows no request started except to Metro, so the save waited inside sign-in
+  preparation with no network activity; the access token was over an hour old, so `getSession()` needed a refresh, consistent with a refresh begun
+  earlier that never settled. The log before 11:06 had already been discarded. If it recurs, the log now names the stalled step.
