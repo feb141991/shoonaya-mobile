@@ -155,6 +155,13 @@ const ALL_SHARED_SLUGS = [
   'guru-purnima',
 ];
 
+// Festivals whose mantra is deliberately withheld (AGENTS.md section 3: unsupported or
+// initiation-only content stays withheld). Ashadha Gupt Navratri's Navarna (Chamunda)
+// mantra is traditionally received from one's own teacher, so the content now says
+// to chant "the mantra given by one's own teacher" instead of publishing one.
+// A listed slug may have no mantra; if it has one, it is checked like any other.
+const MANTRA_WITHHELD_SLUGS = new Set(['gupt-navratri-ashadha-begins']);
+
 const ALL_AUTHORED_SLUGS = [
   ...ALL_HINDU_SLUGS,
   ...ALL_SIKH_SLUGS,
@@ -258,6 +265,7 @@ describe('Batch 1, 2, 3, 4 & 5 Festival Content & Hero Integration Suite', () =>
   it('retains structurally complete mantra drafts, verified for Ekadashis and gated for others', () => {
     for (const slug of ALL_AUTHORED_SLUGS) {
       const festival = lookupFestivalContent(slug)!;
+      if (!festival.mantra && MANTRA_WITHHELD_SLUGS.has(slug)) continue;
       assert.ok(festival.mantra, `Expected mantra for ${slug}`);
       assert.ok(festival.mantra.sanskrit.length > 5, `Mantra text too short for ${slug}`);
       assert.ok(festival.mantra.transliteration.length > 5, `Transliteration too short for ${slug}`);

@@ -81,7 +81,7 @@ const OVER_LIMIT_CEILINGS: Record<string, number> = {
   'app/dyuta.tsx': 947,
   'app/nitya-plans.tsx': 936,
   'lib/mandali.ts': 932,
-  'lib/panchatantraArtwork.ts': 930,
+  'lib/panchatantraArtwork.ts': 876,
   'app/ai-chat.tsx': 928,
   'app/dharm-veer/[id].tsx': 904,
   'components/home/DharmaMitraChatSheet.tsx': 898,
