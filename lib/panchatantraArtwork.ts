@@ -98,6 +98,7 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-cave-that-talked': require('@/assets/panchatantra/cave-that-talked-1.webp'),
   'panchatantra-butter-blinded-brahman': require('@/assets/panchatantra/butter-blinded-brahman-1.webp'),
   'panchatantra-monk-who-left-his-body-behind': require('@/assets/panchatantra/monk-who-left-his-body-behind-1.webp'),
+  'panchatantra-girl-who-married-a-snake': require('@/assets/panchatantra/girl-who-married-a-snake-1.webp'),
   'panchatantra-wedge-pulling-monkey': require('@/assets/panchatantra/wedge-pulling-monkey-1.webp'),
   'panchatantra-merchant-strong-tooth': require('@/assets/panchatantra/merchant-strong-tooth-1.webp'),
   'panchatantra-godly-and-june': require('@/assets/panchatantra/godly-and-june-1.webp'),
@@ -752,6 +753,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/monk-who-left-his-body-behind-4.webp'),
     require('@/assets/panchatantra/monk-who-left-his-body-behind-5.webp'),
     require('@/assets/panchatantra/monk-who-left-his-body-behind-6.webp'),
+  ],
+  'panchatantra-girl-who-married-a-snake': [
+    require('@/assets/panchatantra/girl-who-married-a-snake-1.webp'),
+    require('@/assets/panchatantra/girl-who-married-a-snake-2.webp'),
+    require('@/assets/panchatantra/girl-who-married-a-snake-3.webp'),
+    require('@/assets/panchatantra/girl-who-married-a-snake-4.webp'),
+    require('@/assets/panchatantra/girl-who-married-a-snake-5.webp'),
+    require('@/assets/panchatantra/girl-who-married-a-snake-6.webp'),
   ],
   'panchatantra-wedge-pulling-monkey': [
     require('@/assets/panchatantra/wedge-pulling-monkey-1.webp'),

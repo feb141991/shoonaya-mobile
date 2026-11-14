@@ -1105,3 +1105,14 @@ test('The Monk Who Left His Body Behind story uses six paragraph-aligned offline
     assert.ok(getPanchatantraSceneArtwork('panchatantra-monk-who-left-his-body-behind', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });
+
+test('The Girl Who Married a Snake story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-girl-who-married-a-snake');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-girl-who-married-a-snake'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-girl-who-married-a-snake'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-girl-who-married-a-snake', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
