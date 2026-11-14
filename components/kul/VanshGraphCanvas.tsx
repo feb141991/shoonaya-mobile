@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   AppState,
   type AppStateStatus,
@@ -21,10 +21,7 @@ import {
 import { useIsFocused } from 'expo-router';
 
 import type { KulFamilyMember } from '@/lib/kul';
-import {
-  type VanshLayoutResult,
-  computeVanshFitScale,
-} from '@/lib/vanshLayout';
+import type { VanshLayoutResult } from '@/lib/vanshLayout';
 import {
   COLORS,
   FONTS,
@@ -40,6 +37,7 @@ import {
   computeVansh3DLayout,
   computePanAngles,
   computePinchZoom,
+  gestureClockMs,
   project3D,
   shouldAutoOrbitRun,
 } from '@/lib/vansh3d';
@@ -106,14 +104,6 @@ export function VanshGraphCanvas({
     );
   }, [effectiveLayout, viewportSize.width, viewportSize.height]);
 
-  // Base contract fit scale preserved for test suite assertions
-  const fitScale = computeVanshFitScale(
-    layout.canvasWidth,
-    layout.canvasHeight,
-    viewportSize.width,
-    viewportSize.height
-  );
-
   const initialPreset = VIEW_PRESETS.orbit;
   const rotX = useSharedValue(initialPreset.rotX);
   const savedRotX = useSharedValue(initialPreset.rotX);
@@ -130,29 +120,8 @@ export function VanshGraphCanvas({
     zoom: initialPreset.zoom,
   });
 
-  const rafRef = useRef<number | null>(null);
-  const pendingCameraRef = useRef<{ rotX: number; rotY: number; zoom: number } | null>(null);
-
-  const scheduleSync = useCallback((rx: number, ry: number, z: number) => {
-    pendingCameraRef.current = { rotX: rx, rotY: ry, zoom: z };
-    if (rafRef.current === null) {
-      rafRef.current = requestAnimationFrame(() => {
-        rafRef.current = null;
-        if (pendingCameraRef.current) {
-          setCamera(pendingCameraRef.current);
-          pendingCameraRef.current = null;
-        }
-      });
-    }
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-    };
-  }, []);
-
+  // Gesture and auto-orbit updates are already throttled (24 ms and 40 ms), so
+  // each sync sets the camera directly (setCamera is stable across renders).
   const handleInteractionStart = useCallback(() => {
     if (autoOrbit) setAutoOrbit(false);
   }, [autoOrbit]);
@@ -172,10 +141,10 @@ export function VanshGraphCanvas({
       rotX.value = next.rotX;
       rotY.value = next.rotY;
 
-      const now = Date.now();
+      const now = gestureClockMs();
       if (now - lastSyncTime.value >= 24) {
         lastSyncTime.value = now;
-        runOnJS(scheduleSync)(next.rotX, next.rotY, zoom.value);
+        runOnJS(setCamera)({ rotX: next.rotX, rotY: next.rotY, zoom: zoom.value });
       }
     })
     .onEnd(() => {
@@ -184,7 +153,7 @@ export function VanshGraphCanvas({
       savedRotX.value = rotX.value;
       savedRotY.value = rotY.value;
       runOnJS(setIsInteractingState)(false);
-      runOnJS(scheduleSync)(rotX.value, rotY.value, zoom.value);
+      runOnJS(setCamera)({ rotX: rotX.value, rotY: rotY.value, zoom: zoom.value });
     });
 
   const pinchGesture = Gesture.Pinch()
@@ -200,10 +169,10 @@ export function VanshGraphCanvas({
       const nextZoom = computePinchZoom(savedZoom.value, e.scale);
       zoom.value = nextZoom;
 
-      const now = Date.now();
+      const now = gestureClockMs();
       if (now - lastSyncTime.value >= 24) {
         lastSyncTime.value = now;
-        runOnJS(scheduleSync)(rotX.value, rotY.value, nextZoom);
+        runOnJS(setCamera)({ rotX: rotX.value, rotY: rotY.value, zoom: nextZoom });
       }
     })
     .onEnd(() => {
@@ -211,7 +180,7 @@ export function VanshGraphCanvas({
       isInteracting.value = false;
       savedZoom.value = zoom.value;
       runOnJS(setIsInteractingState)(false);
-      runOnJS(scheduleSync)(rotX.value, rotY.value, zoom.value);
+      runOnJS(setCamera)({ rotX: rotX.value, rotY: rotY.value, zoom: zoom.value });
     });
 
   const composedGesture = Gesture.Simultaneous(panGesture, pinchGesture);
@@ -243,7 +212,7 @@ export function VanshGraphCanvas({
           rotY.value = nextRotY;
           savedRotY.value = nextRotY;
           accumulatedTime = 0;
-          scheduleSync(rotX.value, nextRotY, zoom.value);
+          setCamera({ rotX: rotX.value, rotY: nextRotY, zoom: zoom.value });
         }
       }
 
@@ -252,7 +221,7 @@ export function VanshGraphCanvas({
 
     animId = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(animId);
-  }, [isAutoOrbitActive, viewMode, rotX, rotY, zoom, savedRotY, scheduleSync, isInteracting]);
+  }, [isAutoOrbitActive, viewMode, rotX, rotY, zoom, savedRotY, isInteracting]);
 
   const applyCameraPreset = (target: { rotX: number; rotY: number; zoom: number }) => {
     rotX.value = target.rotX;

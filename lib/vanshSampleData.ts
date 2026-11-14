@@ -1,5 +1,5 @@
 import type { KulFamilyMember } from './kul';
-import type { LayoutVanshEdge, LayoutVanshNode } from './vanshLayout';
+import type { LayoutVanshCrest, LayoutVanshEdge, LayoutVanshNode } from './vanshLayout';
 
 export const SAMPLE_VANSH_MEMBERS: KulFamilyMember[] = [
   // Gen 1: Paternal Grandparents (Pitri Paksha)
@@ -66,7 +66,7 @@ export function getSampleVanshLayout(): { nodes: LayoutVanshNode[]; edges: Layou
   return { nodes, edges };
 }
 
-export function getEffectiveVanshLayout(layout: { nodes: LayoutVanshNode[]; edges: LayoutVanshEdge[]; crest: any }): { nodes: LayoutVanshNode[]; edges: LayoutVanshEdge[]; crest: any } {
+export function getEffectiveVanshLayout(layout: { nodes: LayoutVanshNode[]; edges: LayoutVanshEdge[]; crest: LayoutVanshCrest | null }): { nodes: LayoutVanshNode[]; edges: LayoutVanshEdge[]; crest: LayoutVanshCrest | null } {
   const parentChildCount = layout.edges.filter((e) => e.type === 'parent_child').length;
   const isMinimalGraph = layout.nodes.length < 5 || parentChildCount < 2;
 

@@ -17,8 +17,6 @@ import {
   MAX_PITCH,
   TOP_HUD_HEIGHT,
   BOTTOM_CONTROLS_HEIGHT,
-  CARD_BASE_WIDTH,
-  CARD_BASE_HEIGHT,
 } from '../lib/vansh3d';
 import { MIN_TOUCH_TARGET } from '../lib/constants';
 import type { LayoutVanshNode, LayoutVanshEdge } from '../lib/vanshLayout';

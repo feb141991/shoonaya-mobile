@@ -131,6 +131,16 @@ export function computePinchZoom(
 }
 
 /**
+ * Wall-clock milliseconds for throttling camera syncs inside gesture worklets.
+ * It runs in gesture event callbacks, never during render; it lives here so the
+ * canvas's gesture builders stay free of direct impure calls.
+ */
+export function gestureClockMs(): number {
+  'worklet';
+  return Date.now();
+}
+
+/**
  * Evaluates whether auto-orbit rotation is permitted to run under live system conditions.
  */
 export function shouldAutoOrbitRun(conditions: AutoOrbitConditions): boolean {
@@ -417,14 +427,10 @@ export function computeVansh3DLayout(
   // Determine span of generations and columns
   let minCol = 0;
   let maxCol = 1;
-  let minGen = 1;
-  let maxGen = 1;
 
   if (nodes.length > 0) {
     minCol = Math.min(...nodes.map((n) => n.columnIndex));
     maxCol = Math.max(...nodes.map((n) => n.columnIndex));
-    minGen = Math.min(...nodes.map((n) => n.generation));
-    maxGen = Math.max(...nodes.map((n) => n.generation));
   }
 
   const nodes3D: Vansh3DNode[] = nodes.map((node) => {
