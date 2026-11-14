@@ -1,9 +1,20 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 import { DYUTA_COPY } from '../lib/dyuta/copy';
 
-const screen = readFileSync(new URL('../app/dyuta.tsx', import.meta.url), 'utf8');
+const COMPONENTS = new URL('../components/dyuta/', import.meta.url);
+// The screen's text now lives in app/dyuta.tsx and in the files under components/dyuta/. Every assertion below reads
+// all of them as one text, so no scan covers less than it did when everything was in one file.
+const screen = [
+  new URL('../app/dyuta.tsx', import.meta.url),
+  ...readdirSync(COMPONENTS)
+    .filter((file) => /\.tsx?$/.test(file))
+    .sort()
+    .map((file) => new URL(file, COMPONENTS)),
+]
+  .map((file) => readFileSync(file, 'utf8'))
+  .join('\n');
 
 describe('Dyuta Sabha product surface', () => {
   it('renders a visual sabha, seven lamps, animated dice and four Guide moods', () => {

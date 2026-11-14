@@ -289,7 +289,7 @@ export const COLORS = {
   // Dyuta Sabha table surfaces — sampled from the approved in-game mockup
   // (ivory dice, carved sandstone octagon, woven mat). Dice stay ivory in
   // dark mode because they read as physical objects; the table darkens to
-  // sit on darkBg. Used only by app/dyuta.tsx.
+  // sit on darkBg. Used only by app/dyuta.tsx and components/dyuta/.
   dyutaIvory: '#FBF5E8',
   dyutaIvoryShade: '#E3D2B4',
   dyutaIvoryEdge: '#C9B28A',

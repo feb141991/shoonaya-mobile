@@ -1,12 +1,16 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Easing, KeyboardAvoidingView, Platform, Text, TextInput, useColorScheme, useWindowDimensions, View, ScrollView } from 'react-native';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Text, TextInput, useColorScheme, useWindowDimensions, View, ScrollView } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import Svg, { Circle, ClipPath, Defs, Ellipse, G, Line, LinearGradient as SvgLinearGradient, Path, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { Circle, Ellipse, G } from 'react-native-svg';
 import { Image, type ImageSource } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
+import { DiceStage } from '@/components/dyuta/DiceStage';
+import { SabhaHallBackdrop } from '@/components/dyuta/SabhaHallBackdrop';
+import { SabhaTable } from '@/components/dyuta/SabhaTable';
+import type { Theme } from '@/components/dyuta/types';
 import { BackButton } from '@/components/ui/BackButton';
 import { Card } from '@/components/ui/Card';
 import { PressableSurface } from '@/components/ui/PressableSurface';
@@ -67,7 +71,6 @@ const GUIDE_ASSETS: Record<'neutral' | 'thinking' | 'pleased' | 'defeat', ImageS
   defeat: require('@/assets/dyuta/guide-defeat.png'),
 };
 
-const DIE_PIPS: Record<number, readonly number[]> = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 export default function DyutaScreen() {
@@ -363,107 +366,6 @@ function SabhaBoard({ match, playerLabel, guideLabel, guideMood, visibleRoll, ro
   );
 }
 
-type Vec = { x: number; y: number };
-function cubicPoint(p0: Vec, p1: Vec, p2: Vec, p3: Vec, t: number): Vec {
-  const u = 1 - t;
-  return { x: u * u * u * p0.x + 3 * u * u * t * p1.x + 3 * u * t * t * p2.x + t * t * t * p3.x, y: u * u * u * p0.y + 3 * u * u * t * p1.y + 3 * u * t * t * p2.y + t * t * t * p3.y };
-}
-
-/**
- * Cusped (multifoil) pointed arch from `left` to `right`, springing at
- * `spring` and peaking at `apex`, closed down to `floor`. Each lobe bulges
- * outward between inward-pointing cusps, the classic Mughal opening.
- */
-function multifoilArch(left: number, right: number, spring: number, apex: number, floor: number, lobes = 4): string {
-  const width = right - left;
-  const mid = left + width / 2;
-  const leftCurve = [{ x: left, y: spring }, { x: left, y: spring - width * 0.5 }, { x: mid - width * 0.14, y: apex + width * 0.1 }, { x: mid, y: apex }] as const;
-  const rightCurve = [{ x: mid, y: apex }, { x: mid + width * 0.14, y: apex + width * 0.1 }, { x: right, y: spring - width * 0.5 }, { x: right, y: spring }] as const;
-  const centre = { x: mid, y: spring };
-  const depth = width * 0.05;
-  const points: Vec[] = [];
-  for (let index = 0; index <= lobes; index += 1) points.push(cubicPoint(...leftCurve, index / lobes));
-  for (let index = 1; index <= lobes; index += 1) points.push(cubicPoint(...rightCurve, index / lobes));
-  let d = `M ${left} ${floor} L ${left} ${spring}`;
-  for (let index = 1; index < points.length; index += 1) {
-    const from = points[index - 1]; const to = points[index];
-    const m = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 };
-    const away = { x: m.x - centre.x, y: m.y - centre.y };
-    const length = Math.hypot(away.x, away.y) || 1;
-    d += ` Q ${m.x + (away.x / length) * depth} ${m.y + (away.y / length) * depth} ${to.x} ${to.y}`;
-  }
-  return `${d} L ${right} ${floor} Z`;
-}
-
-/**
- * Palace hall behind the in-game header, after the mockup: a cream wall with
- * three sunlit multifoil arches on capitals, a jali screen in the centre
- * opening, hanging brass diyas with glowing flames and potted plants, fading
- * into the floor the table sits on. Decorative only; it scrolls with the page.
- */
-function SabhaHallBackdrop({ width, theme, isDark }: { width: number; theme: Theme; isDark: boolean }) {
-  const height = 560;
-  const wall = theme.cardSoft;
-  const lightTop = isDark ? COLORS.homeHeroDark : COLORS.homeHeroLight;
-  const lightBottom = isDark ? COLORS.homeRaisedDark : COLORS.homeRaisedLight;
-  const glow = isDark ? COLORS.navGlowGoldDark : COLORS.navGlowGoldLight;
-  const column = width * 0.075;
-  const span = (width - column * 4) / 3;
-  const spring = 250;
-  const apex = 96;
-  const opening = (index: number) => { const left = column + index * (span + column); return { left, right: left + span }; };
-  const centre = opening(1);
-  const lamp = (x: number) => <G key={x}>
-    {Array.from({ length: 9 }, (_, index) => <Ellipse key={index} cx={x} cy={4 + index * 6} rx={1.6} ry={2.8} fill="none" stroke={theme.brandStrong} strokeWidth={1} />)}
-    <Circle cx={x} cy={66} r={30} fill="url(#hallFlame)" />
-    <Path d={`M ${x - 16} 66 Q ${x} 86 ${x + 16} 66 Z`} fill={theme.brand} stroke={theme.brandStrong} strokeWidth={1} />
-    <Path d={`M ${x - 18} 66 H ${x + 18}`} stroke={theme.brandStrong} strokeWidth={1.6} strokeLinecap="round" />
-    <Circle cx={x} cy={80} r={2.2} fill={theme.brandStrong} />
-    <Path d={`M ${x} 50 Q ${x + 4} 58 ${x} 64 Q ${x - 4} 58 ${x} 50 Z`} fill={theme.brand} />
-    <Ellipse cx={x} cy={60} rx={1.4} ry={2.6} fill={COLORS.dyutaIvory} />
-  </G>;
-  const plant = (x: number, flip: 1 | -1) => <G key={x} transform={`translate(${x} 40) scale(${flip * 0.6} 0.6)`}>
-    {[[-22, 120, -38], [-10, 108, -14], [6, 112, 14], [18, 126, 36], [-2, 98, 2], [-30, 140, -60], [26, 142, 58]].map(([dx, cy, deg], index) => <Ellipse key={index} cx={dx} cy={cy} rx={6} ry={20} fill={COLORS.sage} fillOpacity={0.55 + (index % 3) * 0.12} transform={`rotate(${deg} ${dx} ${cy})`} />)}
-    <Path d="M -20 150 H 20 L 15 182 Q 0 188 -15 182 Z" fill={theme.brand} />
-    <Path d="M -22 150 H 22" stroke={theme.brandStrong} strokeWidth={3} strokeLinecap="round" />
-  </G>;
-  return <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, width, height }}>
-    <Svg width={width} height={height}>
-      <Defs>
-        <SvgLinearGradient id="hallLight" x1="0" y1="0" x2="0" y2="1"><Stop offset={0} stopColor={lightTop} /><Stop offset={1} stopColor={lightBottom} /></SvgLinearGradient>
-        <SvgLinearGradient id="hallFade" x1="0" y1="0" x2="0" y2="1"><Stop offset={0} stopColor={theme.bg} stopOpacity={0} /><Stop offset={1} stopColor={theme.bg} stopOpacity={1} /></SvgLinearGradient>
-        <RadialGradient id="hallSun" cx="50%" cy="40%" r="50%"><Stop offset={0} stopColor={glow} stopOpacity={0.55} /><Stop offset={1} stopColor={glow} stopOpacity={0} /></RadialGradient>
-        <RadialGradient id="hallFlame" cx="50%" cy="50%" r="50%"><Stop offset={0} stopColor={glow} /><Stop offset={1} stopColor={glow} stopOpacity={0} /></RadialGradient>
-        <ClipPath id="hallJali"><Path d={multifoilArch(centre.left + 14, centre.right - 14, spring + 30, apex + 60, height)} /></ClipPath>
-      </Defs>
-      <Rect x={0} y={0} width={width} height={height} fill={wall} />
-      {[0, 1, 2].map((index) => { const { left, right } = opening(index); return <G key={index}>
-        <Path d={multifoilArch(left - 5, right + 5, spring, apex - 7, height)} fill="none" stroke={theme.premiumBorder} strokeWidth={6} />
-        <Path d={multifoilArch(left, right, spring, apex, height)} fill="url(#hallLight)" stroke={theme.brand} strokeOpacity={0.35} strokeWidth={1.2} />
-      </G>; })}
-      {/* jali screen in the centre opening */}
-      <G clipPath="url(#hallJali)">
-        <Rect x={centre.left} y={apex} width={span} height={height - apex} fill={theme.brandSoft} />
-        {Array.from({ length: 30 }, (_, index) => { const offset = index * 14 - 160; return <G key={index}>
-          <Line x1={centre.left + offset} y1={height} x2={centre.left + offset + height} y2={0} stroke={theme.brand} strokeOpacity={0.35} strokeWidth={1} />
-          <Line x1={centre.left + offset} y1={0} x2={centre.left + offset + height} y2={height} stroke={theme.brand} strokeOpacity={0.35} strokeWidth={1} />
-        </G>; })}
-      </G>
-      <Ellipse cx={width / 2} cy={spring} rx={width * 0.5} ry={spring * 0.9} fill="url(#hallSun)" />
-      {/* columns with capitals and bases */}
-      {[0, 1, 2, 3].map((index) => { const x = index * (span + column); return <G key={index}>
-        <Rect x={x + column * 0.18} y={spring - 4} width={column * 0.64} height={height - spring} fill={wall} stroke={theme.premiumBorder} strokeWidth={1} />
-        <Rect x={x - 2} y={spring - 14} width={column + 4} height={10} rx={2} fill={wall} stroke={theme.brand} strokeOpacity={0.35} strokeWidth={1} />
-        <Path d={`M ${x + column * 0.5} ${spring - 26} l 5 8 l -5 4 l -5 -4 Z`} fill={theme.brand} fillOpacity={0.6} />
-      </G>; })}
-      {[width * 0.24, width * 0.76].map(lamp)}
-      {plant(width * 0.03, 1)}
-      {plant(width * 0.97, -1)}
-      <Rect x={0} y={height - 200} width={width} height={200} fill="url(#hallFade)" />
-    </Svg>
-  </View>;
-}
-
 /** Final seal count shown on the mat once the match is over, in place of the dice. */
 function FinalTally({ playerLabel, guideLabel, seals, copy, theme, isDark }: { playerLabel: string; guideLabel: string; seals: Record<DyutaSide, number>; copy: DyutaCopy; theme: Theme; isDark: boolean }) {
   return <View accessible accessibilityLabel={`${copy.finalScore}: ${playerLabel} ${seals.player}, ${guideLabel} ${seals.guide}`} style={{ alignItems: 'center', gap: SPACING.xs }}>
@@ -537,199 +439,6 @@ function RoundBanner({ label, theme }: { label: string; theme: Theme }) {
   </View>;
 }
 
-/**
- * Octagonal carved table drawn in a 100×100 box and squashed vertically for a
- * seated perspective: a heavy sandstone slab with a lotus-relief rim, a carved
- * lip, a gold filigree band and a layered mandala on the mat.
- */
-function SabhaTable({ width, theme, isDark, children }: { width: number; theme: Theme; isDark: boolean; children: React.ReactNode }) {
-  const height = Math.round(width * 0.76);
-  const rim = isDark ? COLORS.dyutaRimDark : COLORS.dyutaRimLight;
-  const edge = isDark ? COLORS.dyutaRimEdgeDark : COLORS.dyutaRimEdgeLight;
-  const mat = isDark ? COLORS.dyutaMatDark : COLORS.dyutaMatLight;
-  const highlight = isDark ? COLORS.navGlowIvoryDark : COLORS.navGlowIvoryLight;
-  const gold = theme.brand;
-  const cy = 47;
-  const octagon = (radius: number, dy = 0) => Array.from({ length: 8 }, (_, index) => { const angle = Math.PI / 8 + (index * Math.PI) / 4; return `${50 + radius * Math.cos(angle)},${cy + dy + radius * Math.sin(angle)}`; }).join(' ');
-  const ring = (count: number, radius: number, offset = 0) => Array.from({ length: count }, (_, index) => { const angle = offset + (index * 2 * Math.PI) / count; return { x: 50 + radius * Math.cos(angle), y: cy + radius * Math.sin(angle), deg: (angle * 180) / Math.PI }; });
-  // Radial lotus petal centred on (x, y), pointing outward.
-  const petal = (x: number, y: number, deg: number, length: number, girth: number) => `M ${-length} 0 Q 0 ${-girth} ${length} 0 Q 0 ${girth} ${-length} 0 Z`;
-  return <View style={{ width, height, alignSelf: 'center' }}>
-    <Svg width={width} height={height} viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute' }}>
-      <Defs>
-        <SvgLinearGradient id="dyutaSlab" x1="0" y1="0" x2="0" y2="1"><Stop offset={0} stopColor={rim} /><Stop offset={0.55} stopColor={rim} /><Stop offset={1} stopColor={edge} /></SvgLinearGradient>
-        <RadialGradient id="dyutaMat" cx={50} cy={cy} r={37} gradientUnits="userSpaceOnUse"><Stop offset={0} stopColor={mat} /><Stop offset={0.82} stopColor={mat} /><Stop offset={1} stopColor={rim} /></RadialGradient>
-        <RadialGradient id="dyutaFloor" cx="50%" cy="50%" r="50%"><Stop offset={0} stopColor={COLORS.dyutaDieShadow} /><Stop offset={1} stopColor={COLORS.dyutaDieShadow} stopOpacity={0} /></RadialGradient>
-      </Defs>
-      {/* floor shadow and slab thickness */}
-      <Ellipse cx={50} cy={cy + 8} rx={50} ry={46} fill="url(#dyutaFloor)" />
-      <Polygon points={octagon(49.5, 4)} fill={edge} />
-      <Polygon points={octagon(49.5, 2)} fill={edge} stroke={edge} strokeWidth={0.4} />
-      <Polygon points={octagon(49.5)} fill="url(#dyutaSlab)" stroke={edge} strokeWidth={0.6} />
-      {/* faceted stone panels: faces turned away from the light (lower half) carry more shade */}
-      <G>{Array.from({ length: 8 }, (_, index) => {
-        const corner = (radius: number, step: number) => { const angle = Math.PI / 8 + (step * Math.PI) / 4; return `${50 + radius * Math.cos(angle)},${cy + radius * Math.sin(angle)}`; };
-        const facing = Math.sin(Math.PI / 8 + ((index + 0.5) * Math.PI) / 4);
-        return <G key={index}>
-          <Polygon points={`${corner(49.5, index)} ${corner(49.5, index + 1)} ${corner(39.5, index + 1)} ${corner(39.5, index)}`} fill={edge} fillOpacity={0.12 + Math.max(0, facing) * 0.4} />
-          <Line x1={50 + 49.5 * Math.cos(Math.PI / 8 + (index * Math.PI) / 4)} y1={cy + 49.5 * Math.sin(Math.PI / 8 + (index * Math.PI) / 4)} x2={50 + 39.5 * Math.cos(Math.PI / 8 + (index * Math.PI) / 4)} y2={cy + 39.5 * Math.sin(Math.PI / 8 + (index * Math.PI) / 4)} stroke={edge} strokeWidth={0.5} />
-        </G>;
-      })}</G>
-      <Polygon points={octagon(47.4)} fill="none" stroke={highlight} strokeWidth={0.6} />
-      {/* lotus relief: each petal is carved (edge tone) with a lit upper lip */}
-      <G>{ring(28, 42).map(({ x, y, deg }, index) => <G key={index} transform={`translate(${x} ${y}) rotate(${deg})`}>
-        <Path d={petal(x, y, deg, 2.7, 1.9)} fill={edge} fillOpacity={0.55} />
-        <Path d={petal(x, y, deg, 2.7, 1.9)} fill="none" stroke={highlight} strokeWidth={0.35} transform="translate(-0.25 -0.25)" />
-      </G>)}</G>
-      <G>{ring(28, 42, Math.PI / 28).map(({ x, y }, index) => <Circle key={index} cx={x} cy={y} r={0.45} fill={edge} />)}</G>
-      {/* carved lip around the mat */}
-      <Circle cx={50} cy={cy} r={38.4} fill="none" stroke={edge} strokeWidth={1.1} />
-      <Circle cx={50} cy={cy} r={39.3} fill="none" stroke={highlight} strokeWidth={0.4} />
-      {/* gold filigree band */}
-      <Circle cx={50} cy={cy} r={37.4} fill="url(#dyutaMat)" stroke={gold} strokeWidth={0.7} />
-      <Circle cx={50} cy={cy} r={35.2} fill="none" stroke={gold} strokeWidth={0.35} />
-      <G>{ring(36, 36.3).map(({ x, y, deg }, index) => <Ellipse key={index} cx={x} cy={y} rx={0.5} ry={1} fill={gold} fillOpacity={0.75} transform={`rotate(${deg} ${x} ${y})`} />)}</G>
-      <Circle cx={50} cy={cy} r={31.5} fill="none" stroke={gold} strokeWidth={0.3} strokeDasharray="0.8 1.2" />
-      <G>{ring(12, 31.5).map(({ x, y, deg }, index) => <Path key={index} d={`M ${x} ${y - 2} Q ${x + 1.5} ${y} ${x} ${y + 2} Q ${x - 1.5} ${y} ${x} ${y - 2} Z`} fill="none" stroke={gold} strokeWidth={0.35} strokeOpacity={0.8} transform={`rotate(${deg + 90} ${x} ${y})`} />)}</G>
-      {/* layered centre mandala */}
-      <Circle cx={50} cy={cy} r={25} fill="none" stroke={gold} strokeWidth={0.35} strokeOpacity={0.55} />
-      <G>{Array.from({ length: 16 }, (_, index) => <Ellipse key={index} cx={50} cy={cy - 18} rx={2.3} ry={5.2} fill="none" stroke={gold} strokeWidth={0.35} strokeOpacity={0.55} transform={`rotate(${index * 22.5} 50 ${cy})`} />)}</G>
-      <G>{Array.from({ length: 8 }, (_, index) => <Ellipse key={index} cx={50} cy={cy - 11} rx={2.8} ry={6} fill="none" stroke={gold} strokeWidth={0.35} strokeOpacity={0.55} transform={`rotate(${index * 45 + 22.5} 50 ${cy})`} />)}</G>
-      <Circle cx={50} cy={cy} r={8.5} fill="none" stroke={gold} strokeWidth={0.35} strokeOpacity={0.55} />
-      <Circle cx={50} cy={cy} r={3} fill={gold} fillOpacity={0.35} />
-    </Svg>
-    <View style={{ position: 'absolute', top: 0, right: 0, bottom: height * 0.06, left: 0, alignItems: 'center', justifyContent: 'center' }}>{children}</View>
-  </View>;
-}
-
-// Cosmetic faces shown while the dice tumble; never a real result.
-const TUMBLE_FACES = [3, 6, 2, 5, 1, 4] as const;
-
-/**
- * Throw → tumble → land. While `rolling`, each die spins along a short arc
- * with flickering faces; when the result arrives it drops in and settles with
- * a spring. Reduced motion skips all movement and just shows the result.
- */
-function DiceStage({ dice, rolling: rollingDice, theme, isDark, copy, reducedMotion }: { dice: DicePair | null; rolling: [boolean, boolean] | null; theme: Theme; isDark: boolean; copy: DyutaCopy; reducedMotion: boolean }) {
-  const rolling = rollingDice !== null;
-  const lastThrown = useRef<[boolean, boolean]>([true, true]);
-  const tumble = useRef(new Animated.Value(0)).current;
-  const land = useRef(new Animated.Value(1)).current;
-  const wasRolling = useRef(rolling);
-  const [frame, setFrame] = useState(0);
-
-  useEffect(() => {
-    if (reducedMotion) { tumble.setValue(0); land.setValue(1); wasRolling.current = rolling; return; }
-    if (rolling) {
-      land.setValue(0);
-      tumble.setValue(0);
-      const spin = Animated.loop(Animated.timing(tumble, { toValue: 1, duration: 520, easing: Easing.linear, useNativeDriver: true }));
-      spin.start();
-      const flicker = setInterval(() => setFrame((value) => value + 1), 90);
-      wasRolling.current = true;
-      return () => { spin.stop(); clearInterval(flicker); };
-    }
-    if (wasRolling.current) {
-      wasRolling.current = false;
-      land.setValue(0);
-      Animated.spring(land, { toValue: 1, friction: 4, tension: 70, useNativeDriver: true }).start();
-    }
-    return undefined;
-  }, [land, reducedMotion, rolling, tumble]);
-
-  const tumbling = rolling && !reducedMotion;
-  const dieMotion = (direction: 1 | -1, delay: number, moving: boolean) => {
-    const settle = { transform: [{ translateY: land.interpolate({ inputRange: [0, 1], outputRange: [-34, 0] }) }, { scale: land.interpolate({ inputRange: [0, 0.7, 1], outputRange: [1.12, 0.96, 1] }) }] };
-    // The spin only applies mid-throw; a landed die always rests upright.
-    if (!tumbling || !moving) return moving ? settle : {};
-    const phase = Animated.modulo(Animated.add(tumble, delay), 1);
-    return {
-      transform: [
-        // airborne arc while tumbling, then a drop that overshoots and settles
-        { translateY: Animated.add(phase.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, -26, 0] }), land.interpolate({ inputRange: [0, 1], outputRange: [-34, 0] })) },
-        { translateX: phase.interpolate({ inputRange: [0, 0.5, 1], outputRange: [-6 * direction, 6 * direction, -6 * direction] }) },
-        { rotate: phase.interpolate({ inputRange: [0, 1], outputRange: ['0deg', `${360 * direction}deg`] }) },
-        { scale: land.interpolate({ inputRange: [0, 0.7, 1], outputRange: [1.12, 0.96, 1] }) },
-      ],
-    };
-  };
-  const faceFor = (offset: number) => TUMBLE_FACES[(frame + offset) % TUMBLE_FACES.length];
-  // A single-die reroll tumbles only that die; the kept die stays visible and still.
-  const faceOf = (index: 0 | 1) => { const moving = rollingDice?.[index] ?? false; if (moving) return tumbling ? faceFor(index * 3) : null; return dice?.[index] ?? null; };
-  const first = faceOf(0);
-  const second = faceOf(1);
-  // Remember which dice were thrown so only they replay the landing bounce.
-  if (rollingDice) lastThrown.current = rollingDice;
-  const [movingFirst, movingSecond] = rollingDice ?? lastThrown.current;
-
-  return <View style={{ alignItems: 'center', gap: SPACING.sm }}>
-    <Text style={{ ...TYPE.chip, color: theme.brandStrong, textTransform: 'uppercase', letterSpacing: 1.5, backgroundColor: isDark ? COLORS.dyutaMatDark : COLORS.dyutaMatLight, paddingHorizontal: SPACING.sm, borderRadius: RADII.xs, overflow: 'hidden' }}>{copy.concealedThrow}</Text>
-    <View accessibilityLiveRegion="polite" style={{ flexDirection: 'row', alignItems: 'flex-start', gap: SPACING.lg }}>
-      <Animated.View style={dieMotion(1, 0, movingFirst)}><IvoryDie value={first} label={copy.firstDie} tilt="-14deg" airborne={tumbling && movingFirst} /></Animated.View>
-      <Animated.View style={[{ marginTop: SPACING.xxl }, dieMotion(-1, 0.35, movingSecond)]}><IvoryDie value={second} label={copy.secondDie} tilt="10deg" airborne={tumbling && movingSecond} /></Animated.View>
-    </View>
-  </View>;
-}
-
-// Pip centres on a unit face, indexed like DIE_PIPS (row-major 3×3).
-const PIP_GRID = [0.24, 0.5, 0.76] as const;
-// Faces visible beside each front value; opposite faces of a standard die sum to seven.
-const DIE_NEIGHBOURS: Record<number, [number, number]> = { 1: [2, 3], 2: [3, 1], 3: [1, 2], 4: [5, 1], 5: [1, 3], 6: [2, 4] };
-
-type Point = readonly [number, number];
-/** Closed SVG path through `points` with every corner rounded by up to `radius`. */
-function roundedPath(points: readonly Point[], radius: number): string {
-  const n = points.length;
-  const toward = (from: Point, to: Point): Point => { const dx = to[0] - from[0]; const dy = to[1] - from[1]; const length = Math.hypot(dx, dy) || 1; const r = Math.min(radius, length / 2); return [from[0] + (dx / length) * r, from[1] + (dy / length) * r]; };
-  return points.map((point, index) => {
-    const before = toward(point, points[(index - 1 + n) % n]);
-    const after = toward(point, points[(index + 1) % n]);
-    return `${index === 0 ? 'M' : 'L'} ${before[0]} ${before[1]} Q ${point[0]} ${point[1]} ${after[0]} ${after[1]}`;
-  }).join(' ') + ' Z';
-}
-
-/**
- * Ivory cube in oblique projection with rounded edges: the front face carries
- * the value, the top and right faces show neighbouring faces, a soft rim light
- * runs along the top edge and a shadow sits on the mat. A concealed die keeps
- * every face blank.
- */
-function IvoryDie({ value, label, tilt, size = 92, airborne = false }: { value: number | null; label: string; tilt: string; size?: number; airborne?: boolean }) {
-  const x0 = 12, y0 = 32, s = 54, d = 15;
-  const x1 = x0 + s, y1 = y0 + s;
-  const tl: Point = [x0, y0], tr: Point = [x1, y0], br: Point = [x1, y1], bl: Point = [x0, y1];
-  const btl: Point = [x0 + d, y0 - d], btr: Point = [x1 + d, y0 - d], bbr: Point = [x1 + d, y1 - d];
-  const pipsFor = (face: number) => DIE_PIPS[face] ?? [];
-  const [topFace, sideFace] = value ? DIE_NEIGHBOURS[value] : [0, 0];
-  const inset = 0.08;
-  const grid = (index: number) => inset + (1 - inset * 2) * PIP_GRID[index];
-  const frontPips = value ? pipsFor(value).map((cell) => ({ cx: x0 + s * grid(cell % 3), cy: y0 + s * grid(Math.floor(cell / 3)) })) : [];
-  const topPips = value ? pipsFor(topFace).map((cell) => { const u = grid(cell % 3); const v = 1 - grid(Math.floor(cell / 3)); return { cx: x0 + s * u + d * v, cy: y0 - d * v }; }) : [];
-  const sidePips = value ? pipsFor(sideFace).map((cell) => { const u = grid(cell % 3); const v = 1 - grid(Math.floor(cell / 3)); return { cx: x1 + d * u, cy: y1 - d * u - s * v }; }) : [];
-  return <View accessible accessibilityRole="image" accessibilityLabel={airborne ? `${label}: rolling` : value ? `${label}: ${value}` : `${label}: concealed`} style={{ width: size, height: size, transform: [{ rotate: tilt }] }}>
-    <Svg width={size} height={size} viewBox="0 0 100 100">
-      <Defs>
-        <SvgLinearGradient id="dieFront" x1="0" y1="0" x2="1" y2="1"><Stop offset={0} stopColor={COLORS.dyutaIvory} /><Stop offset={1} stopColor={COLORS.dyutaIvoryShade} /></SvgLinearGradient>
-        <SvgLinearGradient id="dieTop" x1="0" y1="1" x2="1" y2="0"><Stop offset={0} stopColor={COLORS.dyutaIvory} /><Stop offset={1} stopColor={COLORS.dyutaIvoryShade} /></SvgLinearGradient>
-        <SvgLinearGradient id="dieSide" x1="0" y1="0" x2="1" y2="1"><Stop offset={0} stopColor={COLORS.dyutaIvoryShade} /><Stop offset={1} stopColor={COLORS.dyutaIvoryEdge} /></SvgLinearGradient>
-        <RadialGradient id="dieShadow" cx="50%" cy="50%" r="50%"><Stop offset={0} stopColor={COLORS.dyutaDieShadow} /><Stop offset={1} stopColor={COLORS.dyutaDieShadow} stopOpacity={0} /></RadialGradient>
-      </Defs>
-      {airborne ? null : <Ellipse cx={x0 + s / 2 + 10} cy={y1 + 3} rx={s * 0.66} ry={7.5} fill="url(#dieShadow)" />}
-      {/* silhouette doubles as the softened edge between faces */}
-      <Path d={roundedPath([bl, tl, btl, btr, bbr, br], 9)} fill={COLORS.dyutaIvoryEdge} />
-      <Path d={roundedPath([tr, btr, bbr, br], 7)} fill="url(#dieSide)" transform="translate(-0.6 0.4)" />
-      <Path d={roundedPath([tl, btl, btr, tr], 7)} fill="url(#dieTop)" transform="translate(0.4 0.5)" />
-      <Path d={roundedPath([tl, tr, br, bl], 10)} fill="url(#dieFront)" />
-      <Path d={`M ${x0 + 9} ${y0 + 1.4} H ${x1 - 9}`} stroke={COLORS.navGlowIvoryLight} strokeWidth={1.6} strokeLinecap="round" />
-      <Path d={`M ${x0 + 1.4} ${y0 + 9} V ${y1 - 9}`} stroke={COLORS.navGlowIvoryLight} strokeWidth={1.2} strokeLinecap="round" />
-      {topPips.map((pip, index) => <Ellipse key={`t${index}`} cx={pip.cx} cy={pip.cy} rx={3.2} ry={1.5} fill={COLORS.ink} fillOpacity={0.85} />)}
-      {sidePips.map((pip, index) => <Ellipse key={`s${index}`} cx={pip.cx} cy={pip.cy} rx={1.4} ry={3.4} fill={COLORS.ink} fillOpacity={0.8} />)}
-      {frontPips.map((pip, index) => <Circle key={`f${index}`} cx={pip.cx} cy={pip.cy} r={5} fill={COLORS.ink} />)}
-    </Svg>
-    {value === null ? <View style={{ position: 'absolute', left: (x0 / 100) * size, top: (y0 / 100) * size, width: (s / 100) * size, height: (s / 100) * size, alignItems: 'center', justifyContent: 'center' }}><Feather name="help-circle" size={24} color={COLORS.brandEarthLight} /></View> : null}
-  </View>;
-}
-
 /** Seven-round track: won rounds fill with the winner's colour and a check; a losing three-seal declaration is dimmed. */
 function SabhaLamps({ match, copy, theme }: { match: DyutaMatchState; copy: DyutaCopy; theme: Theme }) {
   const currentRound = match.phase === 'complete' ? null : match.round;
@@ -780,7 +489,6 @@ function SabhaButton({ label, icon, onPress, variant = 'primary', disabled = fal
   </PressableSurface>;
 }
 
-type Theme = ReturnType<typeof themeColor>;
 type FeatherName = React.ComponentProps<typeof Feather>['name'];
 type ExtrasPanel = 'rules' | 'tutorial' | 'facts' | 'saves' | 'settings';
 const AVATAR_ORDER: DyutaAvatarId[] = ['sun', 'moon', 'star', 'feather', 'heart', 'compass'];
