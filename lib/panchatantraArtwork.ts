@@ -99,6 +99,7 @@ const LOCAL_PANCHATANTRA_ARTWORK: Record<string, ImageSourcePropType> = {
   'panchatantra-butter-blinded-brahman': require('@/assets/panchatantra/butter-blinded-brahman-1.webp'),
   'panchatantra-monk-who-left-his-body-behind': require('@/assets/panchatantra/monk-who-left-his-body-behind-1.webp'),
   'panchatantra-girl-who-married-a-snake': require('@/assets/panchatantra/girl-who-married-a-snake-1.webp'),
+  'panchatantra-remedy-worse-than-disease': require('@/assets/panchatantra/remedy-worse-than-disease-1.webp'),
   'panchatantra-wedge-pulling-monkey': require('@/assets/panchatantra/wedge-pulling-monkey-1.webp'),
   'panchatantra-merchant-strong-tooth': require('@/assets/panchatantra/merchant-strong-tooth-1.webp'),
   'panchatantra-godly-and-june': require('@/assets/panchatantra/godly-and-june-1.webp'),
@@ -761,6 +762,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/girl-who-married-a-snake-4.webp'),
     require('@/assets/panchatantra/girl-who-married-a-snake-5.webp'),
     require('@/assets/panchatantra/girl-who-married-a-snake-6.webp'),
+  ],
+  'panchatantra-remedy-worse-than-disease': [
+    require('@/assets/panchatantra/remedy-worse-than-disease-1.webp'),
+    require('@/assets/panchatantra/remedy-worse-than-disease-2.webp'),
+    require('@/assets/panchatantra/remedy-worse-than-disease-3.webp'),
+    require('@/assets/panchatantra/remedy-worse-than-disease-4.webp'),
+    require('@/assets/panchatantra/remedy-worse-than-disease-5.webp'),
+    require('@/assets/panchatantra/remedy-worse-than-disease-6.webp'),
   ],
   'panchatantra-wedge-pulling-monkey': [
     require('@/assets/panchatantra/wedge-pulling-monkey-1.webp'),

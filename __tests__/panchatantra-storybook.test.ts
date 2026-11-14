@@ -1116,3 +1116,14 @@ test('The Girl Who Married a Snake story uses six paragraph-aligned offline scen
     assert.ok(getPanchatantraSceneArtwork('panchatantra-girl-who-married-a-snake', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });
+
+test('The Remedy That Was Worse Than the Disease story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-remedy-worse-than-disease');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-remedy-worse-than-disease'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-remedy-worse-than-disease'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-remedy-worse-than-disease', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
