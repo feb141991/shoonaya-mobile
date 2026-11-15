@@ -3,6 +3,7 @@ import { Alert, PixelRatio, Platform, type View } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 
 import { SHARE_CARD_HEIGHT, SHARE_CARD_WIDTH } from '@/components/share/ShoonayaShareCard';
+import { shareCapturedImage } from './privateExportFilesDevice';
 
 export async function shareCapturedShoonayaCard(
   ref: RefObject<View | null>,
@@ -28,9 +29,9 @@ export async function shareCapturedShoonayaCard(
 
   try {
     // A card can carry the person's own name and practice numbers, and react-native-view-shot leaves its file in a temp folder or
-    // the cache root where nothing removes it. The file module is loaded here, on first share, so the screens that import this
-    // helper do not load it at startup. The device module keeps the card in the purged private-export directory (AGENTS 25).
-    const { shareCapturedImage } = await import('./privateExportFilesDevice');
+    // the cache root where nothing removes it. Keep the device module in the main bundle: Expo dev clients can fail to resolve a
+    // deferred server bundle request at the exact moment the share action is tapped. The device module keeps the card in the
+    // purged private-export directory (AGENTS 25).
     const shared = await shareCapturedImage(
       () =>
         captureRef(ref, {
