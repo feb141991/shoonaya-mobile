@@ -34,6 +34,9 @@ import ts from 'typescript';
 //   tag (Foo.Bar);
 // - Props written as an interface or an intersection (that fails loudly in
 //   loadComponents, it does not pass silently).
+// For the sanctum the first four are covered by a render test that presses the real controls:
+// __component_tests__/virtual-sanctum-modal.test.tsx (42 breaks inside the four components, each turns it red).
+// The Storybook view has no such test yet.
 
 export type Attribute = {
   name: string;
