@@ -808,6 +808,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/smart-the-jackal-5.webp'),
     require('@/assets/panchatantra/smart-the-jackal-6.webp'),
   ],
+  'panchatantra-unteachable-monkey': [
+    require('@/assets/panchatantra/panchatantra-unteachable-monkey-1.webp'),
+    require('@/assets/panchatantra/panchatantra-unteachable-monkey-2.webp'),
+    require('@/assets/panchatantra/panchatantra-unteachable-monkey-3.webp'),
+    require('@/assets/panchatantra/panchatantra-unteachable-monkey-4.webp'),
+    require('@/assets/panchatantra/panchatantra-unteachable-monkey-5.webp'),
+    require('@/assets/panchatantra/panchatantra-unteachable-monkey-6.webp'),
+  ],
 };
 
 /**

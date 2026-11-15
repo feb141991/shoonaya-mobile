@@ -336,15 +336,16 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
 
     // Tier 2 storybooks
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-monk-who-left-his-body-behind'), 2);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-poor-blossom'), 2);
+    assert.equal(getPanchatantraStoryVisualTier('panchatantra-unteachable-monkey'), 2);
 
     // Tier 0: Manuscript folios without local art
-    assert.equal(getPanchatantraStoryVisualTier('panchatantra-unteachable-monkey'), 0);
     assert.equal(getPanchatantraStoryVisualTier('panchatantra-nonexistent'), 0);
   });
 
   await t.test('sorts stories so full scene storybooks appear first, then manuscript', () => {
     const mixed = [
-      { id: 'panchatantra-unteachable-monkey', title: 'The Unteachable Monkey' },
+      { id: 'panchatantra-manuscript-sample', title: 'The Manuscript Sample' },
       { id: 'panchatantra-monk-and-jackal', title: 'The Monk and the Jackal' },
       { id: 'panchatantra-dove-king-and-net', title: 'The Dove King and the Net' },
       { id: 'panchatantra-fiend-who-washed-his-feet', title: "The Fiend Who Washed His Feet" },
@@ -362,7 +363,7 @@ test('Panchatantra story sorting and visual tier priority', async (t) => {
     assert.equal(sorted[4].id, 'panchatantra-lion-and-rabbit');
 
     // Tier 0 item must follow at index 5
-    assert.equal(sorted[5].id, 'panchatantra-unteachable-monkey');
+    assert.equal(sorted[5].id, 'panchatantra-manuscript-sample');
   });
 
   await t.test('katha.tsx integrates visual tier sorting and thumbnail priority for Story of the Day', () => {
@@ -1136,5 +1137,27 @@ test('The Results of Education story uses six paragraph-aligned offline scenes',
   assert.equal(hasDedicatedSceneArtwork('panchatantra-results-of-education'), true);
   for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
     assert.ok(getPanchatantraSceneArtwork('panchatantra-results-of-education', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('The Poor Blossom story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-poor-blossom');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-poor-blossom'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-poor-blossom'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-poor-blossom', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
+  }
+});
+
+test('The Unteachable Monkey story uses six paragraph-aligned offline scenes', () => {
+  const story = getExpandedPanchatantraStory('panchatantra-unteachable-monkey');
+  assert.ok(story);
+  assert.equal(story?.body.length, 6);
+  assert.equal(hasPanchatantraArtwork('panchatantra-unteachable-monkey'), true);
+  assert.equal(hasDedicatedSceneArtwork('panchatantra-unteachable-monkey'), true);
+  for (let sceneIndex = 0; sceneIndex < 6; sceneIndex += 1) {
+    assert.ok(getPanchatantraSceneArtwork('panchatantra-unteachable-monkey', sceneIndex), `scene ${sceneIndex + 1} should resolve offline`);
   }
 });
