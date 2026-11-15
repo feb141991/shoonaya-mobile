@@ -389,12 +389,6 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
 
-  /* ── Sanctum Shrine Stage ── */
-
-  /* ── Action Pills Grid ── */
-
-  /* ── Segmented Tabs ── */
-
   /* ── Detail Content Styles ── */
   liveDarshanBtn: {
     marginTop: 18,

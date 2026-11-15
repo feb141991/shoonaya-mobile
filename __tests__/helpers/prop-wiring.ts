@@ -21,6 +21,19 @@ import ts from 'typescript';
 // This is a structural check on one screen's call sites, not a behaviour test:
 // a render test that presses the controls (AGENTS.md section 37) proves more
 // where the component test harness exists.
+//
+// What it cannot see (found by an independent review on 2026-11-15, each run on
+// the sanctum modal with tsc and this guard both staying green):
+// - wiring INSIDE a component: a button whose onPress uses the wrong handler
+//   prop, a pill that always selects one tab;
+// - a same-named local that holds the wrong value: `const handleLightDiya =
+//   handleRingBell;` still reads handleLightDiya={handleLightDiya} at the call;
+// - a handler body that does the wrong thing, or two constants swapped;
+// - whether a declared prop is used at all inside its component;
+// - a call site added in a file other than the one it is given, or a namespaced
+//   tag (Foo.Bar);
+// - Props written as an interface or an intersection (that fails loudly in
+//   loadComponents, it does not pass silently).
 
 export type Attribute = {
   name: string;

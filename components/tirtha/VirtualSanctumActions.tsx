@@ -114,6 +114,7 @@ export function VirtualSanctumActions({
 }
 
 const styles = StyleSheet.create({
+  /* ── Action Pills Grid ── */
   actionPillsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

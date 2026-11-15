@@ -152,6 +152,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     gap: 12,
   },
+  /* ── Detail Content Styles ── */
   tagsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',

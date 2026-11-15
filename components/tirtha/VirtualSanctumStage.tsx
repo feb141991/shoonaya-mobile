@@ -5,7 +5,7 @@ import type { TempleSanctumNode } from '@/lib/yatra-data';
 import { FEATURE_COLORS, OVERLAYS, COLORS, FONTS } from '@/lib/constants';
 
 type VirtualSanctumStageProps = {
-  bellRotation: Animated.AnimatedInterpolation<string>;
+  bellRotation: Animated.AnimatedInterpolation<string | number>;
   diyaLit: boolean;
   handleLightDiya: () => void;
   handleRingBell: () => void;
@@ -108,6 +108,7 @@ export function VirtualSanctumStage({
 }
 
 const styles = StyleSheet.create({
+  /* ── Sanctum Shrine Stage ── */
   sanctumOuterFrame: {
     borderRadius: 24,
     overflow: 'hidden',

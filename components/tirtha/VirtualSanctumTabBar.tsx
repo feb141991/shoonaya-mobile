@@ -56,6 +56,7 @@ export function VirtualSanctumTabBar({
 }
 
 const styles = StyleSheet.create({
+  /* ── Segmented Tabs ── */
   tabsRow: {
     flexDirection: 'row',
     gap: 8,
