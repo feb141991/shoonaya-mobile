@@ -28,13 +28,9 @@ import { type PathshalaPath } from '@/lib/pathshala-types';
 import { shareCapturedShoonayaCard } from '@/lib/share-card';
 import { useScrollToTop } from '@/lib/useScrollToTop';
 import { apiFetch, isFetchCancelled } from '@/lib/api';
+import { isFetchTimeout } from '@/lib/fetch-error';
 import { useAppIdentity, captureAppIdentity } from '@/lib/appIdentity';
-import {
-  parseServerTimingHeader,
-  recordRefreshFailure,
-  recordRouteOpen,
-  recordServerTiming,
-} from '@/lib/telemetry';
+import { parseServerTimingHeader, recordRefreshFailure, recordRouteOpen, recordServerTiming } from '@/lib/telemetry';
 import { LoadGenerationGuard, shouldRecordRouteOpen } from '@/lib/routeOpenAttribution';
 import {
   readPathshalaCache,
@@ -335,7 +331,7 @@ function PathshalaContent() {
         }
       } catch (error) {
         if (!isCurrentLoad()) return { outcome: 'failed', cacheHit, readyAt, token };
-        if (!isFetchCancelled(error)) {
+        if (!isFetchCancelled(error) && !isFetchTimeout(error)) {
           console.error(error);
         }
         if (!cacheHit) {
