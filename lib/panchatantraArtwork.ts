@@ -2,16 +2,9 @@ import { ImageSourcePropType } from 'react-native';
 
 // Register image extension handlers in Node.js test environments
 if (typeof require !== 'undefined' && require.extensions) {
-  if (!require.extensions['.jpg']) {
-    require.extensions['.jpg'] = (module, filename) => {
-      module.exports = { uri: filename };
-    };
-  }
-  if (!require.extensions['.webp']) {
-    require.extensions['.webp'] = (module, filename) => {
-      module.exports = { uri: filename };
-    };
-  }
+  const handler = (mod: { exports: unknown }, filename: string) => { mod.exports = { uri: filename }; };
+  if (!require.extensions['.jpg']) require.extensions['.jpg'] = handler;
+  if (!require.extensions['.webp']) require.extensions['.webp'] = handler;
 }
 
 /**
@@ -783,6 +776,14 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
     require('@/assets/panchatantra/plover-who-fought-the-ocean-5.webp'),
     require('@/assets/panchatantra/plover-who-fought-the-ocean-6.webp'),
   ],
+  'panchatantra-poor-blossom': [
+    require('@/assets/panchatantra/panchatantra-poor-blossom-1.webp'),
+    require('@/assets/panchatantra/panchatantra-poor-blossom-2.webp'),
+    require('@/assets/panchatantra/panchatantra-poor-blossom-3.webp'),
+    require('@/assets/panchatantra/panchatantra-poor-blossom-4.webp'),
+    require('@/assets/panchatantra/panchatantra-poor-blossom-5.webp'),
+    require('@/assets/panchatantra/panchatantra-poor-blossom-6.webp'),
+  ],
   'panchatantra-shrewd-old-gander': [
     require('@/assets/panchatantra/shrewd-old-gander-1.webp'),
     require('@/assets/panchatantra/shrewd-old-gander-2.webp'),
@@ -828,11 +829,7 @@ export function getPanchatantraArtworkSource(storyId: string): ImageSourcePropTy
 export function getPanchatantraSceneArtwork(storyId: string, sceneIndex: number): ImageSourcePropType | null {
   if (!storyId) return null;
   const normalizedId = storyId.trim().toLowerCase();
-  const sceneList = LOCAL_PANCHATANTRA_SCENE_ARTWORK[normalizedId];
-  if (sceneList && sceneList[sceneIndex]) {
-    return sceneList[sceneIndex];
-  }
-  return getPanchatantraArtworkSource(storyId);
+  return LOCAL_PANCHATANTRA_SCENE_ARTWORK[normalizedId]?.[sceneIndex] ?? getPanchatantraArtworkSource(storyId);
 }
 
 /**
