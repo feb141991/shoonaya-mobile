@@ -825,8 +825,8 @@ const LOCAL_PANCHATANTRA_SCENE_ARTWORK: Record<string, ImageSourcePropType[]> = 
  */
 export function getPanchatantraArtworkSource(storyId: string): ImageSourcePropType | null {
   if (!storyId) return null;
-  const normalizedId = storyId.trim().toLowerCase();
-  return LOCAL_PANCHATANTRA_ARTWORK[normalizedId] ?? LOCAL_PANCHATANTRA_SCENE_ARTWORK[normalizedId]?.[0] ?? null;
+  const id = storyId.trim().toLowerCase();
+  return LOCAL_PANCHATANTRA_ARTWORK[id] ?? LOCAL_PANCHATANTRA_SCENE_ARTWORK[id]?.[0] ?? null;
 }
 
 /**
@@ -836,8 +836,8 @@ export function getPanchatantraArtworkSource(storyId: string): ImageSourcePropTy
  */
 export function getPanchatantraSceneArtwork(storyId: string, sceneIndex: number): ImageSourcePropType | null {
   if (!storyId) return null;
-  const normalizedId = storyId.trim().toLowerCase();
-  return LOCAL_PANCHATANTRA_SCENE_ARTWORK[normalizedId]?.[sceneIndex] ?? getPanchatantraArtworkSource(storyId);
+  const id = storyId.trim().toLowerCase();
+  return LOCAL_PANCHATANTRA_SCENE_ARTWORK[id]?.[sceneIndex] ?? getPanchatantraArtworkSource(storyId);
 }
 
 /**
@@ -851,20 +851,15 @@ export function hasPanchatantraArtwork(storyId: string): boolean {
  * Returns true if dedicated scene-by-scene illustrations exist for this story.
  */
 export function hasDedicatedSceneArtwork(storyId: string): boolean {
-  if (!storyId) return false;
-  return Boolean(LOCAL_PANCHATANTRA_SCENE_ARTWORK[storyId.trim().toLowerCase()]);
+  return !storyId ? false : Boolean(LOCAL_PANCHATANTRA_SCENE_ARTWORK[storyId.trim().toLowerCase()]);
 }
 
 /**
  * Computes the visual tier for a Panchatantra fable:
- * Tier 2 = Has dedicated 6-scene storybook artwork (highest priority)
- * Tier 1 = Has masterwork cover artwork
- * Tier 0 = Manuscript text-only folio
+ * Tier 2 = 6-scene artwork, Tier 1 = cover artwork, Tier 0 = text-only folio.
  */
 export function getPanchatantraStoryVisualTier(storyId: string): number {
-  if (hasDedicatedSceneArtwork(storyId)) return 2;
-  if (hasPanchatantraArtwork(storyId)) return 1;
-  return 0;
+  return hasDedicatedSceneArtwork(storyId) ? 2 : hasPanchatantraArtwork(storyId) ? 1 : 0;
 }
 
 /**
@@ -875,7 +870,5 @@ export function getPanchatantraStoryVisualTier(storyId: string): number {
  * Stable sort preserves the catalog order within each tier.
  */
 export function sortPanchatantraStoriesByVisualTier<T extends { id: string }>(stories: T[]): T[] {
-  return [...stories].sort((a, b) => {
-    return getPanchatantraStoryVisualTier(b.id) - getPanchatantraStoryVisualTier(a.id);
-  });
+  return [...stories].sort((a, b) => getPanchatantraStoryVisualTier(b.id) - getPanchatantraStoryVisualTier(a.id));
 }
