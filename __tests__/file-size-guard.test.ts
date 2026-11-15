@@ -54,7 +54,7 @@ export function findSizeViolations(files: Array<{ path: string; lines: number }>
 
 // Files over their limit on 2026-11-12, with their line counts then. This list may only shrink.
 const OVER_LIMIT_CEILINGS: Record<string, number> = {
-  'app/kul.tsx': 3699,
+  'app/kul.tsx': 3532,
   'app/(tabs)/mandali.tsx': 2933,
   'app/(tabs)/index.tsx': 2910,
   'app/(tabs)/profile.tsx': 2197,
@@ -77,7 +77,7 @@ const OVER_LIMIT_CEILINGS: Record<string, number> = {
   'app/name-story.tsx': 952,
   'app/nitya-plans.tsx': 936,
   'lib/mandali.ts': 932,
-  'lib/panchatantraArtwork.ts': 930,
+  'lib/panchatantraArtwork.ts': 876,
   'app/ai-chat.tsx': 928,
   'app/dharm-veer/[id].tsx': 904,
   'components/home/DharmaMitraChatSheet.tsx': 898,
@@ -89,7 +89,6 @@ const OVER_LIMIT_CEILINGS: Record<string, number> = {
   'components/ui/TimePickerField.tsx': 782,
   'lib/homeCache.ts': 780,
   'components/mandali/PostComments.tsx': 727,
-  'components/kul/VanshGraphCanvas.tsx': 721,
   'lib/ashrama.ts': 701,
   'components/ui/CalendarDatePicker.tsx': 692,
   'components/tour/AppTourModal.tsx': 691,

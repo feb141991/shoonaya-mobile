@@ -167,7 +167,7 @@ export function JoinMandaliPrompt({
     }
   };
 
-  const useManualCity = async () => {
+  const resolveManualCity = async () => {
     if (!manualCity.trim()) {
       setGeoError('Enter a city first.');
       return;
@@ -310,7 +310,7 @@ export function JoinMandaliPrompt({
           />
           <PressableSurface
             haptic="selection"
-            onPress={() => void useManualCity()}
+            onPress={() => void resolveManualCity()}
             disabled={resolvingManualLocation}
             style={{
               alignSelf: 'flex-start',

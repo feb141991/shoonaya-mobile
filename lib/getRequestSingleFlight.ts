@@ -1,3 +1,5 @@
+import { abortReasonOf } from './abort-reason';
+
 /** In-flight GET sharing only: no settled response cache, no write replay. */
 export function getRequestKey(scope: string, path: string, options: RequestInit & { timeoutMs?: number; dedupe?: boolean }): string | null {
   if ((options.method ?? 'GET').toUpperCase() !== 'GET' || options.body != null || options.dedupe === false) return null;
@@ -14,7 +16,7 @@ export function getRequestKey(scope: string, path: string, options: RequestInit 
 }
 
 function abortError(signal: AbortSignal): unknown {
-  return signal.reason ?? Object.assign(new Error('Request cancelled'), { name: 'AbortError' });
+  return abortReasonOf(signal);
 }
 
 export function createGetRequestSingleFlight() {

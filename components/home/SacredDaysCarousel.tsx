@@ -27,6 +27,7 @@ import {
   type SacredDaysDeckItem,
   type SacredDaysObservance,
 } from '@/lib/sacred-days-deck';
+import { upcomingMelaObservances } from '@/lib/melaSchedule';
 import { ObservanceSeriesCard } from './ObservanceSeriesCard';
 import { SacredDaysCard } from './SacredDaysCard';
 import { SacredCalendarSheet } from './SacredCalendarSheet';
@@ -102,6 +103,7 @@ export function SacredDaysCarousel({
   isDark,
   lang = 'en',
   spiritualDate,
+  tradition,
   onRetryUnavailable,
   onSignInPress,
 }: {
@@ -112,6 +114,8 @@ export function SacredDaysCarousel({
   isDark: boolean;
   lang?: 'en' | 'hi' | 'pa';
   spiritualDate: string;
+  // Profile tradition, used only to decide whether Kumbh bathing days (lib/melaSchedule.ts) are offered.
+  tradition?: string | null;
   onRetryUnavailable?: () => void;
   // Present only for the 'empty' (guest) state -- opens the sign-in gate.
   onSignInPress?: () => void;
@@ -127,12 +131,13 @@ export function SacredDaysCarousel({
   const items = useMemo(
     () =>
       buildSacredDaysDeck({
-        observances,
+        // Kumbh days are dated by the state Mela authorities, not the calendar, so they join here.
+        observances: [...observances, ...upcomingMelaObservances({ profileTradition: tradition, windowDays: HOME_SACRED_DAYS_WINDOW })],
         series,
         spiritualDate,
         windowDays: HOME_SACRED_DAYS_WINDOW,
       }),
-    [observances, series, spiritualDate],
+    [observances, series, spiritualDate, tradition],
   );
 
   const reducedMotion = useReducedMotion();

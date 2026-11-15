@@ -53,14 +53,8 @@ describe('Japa sound & bottom nav visibility contract', () => {
     assert.match(practiceFile, /onPress=\{onOpenSound\}/);
     assert.match(japaFile, /<JapaPracticeScreen[\s\S]*?onOpenSound=\{\(\) => setSoundSheetOpen\(true\)\}/);
 
-    // Launcher offers ambient sound setup: the row lives in the launcher
-    // component and the screen wires it to the sound sheet. (These were once
-    // a single check of japa.tsx; "Ambient sound" also appears in a comment
-    // there, so it must be read from the launcher itself.)
-    const launcherFile = fs.readFileSync(path.join(__dirname, '../components/japa/JapaLauncherScreen.tsx'), 'utf8');
-    assert.match(launcherFile, />\s*Ambient sound\s*</);
-    assert.match(launcherFile, /accessibilityLabel=\{`Ambient sound\./);
-    assert.match(launcherFile, /onPress=\{onOpenSound\}/);
+    // The launcher's Ambient sound row (its label, its accessibility label and what pressing it does) is covered by a
+    // render test: __component_tests__/japa-launcher.test.tsx. Here only the screen's wiring of that row stays.
     assert.match(japaFile, /onOpenSound=\{\(\) => setSoundSheetOpen\(true\)\}/);
   });
 });

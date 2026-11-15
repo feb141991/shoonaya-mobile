@@ -365,7 +365,7 @@ Rules:
   pre-selected choice the person can untick and Settings has a toggle for each; it is never a silent write on "Not now" or on completing
   onboarding without seeing the choices, and the OS push prompt never stands in for any category. Settings' fallback for a missing
   profile value must read the same way (guard: `__tests__/notification-default-tier.test.ts`). Backend: migrations `20261112100000`
-  (defaults) and `20261112110000` (Brahma opt-in reset), unapplied until approved.
+  (defaults) and `20261112110000` (Brahma opt-in reset), both APPLIED to production (confirmed in the production migration list on 2026-11-13).
 - Why this rule exists: on 2026-10-26, the backend half of this same defect
   (nine reminder columns backfilled with `WHERE x = false OR x IS NULL`,
   destroying the record of real opt-outs) was recorded in the Shoonaya
@@ -580,8 +580,9 @@ Rules:
   no longer hashes to its pinned value, and the backend's `consent-wording.test.ts` pins the same list: keep the two equal (section 1).
 - A new consent screen or write path must send the context, and a consent with no registered wording on that screen is simply recorded as having none.
 - Origin: 2026-11-12 privacy audit. Consents were yes/no flags with one shared, client-supplied timestamp, and no record of when each was given, which
-  wording was shown or on which screen. Backend migration `20261112140000_consent_evidence_ledger` is UNAPPLIED: until it is, the context is sent and
-  ignored. Not verified on a device. Whether proof of consent should outlive the account is a counsel decision.
+  wording was shown or on which screen. Backend migration `20261112140000_consent_evidence_ledger` is APPLIED to production (confirmed in the production
+  migration list on 2026-11-13), so the database now records the context. Not verified: whether the deployed backend's export and generated types have caught
+  up with the ledger, and the Native consent screens on a device. Whether proof of consent should outlive the account is a counsel decision.
 
 ### 31. A Signed-Out Person May Read Mandali, and Nothing More
 - Founder decision 2026-11-12: a guest sees Mandali posts (`components/mandali/GuestMandaliFeed.tsx`, from the backend's `GET /api/mandali/public-feed`).
@@ -589,7 +590,7 @@ Rules:
   database enforces. The guest feed carries posts, the author's public username and avatar, and counts. It never carries an account id, a Mandali id,
   the names of people who reacted, comments, poll votes, RSVPs or member lists, and it is never stored on the device.
 - A new guest-visible Mandali surface must come from that route (or one built the same way), never from a direct table read. The database also closed
-  who-upvoted and who-RSVP'd to signed-in users (backend migration `20261112160000`, UNAPPLIED); posts and comments keep a public SELECT for this.
+  who-upvoted and who-RSVP'd to signed-in users (backend migration `20261112160000`, APPLIED to production, confirmed 2026-11-13); posts and comments keep a public SELECT for this.
 - Guard: `__tests__/mandali-guest-readonly.test.ts` (three mutations proven red). Not verified on a device, in dark mode, with large text, or against the
   deployed route.
 
@@ -638,3 +639,62 @@ Rules:
 ### 35. A Lock-Screen Privacy Control Needs a Sender Capability
 - Enable “Hide notification details” only after an authenticated read from the endpoint that ships with push redaction. An existing profile column cannot prove that the active sender honors the preference. Keep the switch unavailable after an uncertain save until a fresh read confirms the value.
 - Origin: the 2026-11-12 branch review found the database column in production before the sender code was deployed. The old column-only readiness check could offer privacy the sender had no code to enforce. Guarded by the Native discretion contract tests and the backend Expo-payload tests.
+
+### 36. Lint Is a Gate, and Its Warnings Only Ratchet Down
+- ESLint runs in `npm run prebuild:verify` (so in CI and before every EAS build or OTA update) through `npm run check:lint`
+  (`scripts/check-lint-ratchet.ts`, rules in `lib/lintRatchet.ts`, config in `eslint.config.js`, set up as the Expo lint guide describes).
+  Never remove it from `prebuild:verify`, and never switch a rule off to make a change pass.
+- An **error** is a rule the repo already satisfies, so it stays at zero: `react-hooks/rules-of-hooks` and `react-hooks/static-components`
+  (a component declared inside another component remounts on every render). A **warning** is a rule existing code still breaks. Its count
+  per rule is recorded in `lint-baseline.json` and may only go down: the gate fails if any rule has more warnings than its baseline, if a
+  rule that is not in the baseline has any, and if a baseline is left more than 25 above the real count. After fixing warnings, run
+  `npm run check:lint -- --update`; it lowers the baseline and refuses to raise it or add a rule. Never edit the file by hand upward.
+- Switched off on purpose, with the reason in `eslint.config.js`: `import/no-unresolved` (the typecheck resolves the `@/` alias, this rule cannot)
+  and `react/no-unescaped-entities` (JSX text in React Native is not HTML; entities are guarded by `entity-in-js-string-guard.test.ts`).
+- Use `npm run lint` to see every finding. New code should add none: a warning you introduce is a failure of the gate even while the total is
+  under the old baseline for that rule.
+- Why this rule exists: on 2026-11-13 a review found the repo had no linter, with the bug classes below caught only by hand or by tests that read
+  source text. The first run found 0 errors after two real fixes (a function called `useManualCity` that was not a hook and tripped the
+  rules-of-hooks check, and `StatBox` declared inside the Mood Insights screen, which remounted on every render, the same class as the Japa
+  Meru-crown remount) and a baseline of 1,431 warnings: 476 `react-hooks/refs`, 209 unused variables, 207 `any`, 199 import order, 108
+  `set-state-in-effect`, 50 `console.*` other than warn and error, 42 empty `catch {}`, 36 `exhaustive-deps`, and smaller counts.
+- Not verified: that the 1,431 warnings are all worth fixing (the React Compiler-era `react-hooks/*` rules are new to this codebase and some
+  will be false positives), and the CI run itself: the gate ran locally (`npm run prebuild:verify`), not yet on a pull request.
+
+### 37. Tests Prove Behaviour; Grepping Source Text Only Ratchets Down
+- A test that reads a source file and matches a regular expression against it proves a pattern exists, not that the screen works. It passes when
+  the behaviour is broken and fails when the code is harmlessly reorganised (the Japa split broke or silently re-pointed several of them). New UI tests
+  render the component with `@testing-library/react-native` and press its controls (`__component_tests__/`, run by `npm run test:components`, part of
+  `prebuild:verify`), or call the logic directly. Prove each new test red by breaking the behaviour on a scratch copy, never on a file Metro is serving.
+- `__tests__/source-text-tests-guard.test.ts` records, per file, how many `assert.match`/`doesNotMatch` calls a test makes in a file that reads source
+  (108 files, 1,354 assertions on 2026-11-13). A ceiling only goes down; a new test file gets none; a listed file that drops to zero loses its entry. Never
+  raise a ceiling or add a file. Tests that read project configuration (`lint-ratchet.test.ts`) are exempt by name. A check about the whole codebase
+  ("no screen calls X") belongs in an ESLint rule, not a regex over one file.
+- The harness uses `@react-native/jest-preset` with hand-written mocks in `jest.setup.ts`, NOT `jest-expo`: `jest-expo` fails with a null-path
+  TypeError when the checkout path contains parentheses (`/Users/Business(C)/`), because its stack parser strips `(...)` from file names. NativeWind's
+  Babel plugin is skipped when `NODE_ENV=test` (`babel.config.js`). A native module a component needs is mocked there as a host-name string.
+- Origin: 2026-11-13 review: 122 test files and about 1,450 regex assertions read source text, and there was no render test at all. First conversions:
+  the Japa launcher (10 tests) and the bead ring pendant (6 tests) replaced the source-grep assertions for the same behaviour.
+- Not done: converting the other ~100 files (the roughly 45 that pin UI layout are the best candidates); component tests run on Node, so they say
+  nothing about Android or iOS rendering. Device verification is still required (section 7).
+
+### 38. Abort Reasons Must Survive React Native's AbortController
+- React Native 0.86 installs the old `abort-controller` package as the global `AbortController`
+  (`node_modules/react-native/Libraries/Core/setUpXHR.js`). Its `abort()` takes no argument and its signal has no `reason`, so on a device
+  `controller.abort(error)` keeps nothing and `signal.reason` is `undefined`. Node's built-in controller keeps it, so unit tests cannot see this.
+- Abort with a reason only through `abortWithReason(controller, reason)` and read one only through `abortReasonOf(signal)` (`lib/abort-reason.ts`).
+  Never read `signal.reason` directly or rethrow it: a timeout then rejects with `undefined`, which no caller can classify and no log can name.
+- Origin: 2026-11-13, the iOS simulator logged "Failed to persist japa completion undefined" twice (11:14 and 11:18 IST). The device log showed the app
+  made no request to the API or Supabase in that window: each of the three attempts gave up in sign-in preparation (`apiFetch`'s 15-second auth phase)
+  and rejected with `undefined`. The save stayed queued on the device (uncertain outcomes are never dropped). Sweep: the only direct `reason` reads were in
+  `lib/api.ts` (four) and `lib/getRequestSingleFlight.ts` (one); both, and `lib/api-phase-timeout.ts`, now use the helpers. Guard:
+  `__tests__/abort-reason-polyfill.test.ts` runs against the real `abort-controller` package (each fix proven red by reverting it).
+- A timeout is not a cancellation. `apiFetch`'s timeouts are `AbortError`s marked `timeout: true`; `isFetchTimeout` recognises them and
+  `isFetchCancelled` returns false for them (`lib/fetch-error.ts`), so the Japa, Mood, Sankalpa and Mandali write retries keep retrying a timeout and
+  log it when they give up, while a request the screen cancelled still stops silently. Guard: `__tests__/fetch-timeout-vs-cancel.test.ts`.
+- Supabase's sign-in calls (`/auth/v1/`: token refresh, sign-in, sign-out) have a 20-second deadline in the client's fetch (`lib/fetchDeadline.ts`,
+  used by `lib/supabase.ts`). auth-js shares one in-flight token refresh between every caller, so a refresh whose connection hangs would otherwise hold
+  every later `getSession()`, and with it every signed-in `apiFetch`, until the app restarts. Guard: `__tests__/supabase-auth-deadline.test.ts`.
+- Cause of the stall: not proven. The device log from 11:06 to 11:23 shows no request started except to Metro, so the save waited inside sign-in
+  preparation with no network activity; the access token was over an hour old, so `getSession()` needed a refresh, consistent with a refresh begun
+  earlier that never settled. The log before 11:06 had already been discarded. If it recurs, the log now names the stalled step.

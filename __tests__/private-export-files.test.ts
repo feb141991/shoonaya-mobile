@@ -371,10 +371,9 @@ test('a share card: a capture that fails removes nothing and adopts nothing', as
   assert.deepEqual(device.log, ['available']);
 });
 
-test('share-card.ts: every card goes through the purged directory, loaded on first share, with its capture settings unchanged', () => {
+test('share-card.ts: every card goes through the purged directory with its capture settings unchanged', () => {
   const card = source('lib/share-card.ts');
-  assert.match(card, /await import\('\.\/privateExportFilesDevice'\)/);
-  assert.doesNotMatch(card, /^import .*privateExportFilesDevice/m, 'the file module is not loaded when a screen opens');
+  assert.match(card, /^import \{ shareCapturedImage \} from '\.\/privateExportFilesDevice';/m, 'the share device module must be in the main bundle');
   assert.match(card, /shareCapturedImage\(\s*\(\) =>\s*captureRef\(ref, \{/);
   assert.doesNotMatch(card, /Sharing\.|expo-sharing/, 'the helper no longer shares a file from the place view-shot chose');
   assert.match(card, /result: 'tmpfile'/);

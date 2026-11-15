@@ -352,6 +352,7 @@ export function JapaBeadRing({
           before the beads so its hook comes out from behind the guru bead, not on top of it. */}
       {!malaSkin.hasMeruCrown ? (
         <Animated.View
+          testID="japa-pendant"
           pointerEvents="none"
           style={{
             position: 'absolute',

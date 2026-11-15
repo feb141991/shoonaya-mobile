@@ -86,6 +86,8 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   }
   if (pathname.startsWith('/vrat')) return '/vrat';
   if (pathname.startsWith('/festival/')) return path as Href;
+  // Kumbh and other melas (lib/melaSchedule.ts): dated by the state Mela authorities, with their own screen.
+  if (pathname.startsWith('/mela/') && pathname.length > '/mela/'.length) return pathname as Href;
   // The backend's candidate producers (sankranti, series, pradosha) and observance notification source write festival
   // links as /festivals/<slug> in the plural; the screen is /festival/<slug>. Without this a tap on one of those
   // notifications fell through to the fallback and opened Home. A bare /festivals has no slug and keeps the fallback.

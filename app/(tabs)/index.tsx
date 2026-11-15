@@ -1840,7 +1840,7 @@ function HomeContent() {
                 theme={theme}
                 isDark={isDark}
                 lang={state.profile.appLanguage === 'hi' || state.profile.appLanguage === 'pa' ? state.profile.appLanguage : 'en'}
-                spiritualDate={state.date.iso}
+                spiritualDate={state.date.iso} tradition={state.profile.tradition}
                 onRetryUnavailable={retryPanchang}
               />
             </View>
@@ -2338,7 +2338,7 @@ function HomeContent() {
             theme={theme}
             isDark={isDark}
             lang={state.profile.appLanguage}
-            spiritualDate={state.date.iso}
+            spiritualDate={state.date.iso} tradition={state.profile.tradition}
             onRetryUnavailable={retryPanchang}
             onSignInPress={() => setSacredDaysAuthGateVisible(true)}
           />

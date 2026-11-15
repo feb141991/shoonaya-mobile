@@ -7,6 +7,7 @@ import type { Session } from '@supabase/supabase-js';
 import { isFetchCancelled } from './fetch-error';
 import { API_AUTH_PREPARATION_TIMEOUT_MS, DEFAULT_API_TIMEOUT_MS } from './api-policy';
 import { createApiPhaseTimeout } from './api-phase-timeout';
+import { abortReasonOf, abortWithReason } from './abort-reason';
 import { waitForAuthReady } from './authReadyGate';
 import { sessionHasUsableAccessToken } from './api-auth-policy';
 import { createSingleFlight } from './async-single-flight';
@@ -208,15 +209,15 @@ async function performApiFetch(path: string, options: ApiFetchOptions = {}, chec
   const responseHistory: Response[] = [];
   const controller = new AbortController();
   const callerSignal = fetchOptions.signal;
-  const forwardAbort = () => controller.abort(callerSignal?.reason);
+  const forwardAbort = () => abortWithReason(controller, callerSignal ? abortReasonOf(callerSignal) : undefined);
   if (callerSignal?.aborted) forwardAbort();
   else callerSignal?.addEventListener('abort', forwardAbort, { once: true });
   const phaseTimeout = createApiPhaseTimeout(controller, API_AUTH_PREPARATION_TIMEOUT_MS, timeoutMs);
 
   const abortable = async <T>(operation: Promise<T>): Promise<T> => {
-    if (controller.signal.aborted) throw controller.signal.reason;
+    if (controller.signal.aborted) throw abortReasonOf(controller.signal);
     return new Promise<T>((resolve, reject) => {
-      const onAbort = () => reject(controller.signal.reason);
+      const onAbort = () => reject(abortReasonOf(controller.signal));
       controller.signal.addEventListener('abort', onAbort, { once: true });
       operation.then(
         (value) => {
@@ -249,7 +250,7 @@ async function performApiFetch(path: string, options: ApiFetchOptions = {}, chec
       accessToken = null;
     }
     checkOwner?.();
-    if (controller.signal.aborted) throw controller.signal.reason;
+    if (controller.signal.aborted) throw abortReasonOf(controller.signal);
     const requestHeaders = new Headers(headers);
     requestHeaders.set('X-Request-ID', requestId);
     if (accessToken) requestHeaders.set('Authorization', `Bearer ${accessToken}`);
