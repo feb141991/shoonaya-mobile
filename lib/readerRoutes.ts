@@ -9,7 +9,7 @@
 export function isReaderRoute(segments: readonly string[]): boolean {
   const [root, second] = segments;
   if (root === 'pathshala') return segments.length >= 3;
-  if (root === 'dharm-veer' || root === 'vrat' || root === 'festival') return segments.length >= 2;
+  if (root === 'dharm-veer' || root === 'vrat' || root === 'festival' || root === 'mela') return segments.length >= 2;
   if (root === 'bhakti') return (second === 'stotram' || second === 'katha') && segments.length >= 3;
   return false;
 }

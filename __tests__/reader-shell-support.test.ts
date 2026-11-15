@@ -25,10 +25,11 @@ test('reader routes: every reader screen, and no list page', () => {
     ['bhakti', 'katha', '[id]'],
     ['vrat', '[slug]'],
     ['festival', '[slug]'],
+    ['mela', '[slug]'],
     ['pathshala', '[pathId]', '[lessonId]'],
   ];
   const notReaders = [
-    ['dharm-veer'], ['vrat'], ['festival'], ['bhakti'], ['bhakti', 'katha'], ['bhakti', 'browse'],
+    ['dharm-veer'], ['vrat'], ['festival'], ['mela'], ['bhakti'], ['bhakti', 'katha'], ['bhakti', 'browse'],
     ['pathshala'], ['pathshala', '[pathId]'], ['(tabs)'], ['(tabs)', 'mandali'], [],
   ];
   assert.deepEqual(readers.filter((s) => !isReaderRoute(s)), []);
