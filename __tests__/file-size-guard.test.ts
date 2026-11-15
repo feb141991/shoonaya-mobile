@@ -91,7 +91,6 @@ const OVER_LIMIT_CEILINGS: Record<string, number> = {
   'components/mandali/PostComments.tsx': 727,
   'lib/ashrama.ts': 701,
   'components/ui/CalendarDatePicker.tsx': 692,
-  'components/tour/AppTourModal.tsx': 691,
   'components/settings/AccountDeletionSheet.tsx': 688,
   'lib/lineage-data.ts': 671,
   'components/sanskara/SanskaraNodeSheet.tsx': 645,

@@ -100,10 +100,14 @@ describe("Interactive App Tour — Entry Points & Non-blocking Experience", () =
 
 describe("Interactive App Tour — Architectural & Bloat Prevention Constraints", () => {
   const rootDir = path.resolve(__dirname, "..");
-  const tourModalPath = path.join(rootDir, "components", "tour", "AppTourModal.tsx");
+  // The tour is the modal (state, header, controls) plus one component per slide
+  // (file-size split, AGENTS.md section 32); each assertion reads the file that holds the code.
+  const tourFile = (name: string) =>
+    fs.readFileSync(path.join(rootDir, "components", "tour", `${name}.tsx`), "utf-8");
+  const SLIDE_FILES = ["TourSlideToday", "TourSlidePractice", "TourSlideLearn", "TourSlideConnect"];
 
   it("does not bundle heavy videos or external image files (zero bloat, pure Native UI)", () => {
-    const content = fs.readFileSync(tourModalPath, "utf-8");
+    const content = ["AppTourModal", ...SLIDE_FILES].map(tourFile).join("\n");
 
     // No video imports
     assert.ok(!content.includes("expo-av"), "Must not depend on expo-av video player");
@@ -114,7 +118,7 @@ describe("Interactive App Tour — Architectural & Bloat Prevention Constraints"
   });
 
   it("uses Haptics for the bead tap and accessible labels on close/navigation controls", () => {
-    const content = fs.readFileSync(tourModalPath, "utf-8");
+    const content = tourFile("AppTourModal");
 
     assert.ok(content.includes("Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)"));
     assert.ok(content.includes('"Close tour"'));
@@ -123,35 +127,33 @@ describe("Interactive App Tour — Architectural & Bloat Prevention Constraints"
   });
 
   it("conforms to Rule 17: every row-adjacent Text next to an icon/badge sibling carries flex: 1 or flexShrink, with lineHeight", () => {
-    const content = fs.readFileSync(tourModalPath, "utf-8");
-
     // Every row that pairs a label Text with a badge/count/icon cluster must
     // bound the label (flex: 1) and shrink-protect the cluster (flexShrink: 0)
     // — the exact shape of the 2026-10-23 onboarding clipping incident Rule 17
     // documents, reproduced here with the tour's longer Hindi strings.
     const boundedLabelRows = [
-      /flexDirection: "row", alignItems: "center", gap: 6, flex: 1 \}\}>\s*<Feather name="map-pin"/,
-      /style=\{\{ \.\.\.TYPE\.label, color: theme\.text, flex: 1, lineHeight: 19 \}\}>\s*\{isHindi \? "महामृत्युंजय/,
-      /style=\{\{ \.\.\.TYPE\.caption, color: theme\.brand, fontWeight: "600", fontSize: 11, flex: 1, lineHeight: 15 \}\}>\s*\{isHindi \? "दैनिक श्लोक/,
-      /flex: 1 \}\}>\s*<Text style=\{\{ fontSize: 16 \}\}>🏡/,
-      /style=\{\{ \.\.\.TYPE\.caption, color: theme\.brand, fontWeight: "600", fontSize: 11\.5, flex: 1, lineHeight: 15 \}\}>\s*\{isHindi \? "मंडली/,
+      { file: "TourSlideToday", pattern: /flexDirection: "row", alignItems: "center", gap: 6, flex: 1 \}\}>\s*<Feather name="map-pin"/ },
+      { file: "TourSlidePractice", pattern: /style=\{\{ \.\.\.TYPE\.label, color: theme\.text, flex: 1, lineHeight: 19 \}\}>\s*\{isHindi \? "महामृत्युंजय/ },
+      { file: "TourSlideLearn", pattern: /style=\{\{ \.\.\.TYPE\.caption, color: theme\.brand, fontWeight: "600", fontSize: 11, flex: 1, lineHeight: 15 \}\}>\s*\{isHindi \? "दैनिक श्लोक/ },
+      { file: "TourSlideConnect", pattern: /flex: 1 \}\}>\s*<Text style=\{\{ fontSize: 16 \}\}>🏡/ },
+      { file: "TourSlideConnect", pattern: /style=\{\{ \.\.\.TYPE\.caption, color: theme\.brand, fontWeight: "600", fontSize: 11\.5, flex: 1, lineHeight: 15 \}\}>\s*\{isHindi \? "मंडली/ },
     ];
-    for (const pattern of boundedLabelRows) {
-      assert.match(content, pattern, `Expected a bounded (flex: 1) label Text matching ${pattern}`);
+    for (const { file, pattern } of boundedLabelRows) {
+      assert.match(tourFile(file), pattern, `Expected a bounded (flex: 1) label Text in ${file} matching ${pattern}`);
     }
 
     // Mutation check: if the Mantra-name label's flex: 1 guard were removed,
     // this test must fail -- proving the assertion is load-bearing, not
     // tautological against whatever the file happens to contain.
-    const withoutGuard = content.replace(
+    const withoutGuard = tourFile(boundedLabelRows[1].file).replace(
       'style={{ ...TYPE.label, color: theme.text, flex: 1, lineHeight: 19 }}',
       'style={{ ...TYPE.label, color: theme.text }}'
     );
-    assert.throws(() => assert.match(withoutGuard, boundedLabelRows[1]));
+    assert.throws(() => assert.match(withoutGuard, boundedLabelRows[1].pattern));
   });
 
   it("labels every mockup frame as illustrative so specific-looking panchang/muhurta/shloka data is never read as today's real values", () => {
-    const content = fs.readFileSync(tourModalPath, "utf-8");
+    const content = SLIDE_FILES.map(tourFile).join("\n");
     const previewLabelCount = (content.match(/Illustrative preview/g) ?? []).length;
     // One per "Faithful Mockup Frame" (slides 1, 3, 4) that shows specific
     // time/verse-looking values which are frozen, not live data.
