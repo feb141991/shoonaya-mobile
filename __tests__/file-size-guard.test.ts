@@ -74,7 +74,6 @@ const OVER_LIMIT_CEILINGS: Record<string, number> = {
   'app/quiz.tsx': 1147,
   'app/panchang.tsx': 1100,
   'app/vrat/[slug].tsx': 1007,
-  'components/tirtha/VirtualSanctumModal.tsx': 983,
   'app/name-story.tsx': 952,
   'app/nitya-plans.tsx': 936,
   'lib/mandali.ts': 932,

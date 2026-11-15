@@ -448,7 +448,8 @@ export const FEATURE_COLORS = {
     pressableSurfaceDark2: 'rgba(217, 119, 6, 0.2)',
     pressableSurfaceLight2: 'rgba(254, 226, 226, 0.9)',
   },
-  // components/tirtha/VirtualSanctumModal.tsx
+  // components/tirtha/VirtualSanctumModal.tsx and the VirtualSanctum* components it renders
+  // (Stage, Actions, TabBar, TabContent), split out of it on 2026-11-15.
   virtualSanctumModal: {
     cardSurfaceDark: 'rgba(30, 26, 20, 0.95)',
     sanctumBgDarkStart: '#1a120b',
