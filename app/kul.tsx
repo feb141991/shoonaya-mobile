@@ -24,14 +24,14 @@ import { SacredLoader } from "@/components/ui/SacredLoader";
 import { Screen } from "@/components/ui/Screen";
 import { AuthGate } from "@/components/ui/AuthGate";
 import { DatePickerField } from "@/components/ui/DatePickerField";
-import { formatLocalDateOnly } from "@/lib/dateOnly";
+import { formatLocalDateOnly, parseDateOnly } from "@/lib/dateOnly";
 import { KulInviteModal } from "@/components/kul/KulInviteModal";
 import { VanshGraphCanvas } from "@/components/kul/VanshGraphCanvas";
+import { VanshAddPersonModal } from "@/components/kul/VanshAddPersonModal";
 import { getKinshipTier } from "@/lib/kinship";
 import {
   computeVanshLayout,
   formatVanshHeritageLabel,
-  getEligibleParentIds,
 } from "@/lib/vanshLayout";
 import {
   COLORS,
@@ -340,12 +340,6 @@ export default function KulScreen() {
 
   const [showFamilyForm, setShowFamilyForm] = useState(false);
   const [editingFamilyMemberId, setEditingFamilyMemberId] = useState<string | null>(null);
-  const [familyName, setFamilyName] = useState("");
-  const [familyRelationship, setFamilyRelationship] = useState("");
-  const [familyGeneration, setFamilyGeneration] = useState("1");
-  const [familyParent, setFamilyParent] = useState("");
-  const [familySpouse, setFamilySpouse] = useState("");
-  const [familyIsAlive, setFamilyIsAlive] = useState(true);
   const [vanshViewMode, setVanshViewMode] = useState<"canvas" | "list">("canvas");
   const [selectedFamilyMemberId, setSelectedFamilyMemberId] = useState<string | null>(null);
 
@@ -403,12 +397,6 @@ export default function KulScreen() {
     setEditingEventId(null);
     setShowFamilyForm(false);
     setEditingFamilyMemberId(null);
-    setFamilyName("");
-    setFamilyRelationship("");
-    setFamilyGeneration("1");
-    setFamilyParent("");
-    setFamilySpouse("");
-    setFamilyIsAlive(true);
     setShowLineageForm(false);
     setLineageDraft(null);
     setCalendarLabel("");
@@ -558,10 +546,6 @@ export default function KulScreen() {
     ? familyTreeNodeById.get(selectedFamilyMember.id) ?? null
     : null;
   const selectedHeritageLabel = formatVanshHeritageLabel(kul?.lineage);
-  const eligibleFamilyParentIds = useMemo(
-    () => new Set(getEligibleParentIds(snapshot?.familyMembers ?? [], editingFamilyMemberId)),
-    [snapshot?.familyMembers, editingFamilyMemberId],
-  );
   const upcomingEvents = useMemo(() => {
     const today = snapshot?.today ?? localIsoDate();
     return (snapshot?.events ?? [])
@@ -823,10 +807,19 @@ export default function KulScreen() {
     }
   };
 
-  const handleAddFamilyMember = async () => {
-    const generation = Number(familyGeneration);
+  const handleSaveFamilyMemberFromModal = async (data: {
+    name: string;
+    relationship: string;
+    generation: number;
+    parentId?: string | null;
+    spouseId?: string | null;
+    isAlive: boolean;
+    dateOfBirth?: string | null;
+    anniversaryDate?: string | null;
+  }) => {
+    const generation = Number(data.generation);
     if (
-      !familyName.trim() ||
+      !data.name.trim() ||
       !Number.isInteger(generation) ||
       generation < 0 ||
       generation > 20
@@ -835,54 +828,88 @@ export default function KulScreen() {
         "Check the family details",
         "Add a name and a generation from 0 to 20.",
       );
-      return;
+      return false;
     }
+
     const success = await runMutation(
-      (userId) => editingFamilyMemberId
-        ? updateKulFamilyMember(userId, {
-            memberId: editingFamilyMemberId,
-            name: familyName.trim(),
-            relationship: familyRelationship.trim() || null,
-            generation,
-            parentId: familyParent || null,
-            spouseId: familySpouse || null,
-            isAlive: familyIsAlive,
-          })
-        : addKulFamilyMember(userId, {
-            name: familyName.trim(),
-            relationship: familyRelationship.trim() || undefined,
-            generation,
-            parentId: familyParent || undefined,
-          }),
+      async (userId) => {
+        const saved = editingFamilyMemberId
+          ? await updateKulFamilyMember(userId, {
+              memberId: editingFamilyMemberId,
+              name: data.name.trim(),
+              relationship: data.relationship.trim() || null,
+              generation,
+              parentId: data.parentId || null,
+              spouseId: data.spouseId || null,
+              isAlive: data.isAlive,
+            })
+          : await addKulFamilyMember(userId, {
+              name: data.name.trim(),
+              relationship: data.relationship.trim() || undefined,
+              generation,
+              parentId: data.parentId || undefined,
+            });
+
+        if (data.dateOfBirth && parseDateOnly(data.dateOfBirth)) {
+          try {
+            await saveKulEvent(userId, {
+              title: `${data.name.trim()}'s Birthday`,
+              eventType: "birthday",
+              description: `${data.name.trim()}'s Date of Birth`,
+              memberId: saved.id,
+              dateSystem: "gregorian",
+              eventDate: data.dateOfBirth,
+              recurring: true,
+            });
+          } catch (e) {
+            console.warn("Could not save birthday event", e);
+          }
+        }
+
+        if (data.anniversaryDate && parseDateOnly(data.anniversaryDate)) {
+          try {
+            await saveKulEvent(userId, {
+              title: `${data.name.trim()}'s Anniversary`,
+              eventType: "anniversary",
+              description: `${data.name.trim()}'s Wedding Anniversary`,
+              memberId: saved.id,
+              dateSystem: "gregorian",
+              eventDate: data.anniversaryDate,
+              recurring: true,
+            });
+          } catch (e) {
+            console.warn("Could not save anniversary event", e);
+          }
+        }
+
+        return saved;
+      },
       {
-        reload: false,
-        apply: (saved) => patchSnapshot((current) => ({
-          ...current,
-          familyMembers: editingFamilyMemberId
-            ? current.familyMembers.map((member) => member.id === saved.id ? saved : member)
-            : [...current.familyMembers, saved].sort((a, b) => (a.generation ?? 0) - (b.generation ?? 0)),
-        })),
+        reload: Boolean(data.dateOfBirth || data.anniversaryDate),
+        apply: (saved) =>
+          patchSnapshot((current) => ({
+            ...current,
+            familyMembers: editingFamilyMemberId
+              ? current.familyMembers.map((member) =>
+                  member.id === saved.id ? saved : member,
+                )
+              : [...current.familyMembers, saved].sort(
+                  (a, b) => (a.generation ?? 0) - (b.generation ?? 0),
+                ),
+          })),
       },
     );
+
     if (success) {
-      setFamilyName("");
-      setFamilyRelationship("");
-      setFamilyParent("");
-      setFamilySpouse("");
-      setFamilyIsAlive(true);
       setEditingFamilyMemberId(null);
       setShowFamilyForm(false);
+      return true;
     }
+    return false;
   };
 
   const beginEditFamilyMember = (member: KulSnapshot["familyMembers"][number]) => {
     setEditingFamilyMemberId(member.id);
-    setFamilyName(member.name);
-    setFamilyRelationship(member.role ?? "");
-    setFamilyGeneration(String(member.generation ?? 0));
-    setFamilyParent(member.parent_id ?? "");
-    setFamilySpouse(member.spouse_id ?? "");
-    setFamilyIsAlive(member.is_alive);
     setShowFamilyForm(true);
   };
 
@@ -1073,12 +1100,6 @@ export default function KulScreen() {
               accessibilityLabel="Add person to family tree"
               onPress={() => {
                 setEditingFamilyMemberId(null);
-                setFamilyName("");
-                setFamilyRelationship("");
-                setFamilyGeneration("");
-                setFamilyParent("");
-                setFamilySpouse("");
-                setFamilyIsAlive(true);
                 setShowFamilyForm(true);
               }}
               style={{
@@ -1552,132 +1573,23 @@ export default function KulScreen() {
           </ScrollView>
         )}
 
-        {/* Modal: Add or Edit Family Member */}
+        {/* Pop Card Modal: Add or Edit Family Member */}
         {showFamilyForm && snapshot.role === "guardian" ? (
-          <Modal
-            transparent
-            animationType="slide"
+          <VanshAddPersonModal
             visible={showFamilyForm}
-            onRequestClose={() => setShowFamilyForm(false)}
-          >
-            <Pressable
-              style={{
-                flex: 1,
-                backgroundColor: COLORS.familyModalScrim,
-                justifyContent: "flex-end",
-              }}
-              onPress={() => setShowFamilyForm(false)}
-            >
-              <Pressable
-                onPress={(e) => e.stopPropagation()}
-                style={{
-                  backgroundColor: theme.card,
-                  borderTopLeftRadius: RADII.xl,
-                  borderTopRightRadius: RADII.xl,
-                  borderWidth: 1,
-                  borderColor: theme.border,
-                  padding: 20,
-                  maxHeight: "85%",
-                  gap: 12,
-                }}
-              >
-                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-                  <Text style={{ ...TYPE.cardHeading, color: theme.text, fontFamily: FONTS.serifBold, lineHeight: 24 }}>
-                    {editingFamilyMemberId ? "Edit family record" : "Add a person to lineage tree"}
-                  </Text>
-                  <PressableSurface
-                    accessibilityRole="button"
-                    accessibilityLabel="Close form"
-                    onPress={() => setShowFamilyForm(false)}
-                    style={{ width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: theme.cardSoft }}
-                  >
-                    <Feather name="x" size={18} color={theme.dim} />
-                  </PressableSurface>
-                </View>
-
-                <ScrollView style={{ maxHeight: 420 }} contentContainerStyle={{ gap: 10 }} showsVerticalScrollIndicator={false}>
-                  <Field
-                    accessibilityLabel="Family tree person's name"
-                    value={familyName}
-                    onChangeText={setFamilyName}
-                    placeholder="Name"
-                    theme={theme}
-                    maxLength={80}
-                  />
-                  <Field
-                    accessibilityLabel="Relationship to the family"
-                    value={familyRelationship}
-                    onChangeText={setFamilyRelationship}
-                    placeholder="Relationship · e.g. Grandmother"
-                    theme={theme}
-                    maxLength={50}
-                  />
-                  <Field
-                    accessibilityLabel="Family generation number"
-                    value={familyGeneration}
-                    onChangeText={setFamilyGeneration}
-                    placeholder="Generation number"
-                    theme={theme}
-                    maxLength={2}
-                  />
-                  {snapshot.familyMembers.length ? (
-                    <>
-                      <Text style={{ ...TYPE.caption, color: theme.dim, lineHeight: 16 }}>
-                        Optional parent in this tree
-                      </Text>
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          flexWrap: "wrap",
-                          gap: 7,
-                        }}
-                      >
-                        <Choice
-                          label="No parent selected"
-                          selected={!familyParent}
-                          onPress={() => setFamilyParent("")}
-                          theme={theme}
-                        />
-                        {snapshot.familyMembers.filter((member) => eligibleFamilyParentIds.has(member.id)).map((member) => (
-                          <Choice
-                            key={member.id}
-                            label={member.name}
-                            selected={familyParent === member.id}
-                            onPress={() => setFamilyParent(member.id)}
-                            theme={theme}
-                          />
-                        ))}
-                      </View>
-                    </>
-                  ) : null}
-                  {snapshot.familyMembers.length > 1 ? (
-                    <>
-                      <Text style={{ ...TYPE.caption, color: theme.dim, lineHeight: 16 }}>Optional spouse / partner link</Text>
-                      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
-                        <Choice label="No link" selected={!familySpouse} onPress={() => setFamilySpouse("")} theme={theme} />
-                        {snapshot.familyMembers.filter((member) => member.id !== editingFamilyMemberId).slice(0, 20).map((member) => (
-                          <Choice key={`spouse-${member.id}`} label={member.name} selected={familySpouse === member.id} onPress={() => setFamilySpouse(member.id)} theme={theme} />
-                        ))}
-                      </View>
-                    </>
-                  ) : null}
-                  {editingFamilyMemberId ? (
-                    <View style={{ flexDirection: "row", gap: 7 }}>
-                      <Choice label="Living" selected={familyIsAlive} onPress={() => setFamilyIsAlive(true)} theme={theme} />
-                      <Choice label="Remembered" selected={!familyIsAlive} onPress={() => setFamilyIsAlive(false)} theme={theme} />
-                    </View>
-                  ) : null}
-                  <ActionButton
-                    label={working ? "Saving…" : editingFamilyMemberId ? "Save family record" : "Add to family tree"}
-                    disabled={working}
-                    onPress={() => void handleAddFamilyMember()}
-                    theme={theme}
-                    isDark={isDark}
-                  />
-                </ScrollView>
-              </Pressable>
-            </Pressable>
-          </Modal>
+            onClose={() => {
+              setShowFamilyForm(false);
+              setEditingFamilyMemberId(null);
+            }}
+            onSave={handleSaveFamilyMemberFromModal}
+            editingMember={
+              editingFamilyMemberId
+                ? snapshot.familyMembers.find((m) => m.id === editingFamilyMemberId) ?? null
+                : null
+            }
+            existingMembers={snapshot.familyMembers}
+            isDark={isDark}
+          />
         ) : null}
 
         {/* Modal: Gotra & Parampara */}
@@ -2895,20 +2807,14 @@ export default function KulScreen() {
                     theme={theme}
                     action={
                       snapshot.role === "guardian"
-                        ? showFamilyForm
-                          ? "Close"
-                          : editingFamilyMemberId ? "Edit person" : "Add person"
+                        ? "Add person"
                         : undefined
                     }
                     onAction={
                       snapshot.role === "guardian"
                         ? () => {
-                            if (showFamilyForm && !editingFamilyMemberId) {
-                              setShowFamilyForm(false);
-                            } else {
-                              setEditingFamilyMemberId(null);
-                              setShowFamilyForm((value) => !value);
-                            }
+                            setEditingFamilyMemberId(null);
+                            setShowFamilyForm(true);
                           }
                         : undefined
                     }
@@ -2916,101 +2822,6 @@ export default function KulScreen() {
                   <Text style={{ ...TYPE.body, color: theme.dim }}>
                     Visual lineage and generational roots. Preserved privately within your Kutumb circle.
                   </Text>
-
-                  {showFamilyForm && snapshot.role === "guardian" ? (
-                    <View
-                      style={{
-                        padding: 14,
-                        borderRadius: RADII.md,
-                        backgroundColor: theme.cardSoft,
-                        borderWidth: 1,
-                        borderColor: theme.borderSoft,
-                        gap: 10,
-                      }}
-                    >
-                      <Text style={{ ...TYPE.label, color: theme.brand, fontFamily: FONTS.serifBold }}>
-                        {editingFamilyMemberId ? "Edit family record" : "Add a person to lineage tree"}
-                      </Text>
-                      <Field
-                        accessibilityLabel="Family tree person's name"
-                        value={familyName}
-                        onChangeText={setFamilyName}
-                        placeholder="Name"
-                        theme={theme}
-                        maxLength={80}
-                      />
-                      <Field
-                        accessibilityLabel="Relationship to the family"
-                        value={familyRelationship}
-                        onChangeText={setFamilyRelationship}
-                        placeholder="Relationship · e.g. Grandmother"
-                        theme={theme}
-                        maxLength={50}
-                      />
-                      <Field
-                        accessibilityLabel="Family generation number"
-                        value={familyGeneration}
-                        onChangeText={setFamilyGeneration}
-                        placeholder="Generation number"
-                        theme={theme}
-                        maxLength={2}
-                      />
-                      {snapshot.familyMembers.length ? (
-                        <>
-                          <Text style={{ ...TYPE.caption, color: theme.dim }}>
-                            Optional parent in this tree
-                          </Text>
-                          <View
-                            style={{
-                              flexDirection: "row",
-                              flexWrap: "wrap",
-                              gap: 7,
-                            }}
-                          >
-                            <Choice
-                              label="No parent selected"
-                              selected={!familyParent}
-                              onPress={() => setFamilyParent("")}
-                              theme={theme}
-                            />
-                            {snapshot.familyMembers.filter((member) => eligibleFamilyParentIds.has(member.id)).map((member) => (
-                              <Choice
-                                key={member.id}
-                                label={member.name}
-                                selected={familyParent === member.id}
-                                onPress={() => setFamilyParent(member.id)}
-                                theme={theme}
-                              />
-                            ))}
-                          </View>
-                        </>
-                      ) : null}
-                      {snapshot.familyMembers.length > 1 ? (
-                        <>
-                          <Text style={{ ...TYPE.caption, color: theme.dim }}>Optional spouse / partner link</Text>
-                          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
-                            <Choice label="No link" selected={!familySpouse} onPress={() => setFamilySpouse("")} theme={theme} />
-                            {snapshot.familyMembers.filter((member) => member.id !== editingFamilyMemberId).slice(0, 20).map((member) => (
-                              <Choice key={`spouse-${member.id}`} label={member.name} selected={familySpouse === member.id} onPress={() => setFamilySpouse(member.id)} theme={theme} />
-                            ))}
-                          </View>
-                        </>
-                      ) : null}
-                      {editingFamilyMemberId ? (
-                        <View style={{ flexDirection: "row", gap: 7 }}>
-                          <Choice label="Living" selected={familyIsAlive} onPress={() => setFamilyIsAlive(true)} theme={theme} />
-                          <Choice label="Remembered" selected={!familyIsAlive} onPress={() => setFamilyIsAlive(false)} theme={theme} />
-                        </View>
-                      ) : null}
-                      <ActionButton
-                        label={working ? "Saving…" : editingFamilyMemberId ? "Save family record" : "Add to family tree"}
-                        disabled={working}
-                        onPress={() => void handleAddFamilyMember()}
-                        theme={theme}
-                        isDark={isDark}
-                      />
-                    </View>
-                  ) : null}
 
                   {snapshot.familyMembers.length ? (
                     <View style={{ gap: 10 }}>
@@ -3427,6 +3238,23 @@ export default function KulScreen() {
           kulName={kul.name}
           avatarEmoji={kul.avatarEmoji}
           theme={theme}
+          isDark={isDark}
+        />
+      ) : null}
+      {showFamilyForm && snapshot && snapshot.role === "guardian" ? (
+        <VanshAddPersonModal
+          visible={showFamilyForm}
+          onClose={() => {
+            setShowFamilyForm(false);
+            setEditingFamilyMemberId(null);
+          }}
+          onSave={handleSaveFamilyMemberFromModal}
+          editingMember={
+            editingFamilyMemberId
+              ? snapshot.familyMembers.find((m) => m.id === editingFamilyMemberId) ?? null
+              : null
+          }
+          existingMembers={snapshot.familyMembers}
           isDark={isDark}
         />
       ) : null}

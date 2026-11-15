@@ -9,7 +9,7 @@ export interface BranchTheme {
 }
 
 export const GENERATION_ORBIT_LEVELS = [
-  { gen: 1, yTier: -170, label: 'Gen 1: पूर्वज (Grandparents)' },
+  { gen: 1, yTier: -170, label: 'Gen 1: पूर्वज (Grandparents & earlier)' },
   { gen: 2, yTier: -60, label: 'Gen 2: माता-पिता (Parents)' },
   { gen: 3, yTier: 50, label: 'Gen 3: आप / समकालीन (Self & Living)' },
   { gen: 4, yTier: 160, label: 'Gen 4: नवीन पीढ़ी (Next Gen)' },

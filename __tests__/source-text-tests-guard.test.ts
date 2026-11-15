@@ -52,6 +52,7 @@ const SOURCE_TEXT_CEILINGS: Record<string, number> = {
   '__tests__/onboarding-shell-integration.test.ts': 30,
   '__tests__/panchatantra-wisdom-actions-contract.test.ts': 30,
   'tests/rashiphala-guidance-surface.test.ts': 30,
+  '__tests__/discreet-mode.test.ts': 9,
   '__tests__/save-error.test.ts': 29,
   '__tests__/vansh-screen-contract.test.ts': 29,
   '__tests__/mandali-guest-readonly.test.ts': 28,
