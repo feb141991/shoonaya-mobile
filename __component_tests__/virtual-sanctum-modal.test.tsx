@@ -326,4 +326,20 @@ describe('VirtualSanctumModal', () => {
       expect(mockPush).toHaveBeenCalledWith('/live-darshan');
     });
   });
+
+  // The floor line used to be one Shaiva mantra printed for every temple (Vishnu, Krishna and Gurdwara shrines included).
+  // It is now a recorded fact of a shrine (lib/yatra-data.ts, __tests__/yatra-sanctum-mantra.test.ts pins which ones).
+  describe('sanctum floor line', () => {
+    it('shows the mantra a shrine records, exactly as recorded', async () => {
+      await open({ ...TEMPLE, sanctumFloorMantra: 'Fixture floor mantra' });
+      expect(screen.getByText('Fixture floor mantra')).toBeTruthy();
+    });
+
+    it('shows no floor line for a shrine that records none, and never falls back to a default mantra', async () => {
+      await open();
+      expect(screen.queryByText(/✦/)).toBeNull();
+      expect(screen.queryByText(/शिवाय/)).toBeNull();
+      expect(screen.queryByText(/महादेव/)).toBeNull();
+    });
+  });
 });

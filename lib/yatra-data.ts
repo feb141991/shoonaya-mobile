@@ -8,6 +8,11 @@
 
 export type YatraTradition = 'sanatan' | 'sikh' | 'jain';
 
+// The mantra the sanctum floor used to show for EVERY temple, including Vishnu, Krishna and Gurdwara shrines. It is a Shaiva
+// mantra, so it is recorded only on the shrines of Shiva (below) and no other shrine falls back to it. A shrine with no
+// reviewed mantra of its own shows no floor line; do not default one in. (AGENTS.md section 3 and section 39.)
+export const SHIVA_SANCTUM_FLOOR_MANTRA = '✦ ॐ नमः शिवाय ✦ हर हर महादेव ✦';
+
 export interface TempleSanctumNode {
   id: string;
   name: string;
@@ -27,6 +32,8 @@ export interface TempleSanctumNode {
     audioUrl?: string;
   };
   liveDarshanStreamId?: string; // YouTube or live darshan id if supported
+  /** Mantra shown on the floor of the virtual sanctum. Absent means none is recorded for this shrine and nothing is shown. */
+  sanctumFloorMantra?: string;
   colorAccent: string;
   latitude: number;
   longitude: number;
@@ -82,6 +89,7 @@ export const SACRED_YATRA_CIRCUITS: Record<string, YatraCircuit> = {
           // rather than link an unrelated or rights-unclear track.
         },
         colorAccent: '#D97706',
+        sanctumFloorMantra: SHIVA_SANCTUM_FLOOR_MANTRA,
         latitude: 20.888,
         longitude: 70.401,
       },
@@ -102,6 +110,7 @@ export const SACRED_YATRA_CIRCUITS: Record<string, YatraCircuit> = {
           description: 'Composed by Jagadguru Adi Shankaracharya during his tapasya at Srisailam.',
         },
         colorAccent: '#EA580C',
+        sanctumFloorMantra: SHIVA_SANCTUM_FLOOR_MANTRA,
         latitude: 16.074,
         longitude: 78.868,
       },
@@ -123,6 +132,7 @@ export const SACRED_YATRA_CIRCUITS: Record<string, YatraCircuit> = {
           description: 'Om Mahakalaya Namah — Chanting for fearlessness from death.',
         },
         colorAccent: '#B45309',
+        sanctumFloorMantra: SHIVA_SANCTUM_FLOOR_MANTRA,
         latitude: 23.183,
         longitude: 75.768,
       },
@@ -144,6 +154,7 @@ export const SACRED_YATRA_CIRCUITS: Record<string, YatraCircuit> = {
           audioUrl: 'https://archive.org/download/stotras-of-sri-sankara-bhagavatpada/Stotras%20of%20Sri%20Sankara%20Bhagavatpada/025-Narmadashtakam.mp3',
         },
         colorAccent: '#7C3AED',
+        sanctumFloorMantra: SHIVA_SANCTUM_FLOOR_MANTRA,
         latitude: 22.247,
         longitude: 76.151,
       },
@@ -164,6 +175,7 @@ export const SACRED_YATRA_CIRCUITS: Record<string, YatraCircuit> = {
           description: 'Kedararanya-Vasam Mahadev-Isam — Divine hymn composed in devotion to Kedarnath.',
         },
         colorAccent: '#2563EB',
+        sanctumFloorMantra: SHIVA_SANCTUM_FLOOR_MANTRA,
         latitude: 30.735,
         longitude: 79.066,
       },
@@ -186,6 +198,7 @@ export const SACRED_YATRA_CIRCUITS: Record<string, YatraCircuit> = {
           audioUrl: 'https://archive.org/download/Chamakam_201606/Kashi%20Vishwanath%20Ashtakam.mp3',
         },
         colorAccent: '#D97706',
+        sanctumFloorMantra: SHIVA_SANCTUM_FLOOR_MANTRA,
         latitude: 25.311,
         longitude: 83.011,
       },
@@ -206,6 +219,7 @@ export const SACRED_YATRA_CIRCUITS: Record<string, YatraCircuit> = {
           description: 'Setubandhe Tu Ramesham — Southern pinnacle of the Jyotirlinga circuit.',
         },
         colorAccent: '#059669',
+        sanctumFloorMantra: SHIVA_SANCTUM_FLOOR_MANTRA,
         latitude: 9.288,
         longitude: 79.317,
       },
@@ -303,6 +317,7 @@ export const SACRED_YATRA_CIRCUITS: Record<string, YatraCircuit> = {
         significance: 'Southern anchor of the Char Dham, completing the sacred pilgrim circuit of India.',
         offerings: ['Ganga Jal Abhishekam', 'Bilva Patra', 'Agni Theertha Snana'],
         colorAccent: '#059669',
+        sanctumFloorMantra: SHIVA_SANCTUM_FLOOR_MANTRA,
         latitude: 9.288,
         longitude: 79.317,
       },

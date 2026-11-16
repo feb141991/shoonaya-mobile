@@ -698,3 +698,18 @@ Rules:
 - Cause of the stall: not proven. The device log from 11:06 to 11:23 shows no request started except to Metro, so the save waited inside sign-in
   preparation with no network activity; the access token was over an hour old, so `getSession()` needed a refresh, consistent with a refresh begun
   earlier that never settled. The log before 11:06 had already been discarded. If it recurs, the log now names the stalled step.
+
+### 39. A Shrine's Mantra Is a Recorded Fact, Not a Default for Every Shrine
+- The virtual sanctum's floor line (`components/tirtha/VirtualSanctumStage.tsx`) renders `TempleSanctumNode.sanctumFloorMantra` and nothing else; a shrine
+  with none shows no line. Never type a mantra, a deity symbol or any tradition-specific phrase into a component that renders for more than one shrine, and
+  never fall back to another tradition's text (section 3). Record it on the node, with its tradition and, once one is supplied, its reviewed source.
+- Recorded today on the eight shrines of Shiva only (the seven Jyotirlinga nodes and Rameswaram in the Char Dham circuit), with the exact text the stage
+  used to print. That choice was made from each node's own deity and Sthala Purana text; no source or council review of the mantra itself is recorded.
+  The other seven shrines (Badrinath, Dwarka, Puri Jagannath, the four Panj Takht gurdwaras) now show no floor line: withheld, not filled in.
+- Origin: 2026-11-16. The line was hard-coded in the modal for all 15 shrines in three circuits, so Badrinath, Dwarka, Puri and four Gurdwara shrines
+  printed "Om Namah Shivaya, Har Har Mahadev". Found while splitting the modal (the split moved it verbatim and flagged it). Guard:
+  `__tests__/yatra-sanctum-mantra.test.ts` (which shrines record it, by count and by id) and the "sanctum floor line" render tests in
+  `__component_tests__/virtual-sanctum-modal.test.tsx` (seven mutations, each proven red).
+- Same class, not changed, needs a founder decision: the Om glyph on the stage is shown for every shrine including the Sikh ones (the app already uses
+  the Khanda symbol for Sikh in `app/bhakti/browse.tsx`), and the diya, bell, parikrama and pushpam actions are offered on Gurdwara nodes. The shrine
+  node has no tradition field of its own; only its circuit does. Not verified on a device, in dark mode, or with large text.

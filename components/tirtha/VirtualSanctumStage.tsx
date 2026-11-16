@@ -96,12 +96,14 @@ export function VirtualSanctumStage({
           </Pressable>
         </View>
 
-        {/* Sanctum Floor Floral Border */}
-        <View style={styles.sanctumFloor}>
-          <Text style={styles.sanctumFloorMantra}>
-            ✦ ॐ नमः शिवाय ✦ हर हर महादेव ✦
-          </Text>
-        </View>
+        {/* Sanctum floor line: shown only for a shrine whose data records a mantra (lib/yatra-data.ts) */}
+        {temple.sanctumFloorMantra ? (
+          <View style={styles.sanctumFloor}>
+            <Text style={styles.sanctumFloorMantra}>
+              {temple.sanctumFloorMantra}
+            </Text>
+          </View>
+        ) : null}
       </LinearGradient>
     </View>
   );
