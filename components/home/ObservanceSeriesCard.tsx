@@ -16,7 +16,7 @@ import {
 } from '@/lib/observance-series-card-helpers';
 import { resolveSeriesChildSlug } from '@/lib/observance-series-content';
 import { resolveNativeRoute } from '@/lib/routes';
-import { SACRED_DAYS_CARD_HEIGHT } from '@/lib/sacred-days-deck';
+import { formatSacredDate, SACRED_DAYS_CARD_HEIGHT } from '@/lib/sacred-days-deck';
 
 type Theme = {
   card: string;
@@ -95,11 +95,12 @@ export function ObservanceSeriesCard({
     ? [COLORS.navGlassTopDark, COLORS.navGlassBottomDark]
     : [COLORS.navGlassTopLight, COLORS.navGlassBottomLight];
   const badgeTextColor = isDark ? COLORS.textOnBrandDark : COLORS.textOnBrandLight;
+  const formattedDate = formatSacredDate(targetDate, lang);
 
   return (
     <PressableSurface
       haptic="selection"
-      accessibilityLabel={`${seriesName}, ${title}, ${daysBadgeLabel(daysLeft, lang)}${description ? `. ${description}` : ''}`}
+      accessibilityLabel={`${seriesName}, ${title}, ${formattedDate ? `${formattedDate}, ` : ''}${daysBadgeLabel(daysLeft, lang)}${description ? `. ${description}` : ''}`}
       accessibilityHint={href ? copy.learnMore : undefined}
       accessibilityState={{ disabled: !href }}
       disabled={!href}
@@ -160,12 +161,22 @@ export function ObservanceSeriesCard({
             {description ?? statusLine}
           </Text>
 
-          {href ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
-              <Text style={{ ...TYPE.chip, color: accent }}>{copy.learnMore}</Text>
-              <Feather name="arrow-right" size={13} color={accent} />
-            </View>
-          ) : null}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4, gap: 8 }}>
+            {href ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                <Text style={{ ...TYPE.chip, color: accent }}>{copy.learnMore}</Text>
+                <Feather name="arrow-right" size={13} color={accent} />
+              </View>
+            ) : <View style={{ flexShrink: 0 }} />}
+            {formattedDate ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                <Feather name="calendar" size={11} color={cardDimColor} />
+                <Text style={{ ...TYPE.chip, color: cardDimColor }} numberOfLines={1}>
+                  {formattedDate}
+                </Text>
+              </View>
+            ) : null}
+          </View>
         </View>
       </View>
     </PressableSurface>

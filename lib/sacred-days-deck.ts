@@ -23,11 +23,54 @@ export type SacredDaysObservance = {
   routeSlug: string;
   href: string;
   label: string;
+  date?: string | null;
   monthLabel?: string | null;
   description?: string | null;
   descriptionLocal?: string | null;
   descriptionPa?: string | null;
 };
+
+const SACRED_FALLBACK_MONTHS: Record<string, string[]> = {
+  en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+  hi: ['जन', 'फ़र', 'मार्च', 'अप्रै', 'मई', 'जून', 'जुला', 'अग', 'सितं', 'अक्टू', 'नवं', 'दिसं'],
+  pa: ['ਜਨ', 'ਫ਼ਰ', 'ਮਾਰਚ', 'ਅਪ੍ਰੈ', 'ਮਈ', 'ਜੂਨ', 'ਜੁਲਾ', 'ਅਗ', 'ਸਤੰ', 'ਅਕਤੂ', 'ਨਵੰ', 'ਦਸੰ'],
+};
+
+/**
+ * Formats a canonical spiritual ISO date (YYYY-MM-DD) into a concise
+ * localized date string (e.g. 'Fri, 20 Nov', 'शुक्र, 20 नव॰', 'ਸ਼ੁੱਕਰ, 20 ਨਵੰ').
+ * Strictly validates against impossible dates (Rule 13) and formats in UTC
+ * so the local device timezone never shifts civil date across midnight.
+ */
+export function formatSacredDate(
+  dateIso: string | undefined | null,
+  lang: 'en' | 'hi' | 'pa' = 'en'
+): string | null {
+  if (!dateIso || typeof dateIso !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(dateIso)) {
+    return null;
+  }
+
+  const stableDate = new Date(`${dateIso}T12:00:00.000Z`);
+  if (Number.isNaN(stableDate.getTime()) || stableDate.toISOString().slice(0, 10) !== dateIso) {
+    return null;
+  }
+
+  try {
+    const locale = lang === 'hi' ? 'hi-IN' : lang === 'pa' ? 'pa-IN' : 'en-IN';
+    return stableDate.toLocaleDateString(locale, {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      timeZone: 'UTC',
+    });
+  } catch {
+    const parts = dateIso.split('-');
+    const monthIdx = Number(parts[1]) - 1;
+    const day = Number(parts[2]);
+    const monthName = SACRED_FALLBACK_MONTHS[lang]?.[monthIdx] ?? SACRED_FALLBACK_MONTHS.en[monthIdx];
+    return `${day} ${monthName}`;
+  }
+}
 
 /**
  * Same pa -> hi -> en / hi -> en fallback chain as

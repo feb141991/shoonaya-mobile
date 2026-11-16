@@ -93,6 +93,7 @@ export function upcomingMelaObservances({
         routeSlug: mela.slug,
         href: melaHref(mela.slug),
         label: name,
+        date: day.date,
         description: `${day.title}, ${day.place}`,
       });
       break;

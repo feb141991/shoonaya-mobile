@@ -10,6 +10,7 @@ import { getNativeSeriesCardCopy } from '@/lib/observance-series-card-helpers';
 import { resolveSeriesChildHref } from '@/lib/observance-series-content';
 import { resolveNativeRoute } from '@/lib/routes';
 import {
+  formatSacredDate,
   pickSacredDayLocalizedText,
   SACRED_DAYS_CARD_HEIGHT,
   type SacredDaysObservance,
@@ -107,11 +108,12 @@ export function SacredDaysCard({
     routeSlug: entry.routeSlug,
     name: entry.name,
   }) || entry.href;
+  const formattedDate = formatSacredDate(entry.date, lang);
 
   return (
     <PressableSurface
       haptic="selection"
-      accessibilityLabel={`${displayName}, ${daysBadgeLabel(entry.daysLeft, lang)}${displayDescription ? `. ${displayDescription}` : ''}`}
+      accessibilityLabel={`${displayName}, ${formattedDate ? `${formattedDate}, ` : ''}${daysBadgeLabel(entry.daysLeft, lang)}${displayDescription ? `. ${displayDescription}` : ''}`}
       accessibilityHint={copy.learnMore}
       onPress={() => router.push(resolveNativeRoute(resolvedHref) as Href)}
       style={{
@@ -166,13 +168,23 @@ export function SacredDaysCard({
             </View>
           </View>
 
-          <Text style={{ ...TYPE.caption, color: cardDimColor, marginTop: 2, lineHeight: 15 }} numberOfLines={2}>
+          <Text style={{ ...TYPE.caption, color: cardDimColor, marginTop: 2, lineHeight: 15 }} numberOfLines={1}>
             {displayDescription ?? entry.monthLabel ?? entry.label}
           </Text>
 
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
-            <Text style={{ ...TYPE.chip, color: accent }}>{copy.learnMore}</Text>
-            <Feather name="arrow-right" size={13} color={accent} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4, gap: 8 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+              <Text style={{ ...TYPE.chip, color: accent }}>{copy.learnMore}</Text>
+              <Feather name="arrow-right" size={13} color={accent} />
+            </View>
+            {formattedDate ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                <Feather name="calendar" size={11} color={cardDimColor} />
+                <Text style={{ ...TYPE.chip, color: cardDimColor }} numberOfLines={1}>
+                  {formattedDate}
+                </Text>
+              </View>
+            ) : null}
           </View>
         </View>
       </View>

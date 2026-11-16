@@ -7,6 +7,7 @@ import type { ObservanceSeries } from '../lib/observance-series-contract.generat
 import {
   buildSacredDaysDeck,
   buildSacredDaysSections,
+  formatSacredDate,
   HOME_SACRED_DAYS_LIMIT,
   HOME_SACRED_DAYS_WINDOW,
   type SacredDaysObservance,
@@ -287,5 +288,45 @@ test('SacredDaysCard and ObservanceSeriesCard maintain robust Yoga layout withou
   // Row container inside PressableSurface must use height: '100%' without conflicting flex: 1
   assert.match(cardSource, /style=\{\{\s*height:\s*'100%',\s*flexDirection:\s*'row'/);
   assert.match(seriesCardSource, /style=\{\{\s*height:\s*'100%',\s*flexDirection:\s*'row'/);
+});
+
+test('formatSacredDate formats canonical dates across languages and rejects invalid dates', () => {
+  // English format
+  assert.equal(formatSacredDate('2026-11-20', 'en'), 'Fri, 20 Nov');
+  assert.equal(formatSacredDate('2026-11-08', 'en'), 'Sun, 8 Nov');
+
+  // Hindi format
+  assert.equal(formatSacredDate('2026-11-20', 'hi'), 'शुक्र, 20 नव॰');
+  assert.equal(formatSacredDate('2026-11-08', 'hi'), 'रवि, 8 नव॰');
+
+  // Punjabi format
+  assert.equal(formatSacredDate('2026-11-20', 'pa'), 'ਸ਼ੁੱਕਰ, 20 ਨਵੰ');
+  assert.equal(formatSacredDate('2026-11-08', 'pa'), 'ਐਤ, 8 ਨਵੰ');
+
+  // Rule 13: Impossible dates rolling over in JS must fail safe and return null
+  assert.equal(formatSacredDate('2026-02-31', 'en'), null);
+  assert.equal(formatSacredDate('2025-04-31', 'en'), null);
+  assert.equal(formatSacredDate('2026-13-01', 'en'), null);
+
+  // Missing, empty or malformed inputs return null
+  assert.equal(formatSacredDate(undefined, 'en'), null);
+  assert.equal(formatSacredDate(null, 'en'), null);
+  assert.equal(formatSacredDate('', 'en'), null);
+  assert.equal(formatSacredDate('invalid-date', 'en'), null);
+});
+
+test('buildSacredDaysDeck preserves canonical date on observance items', () => {
+  const items = buildSacredDaysDeck({
+    observances: [{ ...observance('Devutthana Ekadashi', 2), date: '2026-11-10' }],
+    series: [],
+    spiritualDate,
+    windowDays: HOME_SACRED_DAYS_WINDOW,
+  });
+  assert.equal(items.length, 1);
+  if (items[0].type === 'observance') {
+    assert.equal(items[0].entry.date, '2026-11-10');
+  } else {
+    assert.fail('Expected observance item');
+  }
 });
 
