@@ -287,6 +287,75 @@ describe('AppTourModal', () => {
     });
   });
 
+  // Profile, Onboarding and Settings keep the tour mounted and only flip `visible`. A Modal renders nothing while it is
+  // hidden, so its pager starts on slide 1 every time it opens; the slide counter and the bead must start over with it.
+  describe('opening it again', () => {
+    const tour = (visible: boolean, onClose: () => void = jest.fn(), isHindi = false) => (
+      <AppTourModal visible={visible} onClose={onClose} isHindi={isHindi} />
+    );
+
+    it('starts on the first slide again after being closed on the last', async () => {
+      const theme = themeColor(false);
+      const { rerender } = await render(tour(true));
+      await next();
+      await next();
+      await next();
+      expect(screen.getByText('TOUR 4 OF 4')).toBeTruthy();
+
+      await rerender(tour(false));
+      expect(screen.queryByText('TOUR 4 OF 4')).toBeNull();
+      await rerender(tour(true));
+
+      expect(screen.getByText('TOUR 1 OF 4')).toBeTruthy();
+      expect(screen.getByLabelText('Skip tour')).toBeTruthy();
+      expect(screen.getByLabelText('Next tour slide')).toBeTruthy();
+      expect(screen.queryByLabelText('Previous tour slide')).toBeNull();
+      expect(screen.queryByLabelText('Enter Shoonaya Sanctuary')).toBeNull();
+      expect(progressColours()).toEqual([theme.brand, theme.borderSoft, theme.borderSoft, theme.borderSoft]);
+    });
+
+    it('starts the bead again at 1, with the first hint, after being closed part-way round', async () => {
+      const { rerender } = await render(tour(true));
+      await press('Count bead 1');
+      await press('Count bead 2');
+      expect(screen.getByText('3 / 108')).toBeTruthy();
+      expect(screen.getByText('+1 bead counted · Works 100% offline')).toBeTruthy();
+
+      await rerender(tour(false));
+      await rerender(tour(true));
+
+      expect(screen.getByText('1 / 108')).toBeTruthy();
+      expect(screen.getByLabelText('Count bead 1')).toBeTruthy();
+      expect(screen.getByText('Gentle tactile vibration like a real Mala')).toBeTruthy();
+      expect(screen.queryByText('+1 bead counted · Works 100% offline')).toBeNull();
+    });
+
+    it('starts over every time it is opened, wherever the last visit ended', async () => {
+      const { rerender } = await render(tour(true));
+      for (const stoppedAfter of [1, 3, 2, 0]) {
+        for (let step = 0; step < stoppedAfter; step++) await next();
+        await rerender(tour(false));
+        await rerender(tour(true));
+        expect(screen.getByText('TOUR 1 OF 4')).toBeTruthy();
+      }
+    });
+
+    it('does not start over when the screen behind it re-renders while it is open', async () => {
+      // The three screens pass a new onClose arrow on every render, and Settings can change language under an open tour.
+      const { rerender } = await render(tour(true, jest.fn()));
+      await next();
+      await press('Count bead 1');
+      await rerender(tour(true, jest.fn()));
+      await rerender(tour(true, jest.fn()));
+      expect(screen.getByText('TOUR 2 OF 4')).toBeTruthy();
+      expect(screen.getByText('2 / 108')).toBeTruthy();
+
+      await rerender(tour(true, jest.fn(), true));
+      expect(screen.getByText('झलक 2 / 4')).toBeTruthy();
+      expect(screen.getByText('2 / 108')).toBeTruthy();
+    });
+  });
+
   describe('what each slide is handed', () => {
     it('gives every slide one full screen width', async () => {
       await open();

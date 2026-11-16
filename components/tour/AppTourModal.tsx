@@ -31,6 +31,23 @@ export type AppTourModalProps = {
 };
 
 export function AppTourModal({ visible, onClose, isHindi = false }: AppTourModalProps) {
+  // The slide, the bead count and the pager all live in the Modal's children, not in this component. A Modal renders
+  // nothing while it is hidden, so its children are built again on every opening. Profile, Onboarding and Settings keep
+  // this component mounted and only flip `visible`; state kept here would survive a close and put "TOUR 4 OF 4" and
+  // Enter Sanctuary over a pager that has restarted on the first slide.
+  return (
+    <Modal
+      visible={visible}
+      transparent={false}
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <AppTourContent onClose={onClose} isHindi={isHindi} />
+    </Modal>
+  );
+}
+
+function AppTourContent({ onClose, isHindi }: { onClose: () => void; isHindi: boolean }) {
   const insets = useSafeAreaInsets();
   const isDark = useColorScheme() === "dark";
   const theme = themeColor(isDark);
@@ -64,149 +81,142 @@ export function AppTourModal({ visible, onClose, isHindi = false }: AppTourModal
   };
 
   return (
-    <Modal
-      visible={visible}
-      transparent={false}
-      animationType="slide"
-      onRequestClose={onClose}
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: theme.bg,
+        paddingTop: Math.max(insets.top, 16),
+        paddingBottom: Math.max(insets.bottom, 16),
+      }}
     >
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: theme.bg,
-          paddingTop: Math.max(insets.top, 16),
-          paddingBottom: Math.max(insets.bottom, 16),
-        }}
-      >
-        {/* Top Header: Story segment progress bars + Close button */}
-        <View style={{ paddingHorizontal: 20, paddingTop: 6, paddingBottom: 10, gap: 14 }}>
-          {/* Progress segments */}
-          <View style={{ flexDirection: "row", gap: 6, alignItems: "center" }}>
-            {Array.from({ length: totalSlides }).map((_, i) => {
-              const isPast = i < activeIndex;
-              const isCurrent = i === activeIndex;
-              return (
-                <View
-                  key={i}
-                  style={{
-                    flex: 1,
-                    height: 3.5,
-                    borderRadius: 2,
-                    backgroundColor: isCurrent ? theme.brand : isPast ? theme.brandSoft : theme.borderSoft,
-                  }}
-                />
-              );
-            })}
-          </View>
-
-          {/* Navigation Bar */}
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-              <Feather name="compass" size={17} color={theme.brand} />
-              <Text style={{ ...TYPE.caption, color: theme.brand, fontFamily: FONTS.sansMedium, letterSpacing: 0.8 }}>
-                {isHindi ? `झलक ${activeIndex + 1} / ${totalSlides}` : `TOUR ${activeIndex + 1} OF ${totalSlides}`}
-              </Text>
-            </View>
-
-            <PressableSurface
-              haptic="selection"
-              accessibilityRole="button"
-              accessibilityLabel={isHindi ? "यात्रा बन्द करें" : "Close tour"}
-              onPress={onClose}
-              style={{
-                width: MIN_TOUCH_TARGET,
-                height: MIN_TOUCH_TARGET,
-                borderRadius: 22,
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: theme.card,
-                borderWidth: 1,
-                borderColor: theme.border,
-              }}
-            >
-              <Feather name="x" size={18} color={theme.text} />
-            </PressableSurface>
-          </View>
+      {/* Top Header: Story segment progress bars + Close button */}
+      <View style={{ paddingHorizontal: 20, paddingTop: 6, paddingBottom: 10, gap: 14 }}>
+        {/* Progress segments */}
+        <View style={{ flexDirection: "row", gap: 6, alignItems: "center" }}>
+          {Array.from({ length: totalSlides }).map((_, i) => {
+            const isPast = i < activeIndex;
+            const isCurrent = i === activeIndex;
+            return (
+              <View
+                key={i}
+                style={{
+                  flex: 1,
+                  height: 3.5,
+                  borderRadius: 2,
+                  backgroundColor: isCurrent ? theme.brand : isPast ? theme.brandSoft : theme.borderSoft,
+                }}
+              />
+            );
+          })}
         </View>
 
-        {/* Swipeable Slides Viewport */}
-        <ScrollView
-          ref={scrollRef}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          onMomentumScrollEnd={handleScroll}
-          style={{ flex: 1 }}
-        >
-          {/* ── Slide 1: Today (Panchang & Sacred Days) ── */}
-          <TourSlideToday isHindi={isHindi} theme={theme} width={width} />
+        {/* Navigation Bar */}
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Feather name="compass" size={17} color={theme.brand} />
+            <Text style={{ ...TYPE.caption, color: theme.brand, fontFamily: FONTS.sansMedium, letterSpacing: 0.8 }}>
+              {isHindi ? `झलक ${activeIndex + 1} / ${totalSlides}` : `TOUR ${activeIndex + 1} OF ${totalSlides}`}
+            </Text>
+          </View>
 
-          {/* ── Slide 2: Practice (Japa & Daily Rituals) ── */}
-          <TourSlidePractice
-            beadCount={beadCount}
-            beadTapped={beadTapped}
-            handleBeadTap={handleBeadTap}
-            isHindi={isHindi}
-            theme={theme}
-            width={width}
-          />
-
-          {/* ── Slide 3: Learn (Bhakti, Pathshala & Stories) ── */}
-          <TourSlideLearn isHindi={isHindi} theme={theme} width={width} />
-
-          {/* ── Slide 4: Connect (KUL & Mandali) ── */}
-          <TourSlideConnect isHindi={isHindi} theme={theme} width={width} />
-        </ScrollView>
-
-        {/* Bottom Controls Row: Previous / Next / Finish */}
-        <View
-          style={{
-            paddingHorizontal: 20,
-            paddingTop: 12,
-            borderTopWidth: 1,
-            borderTopColor: theme.borderSoft,
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 12,
-          }}
-        >
-          {activeIndex > 0 ? (
-            <Button
-              label={isHindi ? "पीछे" : "Previous"}
-              variant="secondary"
-              accessibilityLabel={isHindi ? "पिछला पृष्ठ" : "Previous tour slide"}
-              onPress={() => goToSlide(activeIndex - 1)}
-              style={{ flex: 1, minHeight: MIN_TOUCH_TARGET }}
-            />
-          ) : (
-            <Button
-              label={isHindi ? "छोड़ें" : "Skip"}
-              variant="ghost"
-              accessibilityLabel={isHindi ? "यात्रा छोड़ें" : "Skip tour"}
-              onPress={onClose}
-              style={{ flex: 1, minHeight: MIN_TOUCH_TARGET }}
-            />
-          )}
-
-          {activeIndex < totalSlides - 1 ? (
-            <Button
-              label={isHindi ? "आगे बढ़ें" : "Next"}
-              variant="primary"
-              accessibilityLabel={isHindi ? "अगला पृष्ठ" : "Next tour slide"}
-              onPress={() => goToSlide(activeIndex + 1)}
-              style={{ flex: 1.4, minHeight: MIN_TOUCH_TARGET }}
-            />
-          ) : (
-            <Button
-              label={isHindi ? "शरणस्थली में प्रवेश" : "Enter Sanctuary"}
-              variant="primary"
-              accessibilityLabel={isHindi ? "शरणस्थली में प्रवेश करें" : "Enter Shoonaya Sanctuary"}
-              onPress={onClose}
-              style={{ flex: 1.8, minHeight: MIN_TOUCH_TARGET }}
-            />
-          )}
+          <PressableSurface
+            haptic="selection"
+            accessibilityRole="button"
+            accessibilityLabel={isHindi ? "यात्रा बन्द करें" : "Close tour"}
+            onPress={onClose}
+            style={{
+              width: MIN_TOUCH_TARGET,
+              height: MIN_TOUCH_TARGET,
+              borderRadius: 22,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: theme.card,
+              borderWidth: 1,
+              borderColor: theme.border,
+            }}
+          >
+            <Feather name="x" size={18} color={theme.text} />
+          </PressableSurface>
         </View>
       </View>
-    </Modal>
+
+      {/* Swipeable Slides Viewport */}
+      <ScrollView
+        ref={scrollRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onMomentumScrollEnd={handleScroll}
+        style={{ flex: 1 }}
+      >
+        {/* ── Slide 1: Today (Panchang & Sacred Days) ── */}
+        <TourSlideToday isHindi={isHindi} theme={theme} width={width} />
+
+        {/* ── Slide 2: Practice (Japa & Daily Rituals) ── */}
+        <TourSlidePractice
+          beadCount={beadCount}
+          beadTapped={beadTapped}
+          handleBeadTap={handleBeadTap}
+          isHindi={isHindi}
+          theme={theme}
+          width={width}
+        />
+
+        {/* ── Slide 3: Learn (Bhakti, Pathshala & Stories) ── */}
+        <TourSlideLearn isHindi={isHindi} theme={theme} width={width} />
+
+        {/* ── Slide 4: Connect (KUL & Mandali) ── */}
+        <TourSlideConnect isHindi={isHindi} theme={theme} width={width} />
+      </ScrollView>
+
+      {/* Bottom Controls Row: Previous / Next / Finish */}
+      <View
+        style={{
+          paddingHorizontal: 20,
+          paddingTop: 12,
+          borderTopWidth: 1,
+          borderTopColor: theme.borderSoft,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 12,
+        }}
+      >
+        {activeIndex > 0 ? (
+          <Button
+            label={isHindi ? "पीछे" : "Previous"}
+            variant="secondary"
+            accessibilityLabel={isHindi ? "पिछला पृष्ठ" : "Previous tour slide"}
+            onPress={() => goToSlide(activeIndex - 1)}
+            style={{ flex: 1, minHeight: MIN_TOUCH_TARGET }}
+          />
+        ) : (
+          <Button
+            label={isHindi ? "छोड़ें" : "Skip"}
+            variant="ghost"
+            accessibilityLabel={isHindi ? "यात्रा छोड़ें" : "Skip tour"}
+            onPress={onClose}
+            style={{ flex: 1, minHeight: MIN_TOUCH_TARGET }}
+          />
+        )}
+
+        {activeIndex < totalSlides - 1 ? (
+          <Button
+            label={isHindi ? "आगे बढ़ें" : "Next"}
+            variant="primary"
+            accessibilityLabel={isHindi ? "अगला पृष्ठ" : "Next tour slide"}
+            onPress={() => goToSlide(activeIndex + 1)}
+            style={{ flex: 1.4, minHeight: MIN_TOUCH_TARGET }}
+          />
+        ) : (
+          <Button
+            label={isHindi ? "शरणस्थली में प्रवेश" : "Enter Sanctuary"}
+            variant="primary"
+            accessibilityLabel={isHindi ? "शरणस्थली में प्रवेश करें" : "Enter Shoonaya Sanctuary"}
+            onPress={onClose}
+            style={{ flex: 1.8, minHeight: MIN_TOUCH_TARGET }}
+          />
+        )}
+      </View>
+    </View>
   );
 }

@@ -713,3 +713,29 @@ Rules:
 - Same class, not changed, needs a founder decision: the Om glyph on the stage is shown for every shrine including the Sikh ones (the app already uses
   the Khanda symbol for Sikh in `app/bhakti/browse.tsx`), and the diya, bell, parikrama and pushpam actions are offered on Gurdwara nodes. The shrine
   node has no tradition field of its own; only its circuit does. Not verified on a device, in dark mode, or with large text.
+
+### 40. A Modal's State Lives in Its Children, So Closing It Starts It Over
+- React Native's `Modal` renders nothing while it is hidden: its children are discarded on Android as soon as `visible` is false, and on iOS once the
+  dismissal finishes (`node_modules/react-native/Libraries/Modal/Modal.js`, `_shouldShowModal`). A screen that mounts a modal component once and only flips
+  `visible` keeps that component's own state across openings, while the modal's pager, scroll position and inputs start fresh. State that describes what is
+  on screen (a slide index, a step, a count, a draft, an error line) belongs in a component rendered **inside** the `<Modal>`, so it is built again with the
+  content (`AppTourModal` and `AppTourContent`; `VanshAddPersonModal` does the same by returning null before its content component).
+- A sheet that keeps such state outside its Modal must reset it on every way of closing, including a parent that flips `visible` itself, or say why carrying
+  it over is intended (`MemberInfoSheet` caches its last subject so the closing animation keeps its content). A reset in `onShow`
+  (`CalendarDatePicker.handleOpen`) runs after the first frame has been drawn with the old values.
+- Test it by re-rendering with `visible` false and then true, and prove each test red against the old structure. Also re-render the open modal with a new
+  `onClose` function and a changed language and assert nothing restarts: Profile, Onboarding and Settings pass a new arrow on every render, and a fix that
+  remounts on a prop change would restart the tour under the person's finger.
+- Origin: 2026-11-16, found while reviewing the tour split; fixed 2026-11-17. `AppTourModal` kept its slide index and bead count in the component that
+  Profile, Onboarding and Settings leave mounted. Finishing the tour and opening it again on the same screen showed "TOUR 4 OF 4" and Enter Sanctuary over
+  a pager that had restarted on slide 1, and Previous then scrolled to slide 3. The original file behaved the same way; the split moved it unchanged.
+  Reproduced in a render test; what the pager does on a device is inferred from `Modal.js`, not observed.
+- Sweep, 2026-11-17 (52 files render a Modal, one component each, grouped by structure with a script, then the risky ones read): besides the tour, 11 take a
+  visibility prop and keep state outside the Modal with no effect on that prop. Not this defect: `VanshAddPersonModal` (content remounts), `CalendarDatePicker`
+  (resets in `onShow`), `AddChildSheet` and `SanskaraHandoverModal` (reset every field in `handleClose`, which a parent that flips `visible` itself would
+  skip; the hand-over code stays in memory until then), `ConnectionRequestsSheet`, `SharingSheet`, `PathshalaCompletionModal` and `QuoteCardSheet` (only
+  in-flight flags and a format choice), `MemberInfoSheet` (deliberate). Weaker instances left alone, each its own behaviour change: `AuthGate` keeps its last
+  "Could not leave guest mode" line until the next attempt, and `SanskaraNodeSheet` keeps unsaved edits to the same record across a close. 11 more reset in
+  an effect that mentions `visible`, 7 hold no state, and 22 own their visibility (screens, pickers, buttons); those 22 were grouped, not read one by one.
+- Guard: the "opening it again" tests in `__component_tests__/app-tour-modal.test.tsx` (3 red against the old structure, the 4th red against fixes that
+  remount on a re-render). Not verified on a device (iOS or Android), in dark mode, or with large text.
