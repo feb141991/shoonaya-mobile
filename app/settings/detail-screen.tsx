@@ -10,10 +10,10 @@ import {
   View,
 } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { NotificationDiscretionSetting } from '@/components/settings/NotificationDiscretionSetting';
 import { ToggleRow } from '@/components/settings/ToggleRow';
+import { AboutSettingsView } from '@/components/settings/AboutSettingsView';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
 import * as Haptics from 'expo-haptics';
@@ -27,7 +27,7 @@ import { Pill } from '@/components/ui/Pill';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { Screen } from '@/components/ui/Screen';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, OFFICIAL_EMAIL, RADII, SHADOWS, SOCIAL_LINKS, TYPE, themeColor } from '@/lib/constants';
+import { API_BASE, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, TYPE, themeColor } from '@/lib/constants';
 import { APP_VERSION_LABEL } from '@/lib/appVersion';
 import { apiFetch } from '@/lib/api';
 import { fetchSoleManagerDependents } from '@/lib/sanskara';
@@ -1460,119 +1460,24 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
               </>
             ) : null}
 
-            {/* ── Guidance & tips ─────────────────────────────────────── */}
-            {section === 'about' ? <SettingsSection label="Guidance & Tips" theme={theme}>
-              <Text style={{ ...TYPE.caption, color: theme.dim }}>
-                Bring back the hints Shoonaya shows when you are new to a
-                feature. If you have already moved past your first week of
-                practice, the welcome card will not reappear -- only the
-                occasional feature hint will.
-              </Text>
-              <Button
-                label="Replay first-use tips"
-                variant="secondary"
-                onPress={async () => {
+            {/* ── About Shoonaya & Feedback ─────────────────────────── */}
+            {section === 'about' ? (
+              <AboutSettingsView
+                theme={theme}
+                isDark={isDark}
+                language={language}
+                tourLabel={language === 'hi' ? 'ऐप की मुख्य झलक देखें' : 'Take the visual tour'}
+                onReplayTips={async () => {
                   await Promise.all([
                     replayHomeDiscovery(getAppIdentity()),
                     resetFirstWeekGuideCue(),
                   ]);
                   Alert.alert('Tips reset', 'You will see onboarding hints again as you use the app.');
                 }}
+                onOpenTour={() => setTourVisible(true)}
+                onOpenLegal={(path) => { void openLegalUrl(path); }}
               />
-              <Button
-                label={language === 'hi' ? 'ऐप की मुख्य झलक देखें' : 'Take the visual tour'}
-                variant="secondary"
-                accessibilityLabel={language === 'hi' ? 'चार मुख्य पृष्ठों की झलक' : 'Visual preview of the four core sections'}
-                onPress={() => setTourVisible(true)}
-              />
-            </SettingsSection> : null}
-
-            {/* ── Community & Socials ─────────────────────────────────── */}
-            {section === 'about' ? <SettingsSection label="Community & Socials" theme={theme}>
-              {[
-                {
-                  id: 'instagram',
-                  icon: 'instagram',
-                  label: 'Instagram',
-                  handle: '@shoonayaapp',
-                  url: SOCIAL_LINKS.instagram,
-                },
-                {
-                  id: 'facebook',
-                  icon: 'facebook-square',
-                  label: 'Facebook',
-                  handle: 'Shoonaya',
-                  url: SOCIAL_LINKS.facebook,
-                },
-                {
-                  id: 'linkedin',
-                  icon: 'linkedin-square',
-                  label: 'LinkedIn',
-                  handle: 'Shoonaya',
-                  url: SOCIAL_LINKS.linkedin,
-                },
-                {
-                  id: 'email',
-                  icon: 'envelope',
-                  label: 'Official Email',
-                  handle: OFFICIAL_EMAIL,
-                  url: SOCIAL_LINKS.email,
-                },
-                {
-                  id: 'website',
-                  icon: 'globe',
-                  label: 'Official Website',
-                  handle: 'shoonaya.com',
-                  url: SOCIAL_LINKS.website,
-                },
-              ].map((social, index) => (
-                <View key={social.id}>
-                  {index > 0 ? (
-                    <View style={{ height: 1, backgroundColor: theme.borderSoft, marginVertical: 8 }} />
-                  ) : null}
-                  <PressableSurface
-                    haptic="selection"
-                    accessibilityRole="link"
-                    accessibilityLabel={social.label}
-                    onPress={() => {
-                      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      void Linking.openURL(social.url);
-                    }}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      minHeight: MIN_TOUCH_TARGET,
-                      paddingVertical: 4,
-                    }}
-                  >
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                      <View
-                        style={{
-                          width: 34,
-                          height: 34,
-                          borderRadius: 17,
-                          backgroundColor: theme.brandSoft,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <FontAwesome name={social.icon as any} size={17} color={theme.brand} />
-                      </View>
-                      <View>
-                        <Text style={{ ...TYPE.body, color: theme.text, fontFamily: FONTS.sansSemiBold }}>
-                          {social.label}
-                        </Text>
-                        <Text style={{ ...TYPE.caption, color: theme.dim }}>
-                          {social.handle}
-                        </Text>
-                      </View>
-                    </View>
-                    <Feather name="external-link" size={15} color={theme.dim} />
-                  </PressableSurface>
-                </View>
-              ))}
-            </SettingsSection> : null}
+            ) : null}
 
             {/* ── Privacy & data ──────────────────────────────────────── */}
             {section === 'privacy' ? <SettingsSection label="Privacy & Data" theme={theme}>
@@ -1681,7 +1586,7 @@ export function SettingsDetailScreen({ section }: { section: SettingsSectionKey 
               </View>
             ) : null}
 
-            {(section === 'privacy' || section === 'about') ? (
+            {section === 'privacy' ? (
               <View style={{ alignItems: 'center', gap: 8, marginTop: 4 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 20 }}>
                   <PressableSurface

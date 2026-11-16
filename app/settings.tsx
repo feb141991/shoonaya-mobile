@@ -25,7 +25,7 @@ const DESTINATIONS: SettingsDestination[] = [
   { icon: 'bell', title: 'Notifications', summary: 'Reminder choices and device permission.', href: '/settings/notifications' },
   { icon: 'type', title: 'Language & Appearance', summary: 'App language, translations, sanctuary backdrop and greeting.', href: '/settings/appearance' },
   { icon: 'shield', title: 'Privacy & Data', summary: 'Personalisation consent, data export and account deletion.', href: '/settings/privacy' },
-  { icon: 'heart', title: 'About Shoonaya', summary: 'Support, social channels, terms, privacy and sources.', href: '/settings/about' },
+  { icon: 'heart', title: 'About Shoonaya', summary: 'Mission, reviews, feedback, support, socials and terms.', href: '/settings/about' },
 ];
 
 function SettingsRow({ item, theme }: { item: SettingsDestination; theme: ReturnType<typeof themeColor> }) {

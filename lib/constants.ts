@@ -591,3 +591,10 @@ export const SOCIAL_LINKS = {
   website: 'https://www.shoonaya.com',
   email: `mailto:${OFFICIAL_EMAIL}`,
 } as const;
+
+export const STORE_LINKS = {
+  ios: 'https://apps.apple.com/app/id6793055966',
+  iosReview: 'itms-apps://itunes.apple.com/app/id6793055966?action=write-review',
+  android: 'https://play.google.com/store/apps/details?id=com.shoonaya.app',
+  androidMarket: 'market://details?id=com.shoonaya.app',
+} as const;
