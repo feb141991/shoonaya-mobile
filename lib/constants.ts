@@ -110,7 +110,7 @@ export const COLORS = {
   homePwaPillDotInactive: 'rgba(255,240,200,0.25)',
   homePwaObservanceBg: 'rgba(234,112,48,0.22)',
   homePwaObservanceBorder: 'rgba(255,180,100,0.18)',
-  homePwaObservanceText: 'rgba(255,200,140,0.95)',
+  homePwaObservanceText: 'rgba(255,240,200,0.95)',
   // Rashiphal discovery nudge pill on Home hero -- sourced from PWA's
   // HeroSection.tsx (exact background, text, and arrow colors).
   homePwaRashiphalBg: 'rgba(139,92,246,0.14)',
