@@ -18,7 +18,7 @@ import * as Haptics from 'expo-haptics';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { apiFetch } from '@/lib/api';
 import { APP_BUILD_NUMBER, APP_VERSION } from '@/lib/appVersion';
-import { COLORS, FONTS, MIN_TOUCH_TARGET, OFFICIAL_EMAIL, TYPE, themeColor } from '@/lib/constants';
+import { COLORS, FONTS, MIN_TOUCH_TARGET, SUGGESTIONS_EMAIL, TYPE, themeColor } from '@/lib/constants';
 
 export type FeedbackCategory = 'suggestion' | 'issue' | 'content' | 'appreciation';
 
@@ -135,7 +135,7 @@ export function FeedbackModal({
               const body = encodeURIComponent(
                 `${trimmedMessage}\n\n---\nPlatform: ${Platform.OS} ${Platform.Version}\nApp: v${APP_VERSION} (${APP_BUILD_NUMBER})\nContact: ${email}`,
               );
-              void Linking.openURL(`mailto:${OFFICIAL_EMAIL}?subject=${subject}&body=${body}`);
+              void Linking.openURL(`mailto:${SUGGESTIONS_EMAIL}?subject=${subject}&body=${body}`);
             },
           },
         ],

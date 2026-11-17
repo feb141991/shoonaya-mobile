@@ -582,7 +582,13 @@ export const MIN_TOUCH_TARGET = 44;
 export const API_BASE = process.env.EXPO_PUBLIC_API_BASE ?? 'https://www.shoonaya.com';
 
 
-export const OFFICIAL_EMAIL = 'info@shoonaya.com';
+export const OFFICIAL_ENTITY_NAME = 'The RDS Ventures';
+export const OFFICIAL_EMAIL = 'support@shoonaya.com';
+export const PRIVACY_EMAIL = 'privacy@shoonaya.com';
+export const SUGGESTIONS_EMAIL = 'suggestions@shoonaya.com';
+export const PARTNERS_EMAIL = 'partners@shoonaya.com';
+export const NAMASTE_EMAIL = 'namaste@shoonaya.com';
+export const INFO_EMAIL = 'info@shoonaya.com';
 
 export const SOCIAL_LINKS = {
   instagram: 'https://www.instagram.com/shoonayaapp',
