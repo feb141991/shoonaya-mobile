@@ -758,8 +758,8 @@ Rules:
   lighting" on every circuit. The founder approved withholding the ritual set and swapping the symbol on 2026-11-17.
 - Sweep, 2026-11-17: no other screen offers Light Diya, Ring Bell, Offer Pushpam or the Sthala Purana label (searched `app/`, `components/`, `lib/`); the
   other Om glyphs are tradition lookup tables on unrelated screens. Same class, found and not changed, each its own content decision: the Sikh shrine names
-  are written in Devanagari, not Gurmukhi; the Akal Takht chant card is titled "Mool Mantar & Ardas" but holds only a Roman-letter Mool Mantar, and its
-  recording (Wikimedia Commons) has no rights note recorded; a chant without a recording is read aloud with a Sanskrit voice (`sa-IN`); the modal's
+  are written in Devanagari, not Gurmukhi; the Akal Takht chant card was titled "Mool Mantar & Ardas" but holds only a Roman-letter Mool Mantar (title closed
+  2026-11-17, below), and its recording (Wikimedia Commons) has no rights note recorded (still open); a chant without a recording is read aloud with a Sanskrit voice (`sa-IN`); the modal's
   header tag said "SACRED TIRTHA" for every shrine (closed 2026-11-17, below); and the sanctum's counters (diya, flowers, bell, parikrama) are state of the modal, which the screen
   keeps mounted, so they carry from one shrine to the next (section 40; reproduced in a render test on 2026-11-17 and closed the same day: see the
   "Closed 2026-11-17" bullet at the end of this section).
@@ -787,3 +787,9 @@ Rules:
   catalog's loader reads "Locating Sacred Tirthas" (`app/(tabs)/tirtha.tsx:815`) and its places carry a `tradition` column (which traditions it holds was not
   checked). Guard: `__tests__/yatra-sanctum-profile.test.ts` and the sanctum render test
   (`expectSacredSiteHeader`); 7 breaks each proven red. Not verified on a device.
+- Closed 2026-11-17 (chant title, not the rights note): the Akal Takht card is titled "Mool Mantar", which is what its text and its recording hold; no Ardas text
+  is recorded anywhere and none was written (section 3). Still open and not touched: the recording's rights status is not recorded (the file is on Wikimedia
+  Commons; its licence page was not checked), and the Mool Mantar's Roman spelling has not had a Sikh reviewer. Sweep of all 11 chant cards: Akal Takht is the only
+  Sikh one. Same class, found and not changed, Hindu content for its own review: "Dwarkadhish Aarti & Achyutashtakam" names two texts while its recording is
+  filed as `001-Achyutashtakam.mp3` (what the recording holds was not listened to), and "Rama Setu & Shiva Stuti" names two texts over a one-line description.
+  Guard: `__tests__/yatra-chant-cards.test.ts` pins the Sikh chant cards by shrine and title, bars "Ardas" and pins the recorded text (4 breaks each proven red).

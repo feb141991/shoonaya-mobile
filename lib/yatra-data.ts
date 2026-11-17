@@ -351,7 +351,7 @@ export const SACRED_YATRA_CIRCUITS: Record<string, YatraCircuit> = {
         significance: 'The supreme decision-making seat for the global Sikh Panth.',
         offerings: ['Karah Prashad', 'Shabad Kirtan', 'Langar Seva'],
         stotraOrChant: {
-          title: 'Mool Mantar & Ardas',
+          title: 'Mool Mantar',
           description: 'Ik Onkar Satnaam Karta Purakh Nirbhau Nirvair Akal Moorat Ajooni Saibhang Gurprasaad',
           audioUrl: 'https://upload.wikimedia.org/wikipedia/commons/transcoded/2/2b/The_M%C5%ABl_Mantar%2C_the_opening_verse_of_the_Sikh_scripture%2C_with_%22Shudh_Ucharan%22.wav/The_M%C5%ABl_Mantar%2C_the_opening_verse_of_the_Sikh_scripture%2C_with_%22Shudh_Ucharan%22.wav.mp3',
         },
