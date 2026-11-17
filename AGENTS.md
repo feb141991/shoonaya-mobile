@@ -745,7 +745,7 @@ Rules:
   (`lib/yatra-sanctum-profile.ts`): the symbol over the deity, the mandir ritual set (hanging bell, two diyas, Light Diya, Offer Pushpam, Ring Bell), the
   parikrama tally, the name of the history tab and the line above the circuit map. A shrine records no tradition; its circuit does, so
   `app/yatra/[id].tsx` passes `yatra.tradition` to the modal as a required prop, and the modal hands one `profile` to its four pieces.
-- `sanatan` is exactly what the sanctum showed before profiles existed (Om, every ritual control, "Sthala Purana"). `sikh` shows the Khanda (the symbol the
+- `sanatan` is exactly what the sanctum showed before profiles existed (Om, every ritual control, "Sthala Purana", "SACRED TIRTHA"). `sikh` shows the Khanda (the symbol the
   app already uses for Sikh in `lib/traditions.ts` and `app/bhakti/browse.tsx`), no mandir ritual set, and "History" for the second tab. Any other value
   (Jain has a type but no circuit; a missing or unexpected value) gets the neutral profile: no ritual set, no tally, no symbol. Showing too little is the safe
   failure; never let an unknown tradition fall through to the Hindu profile. A new tradition is a new reviewed profile, and a new circuit is a decision in
@@ -760,7 +760,7 @@ Rules:
   other Om glyphs are tradition lookup tables on unrelated screens. Same class, found and not changed, each its own content decision: the Sikh shrine names
   are written in Devanagari, not Gurmukhi; the Akal Takht chant card is titled "Mool Mantar & Ardas" but holds only a Roman-letter Mool Mantar, and its
   recording (Wikimedia Commons) has no rights note recorded; a chant without a recording is read aloud with a Sanskrit voice (`sa-IN`); the modal's
-  header tag says "SACRED TIRTHA" for every shrine; and the sanctum's counters (diya, flowers, bell, parikrama) are state of the modal, which the screen
+  header tag said "SACRED TIRTHA" for every shrine (closed 2026-11-17, below); and the sanctum's counters (diya, flowers, bell, parikrama) are state of the modal, which the screen
   keeps mounted, so they carry from one shrine to the next (section 40; reproduced in a render test on 2026-11-17 and closed the same day: see the
   "Closed 2026-11-17" bullet at the end of this section).
 - Guard: `__tests__/yatra-sanctum-profile.test.ts` (profile table, circuit by id, unknown values), `__component_tests__/virtual-sanctum-modal.test.tsx`
@@ -778,3 +778,12 @@ Rules:
   its children, as iOS does); 9 breaks each proven red. One behaviour moved, not removed: the Android back button now reaches `onClose` directly, and the chant
   stops one render later, when the sheet is hidden or unmounted (before, the modal stopped it first). Not verified on a device: what the real iOS Modal does
   during its dismissal (read from `Modal.js`, mimicked by a mock), or on Android.
+- Closed 2026-11-17 (header tag): the sheet's header reads `<REGION> · <profile.headerTag>`. The Hindu profile keeps exactly "SACRED TIRTHA"; the Sikh and the
+  neutral profile say "SACRED SITE", in plain English like the circuit hint, not in a Gurmukhi or Punjabi term (none is reviewed, section 27). "Tirtha" is a
+  Hindu word. The English wording was chosen by the engineer, not reviewed by a Sikh reviewer; replace it in `lib/yatra-sanctum-profile.ts` if the reviewer
+  prefers another. Sweep (grep for "tirtha" in `app/` and `components/`, 16 files, the
+  user-facing strings read): every other hit is the name of the whole feature (the Tirtha tab, catalog and Passport, the `— Shoonaya Tirtha` page title of the
+  yatra screen, the Kul links into it) and was left alone, not a label put on one shrine. Same class, not changed, a feature-level wording call: the
+  catalog's loader reads "Locating Sacred Tirthas" (`app/(tabs)/tirtha.tsx:815`) and its places carry a `tradition` column (which traditions it holds was not
+  checked). Guard: `__tests__/yatra-sanctum-profile.test.ts` and the sanctum render test
+  (`expectSacredSiteHeader`); 7 breaks each proven red. Not verified on a device.

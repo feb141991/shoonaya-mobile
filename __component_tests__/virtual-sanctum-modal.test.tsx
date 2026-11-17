@@ -453,6 +453,12 @@ describe('VirtualSanctumModal', () => {
       expect(screen.queryByText(/diya|deepam|pushpam/i)).toBeNull();
     }
 
+    // The header tag after the region: "SACRED TIRTHA" is a Hindu word and used to be printed for every shrine.
+    function expectSacredSiteHeader() {
+      expect(screen.getByText('FIXTURE STATE · SACRED SITE')).toBeTruthy();
+      expect(screen.queryByText(/tirtha/i)).toBeNull();
+    }
+
     it('a Hindu circuit keeps every control: Om, the bell, both diyas, flowers, the parikrama tally and Sthala Purana', async () => {
       await open(TEMPLE, jest.fn(), 'sanatan');
       expect(screen.getByText('🕉️')).toBeTruthy();
@@ -473,6 +479,7 @@ describe('VirtualSanctumModal', () => {
       expect(screen.getByText('☬')).toBeTruthy();
       expect(screen.queryByText('🕉️')).toBeNull();
       expectNoMandirRituals();
+      expectSacredSiteHeader();
 
       // The shrine is still all there: its name, deity, darshan text, chant card, offerings and Live Darshan.
       expect(screen.getByText('Fixture Temple')).toBeTruthy();
@@ -520,6 +527,7 @@ describe('VirtualSanctumModal', () => {
       expect(screen.queryByText('PARIKRAMA')).toBeNull();
       expect(screen.queryByLabelText('Perform Sacred Parikrama')).toBeNull();
       expectNoMandirRituals();
+      expectSacredSiteHeader();
       // Nothing is lost of the shrine itself.
       expect(screen.getByText('Fixture Deity')).toBeTruthy();
       expect(screen.getByText('Fixture significance paragraph.')).toBeTruthy();
@@ -596,10 +604,12 @@ describe('VirtualSanctumModal', () => {
     it('follows the prop when it changes while the sanctum is open, and not the shrine', async () => {
       await open(TEMPLE, jest.fn(), 'sanatan');
       expect(screen.getByText('🕉️')).toBeTruthy();
+      expect(screen.getByText('FIXTURE STATE · SACRED TIRTHA')).toBeTruthy();
       await screen.rerender(<VirtualSanctumModal temple={TEMPLE} tradition="sikh" visible onClose={jest.fn()} />);
       expect(screen.getByText('☬')).toBeTruthy();
       expect(screen.queryByText('🕉️')).toBeNull();
       expectNoMandirRituals();
+      expectSacredSiteHeader();
     });
   });
 });

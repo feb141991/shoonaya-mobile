@@ -23,7 +23,14 @@ describe('the sanctum profile of each tradition', () => {
       historyTabLabel: 'Sthala Purana',
       historyHeading: 'STHALA PURANA & SACRED ORIGINS',
       circuitHint: 'Pinch to zoom and drag to explore pilgrimage routes. Tap any sacred temple for virtual darshan, diya lighting, and stotras.',
+      headerTag: 'SACRED TIRTHA',
     });
+  });
+
+  it("calls the place of a Sikh or unknown circuit a sacred site, never a tirtha (a Hindu word)", () => {
+    for (const profile of [SIKH_SANCTUM_PROFILE, NEUTRAL_SANCTUM_PROFILE]) {
+      assert.equal(profile.headerTag, 'SACRED SITE');
+    }
   });
 
   it('gives a Sikh circuit the Khanda and withholds the mandir ritual set', () => {
@@ -39,8 +46,8 @@ describe('the sanctum profile of each tradition', () => {
   it('never gives a Sikh or an unknown circuit the Om, a Hindu ritual word or the Sthala Purana label', () => {
     for (const profile of [SIKH_SANCTUM_PROFILE, NEUTRAL_SANCTUM_PROFILE]) {
       assert.notEqual(profile.deityGlyph, '🕉️');
-      for (const text of [profile.historyTabLabel, profile.historyHeading, profile.circuitHint]) {
-        assert.doesNotMatch(text, /sthala|purana|diya|deepam|stotra|pushpam|mandir/i, text);
+      for (const text of [profile.historyTabLabel, profile.historyHeading, profile.circuitHint, profile.headerTag]) {
+        assert.doesNotMatch(text, /sthala|purana|diya|deepam|stotra|pushpam|mandir|tirtha/i, text);
       }
     }
   });

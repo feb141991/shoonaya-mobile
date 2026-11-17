@@ -32,6 +32,8 @@ export type SanctumProfile = {
   historyHeading: string;
   /** The line above the circuit map, saying what a tap on a site opens. */
   circuitHint: string;
+  /** What the sheet's header calls the place, after the region ("PUNJAB · SACRED SITE"). "Tirtha" is a Hindu word, so only the Hindu profile uses it. */
+  headerTag: string;
 };
 
 const MAP_HINT = 'Pinch to zoom and drag to explore pilgrimage routes. ';
@@ -44,6 +46,7 @@ export const SANATAN_SANCTUM_PROFILE: Readonly<SanctumProfile> = {
   historyTabLabel: 'Sthala Purana',
   historyHeading: 'STHALA PURANA & SACRED ORIGINS',
   circuitHint: `${MAP_HINT}Tap any sacred temple for virtual darshan, diya lighting, and stotras.`,
+  headerTag: 'SACRED TIRTHA',
 };
 
 export const SIKH_SANCTUM_PROFILE: Readonly<SanctumProfile> = {
@@ -53,6 +56,8 @@ export const SIKH_SANCTUM_PROFILE: Readonly<SanctumProfile> = {
   historyTabLabel: 'History',
   historyHeading: 'HISTORY & ORIGINS',
   circuitHint: `${MAP_HINT}Tap any sacred site for virtual darshan and its history.`,
+  // Plain English, like the circuit hint above. Not a Gurmukhi or Punjabi term: none was reviewed (AGENTS.md section 27).
+  headerTag: 'SACRED SITE',
 };
 
 export const NEUTRAL_SANCTUM_PROFILE: Readonly<SanctumProfile> = {
@@ -62,6 +67,7 @@ export const NEUTRAL_SANCTUM_PROFILE: Readonly<SanctumProfile> = {
   historyTabLabel: 'History',
   historyHeading: 'HISTORY & ORIGINS',
   circuitHint: `${MAP_HINT}Tap any sacred site for virtual darshan and its history.`,
+  headerTag: 'SACRED SITE',
 };
 
 /** The profile for a circuit's tradition. Anything that is not exactly `sanatan` or `sikh` gets the neutral profile. */

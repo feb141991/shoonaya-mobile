@@ -239,7 +239,7 @@ function SanctumSheet({ temple, tradition, visible, onClose }: SanctumSheetProps
             <View style={styles.traditionTag}>
               <Feather name="shield" size={11} color={goldAccent} />
               <Text style={[styles.traditionTagText, { color: goldAccent }]}>
-                {temple.stateOrRegion.toUpperCase()} · SACRED TIRTHA
+                {temple.stateOrRegion.toUpperCase()} · {profile.headerTag}
               </Text>
             </View>
             <Text style={[styles.nodeTitle, { color: theme.text }]}>
