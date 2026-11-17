@@ -332,6 +332,90 @@ describe('VirtualSanctumModal', () => {
     });
   });
 
+  // The screen keeps this modal mounted and only flips `visible`, and the counts used to live in the modal itself, so the diya,
+  // flowers, bell, parikrama and tab of one shrine were still there when the next one (or the same one again) was opened
+  // (AGENTS.md section 40: a modal's state lives in its children). Each test presses the real controls, closes or switches, and
+  // reads what a person would read. Not covered, and not claimed: what the real Modal does on iOS while it is still sliding away.
+  describe('opening a shrine starts the sanctum over', () => {
+    const ANOTHER_TEMPLE: TempleSanctumNode = { ...TEMPLE, id: 'another-temple', name: 'Another Temple' };
+
+    async function practise() {
+      await fireEvent.press(screen.getByLabelText('Light Ghee Diya'));
+      await fireEvent.press(screen.getByLabelText('Offer Sacred Flowers'));
+      await waitFor(() => expect(mockShower.props?.show).toBe(true));
+      await fireEvent.press(screen.getByLabelText('Offer Sacred Flowers'));
+      await fireEvent.press(screen.getByLabelText('Ring Temple Bell'));
+      await fireEvent.press(screen.getByLabelText('Perform Sacred Parikrama'));
+      await fireEvent.press(screen.getByText('Offerings'));
+      expect(screen.getByText('Diya Lit')).toBeTruthy();
+      expect(screen.getByText('Offer Pushpam (2)')).toBeTruthy();
+      expect(screen.getByText('Ring Bell (1)')).toBeTruthy();
+      expect(screen.getByText('1')).toBeTruthy();
+      expect(screen.getByText('Fixture offering one')).toBeTruthy();
+    }
+
+    function expectStartedOver() {
+      expect(screen.getByText('Light Diya')).toBeTruthy();
+      expect(screen.getAllByText('Tap to Light')).toHaveLength(2);
+      expect(screen.getByText('Offer Pushpam')).toBeTruthy();
+      expect(screen.getByText('Ring Bell')).toBeTruthy();
+      expect(screen.getByText('0')).toBeTruthy();
+      expect(screen.getByText('Fixture significance paragraph.')).toBeTruthy();
+      expect(screen.queryByText('Fixture offering one')).toBeNull();
+      expect(mockShower.props?.show).toBe(false);
+    }
+
+    it('shows the same shrine from zero when it is closed and opened again', async () => {
+      await render(<VirtualSanctumModal temple={TEMPLE} tradition="sanatan" visible onClose={jest.fn()} />);
+      await practise();
+
+      await screen.rerender(<VirtualSanctumModal temple={TEMPLE} tradition="sanatan" visible={false} onClose={jest.fn()} />);
+      expect(screen.queryByLabelText('Close temple darshan')).toBeNull();
+
+      await screen.rerender(<VirtualSanctumModal temple={TEMPLE} tradition="sanatan" visible onClose={jest.fn()} />);
+      expectStartedOver();
+    });
+
+    it('shows another shrine from zero, on the Darshan tab, without being closed first', async () => {
+      await render(<VirtualSanctumModal temple={TEMPLE} tradition="sanatan" visible onClose={jest.fn()} />);
+      await practise();
+
+      await screen.rerender(<VirtualSanctumModal temple={ANOTHER_TEMPLE} tradition="sanatan" visible onClose={jest.fn()} />);
+      expect(screen.getByText('Another Temple')).toBeTruthy();
+      expect(screen.queryByText('Fixture Temple')).toBeNull();
+      expectStartedOver();
+    });
+
+    it('starts a Sikh shrine over too: the parikrama tally is not carried to the next gurdwara', async () => {
+      await render(<VirtualSanctumModal temple={TEMPLE} tradition="sikh" visible onClose={jest.fn()} />);
+      await fireEvent.press(screen.getByLabelText('Perform Sacred Parikrama'));
+      await fireEvent.press(screen.getByLabelText('Perform Sacred Parikrama'));
+      expect(screen.getByText('2')).toBeTruthy();
+
+      await screen.rerender(<VirtualSanctumModal temple={ANOTHER_TEMPLE} tradition="sikh" visible onClose={jest.fn()} />);
+      expect(screen.getByText('0')).toBeTruthy();
+      expect(screen.queryByText('2')).toBeNull();
+    });
+
+    // Profile, Onboarding and Settings pass a new arrow on every render, and the colour scheme can change while the sanctum is
+    // open. A fix that restarted the sanctum on any prop change would wipe the person's counts under their finger.
+    it('keeps the counts while it stays open, whatever its parent re-renders with', async () => {
+      await render(<VirtualSanctumModal temple={TEMPLE} tradition="sanatan" visible onClose={jest.fn()} />);
+      await fireEvent.press(screen.getByLabelText('Ring Temple Bell'));
+      await fireEvent.press(screen.getByLabelText('Ring Temple Bell'));
+      await fireEvent.press(screen.getByLabelText('Light Ghee Diya'));
+      await fireEvent.press(screen.getByText('Offerings'));
+
+      await screen.rerender(<VirtualSanctumModal temple={{ ...TEMPLE }} tradition="sanatan" visible onClose={jest.fn()} />);
+      mockScheme.current = 'dark';
+      await screen.rerender(<VirtualSanctumModal temple={{ ...TEMPLE }} tradition="sanatan" visible onClose={() => undefined} />);
+
+      expect(screen.getByText('Ring Bell (2)')).toBeTruthy();
+      expect(screen.getByText('Diya Lit')).toBeTruthy();
+      expect(screen.getByText('Fixture offering one')).toBeTruthy();
+    });
+  });
+
   // The floor line used to be one Shaiva mantra printed for every temple (Vishnu, Krishna and Gurdwara shrines included).
   // It is now a recorded fact of a shrine (lib/yatra-data.ts, __tests__/yatra-sanctum-mantra.test.ts pins which ones).
   describe('sanctum floor line', () => {

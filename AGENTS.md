@@ -761,10 +761,20 @@ Rules:
   are written in Devanagari, not Gurmukhi; the Akal Takht chant card is titled "Mool Mantar & Ardas" but holds only a Roman-letter Mool Mantar, and its
   recording (Wikimedia Commons) has no rights note recorded; a chant without a recording is read aloud with a Sanskrit voice (`sa-IN`); the modal's
   header tag says "SACRED TIRTHA" for every shrine; and the sanctum's counters (diya, flowers, bell, parikrama) are state of the modal, which the screen
-  keeps mounted, so they carry from one shrine to the next (section 40; read from the code, not reproduced).
+  keeps mounted, so they carry from one shrine to the next (section 40; reproduced in a render test on 2026-11-17 and closed the same day: see the
+  "Closed 2026-11-17" bullet at the end of this section).
 - Guard: `__tests__/yatra-sanctum-profile.test.ts` (profile table, circuit by id, unknown values), `__component_tests__/virtual-sanctum-modal.test.tsx`
   ("what a shrine offers follows the tradition of its circuit", rendering the same fixture shrine under each tradition and each flag alone) and
   `__component_tests__/yatra-detail-screen.test.tsx` (renders the real screen for each circuit; a screen that hard-codes `tradition="sanatan"` compiles and
   passes every modal test). 21 mutations each proven red (the early return in `VirtualSanctumActions` that avoids an empty row is not covered). The wiring
   test also fails if a piece is not given `profile`. Not verified on a device or simulator: how the stage looks without the bell and diyas (it keeps a
   210-point minimum height with `space-between`), the Khanda glyph on Android fonts, dark mode, or large text.
+- Closed 2026-11-17 (counters): the diya, flower, bell and parikrama counts, the open tab and the chant state now live in `SanctumSheet`, rendered inside the
+  `<Modal>` of `VirtualSanctumModal` and keyed by shrine id and by an opening count, so a count never carries from one shrine, or one visit, to the next.
+  The opening count is what makes it hold on iOS, where the Modal keeps its children while it slides away: a key by shrine alone still reused the old sheet when
+  a sanctum was opened again in that moment. State must not be moved back up into `VirtualSanctumModal`. Reproduced first (3 of 4 new render tests red on the
+  old structure; the 4th, counts survive a parent re-render, guards against a fix that restarts on every prop change). Guard: "opening a shrine starts the
+  sanctum over" in `__component_tests__/virtual-sanctum-modal.test.tsx` and `__component_tests__/virtual-sanctum-modal-lingering.test.tsx` (a Modal that keeps
+  its children, as iOS does); 9 breaks each proven red. One behaviour moved, not removed: the Android back button now reaches `onClose` directly, and the chant
+  stops one render later, when the sheet is hidden or unmounted (before, the modal stopped it first). Not verified on a device: what the real iOS Modal does
+  during its dismissal (read from `Modal.js`, mimicked by a mock), or on Android.

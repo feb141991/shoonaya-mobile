@@ -33,7 +33,40 @@ interface VirtualSanctumModalProps {
   onClose: () => void;
 }
 
+// Everything a person does inside the sanctum (the diya, flowers, bell, parikrama tally, the open tab, the audio) is state of the
+// SHEET, which is rendered inside the <Modal> and keyed by the shrine and by the opening. React Native's Modal renders nothing
+// while it is hidden, so the sheet is built again on every opening; the opening count in the key does the same on iOS, where the
+// Modal keeps its children until it has finished sliding away and a sanctum opened again in that moment would otherwise reuse the
+// old sheet. A different shrine is a different key too: a count never carries from one shrine, or one visit, to the next. The
+// screen keeps this component mounted and only flips `visible`, so state kept here would outlive each opening (AGENTS.md section
+// 40). Do not move state up into this component.
 export function VirtualSanctumModal({ temple, tradition, visible, onClose }: VirtualSanctumModalProps) {
+  const [opening, setOpening] = useState({ visible, count: 0 });
+  if (opening.visible !== visible) {
+    setOpening({ visible, count: visible ? opening.count + 1 : opening.count });
+  }
+  if (!temple) return null;
+  return (
+    <Modal animationType="slide" transparent visible={visible} onRequestClose={onClose}>
+      <SanctumSheet
+        key={`${temple.id}:${opening.count}`}
+        temple={temple}
+        tradition={tradition}
+        visible={visible}
+        onClose={onClose}
+      />
+    </Modal>
+  );
+}
+
+interface SanctumSheetProps {
+  temple: TempleSanctumNode;
+  tradition: YatraTradition;
+  visible: boolean;
+  onClose: () => void;
+}
+
+function SanctumSheet({ temple, tradition, visible, onClose }: SanctumSheetProps) {
   const isDark = useColorScheme() === 'dark';
   const theme = themeColor(isDark);
   const router = useRouter();
@@ -69,7 +102,7 @@ export function VirtualSanctumModal({ temple, tradition, visible, onClose }: Vir
       setAudioState('idle');
       currentAudioUrl.current = null;
     };
-  }, [temple?.id, audioPlayer]);
+  }, [temple.id, audioPlayer]);
 
   const handleClose = () => {
     void audioPlayer.stop();
@@ -79,7 +112,7 @@ export function VirtualSanctumModal({ temple, tradition, visible, onClose }: Vir
   };
 
   const handleToggleAudio = async () => {
-    if (!temple?.stotraOrChant) return;
+    if (!temple.stotraOrChant) return;
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     if (audioState === 'playing') {
@@ -133,8 +166,6 @@ export function VirtualSanctumModal({ temple, tradition, visible, onClose }: Vir
     }
   };
 
-  if (!temple) return null;
-
   const handleLightDiya = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const nextState = !diyaLit;
@@ -186,143 +217,136 @@ export function VirtualSanctumModal({ temple, tradition, visible, onClose }: Vir
   const sanctumBg: [string, string] = isDark ? [FEATURE_COLORS.virtualSanctumModal.sanctumBgDarkStart, FEATURE_COLORS.virtualSanctumModal.sanctumBgDarkEnd] : [FEATURE_COLORS.virtualSanctumModal.sanctumBgLightStart, FEATURE_COLORS.virtualSanctumModal.sanctumBgLightEnd];
 
   return (
-    <Modal
-      animationType="slide"
-      transparent
-      visible={visible}
-      onRequestClose={handleClose}
-    >
-      <Pressable style={styles.overlay} onPress={handleClose}>
-        <Pressable
-          style={[
-            styles.sheetContainer,
-            {
-              backgroundColor: cardSurface,
-              borderColor: isDark ? OVERLAYS.gold[0.3] : OVERLAYS.gold[0.4],
-            },
-          ]}
-          onPress={(e) => e.stopPropagation()}
-        >
-          {/* Handle bar */}
-          <View style={styles.handleBarContainer}>
-            <View style={[styles.handleBar, { backgroundColor: isDark ? FEATURE_COLORS.virtualSanctumModal.handleBarSurfaceDark : FEATURE_COLORS.virtualSanctumModal.handleBarSurfaceLight }]} />
-          </View>
+    <Pressable style={styles.overlay} onPress={handleClose}>
+      <Pressable
+        style={[
+          styles.sheetContainer,
+          {
+            backgroundColor: cardSurface,
+            borderColor: isDark ? OVERLAYS.gold[0.3] : OVERLAYS.gold[0.4],
+          },
+        ]}
+        onPress={(e) => e.stopPropagation()}
+      >
+        {/* Handle bar */}
+        <View style={styles.handleBarContainer}>
+          <View style={[styles.handleBar, { backgroundColor: isDark ? FEATURE_COLORS.virtualSanctumModal.handleBarSurfaceDark : FEATURE_COLORS.virtualSanctumModal.handleBarSurfaceLight }]} />
+        </View>
 
-          {/* Header Row */}
-          <View style={styles.headerRow}>
-            <View style={styles.titleColumn}>
-              <View style={styles.traditionTag}>
-                <Feather name="shield" size={11} color={goldAccent} />
-                <Text style={[styles.traditionTagText, { color: goldAccent }]}>
-                  {temple.stateOrRegion.toUpperCase()} · SACRED TIRTHA
-                </Text>
-              </View>
-              <Text style={[styles.nodeTitle, { color: theme.text }]}>
-                {temple.name}
-              </Text>
-              <Text style={[styles.sanskritSubtitle, { color: goldAccent }]}>
-                {temple.sanskritName}
+        {/* Header Row */}
+        <View style={styles.headerRow}>
+          <View style={styles.titleColumn}>
+            <View style={styles.traditionTag}>
+              <Feather name="shield" size={11} color={goldAccent} />
+              <Text style={[styles.traditionTagText, { color: goldAccent }]}>
+                {temple.stateOrRegion.toUpperCase()} · SACRED TIRTHA
               </Text>
             </View>
-            <Pressable
-              onPress={handleClose}
-              hitSlop={12}
-              style={[
-                styles.closeButton,
-                {
-                  backgroundColor: isDark ? OVERLAYS.white[0.08] : OVERLAYS.black[0.05],
-                  borderColor: theme.borderSoft,
-                },
-              ]}
-              accessibilityLabel="Close temple darshan"
-            >
-              <Feather name="x" size={18} color={theme.text} />
-            </Pressable>
+            <Text style={[styles.nodeTitle, { color: theme.text }]}>
+              {temple.name}
+            </Text>
+            <Text style={[styles.sanskritSubtitle, { color: goldAccent }]}>
+              {temple.sanskritName}
+            </Text>
           </View>
-
-          <ScrollView
-            style={styles.scrollBody}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
+          <Pressable
+            onPress={handleClose}
+            hitSlop={12}
+            style={[
+              styles.closeButton,
+              {
+                backgroundColor: isDark ? OVERLAYS.white[0.08] : OVERLAYS.black[0.05],
+                borderColor: theme.borderSoft,
+              },
+            ]}
+            accessibilityLabel="Close temple darshan"
           >
-            {/* ══════════════════════════════════════════════════════════════ */}
-            {/* MAJESTIC VIRTUAL SANCTUM (GARBHAGRIHA) SHRINE EXPERIENCE       */}
-            {/* ══════════════════════════════════════════════════════════════ */}
-            <VirtualSanctumStage
-              bellRotation={bellRotation}
-              diyaLit={diyaLit}
-              handleLightDiya={handleLightDiya}
-              handleRingBell={handleRingBell}
-              parikramaCount={parikramaCount}
-              profile={profile}
-              sanctumBg={sanctumBg}
-              temple={temple}
-            />
+            <Feather name="x" size={18} color={theme.text} />
+          </Pressable>
+        </View>
 
-            {/* ══════════════════════════════════════════════════════════════ */}
-            {/* SACRED ACTION CONTROLS                                        */}
-            {/* ══════════════════════════════════════════════════════════════ */}
-            <VirtualSanctumActions
-              bellRungCount={bellRungCount}
-              diyaLit={diyaLit}
-              flowersCount={flowersCount}
-              goldAccent={goldAccent}
-              handleLightDiya={handleLightDiya}
-              handleOfferFlower={handleOfferFlower}
-              handleParikrama={handleParikrama}
-              handleRingBell={handleRingBell}
-              isDark={isDark}
-              parikramaCount={parikramaCount}
-              profile={profile}
-              theme={theme}
-            />
-
-            {/* ══════════════════════════════════════════════════════════════ */}
-            {/* SEGMENTED CONTENT TABS                                         */}
-            {/* ══════════════════════════════════════════════════════════════ */}
-            <VirtualSanctumTabBar
-              activeTab={activeTab}
-              goldAccent={goldAccent}
-              isDark={isDark}
-              profile={profile}
-              setActiveTab={setActiveTab}
-              theme={theme}
-            />
-
-            <VirtualSanctumTabContent
-              activeTab={activeTab}
-              audioState={audioState}
-              goldAccent={goldAccent}
-              handleToggleAudio={handleToggleAudio}
-              isDark={isDark}
-              profile={profile}
-              temple={temple}
-              theme={theme}
-            />
-
-            {/* Live Darshan CTA */}
-            <PressableSurface
-              style={[styles.liveDarshanBtn, { backgroundColor: goldAccent }]}
-              onPress={() => {
-                onClose();
-                router.push('/live-darshan');
-              }}
-              accessibilityLabel="Open Live Darshan Stream"
-            >
-              <Feather name="tv" size={16} color={COLORS.ink} />
-              <Text style={styles.liveDarshanBtnText}>Watch Live Shrines on Shoonaya</Text>
-            </PressableSurface>
-          </ScrollView>
-
-          {/* Pushpa Vrishti — Sacred Flower Petal Shower */}
-          <FlowerShowerOverlay
-            show={showFlowerShower}
-            onComplete={() => setShowFlowerShower(false)}
-            count={40}
+        <ScrollView
+          style={styles.scrollBody}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* ══════════════════════════════════════════════════════════════ */}
+          {/* MAJESTIC VIRTUAL SANCTUM (GARBHAGRIHA) SHRINE EXPERIENCE       */}
+          {/* ══════════════════════════════════════════════════════════════ */}
+          <VirtualSanctumStage
+            bellRotation={bellRotation}
+            diyaLit={diyaLit}
+            handleLightDiya={handleLightDiya}
+            handleRingBell={handleRingBell}
+            parikramaCount={parikramaCount}
+            profile={profile}
+            sanctumBg={sanctumBg}
+            temple={temple}
           />
-        </Pressable>
+
+          {/* ══════════════════════════════════════════════════════════════ */}
+          {/* SACRED ACTION CONTROLS                                        */}
+          {/* ══════════════════════════════════════════════════════════════ */}
+          <VirtualSanctumActions
+            bellRungCount={bellRungCount}
+            diyaLit={diyaLit}
+            flowersCount={flowersCount}
+            goldAccent={goldAccent}
+            handleLightDiya={handleLightDiya}
+            handleOfferFlower={handleOfferFlower}
+            handleParikrama={handleParikrama}
+            handleRingBell={handleRingBell}
+            isDark={isDark}
+            parikramaCount={parikramaCount}
+            profile={profile}
+            theme={theme}
+          />
+
+          {/* ══════════════════════════════════════════════════════════════ */}
+          {/* SEGMENTED CONTENT TABS                                         */}
+          {/* ══════════════════════════════════════════════════════════════ */}
+          <VirtualSanctumTabBar
+            activeTab={activeTab}
+            goldAccent={goldAccent}
+            isDark={isDark}
+            profile={profile}
+            setActiveTab={setActiveTab}
+            theme={theme}
+          />
+
+          <VirtualSanctumTabContent
+            activeTab={activeTab}
+            audioState={audioState}
+            goldAccent={goldAccent}
+            handleToggleAudio={handleToggleAudio}
+            isDark={isDark}
+            profile={profile}
+            temple={temple}
+            theme={theme}
+          />
+
+          {/* Live Darshan CTA */}
+          <PressableSurface
+            style={[styles.liveDarshanBtn, { backgroundColor: goldAccent }]}
+            onPress={() => {
+              onClose();
+              router.push('/live-darshan');
+            }}
+            accessibilityLabel="Open Live Darshan Stream"
+          >
+            <Feather name="tv" size={16} color={COLORS.ink} />
+            <Text style={styles.liveDarshanBtnText}>Watch Live Shrines on Shoonaya</Text>
+          </PressableSurface>
+        </ScrollView>
+
+        {/* Pushpa Vrishti — Sacred Flower Petal Shower */}
+        <FlowerShowerOverlay
+          show={showFlowerShower}
+          onComplete={() => setShowFlowerShower(false)}
+          count={40}
+        />
       </Pressable>
-    </Modal>
+    </Pressable>
   );
 }
 
