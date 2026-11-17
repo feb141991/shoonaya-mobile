@@ -9,7 +9,7 @@ import { callSites, findWiringProblems, loadComponents, mutateCallSite } from '.
 //
 // VirtualSanctumModal.tsx keeps the state and handlers and hands them to four
 // components (VirtualSanctumStage, VirtualSanctumActions, VirtualSanctumTabBar,
-// VirtualSanctumTabContent), 30 props in all. Several are the same type and
+// VirtualSanctumTabContent), 34 props in all (each gets the tradition's `profile`). Several are the same type and
 // close in meaning: handleLightDiya, handleRingBell, handleOfferFlower and
 // handleParikrama are all `() => void`; flowersCount, bellRungCount and
 // parikramaCount are all numbers. The compiler cannot see them swapped, and a

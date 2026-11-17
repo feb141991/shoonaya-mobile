@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { FEATURE_COLORS, OVERLAYS, FONTS, type themeColor } from '@/lib/constants';
+import type { SanctumProfile } from '@/lib/yatra-sanctum-profile';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 
 type VirtualSanctumActionsProps = {
@@ -14,6 +15,7 @@ type VirtualSanctumActionsProps = {
   handleRingBell: () => void;
   isDark: boolean;
   parikramaCount: number;
+  profile: Readonly<SanctumProfile>;
   theme: ReturnType<typeof themeColor>;
 };
 
@@ -28,87 +30,98 @@ export function VirtualSanctumActions({
   handleRingBell,
   isDark,
   parikramaCount,
+  profile,
   theme,
 }: VirtualSanctumActionsProps) {
+  // Which buttons a shrine offers is decided by its tradition's profile (lib/yatra-sanctum-profile.ts). With none, no empty row is drawn.
+  if (!profile.showMandirRituals && !profile.showParikrama) return null;
+
   return (
     <View style={styles.actionPillsGrid}>
-      {/* Light Diya */}
-      <PressableSurface
-        onPress={handleLightDiya}
-        style={[
-          styles.sanctumActionBtn,
-          {
-            backgroundColor: diyaLit
-              ? isDark
-                ? FEATURE_COLORS.virtualSanctumModal.pressableSurfaceDark
-                : FEATURE_COLORS.virtualSanctumModal.pressableSurfaceLight
-              : isDark
-              ? OVERLAYS.white[0.05]
-              : OVERLAYS.black[0.03],
-            borderColor: diyaLit ? goldAccent : isDark ? OVERLAYS.white[0.1] : OVERLAYS.black[0.08],
-          },
-        ]}
-        accessibilityLabel="Light Ghee Diya"
-      >
-        <Text style={styles.actionIcon}>{diyaLit ? '🔥' : '🪔'}</Text>
-        <Text style={[styles.actionBtnText, { color: diyaLit ? goldAccent : theme.text }]}>
-          {diyaLit ? 'Diya Lit' : 'Light Diya'}
-        </Text>
-      </PressableSurface>
+      {/* Light Diya, Offer Pushpam, Ring Bell: the mandir ritual set */}
+      {profile.showMandirRituals ? (
+        <>
+          {/* Light Diya */}
+          <PressableSurface
+            onPress={handleLightDiya}
+            style={[
+              styles.sanctumActionBtn,
+              {
+                backgroundColor: diyaLit
+                  ? isDark
+                    ? FEATURE_COLORS.virtualSanctumModal.pressableSurfaceDark
+                    : FEATURE_COLORS.virtualSanctumModal.pressableSurfaceLight
+                  : isDark
+                  ? OVERLAYS.white[0.05]
+                  : OVERLAYS.black[0.03],
+                borderColor: diyaLit ? goldAccent : isDark ? OVERLAYS.white[0.1] : OVERLAYS.black[0.08],
+              },
+            ]}
+            accessibilityLabel="Light Ghee Diya"
+          >
+            <Text style={styles.actionIcon}>{diyaLit ? '🔥' : '🪔'}</Text>
+            <Text style={[styles.actionBtnText, { color: diyaLit ? goldAccent : theme.text }]}>
+              {diyaLit ? 'Diya Lit' : 'Light Diya'}
+            </Text>
+          </PressableSurface>
 
-      {/* Offer Pushpam */}
-      <PressableSurface
-        onPress={handleOfferFlower}
-        style={[
-          styles.sanctumActionBtn,
-          {
-            backgroundColor: isDark ? OVERLAYS.white[0.05] : OVERLAYS.black[0.03],
-            borderColor: flowersCount > 0 ? FEATURE_COLORS.virtualSanctumModal.flowerActiveBorder : isDark ? OVERLAYS.white[0.1] : OVERLAYS.black[0.08],
-          },
-        ]}
-        accessibilityLabel="Offer Sacred Flowers"
-      >
-        <Text style={styles.actionIcon}>🌸</Text>
-        <Text style={[styles.actionBtnText, { color: theme.text }]}>
-          Offer Pushpam {flowersCount > 0 ? `(${flowersCount})` : ''}
-        </Text>
-      </PressableSurface>
+          {/* Offer Pushpam */}
+          <PressableSurface
+            onPress={handleOfferFlower}
+            style={[
+              styles.sanctumActionBtn,
+              {
+                backgroundColor: isDark ? OVERLAYS.white[0.05] : OVERLAYS.black[0.03],
+                borderColor: flowersCount > 0 ? FEATURE_COLORS.virtualSanctumModal.flowerActiveBorder : isDark ? OVERLAYS.white[0.1] : OVERLAYS.black[0.08],
+              },
+            ]}
+            accessibilityLabel="Offer Sacred Flowers"
+          >
+            <Text style={styles.actionIcon}>🌸</Text>
+            <Text style={[styles.actionBtnText, { color: theme.text }]}>
+              Offer Pushpam {flowersCount > 0 ? `(${flowersCount})` : ''}
+            </Text>
+          </PressableSurface>
 
-      {/* Ring Bell */}
-      <PressableSurface
-        onPress={handleRingBell}
-        style={[
-          styles.sanctumActionBtn,
-          {
-            backgroundColor: isDark ? OVERLAYS.white[0.05] : OVERLAYS.black[0.03],
-            borderColor: bellRungCount > 0 ? goldAccent : isDark ? OVERLAYS.white[0.1] : OVERLAYS.black[0.08],
-          },
-        ]}
-        accessibilityLabel="Ring Temple Bell"
-      >
-        <Text style={styles.actionIcon}>🔔</Text>
-        <Text style={[styles.actionBtnText, { color: theme.text }]}>
-          Ring Bell {bellRungCount > 0 ? `(${bellRungCount})` : ''}
-        </Text>
-      </PressableSurface>
+          {/* Ring Bell */}
+          <PressableSurface
+            onPress={handleRingBell}
+            style={[
+              styles.sanctumActionBtn,
+              {
+                backgroundColor: isDark ? OVERLAYS.white[0.05] : OVERLAYS.black[0.03],
+                borderColor: bellRungCount > 0 ? goldAccent : isDark ? OVERLAYS.white[0.1] : OVERLAYS.black[0.08],
+              },
+            ]}
+            accessibilityLabel="Ring Temple Bell"
+          >
+            <Text style={styles.actionIcon}>🔔</Text>
+            <Text style={[styles.actionBtnText, { color: theme.text }]}>
+              Ring Bell {bellRungCount > 0 ? `(${bellRungCount})` : ''}
+            </Text>
+          </PressableSurface>
+        </>
+      ) : null}
 
       {/* Parikrama */}
-      <PressableSurface
-        onPress={handleParikrama}
-        style={[
-          styles.sanctumActionBtn,
-          {
-            backgroundColor: isDark ? OVERLAYS.white[0.05] : OVERLAYS.black[0.03],
-            borderColor: parikramaCount > 0 ? FEATURE_COLORS.virtualSanctumModal.parikramaActiveBorder : isDark ? OVERLAYS.white[0.1] : OVERLAYS.black[0.08],
-          },
-        ]}
-        accessibilityLabel="Perform Sacred Parikrama"
-      >
-        <Text style={styles.actionIcon}>🔄</Text>
-        <Text style={[styles.actionBtnText, { color: theme.text }]}>
-          +1 Parikrama
-        </Text>
-      </PressableSurface>
+      {profile.showParikrama ? (
+        <PressableSurface
+          onPress={handleParikrama}
+          style={[
+            styles.sanctumActionBtn,
+            {
+              backgroundColor: isDark ? OVERLAYS.white[0.05] : OVERLAYS.black[0.03],
+              borderColor: parikramaCount > 0 ? FEATURE_COLORS.virtualSanctumModal.parikramaActiveBorder : isDark ? OVERLAYS.white[0.1] : OVERLAYS.black[0.08],
+            },
+          ]}
+          accessibilityLabel="Perform Sacred Parikrama"
+        >
+          <Text style={styles.actionIcon}>🔄</Text>
+          <Text style={[styles.actionBtnText, { color: theme.text }]}>
+            +1 Parikrama
+          </Text>
+        </PressableSurface>
+      ) : null}
     </View>
   );
 }

@@ -13,7 +13,8 @@ import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 
-import { TempleSanctumNode } from '@/lib/yatra-data';
+import { TempleSanctumNode, type YatraTradition } from '@/lib/yatra-data';
+import { sanctumProfileFor } from '@/lib/yatra-sanctum-profile';
 import { FEATURE_COLORS, OVERLAYS, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, SHADOWS, themeColor } from '@/lib/constants';
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { FlowerShowerOverlay } from '@/components/ui/FlowerShowerOverlay';
@@ -26,11 +27,13 @@ import { apiFetch } from '@/lib/api';
 
 interface VirtualSanctumModalProps {
   temple: TempleSanctumNode | null;
+  /** The tradition of the circuit the shrine belongs to (a shrine records none itself). It decides which sanctum controls are offered: lib/yatra-sanctum-profile.ts. */
+  tradition: YatraTradition;
   visible: boolean;
   onClose: () => void;
 }
 
-export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctumModalProps) {
+export function VirtualSanctumModal({ temple, tradition, visible, onClose }: VirtualSanctumModalProps) {
   const isDark = useColorScheme() === 'dark';
   const theme = themeColor(isDark);
   const router = useRouter();
@@ -177,6 +180,7 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
     outputRange: ['-18deg', '0deg', '18deg'],
   });
 
+  const profile = sanctumProfileFor(tradition);
   const goldAccent = isDark ? COLORS.brandGoldDark : COLORS.brandGoldLight;
   const cardSurface = isDark ? FEATURE_COLORS.virtualSanctumModal.cardSurfaceDark : OVERLAYS.white[0.98];
   const sanctumBg: [string, string] = isDark ? [FEATURE_COLORS.virtualSanctumModal.sanctumBgDarkStart, FEATURE_COLORS.virtualSanctumModal.sanctumBgDarkEnd] : [FEATURE_COLORS.virtualSanctumModal.sanctumBgLightStart, FEATURE_COLORS.virtualSanctumModal.sanctumBgLightEnd];
@@ -250,6 +254,7 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
               handleLightDiya={handleLightDiya}
               handleRingBell={handleRingBell}
               parikramaCount={parikramaCount}
+              profile={profile}
               sanctumBg={sanctumBg}
               temple={temple}
             />
@@ -268,6 +273,7 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
               handleRingBell={handleRingBell}
               isDark={isDark}
               parikramaCount={parikramaCount}
+              profile={profile}
               theme={theme}
             />
 
@@ -278,6 +284,7 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
               activeTab={activeTab}
               goldAccent={goldAccent}
               isDark={isDark}
+              profile={profile}
               setActiveTab={setActiveTab}
               theme={theme}
             />
@@ -288,6 +295,7 @@ export function VirtualSanctumModal({ temple, visible, onClose }: VirtualSanctum
               goldAccent={goldAccent}
               handleToggleAudio={handleToggleAudio}
               isDark={isDark}
+              profile={profile}
               temple={temple}
               theme={theme}
             />

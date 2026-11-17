@@ -2,6 +2,7 @@ import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import type { TempleSanctumNode } from '@/lib/yatra-data';
+import type { SanctumProfile } from '@/lib/yatra-sanctum-profile';
 import { FEATURE_COLORS, OVERLAYS, COLORS, FONTS } from '@/lib/constants';
 
 type VirtualSanctumStageProps = {
@@ -10,6 +11,7 @@ type VirtualSanctumStageProps = {
   handleLightDiya: () => void;
   handleRingBell: () => void;
   parikramaCount: number;
+  profile: Readonly<SanctumProfile>;
   sanctumBg: [string, string];
   temple: TempleSanctumNode;
 };
@@ -20,6 +22,7 @@ export function VirtualSanctumStage({
   handleLightDiya,
   handleRingBell,
   parikramaCount,
+  profile,
   sanctumBg,
   temple,
 }: VirtualSanctumStageProps) {
@@ -29,72 +32,82 @@ export function VirtualSanctumStage({
         colors={sanctumBg}
         style={styles.sanctumStage}
       >
-        {/* Temple Hanging Bell (Interactive) */}
-        <Animated.View
-          style={[
-            styles.hangingBellContainer,
-            { transform: [{ rotate: bellRotation }] },
-          ]}
-        >
-          <Pressable
-            onPress={handleRingBell}
-            hitSlop={10}
-            accessibilityLabel="Ring sanctum bell"
-            style={styles.bellTouchArea}
+        {/* Temple Hanging Bell (Interactive): a mandir ritual, withheld for traditions whose profile does not offer it */}
+        {profile.showMandirRituals ? (
+          <Animated.View
+            style={[
+              styles.hangingBellContainer,
+              { transform: [{ rotate: bellRotation }] },
+            ]}
           >
-            <View style={styles.bellChain} />
-            <View style={styles.bellDome}>
-              <Text style={styles.bellGlyph}>🔔</Text>
-            </View>
-          </Pressable>
-        </Animated.View>
+            <Pressable
+              onPress={handleRingBell}
+              hitSlop={10}
+              accessibilityLabel="Ring sanctum bell"
+              style={styles.bellTouchArea}
+            >
+              <View style={styles.bellChain} />
+              <View style={styles.bellDome}>
+                <Text style={styles.bellGlyph}>🔔</Text>
+              </View>
+            </Pressable>
+          </Animated.View>
+        ) : null}
 
         {/* Cosmic Sanctum Aura & Halo */}
         <View style={styles.deityAuraRing}>
           <View style={styles.deityInnerGlow}>
-            <Text style={styles.deitySymbolGlyph}>🕉️</Text>
+            {profile.deityGlyph ? <Text style={styles.deitySymbolGlyph}>{profile.deityGlyph}</Text> : null}
             <Text style={styles.deityTitleText}>{temple.deity}</Text>
           </View>
         </View>
 
-        {/* Left & Right Brass Ghee Diyas */}
-        <View style={styles.diyasRow}>
-          {/* Left Diya */}
-          <Pressable
-            onPress={handleLightDiya}
-            style={styles.diyaTouchTarget}
-            accessibilityLabel="Light left temple diya"
-          >
-            <View style={styles.diyaBase}>
-              <Text style={styles.diyaFlameEmoji}>{diyaLit ? '🔥' : '🪔'}</Text>
-              {diyaLit ? (
-                <View style={styles.diyaGlowCircle} />
-              ) : null}
-            </View>
-            <Text style={styles.diyaLabel}>{diyaLit ? 'Deepam' : 'Tap to Light'}</Text>
-          </Pressable>
+        {/* Left & Right Brass Ghee Diyas (mandir ritual) around the Parikrama counter */}
+        {profile.showMandirRituals || profile.showParikrama ? (
+          <View style={[styles.diyasRow, !profile.showMandirRituals && styles.diyasRowCentered]}>
+            {/* Left Diya */}
+            {profile.showMandirRituals ? (
+              <Pressable
+                onPress={handleLightDiya}
+                style={styles.diyaTouchTarget}
+                accessibilityLabel="Light left temple diya"
+              >
+                <View style={styles.diyaBase}>
+                  <Text style={styles.diyaFlameEmoji}>{diyaLit ? '🔥' : '🪔'}</Text>
+                  {diyaLit ? (
+                    <View style={styles.diyaGlowCircle} />
+                  ) : null}
+                </View>
+                <Text style={styles.diyaLabel}>{diyaLit ? 'Deepam' : 'Tap to Light'}</Text>
+              </Pressable>
+            ) : null}
 
-          {/* Center Parikrama Counter Ring */}
-          <View style={styles.parikramaRing}>
-            <Text style={styles.parikramaLabel}>PARIKRAMA</Text>
-            <Text style={styles.parikramaCountNumber}>{parikramaCount}</Text>
+            {/* Center Parikrama Counter Ring */}
+            {profile.showParikrama ? (
+              <View style={styles.parikramaRing}>
+                <Text style={styles.parikramaLabel}>PARIKRAMA</Text>
+                <Text style={styles.parikramaCountNumber}>{parikramaCount}</Text>
+              </View>
+            ) : null}
+
+            {/* Right Diya */}
+            {profile.showMandirRituals ? (
+              <Pressable
+                onPress={handleLightDiya}
+                style={styles.diyaTouchTarget}
+                accessibilityLabel="Light right temple diya"
+              >
+                <View style={styles.diyaBase}>
+                  <Text style={styles.diyaFlameEmoji}>{diyaLit ? '🔥' : '🪔'}</Text>
+                  {diyaLit ? (
+                    <View style={styles.diyaGlowCircle} />
+                  ) : null}
+                </View>
+                <Text style={styles.diyaLabel}>{diyaLit ? 'Deepam' : 'Tap to Light'}</Text>
+              </Pressable>
+            ) : null}
           </View>
-
-          {/* Right Diya */}
-          <Pressable
-            onPress={handleLightDiya}
-            style={styles.diyaTouchTarget}
-            accessibilityLabel="Light right temple diya"
-          >
-            <View style={styles.diyaBase}>
-              <Text style={styles.diyaFlameEmoji}>{diyaLit ? '🔥' : '🪔'}</Text>
-              {diyaLit ? (
-                <View style={styles.diyaGlowCircle} />
-              ) : null}
-            </View>
-            <Text style={styles.diyaLabel}>{diyaLit ? 'Deepam' : 'Tap to Light'}</Text>
-          </Pressable>
-        </View>
+        ) : null}
 
         {/* Sanctum floor line: shown only for a shrine whose data records a mantra (lib/yatra-data.ts) */}
         {temple.sanctumFloorMantra ? (
@@ -184,6 +197,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: '100%',
     paddingHorizontal: 10,
+  },
+  // With no diyas beside it the Parikrama ring would sit at the left edge (space-between), so it is centred.
+  diyasRowCentered: {
+    justifyContent: 'center',
   },
   diyaTouchTarget: {
     alignItems: 'center',

@@ -18,6 +18,7 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { YatraGraphCanvas } from '@/components/tirtha/YatraGraphCanvas';
 import { VirtualSanctumModal } from '@/components/tirtha/VirtualSanctumModal';
 import { getYatraById, TempleSanctumNode } from '@/lib/yatra-data';
+import { sanctumProfileFor } from '@/lib/yatra-sanctum-profile';
 import { FEATURE_COLORS, COLORS, FONTS, MIN_TOUCH_TARGET, RADII, themeColor } from '@/lib/constants';
 
 export default function YatraDetailScreen() {
@@ -92,7 +93,7 @@ export default function YatraDetailScreen() {
         <View style={[styles.infoBanner, { backgroundColor: isDark ? FEATURE_COLORS.yatraDetail.infoBannerSurfaceDark : FEATURE_COLORS.yatraDetail.infoBannerSurfaceLight, borderColor: theme.borderSoft }]}>
           <Feather name="compass" size={14} color={theme.brand} style={styles.infoIcon} />
           <Text style={[styles.infoText, { color: isDark ? FEATURE_COLORS.yatraDetail.infoTextDark : FEATURE_COLORS.yatraDetail.infoTextLight }]}>
-            Pinch to zoom and drag to explore pilgrimage routes. Tap any sacred temple for virtual darshan, diya lighting, and stotras.
+            {sanctumProfileFor(yatra.tradition).circuitHint}
           </Text>
         </View>
 
@@ -108,6 +109,7 @@ export default function YatraDetailScreen() {
         {/* Virtual Sanctum Darshan Modal */}
         <VirtualSanctumModal
           temple={selectedTemple}
+          tradition={yatra.tradition}
           visible={modalVisible}
           onClose={() => setModalVisible(false)}
         />

@@ -710,9 +710,9 @@ Rules:
   printed "Om Namah Shivaya, Har Har Mahadev". Found while splitting the modal (the split moved it verbatim and flagged it). Guard:
   `__tests__/yatra-sanctum-mantra.test.ts` (which shrines record it, by count and by id) and the "sanctum floor line" render tests in
   `__component_tests__/virtual-sanctum-modal.test.tsx` (seven mutations, each proven red).
-- Same class, not changed, needs a founder decision: the Om glyph on the stage is shown for every shrine including the Sikh ones (the app already uses
-  the Khanda symbol for Sikh in `app/bhakti/browse.tsx`), and the diya, bell, parikrama and pushpam actions are offered on Gurdwara nodes. The shrine
-  node has no tradition field of its own; only its circuit does. Not verified on a device, in dark mode, or with large text.
+- Same class, not changed at the time, needed a founder decision: the Om glyph on the stage was shown for every shrine including the Sikh ones (the app already uses
+  the Khanda symbol for Sikh in `app/bhakti/browse.tsx`), and the diya, bell, parikrama and pushpam actions were offered on Gurdwara nodes. The shrine
+  node has no tradition field of its own; only its circuit does. Decided and changed 2026-11-17: section 41. Not verified on a device, in dark mode, or with large text.
 
 ### 40. A Modal's State Lives in Its Children, So Closing It Starts It Over
 - React Native's `Modal` renders nothing while it is hidden: its children are discarded on Android as soon as `visible` is false, and on iOS once the
@@ -739,3 +739,32 @@ Rules:
   an effect that mentions `visible`, 7 hold no state, and 22 own their visibility (screens, pickers, buttons); those 22 were grouped, not read one by one.
 - Guard: the "opening it again" tests in `__component_tests__/app-tour-modal.test.tsx` (3 red against the old structure, the 4th red against fixes that
   remount on a re-render). Not verified on a device (iOS or Android), in dark mode, or with large text.
+
+### 41. A Shrine's Ritual Controls Follow the Tradition of Its Circuit
+- The virtual sanctum (`components/tirtha/VirtualSanctum*`) was written for a Hindu mandir. What it offers is chosen by `sanctumProfileFor(tradition)`
+  (`lib/yatra-sanctum-profile.ts`): the symbol over the deity, the mandir ritual set (hanging bell, two diyas, Light Diya, Offer Pushpam, Ring Bell), the
+  parikrama tally, the name of the history tab and the line above the circuit map. A shrine records no tradition; its circuit does, so
+  `app/yatra/[id].tsx` passes `yatra.tradition` to the modal as a required prop, and the modal hands one `profile` to its four pieces.
+- `sanatan` is exactly what the sanctum showed before profiles existed (Om, every ritual control, "Sthala Purana"). `sikh` shows the Khanda (the symbol the
+  app already uses for Sikh in `lib/traditions.ts` and `app/bhakti/browse.tsx`), no mandir ritual set, and "History" for the second tab. Any other value
+  (Jain has a type but no circuit; a missing or unexpected value) gets the neutral profile: no ritual set, no tally, no symbol. Showing too little is the safe
+  failure; never let an unknown tradition fall through to the Hindu profile. A new tradition is a new reviewed profile, and a new circuit is a decision in
+  `__tests__/yatra-sanctum-profile.test.ts` (circuits are pinned by id and tradition).
+- NOT reviewed by a Sikh reviewer: which sanctum actions, if any, belong at a gurdwara. The mandir ritual set is withheld, not ruled out, and the parikrama
+  tally stays on Sikh shrines only because the approved change did not hide it. Do not describe this as a Sikh-approved design. Gurmukhi or Punjabi wording
+  needs native review (section 27) and none was written.
+- Origin: 2026-11-16 review. After the Shaiva mantra was withheld from non-Shaiva shrines (section 39), the same stage still drew an Om, a hanging bell, two
+  ghee diyas, flowers and a parikrama tally on the four Sikh Panj Takht shrines, called their history "Sthala Purana", and the circuit banner said "diya
+  lighting" on every circuit. The founder approved withholding the ritual set and swapping the symbol on 2026-11-17.
+- Sweep, 2026-11-17: no other screen offers Light Diya, Ring Bell, Offer Pushpam or the Sthala Purana label (searched `app/`, `components/`, `lib/`); the
+  other Om glyphs are tradition lookup tables on unrelated screens. Same class, found and not changed, each its own content decision: the Sikh shrine names
+  are written in Devanagari, not Gurmukhi; the Akal Takht chant card is titled "Mool Mantar & Ardas" but holds only a Roman-letter Mool Mantar, and its
+  recording (Wikimedia Commons) has no rights note recorded; a chant without a recording is read aloud with a Sanskrit voice (`sa-IN`); the modal's
+  header tag says "SACRED TIRTHA" for every shrine; and the sanctum's counters (diya, flowers, bell, parikrama) are state of the modal, which the screen
+  keeps mounted, so they carry from one shrine to the next (section 40; read from the code, not reproduced).
+- Guard: `__tests__/yatra-sanctum-profile.test.ts` (profile table, circuit by id, unknown values), `__component_tests__/virtual-sanctum-modal.test.tsx`
+  ("what a shrine offers follows the tradition of its circuit", rendering the same fixture shrine under each tradition and each flag alone) and
+  `__component_tests__/yatra-detail-screen.test.tsx` (renders the real screen for each circuit; a screen that hard-codes `tradition="sanatan"` compiles and
+  passes every modal test). 21 mutations each proven red (the early return in `VirtualSanctumActions` that avoids an empty row is not covered). The wiring
+  test also fails if a piece is not given `profile`. Not verified on a device or simulator: how the stage looks without the bell and diyas (it keeps a
+  210-point minimum height with `space-between`), the Khanda glyph on Android fonts, dark mode, or large text.

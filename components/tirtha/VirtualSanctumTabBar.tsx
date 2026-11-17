@@ -1,11 +1,13 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { OVERLAYS, COLORS, FONTS, type themeColor } from '@/lib/constants';
+import type { SanctumProfile } from '@/lib/yatra-sanctum-profile';
 
 type VirtualSanctumTabBarProps = {
   activeTab: 'darshan' | 'purana' | 'rituals';
   goldAccent: string;
   isDark: boolean;
+  profile: Readonly<SanctumProfile>;
   setActiveTab: (tab: 'darshan' | 'purana' | 'rituals') => void;
   theme: ReturnType<typeof themeColor>;
 };
@@ -14,6 +16,7 @@ export function VirtualSanctumTabBar({
   activeTab,
   goldAccent,
   isDark,
+  profile,
   setActiveTab,
   theme,
 }: VirtualSanctumTabBarProps) {
@@ -21,7 +24,7 @@ export function VirtualSanctumTabBar({
     <View style={styles.tabsRow}>
       {[
         { key: 'darshan', label: 'Darshan' },
-        { key: 'purana', label: 'Sthala Purana' },
+        { key: 'purana', label: profile.historyTabLabel },
         { key: 'rituals', label: 'Offerings' },
       ].map((tab) => {
         const active = activeTab === tab.key;

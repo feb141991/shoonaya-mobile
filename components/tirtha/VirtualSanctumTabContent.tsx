@@ -3,6 +3,7 @@ import Feather from '@expo/vector-icons/Feather';
 
 import type { TempleSanctumNode } from '@/lib/yatra-data';
 import { FEATURE_COLORS, OVERLAYS, FONTS, RADII, type themeColor } from '@/lib/constants';
+import type { SanctumProfile } from '@/lib/yatra-sanctum-profile';
 
 type VirtualSanctumTabContentProps = {
   activeTab: 'darshan' | 'purana' | 'rituals';
@@ -10,6 +11,7 @@ type VirtualSanctumTabContentProps = {
   goldAccent: string;
   handleToggleAudio: () => Promise<void>;
   isDark: boolean;
+  profile: Readonly<SanctumProfile>;
   temple: TempleSanctumNode;
   theme: ReturnType<typeof themeColor>;
 };
@@ -20,6 +22,7 @@ export function VirtualSanctumTabContent({
   goldAccent,
   handleToggleAudio,
   isDark,
+  profile,
   temple,
   theme,
 }: VirtualSanctumTabContentProps) {
@@ -117,11 +120,11 @@ export function VirtualSanctumTabContent({
         </View>
       ) : null}
 
-      {/* Tab 2: Sthala Purana & History */}
+      {/* Tab 2: the shrine's history (Sthala Purana for a Hindu shrine; the heading comes from the tradition's profile) */}
       {activeTab === 'purana' ? (
         <View style={styles.tabContentBlock}>
           <Text style={[styles.sectionHeading, { color: goldAccent }]}>
-            STHALA PURANA & SACRED ORIGINS
+            {profile.historyHeading}
           </Text>
           <Text style={[styles.puranaParagraph, { color: theme.text }]}>
             {temple.sthalaPurana}

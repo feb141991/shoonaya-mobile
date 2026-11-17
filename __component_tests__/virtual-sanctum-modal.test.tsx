@@ -1,11 +1,14 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import * as Haptics from 'expo-haptics';
-import { StyleSheet } from 'react-native';
+import { Animated, StyleSheet } from 'react-native';
 
+import { VirtualSanctumActions } from '@/components/tirtha/VirtualSanctumActions';
 import { VirtualSanctumModal } from '@/components/tirtha/VirtualSanctumModal';
-import { COLORS } from '@/lib/constants';
-import type { TempleSanctumNode } from '@/lib/yatra-data';
+import { VirtualSanctumStage } from '@/components/tirtha/VirtualSanctumStage';
+import { COLORS, themeColor } from '@/lib/constants';
+import type { TempleSanctumNode, YatraTradition } from '@/lib/yatra-data';
+import { SANATAN_SANCTUM_PROFILE, type SanctumProfile } from '@/lib/yatra-sanctum-profile';
 
 // VirtualSanctumModal was split into a stage, an action row, a tab bar and a tab body (components/tirtha). The
 // compiler checks each prop's type and __tests__/virtual-sanctum-prop-wiring.test.ts checks the call sites, but
@@ -78,8 +81,10 @@ const TEMPLE_WITHOUT_CHANT: TempleSanctumNode = { ...TEMPLE, stotraOrChant: unde
 
 const impact = Haptics.impactAsync as unknown as jest.Mock;
 
-async function open(temple: TempleSanctumNode | null = TEMPLE, onClose: () => void = jest.fn()) {
-  await render(<VirtualSanctumModal temple={temple} visible onClose={onClose} />);
+// The tradition is the circuit's, not the shrine's (lib/yatra-sanctum-profile.ts). Every test below that does not say otherwise
+// is a Hindu circuit, which is exactly what the sanctum showed for every shrine before profiles existed.
+async function open(temple: TempleSanctumNode | null = TEMPLE, onClose: () => void = jest.fn(), tradition: YatraTradition = 'sanatan') {
+  await render(<VirtualSanctumModal temple={temple} tradition={tradition} visible onClose={onClose} />);
   return onClose;
 }
 
@@ -107,7 +112,7 @@ describe('VirtualSanctumModal', () => {
   it('renders nothing without a temple, and nothing while closed', async () => {
     await open(null);
     expect(screen.queryByLabelText('Close temple darshan')).toBeNull();
-    await render(<VirtualSanctumModal temple={TEMPLE} visible={false} onClose={jest.fn()} />);
+    await render(<VirtualSanctumModal temple={TEMPLE} tradition="sanatan" visible={false} onClose={jest.fn()} />);
     expect(screen.queryByLabelText('Close temple darshan')).toBeNull();
   });
 
@@ -120,12 +125,12 @@ describe('VirtualSanctumModal', () => {
   });
 
   it('stops the audio when the sanctum is closed from outside, and when another temple is opened', async () => {
-    await render(<VirtualSanctumModal temple={TEMPLE} visible onClose={jest.fn()} />);
+    await render(<VirtualSanctumModal temple={TEMPLE} tradition="sanatan" visible onClose={jest.fn()} />);
     mockAudio.stop.mockClear();
-    await screen.rerender(<VirtualSanctumModal temple={{ ...TEMPLE, id: 'another-temple' }} visible onClose={jest.fn()} />);
+    await screen.rerender(<VirtualSanctumModal temple={{ ...TEMPLE, id: 'another-temple' }} tradition="sanatan" visible onClose={jest.fn()} />);
     expect(mockAudio.stop).toHaveBeenCalled();
     mockAudio.stop.mockClear();
-    await screen.rerender(<VirtualSanctumModal temple={{ ...TEMPLE, id: 'another-temple' }} visible={false} onClose={jest.fn()} />);
+    await screen.rerender(<VirtualSanctumModal temple={{ ...TEMPLE, id: 'another-temple' }} tradition="sanatan" visible={false} onClose={jest.fn()} />);
     expect(mockAudio.stop).toHaveBeenCalled();
   });
 
@@ -340,6 +345,177 @@ describe('VirtualSanctumModal', () => {
       expect(screen.queryByText(/✦/)).toBeNull();
       expect(screen.queryByText(/शिवाय/)).toBeNull();
       expect(screen.queryByText(/महादेव/)).toBeNull();
+    });
+  });
+
+  // A shrine records no tradition; its circuit does, and the screen passes it in. Before this the sanctum showed the Hindu
+  // mandir ritual set (Om, bell, diyas, flowers, "Sthala Purana") on the four Sikh Panj Takht gurdwaras too.
+  // The same fixture shrine is rendered under each tradition, so the prop and nothing about the shrine is what changes.
+  // Which sanctum actions belong at a gurdwara has not been reviewed by a Sikh reviewer: the ritual set is withheld, not decided.
+  describe('what a shrine offers follows the tradition of its circuit', () => {
+    const mandirControlLabels = [
+      'Light Ghee Diya',
+      'Light left temple diya',
+      'Light right temple diya',
+      'Ring sanctum bell',
+      'Ring Temple Bell',
+      'Offer Sacred Flowers',
+    ];
+    const mandirControlTexts = ['Light Diya', 'Tap to Light', 'Ring Bell', 'Offer Pushpam', '🔔', '🪔', '🌸'];
+
+    function expectNoMandirRituals() {
+      for (const label of mandirControlLabels) expect(screen.queryByLabelText(label)).toBeNull();
+      for (const text of mandirControlTexts) expect(screen.queryByText(text)).toBeNull();
+      expect(screen.queryByText(/diya|deepam|pushpam/i)).toBeNull();
+    }
+
+    it('a Hindu circuit keeps every control: Om, the bell, both diyas, flowers, the parikrama tally and Sthala Purana', async () => {
+      await open(TEMPLE, jest.fn(), 'sanatan');
+      expect(screen.getByText('🕉️')).toBeTruthy();
+      expect(screen.queryByText('☬')).toBeNull();
+      for (const label of mandirControlLabels) expect(screen.getAllByLabelText(label).length).toBeGreaterThan(0);
+      expect(screen.getByText('Light Diya')).toBeTruthy();
+      expect(screen.getByText('Offer Pushpam')).toBeTruthy();
+      expect(screen.getByText('Ring Bell')).toBeTruthy();
+      expect(screen.getByText('PARIKRAMA')).toBeTruthy();
+      expect(screen.getByText('+1 Parikrama')).toBeTruthy();
+      await fireEvent.press(screen.getByText('Sthala Purana'));
+      expect(screen.getByText('STHALA PURANA & SACRED ORIGINS')).toBeTruthy();
+      expect(screen.getByText('Fixture sthala purana paragraph.')).toBeTruthy();
+    });
+
+    it('a Sikh circuit shows the Khanda and none of the mandir ritual set, but keeps the shrine itself', async () => {
+      await open(TEMPLE, jest.fn(), 'sikh');
+      expect(screen.getByText('☬')).toBeTruthy();
+      expect(screen.queryByText('🕉️')).toBeNull();
+      expectNoMandirRituals();
+
+      // The shrine is still all there: its name, deity, darshan text, chant card, offerings and Live Darshan.
+      expect(screen.getByText('Fixture Temple')).toBeTruthy();
+      expect(screen.getByText('Fixture Deity')).toBeTruthy();
+      expect(screen.getByText('Fixture significance paragraph.')).toBeTruthy();
+      expect(screen.getByText('Fixture Chant')).toBeTruthy();
+      expect(screen.getByLabelText('Open Live Darshan Stream')).toBeTruthy();
+      await fireEvent.press(screen.getByText('Offerings'));
+      expect(screen.getByText('Fixture offering one')).toBeTruthy();
+    });
+
+    it('a Sikh circuit calls the second tab History, never Sthala Purana, and shows the same recorded text under it', async () => {
+      await open(TEMPLE, jest.fn(), 'sikh');
+      expect(screen.queryByText('Sthala Purana')).toBeNull();
+      await fireEvent.press(screen.getByText('History'));
+      expect(screen.getByText('HISTORY & ORIGINS')).toBeTruthy();
+      expect(screen.queryByText('STHALA PURANA & SACRED ORIGINS')).toBeNull();
+      expect(screen.getByText('Fixture sthala purana paragraph.')).toBeTruthy();
+    });
+
+    it('a Sikh circuit still offers the parikrama tally, and a press counts it without asking for flowers or the bell', async () => {
+      await open(TEMPLE, jest.fn(), 'sikh');
+      expect(screen.getByText('PARIKRAMA')).toBeTruthy();
+      await fireEvent.press(screen.getByLabelText('Perform Sacred Parikrama'));
+      expect(screen.getByText('1')).toBeTruthy();
+      expect(impact).toHaveBeenLastCalledWith('medium');
+      expect(mockShower.props?.show).toBe(false);
+      expectNoMandirRituals();
+    });
+
+    it('centres the parikrama tally on the stage when no diyas stand beside it, and spreads it between them when they do', async () => {
+      // PARIKRAMA's text sits in the ring, and the ring sits in the row that lays out the diyas and the ring.
+      const rowJustify = () => StyleSheet.flatten(screen.getByText('PARIKRAMA').parent?.parent?.props.style).justifyContent;
+      await open(TEMPLE, jest.fn(), 'sikh');
+      expect(rowJustify()).toBe('center');
+      await screen.unmount();
+      await open(TEMPLE, jest.fn(), 'sanatan');
+      expect(rowJustify()).toBe('space-between');
+    });
+
+    it.each([['jain'], ['buddhist'], ['SANATAN'], ['']])('a circuit whose tradition is %j gets no ritual controls, no tally and no symbol', async (tradition) => {
+      await open(TEMPLE, jest.fn(), tradition as unknown as YatraTradition);
+      expect(screen.queryByText('🕉️')).toBeNull();
+      expect(screen.queryByText('☬')).toBeNull();
+      expect(screen.queryByText('PARIKRAMA')).toBeNull();
+      expect(screen.queryByLabelText('Perform Sacred Parikrama')).toBeNull();
+      expectNoMandirRituals();
+      // Nothing is lost of the shrine itself.
+      expect(screen.getByText('Fixture Deity')).toBeTruthy();
+      expect(screen.getByText('Fixture significance paragraph.')).toBeTruthy();
+      expect(screen.getByText('History')).toBeTruthy();
+    });
+
+    // The two flags are independent: no shipped profile has the ritual set on and the tally off (or the reverse), but the type
+    // allows it, and a piece that only worked when both moved together would break on the first profile that splits them.
+    describe('the stage and the action row follow each flag on its own', () => {
+      const stage = (profile: SanctumProfile) =>
+        render(
+          <VirtualSanctumStage
+            bellRotation={new Animated.Value(0).interpolate({ inputRange: [-1, 0, 1], outputRange: ['-18deg', '0deg', '18deg'] })}
+            diyaLit={false}
+            handleLightDiya={jest.fn()}
+            handleRingBell={jest.fn()}
+            parikramaCount={0}
+            profile={profile}
+            sanctumBg={['#000000', '#111111']}
+            temple={TEMPLE}
+          />,
+        );
+      const actions = (profile: SanctumProfile) =>
+        render(
+          <VirtualSanctumActions
+            bellRungCount={0}
+            diyaLit={false}
+            flowersCount={0}
+            goldAccent="#000000"
+            handleLightDiya={jest.fn()}
+            handleOfferFlower={jest.fn()}
+            handleParikrama={jest.fn()}
+            handleRingBell={jest.fn()}
+            isDark={false}
+            parikramaCount={0}
+            profile={profile}
+            theme={themeColor(false)}
+          />,
+        );
+      const ritualsOnly: SanctumProfile = { ...SANATAN_SANCTUM_PROFILE, showParikrama: false };
+      const tallyOnly: SanctumProfile = { ...SANATAN_SANCTUM_PROFILE, showMandirRituals: false };
+
+      it('stage: the ritual set without the tally draws the bell and both diyas, and no ring', async () => {
+        await stage(ritualsOnly);
+        expect(screen.getByLabelText('Ring sanctum bell')).toBeTruthy();
+        expect(screen.getAllByText('Tap to Light')).toHaveLength(2);
+        expect(screen.queryByText('PARIKRAMA')).toBeNull();
+      });
+
+      it('stage: the tally without the ritual set draws the ring alone, with no bell and no diyas', async () => {
+        await stage(tallyOnly);
+        expect(screen.getByText('PARIKRAMA')).toBeTruthy();
+        expect(screen.queryByLabelText('Ring sanctum bell')).toBeNull();
+        expect(screen.queryByText('Tap to Light')).toBeNull();
+      });
+
+      it('action row: the ritual set without the tally offers the three rituals and no +1 Parikrama', async () => {
+        await actions(ritualsOnly);
+        expect(screen.getByText('Light Diya')).toBeTruthy();
+        expect(screen.getByText('Offer Pushpam')).toBeTruthy();
+        expect(screen.getByText('Ring Bell')).toBeTruthy();
+        expect(screen.queryByText('+1 Parikrama')).toBeNull();
+      });
+
+      it('action row: the tally without the ritual set offers +1 Parikrama alone', async () => {
+        await actions(tallyOnly);
+        expect(screen.getByText('+1 Parikrama')).toBeTruthy();
+        expect(screen.queryByText('Light Diya')).toBeNull();
+        expect(screen.queryByText('Offer Pushpam')).toBeNull();
+        expect(screen.queryByText('Ring Bell')).toBeNull();
+      });
+    });
+
+    it('follows the prop when it changes while the sanctum is open, and not the shrine', async () => {
+      await open(TEMPLE, jest.fn(), 'sanatan');
+      expect(screen.getByText('🕉️')).toBeTruthy();
+      await screen.rerender(<VirtualSanctumModal temple={TEMPLE} tradition="sikh" visible onClose={jest.fn()} />);
+      expect(screen.getByText('☬')).toBeTruthy();
+      expect(screen.queryByText('🕉️')).toBeNull();
+      expectNoMandirRituals();
     });
   });
 });
