@@ -74,3 +74,6 @@ assets/videos/
 # Head briefs and the CMO playbook hold security, cost and strategy detail; this repository is public.
 docs/briefs/
 docs/growth/
+
+# local artifacts
+artifacts/

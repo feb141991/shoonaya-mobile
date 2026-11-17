@@ -47,7 +47,7 @@ import { PostReactionSummaryBar } from '@/components/mandali/PostReactionSummary
 import { type PostReactionSummary, fetchPostReactionSummaries } from '@/lib/mandaliReactions';
 import { MandaliPollCard } from '@/components/mandali/MandaliPollCard';
 import { FestivalQuizMandaliStat } from '@/components/mandali/FestivalQuizMandaliStat';
-import { FEATURE_COLORS, COLORS, FONTS, SHADOWS, TYPE } from '@/lib/constants';
+import { COLORS, FONTS, SHADOWS, TYPE } from '@/lib/constants';
 import { apiFetch, isFetchCancelled } from '@/lib/api';
 import { navScrollHandler } from '@/lib/navScrollBus';
 import { NAV_BAR_CLEARANCE } from '@/lib/nav-bar';
@@ -55,6 +55,8 @@ import { supabase } from '@/lib/supabase';
 import { resolveDisplayName } from '@/lib/displayName';
 import { setGuestMode } from '@/lib/guestSession';
 import { useAppIdentity, getAppIdentity, captureAppIdentity } from '@/lib/appIdentity';
+import { buildMandaliScreenshotDemo, isMandaliScreenshotDemoEnabled } from '@/lib/mandaliScreenshotDemo';
+import { POST_TYPE_META, FILTER_OPTIONS, getInitials } from '@/lib/mandaliMeta';
 import { readMandaliCache, writeMandaliCache, clearMandaliCache, type MandaliCacheIdentity } from '@/lib/mandaliCache';
 import {
   confirmPendingMandaliComment,
@@ -166,30 +168,6 @@ type MandaliFeedItem =
 
 type MandaliSection = 'feed' | 'events' | 'people';
 
-const POST_TYPE_META: Record<MandaliPostType, { label: string; icon: keyof typeof Feather.glyphMap; color: string }> = {
-  update: { label: 'Update', icon: 'message-circle', color: FEATURE_COLORS.mandali.updateAccent },
-  question: { label: 'Question', icon: 'help-circle', color: FEATURE_COLORS.mandali.questionAccent },
-  announcement: { label: 'Announcement', icon: 'volume-2', color: FEATURE_COLORS.mandali.announcementAccent },
-  event: { label: 'Event', icon: 'calendar', color: FEATURE_COLORS.mandali.eventAccent },
-};
-
-// Filter picker options — mirrors POST_TYPE_META plus the "All" case, each
-// with its own color so the Facebook-reaction-style popup reads as a set of
-// distinct choices rather than a single-tone list.
-const FILTER_OPTIONS: Array<{ value: MandaliPostType | 'all'; label: string; icon: keyof typeof Feather.glyphMap; color: string }> = [
-  { value: 'all', label: 'All', icon: 'grid', color: COLORS.brandGold },
-  { value: 'update', label: 'Updates', icon: POST_TYPE_META.update.icon, color: POST_TYPE_META.update.color },
-  { value: 'event', label: 'Events', icon: POST_TYPE_META.event.icon, color: POST_TYPE_META.event.color },
-  { value: 'question', label: 'Questions', icon: POST_TYPE_META.question.icon, color: POST_TYPE_META.question.color },
-  { value: 'announcement', label: 'Announcements', icon: POST_TYPE_META.announcement.icon, color: POST_TYPE_META.announcement.color },
-];
-
-function getInitials(name: string): string {
-  if (!name) return '?';
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
 
 type MandaliTheme = {
   bg: string;
@@ -942,7 +920,10 @@ function MandaliScreen() {
       return { cacheHit, readyAt };
     }
 
-    const visiblePosts = feed.posts;
+    const screenshotDemo = isMandaliScreenshotDemoEnabled
+      ? buildMandaliScreenshotDemo(feed.posts)
+      : null;
+    const visiblePosts = screenshotDemo?.posts ?? feed.posts;
     const visibleMembers: MemberRow[] = feed.members.map((member) => ({
       ...member,
       // Everyone else's row shows their username -- public_profiles (the
@@ -969,7 +950,10 @@ function MandaliScreen() {
     // any previously-expanded full comment threads -- they'll re-fetch on
     // next expand rather than risk showing a thread that no longer matches
     // this fresh set of posts.
-    setFullyLoadedCommentPostIds(new Set());
+    setFullyLoadedCommentPostIds(
+      screenshotDemo?.expandedPostId ? new Set([screenshotDemo.expandedPostId]) : new Set()
+    );
+    if (screenshotDemo?.expandedPostId) setExpandedPostId(screenshotDemo.expandedPostId);
 
     const allPosts = [...visiblePosts, ...visibleBlended];
     const visiblePostIds = new Set(allPosts.map((post) => post.id));
@@ -985,7 +969,9 @@ function MandaliScreen() {
     );
 
     const postsWithUpvotes = allPosts.filter((post) => post.upvotes > 0).map((post) => post.id);
-    if (postsWithUpvotes.length > 0) {
+    if (screenshotDemo) {
+      setReactionSummaries((prev) => ({ ...prev, ...screenshotDemo.reactionSummaries }));
+    } else if (postsWithUpvotes.length > 0) {
       void fetchPostReactionSummaries(postsWithUpvotes, userId).then((summaries) => {
         if (!isCurrentLoad()) return;
         setReactionSummaries((prev) => ({ ...prev, ...summaries }));
@@ -994,13 +980,13 @@ function MandaliScreen() {
 
     // Seed `comments` from each post's 2-comment preview; expanding a post
     // fetches its full thread separately (see toggleComments).
-    const previewComments = allPosts.flatMap((post) => post.commentPreview ?? []);
+    const previewComments = screenshotDemo?.comments ?? allPosts.flatMap((post) => post.commentPreview ?? []);
     setComments((current) => mergePendingMandaliComments(previewComments,
       [...current.filter((comment) => comment.pendingStatus), ...pendingFromDisk]));
     if (!cacheHit) readyAt = Date.now();
 
     const allCommentIds = previewComments.map((comment) => comment.id);
-    if (allCommentIds.length > 0) {
+    if (!screenshotDemo && allCommentIds.length > 0) {
       const { data: commentUpvoteRows, error: upvoteError } = await supabase
         .from('comment_upvotes')
         .select('comment_id, reaction_type')
