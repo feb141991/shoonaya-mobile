@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
   artworkSpace: { flexGrow: 1, minHeight: 130 },
   message: { alignSelf: 'center', width: '100%', maxWidth: 520, gap: SPACING.md },
   symbol: { width: 52, height: 52, marginBottom: SPACING.sm },
-  // The existing ahimsa-hand bitmap is mislabeled (a generic peace icon).
+  // The ahimsa-hand bitmap was a generic peace icon until 2026-11-26.
   // Use the tradition's own word with the hand already in its sanctuary art.
   symbolText: { fontFamily: FONTS.devanagariBold, fontSize: 28, lineHeight: 52, color: COLORS.brandGold, marginBottom: SPACING.sm },
   greeting: { fontFamily: FONTS.sansMedium, fontSize: 16, lineHeight: 25, color: COLORS.brandGold },

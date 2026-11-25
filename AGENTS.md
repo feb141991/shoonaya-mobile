@@ -149,6 +149,13 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before 
   their defects; always run the check again in this repository.
 - `__tests__/asset-formats.test.ts` holds a known-broken list that may only
   shrink. Never add a file to it; fix the artwork and delete the entry.
+- A picture must show what its file name and its relic say it is. Open every relic before it is committed or referenced;
+  a stock emoji renamed after a sacred object is not that object. Origin: on 2026-11-26 the Jain set was found to be
+  emoji (`ahimsa-hand` a peace sign, `jain-swastika` a six-pointed star, `siddhachakra-wheel` an atom, `jain-kalasha` a
+  Greek vase, `peacock-brush` a peacock, `siddhashila-moon` a cratered moon, `three-jewels` a diamond), copied from the
+  backend in `8e21e69` and passing every format check. Replaced the same day here and in the backend, which also serves
+  them as earned relics; provenance in `docs/artwork/relics/README.md`. Guard: `__tests__/jain-relic-art.test.ts`.
+  Still wrong and not fixed: `clay-kalash` and `ganga-kalash` (the same Greek vase) and `peacock-feather` (a peacock).
 - Art that arrives with a baked-in checkerboard is cut out with
   `scripts/relic-cutout/`, then must pass `npm run check:assets`, be viewed over
   a bright contrast colour, and compile with `aapt2`. Prefer the generator's
