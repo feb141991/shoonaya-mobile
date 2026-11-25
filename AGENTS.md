@@ -698,3 +698,23 @@ Rules:
 - Cause of the stall: not proven. The device log from 11:06 to 11:23 shows no request started except to Metro, so the save waited inside sign-in
   preparation with no network activity; the access token was over an hour old, so `getSession()` needed a refresh, consistent with a refresh begun
   earlier that never settled. The log before 11:06 had already been discarded. If it recurs, the log now names the stalled step.
+
+### 39. Bundled Size and Direct Database Reads Only Ratchet Down
+- **Asset budget.** Everything in `assets/` ships in the app and counts against the download. `__tests__/asset-budget-guard.test.ts` gives each folder
+  under `assets/` a ceiling equal to its size on 2026-11-19, caps any single file at 500,000 bytes (one listed exception: the Panchatantra snapshot JSON) and
+  caps the total (104.7 MB). A ceiling only goes down: when art is shrunk, lower its number in the same change (the guard asks for it); growing a folder
+  means shrinking another or deciding to download it instead of bundling it. Never raise a ceiling. A new folder needs a deliberate entry.
+- Origin: the 2026-11-19 audit of the Android bundle found about 80% of the download was `assets/panchatantra/` (83 MB, 593 images, two unconverted JPEGs),
+  with nothing in the repository to notice it growing. The guard does not shrink anything; the Panchatantra downscale was in progress by another stream and
+  will need its ceiling lowered when it lands. Not measured on a real `.aab` after any change.
+- **Direct database reads.** A screen that calls `supabase.from(...)` decides for itself what a failed read means (section 18). `__tests__/direct-database-reads-guard.test.ts`
+  lists the 32 files under `app/`, `components/` and `hooks/` that did so on 2026-11-19 (57 calls) with a ceiling each, and fails for any new file or any added call.
+  New reads go in `lib/` as a function that returns data or throws, with a test (`lib/dharmVeerProfile.ts` is the pattern). This does not move the existing 57
+  calls: each is a separate screen to test on a device.
+- Sweep result 2026-11-19 (every call classified by whether its `error` is read): 55 of 57 handle the error. Fixed: `app/dharm-veer.tsx` turned a failed profile read
+  into tradition `hindu` and timezone `UTC`, picking another tradition's hero of the day and the wrong spiritual day boundary; it now throws into the existing
+  retryable error state (`resolveDharmVeerProfile`, `__tests__/dharm-veer-profile.test.ts`, proven red with the throw removed). Classified, not changed:
+  `hooks/useAiChat.ts` (a failed read sends the chat without tradition and city, a hint the server also resolves, and the active language comes from the language context, so
+  the answer is generic, not wrong; a user-visible retry needs UI work in two screens), `app/(tabs)/mandali.tsx` connection response (a failed read becomes "request no longer
+  pending" and nothing is written), `app/bhakti/zen.tsx` second insert (an intended retry for older databases). The screen wiring of the Dharm Veer fix is not covered by a
+  render test, and none of this was checked on a device.

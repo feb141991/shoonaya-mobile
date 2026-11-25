@@ -20,6 +20,7 @@ import { Screen } from '@/components/ui/Screen';
 import { SacredLoader } from '@/components/ui/SacredLoader';
 import { apiFetch } from '@/lib/api';
 import { FEATURE_COLORS, OVERLAYS, COLORS, FONTS } from '@/lib/constants';
+import { resolveDharmVeerProfile } from '@/lib/dharmVeerProfile';
 import { selectDharmVeer, selectDharmVeerOfTheDayFromRoster, getDharmVeerOfTheDay, getDharmVeerCardCopy, DHARM_VEERS, TRADITION_META, type DharmVeer } from '@/lib/dharm-veer';
 import { getDharmVeerArtworkSource } from '@/lib/dharm-veer-artwork';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
@@ -93,8 +94,11 @@ export default function DharmVeerScreen() {
         apiFetch('/api/dharm-veer/roster'),
       ]);
 
-      resolvedTradition = profileResult.data?.tradition ?? 'hindu';
-      resolvedTimezone = profileResult.data?.timezone ?? 'UTC';
+      // A failed profile read throws into the retryable error state below; it never
+      // falls back to 'hindu' and 'UTC' (wrong hero, wrong spiritual day).
+      const resolvedProfile = resolveDharmVeerProfile(profileResult);
+      resolvedTradition = resolvedProfile.tradition;
+      resolvedTimezone = resolvedProfile.timezone;
       if (!rosterResponse.ok) throw new Error('Dharm Veer roster unavailable');
       const json = await rosterResponse.json();
       const rawRoster: DharmVeer[] = Array.isArray(json?.roster) ? json.roster : [];
