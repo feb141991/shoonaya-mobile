@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 
-import { APP_VERSION } from '@/lib/appVersion';
+import { APP_RELEASE_ID } from '@/lib/appVersion';
 import {
   attachConsentContext,
   buildConsentContext,
@@ -9,7 +9,7 @@ import {
   type ConsentSurface,
 } from '@/lib/consentWording';
 
-const environment = () => ({ platform: Platform.OS, appVersion: APP_VERSION });
+const environment = () => ({ platform: Platform.OS, appVersion: APP_RELEASE_ID });
 
 /** The context to send with a consent change on a screen (see lib/consentWording.ts). */
 export function consentContext(surface: ConsentSurface, keys: ConsentKey[]): ConsentContext {

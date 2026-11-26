@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { apiFetch } from '@/lib/api';
 import { configureNativeAnalytics, deleteNativeAnalyticsHistory, setNativeAnalyticsEnabled, setNativePracticeAnalyticsEnabled, type AnalyticsEventName } from '@/lib/analytics';
-import { APP_VERSION } from '@/lib/appVersion';
+import { APP_RELEASE_ID } from '@/lib/appVersion';
 import { Platform } from 'react-native';
 
 const consentKey = (userId: string) => `shoonaya:product_analytics_consent:${userId}`;
@@ -23,7 +23,7 @@ function configureTransport(): void {
         expectedUserId: userId,
         body: JSON.stringify({
           events: [event],
-          appVersion: APP_VERSION,
+          appVersion: APP_RELEASE_ID,
           platform: Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : undefined,
         }),
       });

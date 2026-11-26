@@ -742,3 +742,17 @@ Rules:
   `description`, so every reason card rendered blank.
 - Origin: 2026-11-26. Guards: `__tests__/ritual-window.test.ts` and `__component_tests__/why-today-ritual-window.test.tsx`
   (both proven red against the previous code). Not verified on a device: no live observance carries the flag before 2029.
+
+### 41. Every Diagnostic Says Which Build and Update Produced It
+- Telemetry summaries, API and sign-in diagnostics, notification taps, product analytics and the consent record send `APP_RELEASE_ID`
+  (`lib/appVersion.ts`, built by `buildReleaseId` in `lib/releaseId.ts`), never `APP_VERSION`: `1.0.0+47` for build 47 on its embedded
+  bundle, `1.0.0+47.ota.1a2b3c4d` while an over-the-air update runs. `APP_VERSION` stays only for comparing against store versions
+  (`lib/updateManager.ts`) and for display. A new upload uses `APP_RELEASE_ID`.
+- The form is semver build metadata, at most 32 characters, because that is what the strictest backend endpoints accept (product
+  analytics, notification taps) and the API-diagnostics endpoint drops a whole upload that fails it. The function drops the OTA part,
+  then the build, rather than exceed the limit. Changing the format means checking every backend `appVersion` validator first (section 1).
+- Why this rule exists: on 2026-11-26 a review of production diagnostics found every row from every build said `1.0.0`, so no fix could be
+  confirmed from production data, and an OTA update was indistinguishable from the build it ran on. Guard: `__tests__/release-id.test.ts`
+  (checks the backend's own pattern and limit; four mutations proven red). Not verified on a device or in a release build: until a build
+  or OTA update carrying this ships, production keeps receiving `1.0.0`. No native module was added (`expo-updates` was already
+  installed), so an OTA update can deliver it.

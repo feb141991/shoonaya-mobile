@@ -1,7 +1,7 @@
 import { AppState, Platform } from 'react-native';
 
 import { apiFetch } from '@/lib/api';
-import { APP_VERSION } from '@/lib/appVersion';
+import { APP_RELEASE_ID } from '@/lib/appVersion';
 import { getAppIdentity } from '@/lib/appIdentity';
 import { closeNotificationTapConsent, isNotificationTapConsentEnabled } from '@/lib/notificationTapConsent';
 import type { PendingNotificationTap } from '@/lib/notificationTap';
@@ -47,7 +47,7 @@ function deps(): TapQueueDeps {
       timeoutMs: UPLOAD_TIMEOUT_MS,
       body: JSON.stringify(body),
     }),
-    appVersion: APP_VERSION,
+    appVersion: APP_RELEASE_ID,
     platform: Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : undefined,
   };
 }

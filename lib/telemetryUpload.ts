@@ -13,7 +13,7 @@ import { Platform } from 'react-native';
 import * as Crypto from 'expo-crypto';
 import { apiFetch } from '@/lib/api';
 import { API_BASE } from '@/lib/constants';
-import { APP_VERSION } from '@/lib/appVersion';
+import { APP_RELEASE_ID } from '@/lib/appVersion';
 import { captureAppIdentity } from '@/lib/appIdentity';
 import {
   getTelemetrySummary,
@@ -108,7 +108,7 @@ async function uploadTelemetrySummary(identity: TelemetryIdentity): Promise<void
       ...('expectedUserId' in decision ? { expectedUserId: decision.expectedUserId } : { expectedGuest: true }),
       body: JSON.stringify({
         schemaVersion: TELEMETRY_SCHEMA_VERSION,
-        appVersion: APP_VERSION,
+        appVersion: APP_RELEASE_ID,
         platform: Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : null,
         ...(guestInstallId ? { guestInstallId } : {}),
         summary,
@@ -162,7 +162,7 @@ async function uploadAuthDiagnostics(): Promise<void> {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          appVersion: APP_VERSION,
+          appVersion: APP_RELEASE_ID,
           platform: Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : null,
           events,
         }),
@@ -205,7 +205,7 @@ async function uploadApiRequestDiagnostics(): Promise<void> {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          appVersion: APP_VERSION,
+          appVersion: APP_RELEASE_ID,
           platform: Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : null,
           events,
         }),
