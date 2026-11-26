@@ -48,6 +48,7 @@ import {
 } from '@/lib/progressiveProfiling';
 import { trackProgressivePromptEvent } from '@/lib/progressiveProfilingAnalytics';
 import { shouldBlockPanchangScreen } from '@/lib/panchang-screen-policy';
+import { PANCHANG_INFO_TEXT as INFO_TEXT } from '@/lib/panchangInfoText';
 
 // ── Panchang — rebuilt to match PWA's src/app/(main)/panchang/today/
 // PanchangDetail.tsx living-sky design (sky-phase gradient, glow orb,
@@ -141,19 +142,6 @@ const SKY_ORB: Record<SkyPhase, { color: string; size: number; opacity: number }
 const PHASE_LABELS: Record<SkyPhase, string> = {
   night: 'Night', predawn: 'Pre-dawn', dawn: 'Dawn',
   morning: 'Morning', afternoon: 'Afternoon', dusk: 'Dusk', evening: 'Evening',
-};
-
-const INFO_TEXT: Record<string, string> = {
-  Tithi: 'Lunar day (1–30). Each tithi has a presiding deity and governs which activities are auspicious.',
-  Nakshatra: "Moon's mansion in 1 of 27 star-clusters. Your moon nakshatra shapes emotion, instinct, and timing.",
-  Yoga: 'Sun + Moon combined longitude across 27 yogas. Indicates the overall quality and nature of the day.',
-  Karana: 'Half of a tithi — the moon moves 6° per karana. Governs the finer timing within each tithi for rituals.',
-  Vara: 'Vedic day of the week. Each day has a ruling planet and presiding deity who blesses related acts.',
-  Sunrise: 'Calculated for your location. Brahma Muhurta starts 96 minutes before sunrise — the ideal waking time.',
-  Sunset: 'Sandhya kaal — ideal for evening prayers, japa, and quiet reflection as day meets night.',
-  'Brahma Muhurta': 'The sacred pre-dawn window — 96 to 48 minutes before sunrise. The best time for meditation, japa, and pranayama.',
-  'Rahu Kaal': 'A 90-min daily window ruled by Rahu (shadow planet). Avoid starting new ventures or auspicious acts.',
-  'Abhijit Muhurat': 'The most auspicious ~48-min window around solar noon. Ideal for important new beginnings.',
 };
 
 function isRealToday(date: Date) {
@@ -884,6 +872,10 @@ export default function PanchangScreen() {
           <PanchangRow emoji="✨" label="Brahma Muhurta (Sacred)" value={panchang.brahmaMuhurta} infoKey="Brahma Muhurta" isOpen={openInfo === 'Brahma Muhurta'} onToggleInfo={() => setOpenInfo((k) => (k === 'Brahma Muhurta' ? null : 'Brahma Muhurta'))} />
           <PanchangRow emoji="☀️" label="Abhijit Muhurat (Auspicious)" value={panchang.abhijitMuhurat} infoKey="Abhijit Muhurat" isOpen={openInfo === 'Abhijit Muhurat'} onToggleInfo={() => setOpenInfo((k) => (k === 'Abhijit Muhurat' ? null : 'Abhijit Muhurat'))} />
           <PanchangRow emoji="⚠️" label="Rahu Kaal (Avoid Starts)" value={panchang.rahuKaal} warn infoKey="Rahu Kaal" isOpen={openInfo === 'Rahu Kaal'} onToggleInfo={() => setOpenInfo((k) => (k === 'Rahu Kaal' ? null : 'Rahu Kaal'))} />
+          <PressableSurface accessibilityLabel="See the Sun's path through today" onPress={() => router.push('/solar-day')} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8 }}>
+            <Text style={{ flex: 1, color: GOLD, fontFamily: FONTS.sansSemiBold, fontSize: 13 }}>See the Sun&apos;s path through today</Text>
+            <Feather name="chevron-right" size={20} color={OVERLAYS.white[0.4]} />
+          </PressableSurface>
         </GlassCard>
 
         {/* Guidance footer */}

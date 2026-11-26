@@ -141,6 +141,7 @@ const NOT_A_LINK_TARGET: Record<string, string> = {
   '/ai-chat': 'Dharma Mitra chat: opened from inside the app; no producer links to it',
   '/dyuta': 'a game, opened from inside the app',
   '/play': 'a game, opened from inside the app',
+  '/solar-bench': 'phase-1 spike: development-build benchmark screen, entered by typing the path; refuses to run outside __DEV__',
   '/pathshala/insights': 'opened from inside Pathshala',
   '/pathshala/saved': 'opened from inside Pathshala',
 };

@@ -59,7 +59,8 @@
     "react-native-view-shot": "5.1.0",
     "react-native-webview": "13.16.1",
     "react-native-worklets": "0.10.1",
-    "react-native-youtube-iframe": "^2.4.1"
+    "react-native-youtube-iframe": "^2.4.1",
+    "three": "^0.187.0"
   },
   "devDependencies": {
     "@react-native/jest-preset": "^0.86.3",
@@ -101,7 +102,8 @@
     "eas:ios:simulator": "npm run prebuild:verify && eas build --platform ios --profile development-simulator",
     "eas:ios:store": "npm run prebuild:release && eas build --platform ios --profile production",
     "eas:update": "npm run prebuild:release && eas update",
-    "test:components": "jest"
+    "test:components": "jest",
+    "build:solar-scene": "node scripts/solar-scene/build.mjs"
   },
   "private": true,
   "expo": {

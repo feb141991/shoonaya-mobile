@@ -16,6 +16,9 @@ module.exports = defineConfig([
     'android/*',
     'vendor/*',
     'store-assets/*', // one-off Node scripts for store artwork, not app code
+    // Browser-page sources, not app modules: build.mjs (still linted) joins them into one script with
+    // page globals (THREE, scene) for the Solar Day WebView. Guarded by solar-scene-generated.test.ts.
+    'scripts/solar-scene/*.js',
     '**/graphify-out/*',
     '**/*.generated.ts',
     '.claude/*',

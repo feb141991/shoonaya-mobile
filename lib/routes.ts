@@ -132,6 +132,7 @@ export function resolveNativeRoute(path: string, fallback: Href = '/(tabs)/paths
   // the PWA's /seva page.
   if (pathname.startsWith('/live-darshan')) return '/live-darshan' as Href;
   if (pathname.startsWith('/seva')) return '/seva' as Href;
+  if (pathname === '/solar-day' || pathname.startsWith('/solar-day/')) return '/solar-day' as Href;
   // These native screens exist (app/shloka.tsx, app/my-progress/*, app/mantras.tsx,
   // app/name-story.tsx, app/festival-quiz/[definitionKey].tsx) but had no dispatch
   // line at all, so daily shloka cron reminders, my-progress links, and festival
