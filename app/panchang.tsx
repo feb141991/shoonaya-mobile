@@ -19,7 +19,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { PressableSurface } from '@/components/ui/PressableSurface';
 import { useFallbackBackHandler } from '@/components/ui/BackButton';
-import { WhyTodayModal } from '@/components/calendar/WhyTodayModal';
+import { RitualWindowNote } from '@/components/calendar/RitualWindowNote';
+import { WhyTodayModal, type WhyTodayObservance } from '@/components/calendar/WhyTodayModal';
 import { CalendarDatePicker } from '@/components/ui/CalendarDatePicker';
 import { formatLocalDateOnly, parseDateOnly } from '@/lib/dateOnly';
 import { notificationDate } from '@/lib/notificationDestination';
@@ -61,21 +62,8 @@ import { shouldBlockPanchangScreen } from '@/lib/panchang-screen-policy';
 
 type Tradition = 'hindu' | 'sikh' | 'buddhist' | 'jain' | 'all';
 
-type UpcomingFestival = {
-  date: string;
-  slug: string;
-  display_name: string;
-  emoji: string;
-  kind: 'major' | 'vrat' | 'regional';
-  tradition: Tradition;
-  status?: 'resolved' | 'ambiguous' | 'unresolved';
-  alternatives?: any[];
-  monthLabel?: { formattedLabel: string; isDivergentFromRuleDefault?: boolean } | null;
-  description?: string | null;
-  reasons?: Array<{ label: string; description: string }>;
-  diagnostics?: string[];
-  sourceRefs?: Array<{ title: string; tier?: string; citation?: string | null }>;
-};
+// The observance fields the "Why today?" sheet reads, plus what this list groups by.
+type UpcomingFestival = WhyTodayObservance & { kind: 'major' | 'vrat' | 'regional'; tradition: Tradition };
 
 type PanchangState = {
   lat: number;
@@ -1047,6 +1035,7 @@ export default function PanchangScreen() {
                         ? `${festival.date} · ${festival.monthLabel.formattedLabel}`
                         : festival.date}
                   </Text>
+                  {festival.status !== 'unresolved' && <RitualWindowNote observance={festival} timeZone={festival.location?.tz ?? profileState.timezone} />}
                 </View>
                 <View style={{ alignItems: 'flex-end', gap: 4 }}>
                   <Text style={{ color: GOLD, fontFamily: FONTS.sansSemiBold, fontSize: 10 }}>{festival.kind.toUpperCase()}</Text>
@@ -1066,6 +1055,7 @@ export default function PanchangScreen() {
           visible={!!whyTodayFestival}
           observance={whyTodayFestival}
           onClose={() => setWhyTodayFestival(null)}
+          timeZone={profileState.timezone}
         />
 
         <CalendarDatePicker

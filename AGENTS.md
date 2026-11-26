@@ -726,3 +726,19 @@ Rules:
   the answer is generic, not wrong; a user-visible retry needs UI work in two screens), `app/(tabs)/mandali.tsx` connection response (a failed read becomes "request no longer
   pending" and nothing is written), `app/bhakti/zen.tsx` second insert (an intended retry for older databases). The screen wiring of the Dharm Veer fix is not covered by a
   render test, and none of this was checked on a device.
+
+### 40. A Festival Date With a Ritual Window Says When the Ritual May Begin
+- When the calendar engine resolves a festival to a day whose ritual may not begin at once, the app shows that time next to
+  the date, from the engine's own instant, in the observance's timezone (`lib/ritualWindow.ts`,
+  `components/calendar/RitualWindowNote.tsx`, on the Panchang festival row and in the "Why today?" sheet). It never works
+  out a time itself (section 2). If the flag arrives without a usable time, it still says to wait for Bhadra to end; a
+  flagged date is never shown as if any time that day were fine.
+- Today this covers Raksha Bandhan (backend `b433b33`, founder-approved 2026-11-26, not council ratified): when Bhadra fills
+  Day 1's afternoon and Purnima lasts under 3 muhurtas after Day 2's sunrise, the date is Day 1, with the ritual after Bhadra
+  ends (`raksha_bandhan_after_bhadra`) or in the Bhadra-puccha (`raksha_bandhan_bhadra_puccha`, 72 minutes, PROPOSED). The
+  next such year at Ujjain is 2029 (23 Aug, from 19:01 IST). Any other engine branch that sets a ritual start belongs in the
+  same module and its test.
+- The "Why today?" sheet reads calculation reasons as the API sends them (`code`, `text`); it had read `label` and
+  `description`, so every reason card rendered blank.
+- Origin: 2026-11-26. Guards: `__tests__/ritual-window.test.ts` and `__component_tests__/why-today-ritual-window.test.tsx`
+  (both proven red against the previous code). Not verified on a device: no live observance carries the flag before 2029.

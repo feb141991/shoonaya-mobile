@@ -2,6 +2,9 @@ import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 
 import { FEATURE_COLORS, OVERLAYS, COLORS, FONTS } from '@/lib/constants';
+import { reasonLines } from '@/lib/ritualWindow';
+
+import { RitualWindowNote } from './RitualWindowNote';
 
 // Mobile port of web's WhyTodayExplanationModal
 // (Sanatan Sangam/Shoonaya/src/components/calendar/WhyTodayExplanationModal.tsx).
@@ -23,8 +26,10 @@ export type WhyTodayObservance = {
   description?: string | null;
   status?: 'resolved' | 'ambiguous' | 'unresolved' | 'under_review';
   monthLabel?: { formattedLabel: string; isDivergentFromRuleDefault?: boolean } | null;
-  reasons?: Array<{ label: string; description: string }>;
+  /** The API sends `{ code, text, details }`; older shapes used `{ label, description }`. */
+  reasons?: unknown[];
   diagnostics?: string[];
+  location?: { tz?: string } | null;
   sourceRefs?: Array<{ title: string; tier?: string; citation?: string | null }>;
   alternatives?: Array<{
     profile?: { tradition?: string; calendar?: string };
@@ -37,6 +42,8 @@ type WhyTodayModalProps = {
   visible: boolean;
   observance: WhyTodayObservance | null;
   onClose: () => void;
+  /** The screen's timezone, used when the observance carries no location of its own. */
+  timeZone?: string;
 };
 
 function Section({ title, icon, children }: { title: string; icon: keyof typeof Feather.glyphMap; children: React.ReactNode }) {
@@ -69,11 +76,11 @@ function InfoCard({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function WhyTodayModal({ visible, observance, onClose }: WhyTodayModalProps) {
+export function WhyTodayModal({ visible, observance, onClose, timeZone = 'Asia/Kolkata' }: WhyTodayModalProps) {
   if (!observance) return null;
 
   const isUnderReview = observance.status === 'unresolved' || observance.status === 'under_review' || observance.status === 'ambiguous';
-  const reasons = observance.reasons ?? [];
+  const reasons = (observance.reasons ?? []).map(reasonLines).filter((r): r is { label: string; description: string } => r !== null);
   const diagnostics = observance.diagnostics ?? [];
   const sourceRefs = observance.sourceRefs ?? [];
   const alternatives = observance.alternatives ?? [];
@@ -176,6 +183,8 @@ export function WhyTodayModal({ visible, observance, onClose }: WhyTodayModalPro
                 </View>
               </InfoCard>
             ) : null}
+
+            <RitualWindowNote observance={observance} timeZone={observance.location?.tz ?? timeZone} size="sheet" />
 
             {reasons.length > 0 && (
               <Section title="Calculation Factors" icon="help-circle">
