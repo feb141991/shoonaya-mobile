@@ -16,10 +16,8 @@ export const COLORS = {
   success: '#5aaa38',
   successBg: 'rgba(134,187,110,0.15)',
   successBorder: 'rgba(134,187,110,0.45)',
-
   // ── Design-system additions (additive only — nothing above this line
   // changed value, so no existing screen shifts color). ──────────────────
-
   // A quieter background layer for nested/secondary surfaces (behind a
   // group of cards, an input field's own fill) that shouldn't compete with
   // cardBgLight/Dark. Sourced from the PWA's own --surface-soft
@@ -28,14 +26,12 @@ export const COLORS = {
   // being invented.
   surfaceSoftLight: '#EFE4D3',
   surfaceSoftDark: '#1C1A16',
-
   // A quieter border than borderLight/Dark, for dividers and nested
   // surfaces (input fields inside a Card) that shouldn't draw as much
   // attention as a card's own outer edge. Sourced from the PWA's
   // --card-border-soft (src/app/globals.css light/dark).
   borderSoftLight: 'rgba(95,58,22,0.06)',
   borderSoftDark: 'rgba(197,160,89,0.08)',
-
   // Accent family beyond gold, so the app doesn't read as one-note beige.
   // `sage` is lifted directly from the PWA's --glow-jain base
   // (rgb(42,107,74), src/app/globals.css:249). `navy` is a deliberately
@@ -51,7 +47,6 @@ export const COLORS = {
   navy: '#3E5C76',
   navyBg: 'rgba(62,92,118,0.12)',
   navyBorder: 'rgba(62,92,118,0.35)',
-
   // Error/danger — the web repo has no dedicated error CSS variable either
   // (checked src/app/globals.css; the (auth) login/signup pages there
   // render errors via toast, not inline color). The one place web does
@@ -72,7 +67,6 @@ export const COLORS = {
   warningBgDark: 'rgba(245,158,11,0.15)',
   warningBorderLight: 'rgba(217,119,6,0.35)',
   warningBorderDark: 'rgba(245,158,11,0.30)',
-
   // Home/Auth premium surfaces — promoted from the first Home/Auth visual
   // pass so the PWA-matched ivory, ink, and translucent gold treatments are
   // reusable tokens instead of screen-local literals.
