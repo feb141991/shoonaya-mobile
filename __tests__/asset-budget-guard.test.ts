@@ -79,26 +79,35 @@ function walk(dir: string, out: AssetFile[] = []): AssetFile[] {
   return out;
 }
 
-// Bytes per folder under assets/ on 2026-11-19, rounded up to 25 KB. This list may only shrink.
+// Bytes per folder under assets/ as committed on 2026-11-19 (HEAD, not a working tree with uncommitted shrinks),
+// rounded up to 25 KB. This list may only shrink.
 const FOLDER_CEILINGS: Record<string, number> = {
-  '(root)': 900_000,
+  '(root)': 3_325_000,
   'audio': 800_000,
   'brand': 225_000,
   'data': 1_000_000,
-  'dharm-veer': 1_150_000,
+  'dharm-veer': 4_825_000,
   'dyuta': 1_325_000,
   'heroes': 8_175_000,
   'icons': 1_550_000,
   'japa': 900_000,
   'onboarding': 475_000,
-  'panchatantra': 83_750_000,
+  'panchatantra': 86_000_000,
   'relics': 2_425_000,
   'startup-scenes': 2_100_000,
 };
-const TOTAL_CEILING = 104_700_000;
+const TOTAL_CEILING = 113_000_000;
 // Files already over the single-file limit on 2026-11-19, at their size then.
 const BIG_FILE_CEILINGS: Record<string, number> = {
   'assets/data/panchatantra-expanded-snapshot.json': 997_280,
+  'assets/dharm-veer/arjuna.jpg': 1_114_583,
+  'assets/dharm-veer/chanakya.jpg': 1_064_116,
+  'assets/dharm-veer/sri-krishna.jpg': 1_259_821,
+  'assets/dharm-veer/sri-rama.jpg': 1_368_341,
+  'assets/icon.png': 1_667_794,
+  'assets/panchatantra/dove-king-and-net.jpg': 1_416_746,
+  'assets/panchatantra/lion-and-rabbit.jpg': 815_793,
+  'assets/splash-icon.png': 1_229_971,
 };
 
 describe('bundled assets stay inside their size budget', () => {

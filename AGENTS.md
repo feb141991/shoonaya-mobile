@@ -708,8 +708,9 @@ Rules:
 
 ### 39. Bundled Size and Direct Database Reads Only Ratchet Down
 - **Asset budget.** Everything in `assets/` ships in the app and counts against the download. `__tests__/asset-budget-guard.test.ts` gives each folder
-  under `assets/` a ceiling equal to its size on 2026-11-19, caps any single file at 500,000 bytes (one listed exception: the Panchatantra snapshot JSON) and
-  caps the total (104.7 MB). A ceiling only goes down: when art is shrunk, lower its number in the same change (the guard asks for it); growing a folder
+  under `assets/` a ceiling equal to its committed size on 2026-11-19, caps any single file at 500,000 bytes (the files already over it are listed at
+  their size) and caps the total (113 MB). Measure a ceiling from what is committed (`git ls-tree -r -l HEAD assets`), never from a working tree: the
+  first version was measured from a tree holding another stream's uncommitted image shrinks, so CI, which checks the commit, failed on push. A ceiling only goes down: when art is shrunk, lower its number in the same change (the guard asks for it); growing a folder
   means shrinking another or deciding to download it instead of bundling it. Never raise a ceiling. A new folder needs a deliberate entry.
 - Origin: the 2026-11-19 audit of the Android bundle found about 80% of the download was `assets/panchatantra/` (83 MB, 593 images, two unconverted JPEGs),
   with nothing in the repository to notice it growing. The guard does not shrink anything; the Panchatantra downscale was in progress by another stream and
